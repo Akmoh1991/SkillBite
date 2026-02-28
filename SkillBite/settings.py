@@ -95,28 +95,30 @@ AUTH_PASSWORD_VALIDATORS = [
 
 
 # Internationalization
-# لغة الموقع
 LANGUAGE_CODE = 'ar'
-
-# إذا تبي تشغّل أكثر من لغة مستقبلاً
 USE_I18N = True
 
-# المنطقة الزمنية (الخبر/السعودية)
 TIME_ZONE = 'Asia/Riyadh'
-
 USE_TZ = True
 
-# جعل أول يوم بالأسبوع السبت (اختياري لكنه مناسب للسعودية)
 FIRST_DAY_OF_WEEK = 6  # 6 = Saturday
 
-# تنسيقات عرض التاريخ/الوقت (اختياري)
 DATE_FORMAT = "d/m/Y"
 DATETIME_FORMAT = "d/m/Y H:i"
 TIME_FORMAT = "H:i"
 
 
 # Static files (CSS, JavaScript, Images)
-STATIC_URL = 'static/'
+STATIC_URL = "/static/"
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+]
+# للإنتاج لاحقًا: python manage.py collectstatic
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
+# Media uploads
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
 
 
 # Security defaults (مفيدة حتى في التطوير، وضرورية في الإنتاج)
@@ -124,10 +126,5 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = "DENY"
 CSRF_COOKIE_HTTPONLY = True
 SESSION_COOKIE_HTTPONLY = True
-
-# فعلها فقط مع HTTPS في الإنتاج
-# SECURE_SSL_REDIRECT = True
-# SESSION_COOKIE_SECURE = True
-# CSRF_COOKIE_SECURE = True
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

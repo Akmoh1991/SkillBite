@@ -96,15 +96,15 @@
     }
     .hero h1{
       margin:0 auto;
-      max-width:720px;
-      font-size:64px;
+      max-width:820px;
+      font-size:60px;
       line-height:1.18;
       font-weight:900;
       letter-spacing:-.4px;
     }
     .hero-sub{
       margin:12px auto 0;
-      max-width:860px;
+      max-width:900px;
       color:var(--muted);
       font-size:22px;
       line-height:1.8;
@@ -260,134 +260,6 @@
       font-weight:900;
     }
 
-    .story{
-      margin-top:34px;
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:20px;
-      align-items:center;
-      direction:ltr;
-    }
-    .story .text{
-      direction:rtl;
-      text-align:right;
-    }
-    .story h3{
-      margin:0 0 8px;
-      font-size:32px;
-      line-height:1.35;
-      font-weight:900;
-    }
-    .story p{
-      margin:0;
-      color:var(--muted);
-      font-size:19px;
-      line-height:1.75;
-      font-weight:600;
-    }
-    .story-card{
-      background:var(--surface);
-      border-radius:18px;
-      padding:12px;
-      position:relative;
-    }
-    .badge{
-      position:absolute;
-      top:12px;
-      left:12px;
-      border-radius:10px;
-      background:linear-gradient(180deg,var(--green),var(--green-dark));
-      color:#fff;
-      font-size:17px;
-      font-weight:800;
-      padding:6px 10px;
-    }
-    .story-card img{
-      width:100%;
-      height:290px;
-      object-fit:cover;
-      border-radius:13px;
-      display:block;
-    }
-
-    .integrations{
-      margin-top:34px;
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:16px;
-      align-items:center;
-      direction:ltr;
-    }
-    .integrations .text{
-      direction:rtl;
-      text-align:right;
-    }
-    .integrations h3{
-      margin:8px 0;
-      font-size:32px;
-      line-height:1.35;
-      font-weight:900;
-    }
-    .integrations p{
-      margin:0;
-      color:var(--muted);
-      font-size:19px;
-      line-height:1.75;
-      font-weight:600;
-    }
-    .tiles{
-      display:grid;
-      grid-template-columns:repeat(5,1fr);
-      gap:8px;
-    }
-    .tile{
-      min-height:52px;
-      border-radius:8px;
-      display:grid;
-      place-items:center;
-      color:#fff;
-      font-size:13px;
-      font-weight:900;
-    }
-    .c1{background:#0f8155}.c2{background:#159565}.c3{background:#22a66f}.c4{background:#2ab77b}.c5{background:#1d6a4b}
-    .c6{background:#21724f}.c7{background:#2d7f59}.c8{background:#1f8e60}.c9{background:#26a26e}.c10{background:#1c5f45}
-
-    .omni{
-      margin-top:32px;
-      background:var(--surface);
-      border-radius:18px;
-      padding:18px;
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:18px;
-      align-items:center;
-      direction:ltr;
-    }
-    .omni .text{
-      direction:rtl;
-      text-align:right;
-    }
-    .omni h3{
-      margin:0 0 8px;
-      font-size:32px;
-      line-height:1.35;
-      font-weight:900;
-    }
-    .omni p{
-      margin:0;
-      color:var(--muted);
-      font-size:19px;
-      line-height:1.75;
-      font-weight:600;
-    }
-    .omni img{
-      width:100%;
-      height:250px;
-      object-fit:cover;
-      border-radius:12px;
-      display:block;
-    }
-
     .stats{
       margin-top:56px;
       text-align:center;
@@ -400,7 +272,7 @@
     }
     .stats p{
       margin:8px auto 0;
-      max-width:850px;
+      max-width:900px;
       color:var(--muted);
       font-size:19px;
       line-height:1.75;
@@ -461,7 +333,7 @@
     }
     .cta p{
       margin:8px auto 0;
-      max-width:760px;
+      max-width:820px;
       color:#e5fff4;
       font-size:19px;
       line-height:1.75;
@@ -583,8 +455,8 @@
     @media (max-width:1020px){
       .hero h1{font-size:48px}
       h2,.stats h2,.faq h2,.cta h2{font-size:30px}
-      .feature h3,.story h3,.integrations h3,.omni h3{font-size:28px}
-      .hero-sub,.lead,.feature p,.story p,.integrations p,.omni p,.stats p,.cta p{font-size:18px}
+      .feature h3{font-size:28px}
+      .hero-sub,.lead,.feature p,.stats p,.cta p{font-size:18px}
       .more{font-size:17px}
       .hero-mosaic{
         grid-template-columns:1fr 1fr 1fr;
@@ -596,14 +468,11 @@
       .m-tall1{grid-column:2;grid-row:2}
       .m-tall2{grid-column:3;grid-row:2}
       .logos{gap:10px}
-      .feature,.feature.clear,.story,.integrations,.omni,.testis,.fgrid{grid-template-columns:1fr}
-      .feature.clear .text{order:2}
-      .feature.clear .media-wrap{order:1}
+      .feature,.testis,.fgrid{grid-template-columns:1fr}
       .footer-top{flex-direction:column;align-items:flex-start}
     }
     @media (max-width:640px){
       .brand,.footer-brand{font-size:24px}
-      .top-actions .hbtn{font-size:13px}
       .hero h1{font-size:35px}
       .btn{font-size:15px}
       .hero-mosaic{
@@ -615,8 +484,8 @@
       .m-bottom{grid-column:2;grid-row:2}
       .m-tall1{grid-column:1;grid-row:3}
       .m-tall2{grid-column:2;grid-row:3}
-      h2,.stats h2,.faq h2,.cta h2,.feature h3,.story h3,.integrations h3,.omni h3{font-size:24px}
-      .hero-sub,.lead,.feature p,.story p,.integrations p,.omni p,.stats p,.cta p,.a{font-size:16px}
+      h2,.stats h2,.faq h2,.cta h2,.feature h3{font-size:24px}
+      .hero-sub,.lead,.feature p,.stats p,.cta p,.a{font-size:16px}
       .q{font-size:17px}
       .logos{gap:8px}
       .logo{font-size:14px;padding:7px 10px}
@@ -630,7 +499,7 @@
     <div class="wrap header-inner">
       <a class="brand" href="#"><span class="brand-mark">☁</span>SkillBite</a>
       <div class="header-actions">
-        <a class="hbtn primary" href="#demo">ابدأ التجربة</a>
+        <a class="hbtn primary" href="#demo">ابدأ التجربة مجانًا</a>
         <a class="hbtn" href="#">تسجيل الدخول</a>
       </div>
     </div>
@@ -638,11 +507,11 @@
 
   <main class="wrap">
     <section class="hero">
-      <h1>نطوّر مهارات فريقك <br>بتدريب مستمر</h1>
-      <p class="hero-sub">منصة SaaS تجمع المسارات التدريبية والاختبارات والتقارير في تجربة واحدة لمديري التشغيل والمشرفين.</p>
+      <h1>حوّل موظفيك إلى فريق<br>يعمل باحتراف وثبات في كل شِفت</h1>
+      <p class="hero-sub">SkillBite منصة تدريب للمطاعم والمقاهي تقلّل الأخطاء، تسرّع تأهيل الموظفين، وتضمن جودة خدمة ثابتة عبر جميع الفروع — من لوحة واحدة سهلة.</p>
       <div class="hero-actions">
         <a class="btn primary" href="#demo">ابدأ تجربة مجانية 14 يوم</a>
-        <a class="btn ghost" href="#pricing">استعرض الباقات</a>
+        <a class="btn ghost" href="#pricing">احجز عرض توضيحي</a>
       </div>
 
       <div class="hero-mosaic">
@@ -655,22 +524,22 @@
     </section>
 
     <section class="section center" id="features">
-      <h2>مميزات النظام </h2>
-      <p class="lead">مصممة خصيصًا لبيئات التشغيل اليومية في قطاع الأغذية والمشروبات، مع تركيز على سرعة التأهيل وثبات جودة الخدمة.</p>
+      <h2>كل ما تحتاجه لتدريب فريقك من مكان واحد</h2>
+      <p class="lead">أنشئ التدريب، تابعه، وقِس أثره على التشغيل — بدون أوراق، بدون فوضى، وبدون اعتماد على التوجيه الشفهي.</p>
       <div class="logos">
-        <div class="logo">دورات تدريبية</div>
-        <div class="logo">قوائم المهام</div>
-        <div class="logo">تقليل اخطاء الموظفين</div>
-        <div class="logo">لوحات تحكم</div>
-        <div class="logo">تقارير</div>
+        <div class="logo">مسارات حسب الدور</div>
+        <div class="logo">اختبارات تقييم فورية</div>
+        <div class="logo">قوائم تحقق يومية</div>
+        <div class="logo">لوحات متابعة للفروع</div>
+        <div class="logo">تقارير أداء واضحة</div>
       </div>
     </section>
 
     <section class="feature" id="tracks">
       <div class="text">
-        <h3>نجاح التشغيل يبدأ من تدريب واضح ومنهجي لكل دور</h3>
-        <p>أنشئ مسارات تدريبية للموظفين الجدد والحاليين تشمل الاستقبال، الخدمة، المطبخ، السلامة الغذائية، وتجربة العميل مع ترتيب واضح للدروس.</p>
-        <a class="more" href="#">تعرّف أكثر</a>
+        <h3>نظام تدريب واضح لكل دور داخل مطعمك</h3>
+        <p>صمّم مسارات تدريب للباريستا، الكاشير، المطبخ، والمشرفين. كل موظف يعرف بالضبط ماذا يتعلم ومتى يُعتمد للعمل — بخطوات مرتبة وسهلة.</p>
+        <a class="more" href="#">شاهد كيف تبني مسارك الأول خلال دقائق</a>
       </div>
       <div class="media-wrap">
         <img class="h1" src="https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=1400" alt="training team">
@@ -679,9 +548,9 @@
 
     <section class="feature clear alt">
       <div class="text">
-        <h3>تابع تقدّم المتدربين لحظة بلحظة ومن أي مكان</h3>
-        <p>لوحات متابعة مباشرة توضّح نسب الإنجاز، الدورات المكتملة، الدروس المتأخرة، والاختبارات غير المجتازة لكل فرع وفريق.</p>
-        <a class="more" href="#">تعرّف أكثر</a>
+        <h3>اعرف من أنجز التدريب… ومن يحتاج تدخل فوري</h3>
+        <p>لوحات تحكم تعرض نسب الإنجاز، الدروس المتأخرة، والاختبارات غير المجتازة لكل فرع وفريق — لتتدخل في الوقت الصحيح قبل بداية الشفت.</p>
+        <a class="more" href="#">شاهد مثال للتقارير</a>
       </div>
       <div class="media-wrap">
         <img class="h2" src="https://images.pexels.com/photos/590016/pexels-photo-590016.jpeg?auto=compress&cs=tinysrgb&w=1400" alt="learning analytics">
@@ -690,9 +559,9 @@
 
     <section class="feature clear">
       <div class="text">
-        <h3>وحّد إجراءات العمل عبر SOPs وقوائم التحقق اليومية</h3>
-        <p>حوّل المعرفة التشغيلية إلى خطوات واضحة قابلة للتطبيق، مع تأكيد تنفيذ المهام وتوثيق الاعتماد من المشرفين.</p>
-        <a class="more" href="#">تعرّف أكثر</a>
+        <h3>ثبّت معايير التشغيل عبر SOPs وقوائم التحقق اليومية</h3>
+        <p>حوّل إجراءات التشغيل إلى خطوات قابلة للتطبيق يوميًا، مع توثيق التنفيذ واعتماد المشرفين. قلّل التباين بين الفروع وارفَع الالتزام بالجودة والسلامة.</p>
+        <a class="more" href="#">تعرّف على التوحيد بين الفروع</a>
       </div>
       <div class="media-wrap">
         <img class="h3" src="https://images.pexels.com/photos/3184191/pexels-photo-3184191.jpeg?auto=compress&cs=tinysrgb&w=1400" alt="standard operating procedures">
@@ -700,31 +569,35 @@
     </section>
 
     <section class="stats">
-      <h2>استثمر في تدريب ينعكس مباشرة على جودة الخدمة</h2>
-      <p>من تأهيل الموظفين الجدد إلى تطوير قادة الفروع، تمنحك SkillBite دورة تدريب متكاملة يمكن قياس أثرها على الأداء اليومي.</p>
+      <h2>نتائج تلاحظها بسرعة على جودة الخدمة</h2>
+      <p>كل يوم بدون نظام تدريب واضح يعني أخطاء أكثر وتكاليف أعلى. SkillBite يساعدك ترفع جودة الأداء وتثبتها عبر الفريق — بشكل قابل للقياس والمتابعة.</p>
     </section>
 
     <section class="testis">
-      <article class="t"><b>السرعة </b><span>اختصرنا فترة تأهيل الموظف الجديد من أسابيع إلى أيام عبر مسارات تدريب واضحة.</span></article>
-      <article class="t"><b> التدريب السريع </b><span>صرنا نعرف بالضبط من أكمل التدريب ومن يحتاج متابعة قبل بدء الشفت.</span></article>
-      <article class="t"><b> الوضوح</b><span>قوائم التحقق اليومية رفعت الالتزام بالنظافة والسلامة وجودة التجهيز.</span></article>
+      <article class="t"><b>تأهيل أسرع</b><span>اختصر فترة تأهيل الموظف الجديد عبر مسارات مرتبة وخطوات واضحة.</span></article>
+      <article class="t"><b>تحكم كامل</b><span>تعرف فورًا من أكمل التدريب ومن يحتاج متابعة قبل بداية الشفت.</span></article>
+      <article class="t"><b>ثبات الجودة</b><span>نفس المعايير، نفس الجودة، في كل فرع ومع كل تغيير في الموظفين.</span></article>
     </section>
 
     <section class="cta" id="demo">
-      <h2>ابدأ اليوم وابنِ نظام تدريب احترافي لفريقك</h2>
-      <p>احصل على تجربة مجانية لمدة 14 يومًا مع إعداد أول مسار تدريبي لفريقك ومتابعة مباشرة من فريقنا.</p>
-      <a class="btn" href="#">ابدأ التجربة المجانية</a>
+      <h2>ابدأ اليوم… واجعل تدريب فريقك ميزة تنافسية</h2>
+      <p>جرّب SkillBite مجانًا لمدة 14 يومًا بدون التزام. سنساعدك في إعداد أول مسار تدريبي لفريقك خطوة بخطوة.</p>
+      <a class="btn" href="#">ابدأ التجربة المجانية الآن</a>
     </section>
 
     <section class="faq" id="faq">
       <h2>الأسئلة الشائعة</h2>
       <div class="qa open">
         <button class="q" type="button">هل المنصة مناسبة لأكثر من فرع وسلسلة؟</button>
-        <div class="a">نعم، يمكنك إدارة التدريب لكل الفروع من لوحة واحدة مع صلاحيات وتقارير مستقلة لكل فرع.</div>
+        <div class="a">نعم. يمكنك إدارة التدريب لكل الفروع من لوحة واحدة مع صلاحيات وتقارير مستقلة لكل فرع.</div>
       </div>
       <div class="qa">
         <button class="q" type="button">هل يمكن تخصيص المسارات حسب الدور الوظيفي؟</button>
-        <div class="a">بالتأكيد، يمكنك إنشاء مسارات مختلفة للكاشير، الباريستا، الطاهي، المشرف، وغيرها حسب احتياج التشغيل.</div>
+        <div class="a">بالتأكيد. أنشئ مسارات مختلفة للكاشير، الباريستا، الطاهي، المشرف وغيرها حسب احتياج التشغيل.</div>
+      </div>
+      <div class="qa">
+        <button class="q" type="button">هل أحتاج خبرة تقنية لتشغيل المنصة؟</button>
+        <div class="a">لا. المنصة مصممة لتكون سهلة الاستخدام ويمكن إعداد أول مسار تدريبي خلال دقائق.</div>
       </div>
       <div class="qa">
         <button class="q" type="button">هل توجد تجربة مجانية قبل الاشتراك؟</button>
@@ -737,13 +610,13 @@
     <div class="wrap">
       <div class="footer-top">
         <a class="footer-brand" href="#"><span class="mark">☁</span>SkillBite</a>
-        <div class="footer-note">منصة تدريب رقمية لفرق المطاعم والمقاهي بمعايير تشغيل واضحة</div>
+        <div class="footer-note">تدريب رقمي لفرق المطاعم والمقاهي — بمعايير تشغيل واضحة ونتائج قابلة للقياس</div>
       </div>
       <div class="fgrid">
-        <div><h4>المنصة</h4><a href="#">المسارات التدريبية</a><a href="#">الاختبارات</a><a href="#">التقارير</a></div>
+        <div><h4>المنصة</h4><a href="#features">المميزات</a><a href="#tracks">المسارات التدريبية</a><a href="#faq">الأسئلة الشائعة</a></div>
         <div><h4>القطاعات</h4><a href="#">المطاعم</a><a href="#">المقاهي</a><a href="#">سلاسل الفروع</a></div>
         <div><h4>الشركة</h4><a href="#">من نحن</a><a href="#">الشراكات</a><a href="#">تواصل معنا</a></div>
-        <div><h4>الدعم</h4><a href="#">الأسئلة الشائعة</a><a href="#">مركز المساعدة</a><a href="#">سياسة الخصوصية</a></div>
+        <div><h4>الدعم</h4><a href="#faq">مركز المساعدة</a><a href="#">سياسة الخصوصية</a><a href="#">الشروط والأحكام</a></div>
       </div>
       <div class="copy">© 2026 SkillBite - منصة SaaS لتدريب فرق الأغذية والمشروبات. جميع الحقوق محفوظة.</div>
     </div>
