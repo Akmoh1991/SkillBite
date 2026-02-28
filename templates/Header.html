@@ -1,0 +1,338 @@
+<!-- Header.html -->
+<header class="sb-header" dir="rtl">
+  <div class="sb-header__wrap">
+    <a class="sb-brand" href="/">
+      <span class="sb-brand__mark" aria-hidden="true">SB</span>
+      <div class="sb-brand__text">
+        <div class="sb-brand__name">SkillBite</div>
+        <div class="sb-brand__tag">تدريب المطاعم والمقاهي</div>
+      </div>
+    </a>
+
+    <nav class="sb-nav" aria-label="القائمة الرئيسية">
+      <a class="sb-nav__link" href="#features">المزايا</a>
+      <a class="sb-nav__link" href="#tracks">المسارات</a>
+      <a class="sb-nav__link" href="#how">كيف يعمل</a>
+      <a class="sb-nav__link" href="#pricing">الأسعار</a>
+      <a class="sb-nav__link" href="#faq">الأسئلة</a>
+    </nav>
+
+    <div class="sb-header__actions">
+      <a class="sb-btn sb-btn--ghost" href="#pricing">عرض الأسعار</a>
+      <a class="sb-btn sb-btn--primary" href="#demo">اطلب عرض النظام</a>
+
+      <button class="sb-burger" type="button" aria-label="فتح القائمة" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile drawer -->
+  <div class="sb-drawer" aria-hidden="true">
+    <div class="sb-drawer__panel" role="dialog" aria-label="قائمة الجوال">
+      <div class="sb-drawer__top">
+        <div class="sb-drawer__title">القائمة</div>
+        <button class="sb-drawer__close" type="button" aria-label="إغلاق القائمة">✕</button>
+      </div>
+
+      <div class="sb-drawer__links">
+        <a class="sb-drawer__link" href="#features">المزايا</a>
+        <a class="sb-drawer__link" href="#tracks">المسارات</a>
+        <a class="sb-drawer__link" href="#how">كيف يعمل</a>
+        <a class="sb-drawer__link" href="#pricing">الأسعار</a>
+        <a class="sb-drawer__link" href="#faq">الأسئلة</a>
+      </div>
+
+      <div class="sb-drawer__cta">
+        <a class="sb-btn sb-btn--ghost sb-btn--full" href="#pricing">عرض الأسعار</a>
+        <a class="sb-btn sb-btn--primary sb-btn--full" href="#demo">اطلب عرض النظام</a>
+      </div>
+    </div>
+
+    <div class="sb-drawer__backdrop" tabindex="-1" aria-label="إغلاق"></div>
+  </div>
+</header>
+
+<style>
+  :root{
+    --sb-green:#16a34a;
+    --sb-green-2:#22c55e;
+    --sb-ink:#0f172a;
+    --sb-muted:#475569;
+    --sb-border:#e5e7eb;
+    --sb-bg:#ffffff;
+    --sb-soft:#f8fafc;
+    --sb-shadow: 0 12px 30px rgba(2,6,23,.10);
+    --sb-radius: 16px;
+    --sb-max: 1180px;
+    --sb-font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Arial, "Noto Sans Arabic", "Noto Kufi Arabic", sans-serif;
+  }
+
+  .sb-header{
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(255,255,255,.92);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--sb-border);
+    font-family: var(--sb-font);
+  }
+
+  .sb-header__wrap{
+    max-width: var(--sb-max);
+    margin: 0 auto;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+  }
+
+  .sb-brand{
+    display:flex;
+    align-items:center;
+    gap: 10px;
+    text-decoration:none;
+    color: var(--sb-ink);
+    min-width: 220px;
+  }
+
+  .sb-brand__mark{
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
+    display:grid;
+    place-items:center;
+    background: linear-gradient(135deg, var(--sb-green), var(--sb-green-2));
+    color: white;
+    font-weight: 800;
+    letter-spacing: .5px;
+    box-shadow: 0 10px 20px rgba(34,197,94,.25);
+  }
+
+  .sb-brand__name{
+    font-weight: 800;
+    font-size: 16px;
+    line-height: 1.1;
+  }
+  .sb-brand__tag{
+    font-size: 12px;
+    color: var(--sb-muted);
+    margin-top: 2px;
+  }
+
+  .sb-nav{
+    display:flex;
+    align-items:center;
+    gap: 18px;
+  }
+  .sb-nav__link{
+    text-decoration:none;
+    color: var(--sb-muted);
+    font-weight: 650;
+    font-size: 14px;
+    padding: 8px 10px;
+    border-radius: 12px;
+    transition: .2s ease;
+  }
+  .sb-nav__link:hover{
+    color: var(--sb-ink);
+    background: var(--sb-soft);
+  }
+
+  .sb-header__actions{
+    display:flex;
+    align-items:center;
+    gap: 10px;
+  }
+
+  .sb-btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-radius: 14px;
+    font-weight: 800;
+    font-size: 13px;
+    text-decoration:none;
+    border: 1px solid transparent;
+    transition: .2s ease;
+    white-space: nowrap;
+  }
+
+  .sb-btn--primary{
+    background: linear-gradient(135deg, var(--sb-green), var(--sb-green-2));
+    color: #fff;
+    box-shadow: 0 12px 26px rgba(34,197,94,.18);
+  }
+  .sb-btn--primary:hover{ transform: translateY(-1px); }
+
+  .sb-btn--ghost{
+    background: #fff;
+    color: var(--sb-green);
+    border-color: rgba(22,163,74,.25);
+  }
+  .sb-btn--ghost:hover{
+    background: rgba(22,163,74,.06);
+  }
+
+  .sb-burger{
+    display:none;
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
+    border: 1px solid var(--sb-border);
+    background:#fff;
+    cursor:pointer;
+    align-items:center;
+    justify-content:center;
+    gap: 5px;
+    padding: 0;
+  }
+  .sb-burger span{
+    display:block;
+    width: 18px;
+    height: 2px;
+    background: var(--sb-ink);
+    border-radius: 999px;
+  }
+
+  /* Drawer */
+  .sb-drawer{
+    display:none;
+  }
+  .sb-drawer.is-open{
+    display:block;
+  }
+  .sb-drawer__backdrop{
+    position: fixed;
+    inset: 0;
+    background: rgba(2,6,23,.45);
+  }
+  .sb-drawer__panel{
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: min(360px, 92vw);
+    height: 100vh;
+    background: #fff;
+    border-left: 1px solid var(--sb-border);
+    box-shadow: var(--sb-shadow);
+    padding: 16px;
+    display:flex;
+    flex-direction:column;
+    gap: 14px;
+    animation: sbSlideIn .18s ease-out;
+  }
+  @keyframes sbSlideIn{
+    from{ transform: translateX(12px); opacity: .6; }
+    to{ transform: translateX(0); opacity: 1; }
+  }
+  .sb-drawer__top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .sb-drawer__title{
+    font-weight: 900;
+    color: var(--sb-ink);
+  }
+  .sb-drawer__close{
+    width: 40px; height: 40px;
+    border-radius: 14px;
+    border: 1px solid var(--sb-border);
+    background:#fff;
+    cursor:pointer;
+    font-size: 16px;
+  }
+  .sb-drawer__links{
+    display:flex;
+    flex-direction:column;
+    gap: 8px;
+    padding-top: 6px;
+  }
+  .sb-drawer__link{
+    padding: 12px 12px;
+    border-radius: 14px;
+    text-decoration:none;
+    color: var(--sb-ink);
+    font-weight: 800;
+    border: 1px solid var(--sb-border);
+    background: var(--sb-soft);
+  }
+  .sb-drawer__link:hover{
+    border-color: rgba(22,163,74,.25);
+    background: rgba(22,163,74,.06);
+  }
+  .sb-drawer__cta{
+    margin-top:auto;
+    display:flex;
+    flex-direction:column;
+    gap: 10px;
+  }
+  .sb-btn--full{ width:100%; }
+
+  /* Responsive */
+  @media (max-width: 980px){
+    .sb-nav{ display:none; }
+    .sb-burger{ display:inline-flex; }
+    .sb-brand{ min-width: unset; }
+  }
+</style>
+
+<script>
+  (function(){
+    const header = document.querySelector(".sb-header");
+    if(!header) return;
+
+    const burger = header.querySelector(".sb-burger");
+    const drawer = header.querySelector(".sb-drawer");
+    const closeBtn = header.querySelector(".sb-drawer__close");
+    const backdrop = header.querySelector(".sb-drawer__backdrop");
+    const drawerLinks = header.querySelectorAll(".sb-drawer__link");
+
+    function openDrawer(){
+      drawer.classList.add("is-open");
+      drawer.setAttribute("aria-hidden","false");
+      burger.setAttribute("aria-expanded","true");
+      document.body.style.overflow = "hidden";
+    }
+    function closeDrawer(){
+      drawer.classList.remove("is-open");
+      drawer.setAttribute("aria-hidden","true");
+      burger.setAttribute("aria-expanded","false");
+      document.body.style.overflow = "";
+    }
+
+    burger?.addEventListener("click", () => {
+      const isOpen = drawer.classList.contains("is-open");
+      isOpen ? closeDrawer() : openDrawer();
+    });
+
+    closeBtn?.addEventListener("click", closeDrawer);
+    backdrop?.addEventListener("click", closeDrawer);
+
+    drawerLinks.forEach(a=>{
+      a.addEventListener("click", () => {
+        closeDrawer();
+      });
+    });
+
+    document.addEventListener("keydown", (e)=>{
+      if(e.key === "Escape" && drawer.classList.contains("is-open")) closeDrawer();
+    });
+
+    // Smooth scroll (optional)
+    document.querySelectorAll('a[href^="#"]').forEach(a=>{
+      a.addEventListener("click",(e)=>{
+        const id = a.getAttribute("href");
+        if(!id || id === "#") return;
+        const el = document.querySelector(id);
+        if(!el) return;
+        e.preventDefault();
+        el.scrollIntoView({behavior:"smooth", block:"start"});
+      });
+    });
+  })();
+</script>

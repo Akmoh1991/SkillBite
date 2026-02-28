@@ -1,5 +1,8 @@
 from django.urls import path
+from . import views
+
+app_name = "tenancy"
 
 urlpatterns = [
-    # سيتم إضافة مسارات الشاشة الرئيسية، المصادقة، وإدارة الـ tenant لاحقًا
+    path("", views.home, name="home"),
 ]

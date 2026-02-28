@@ -38,7 +38,9 @@ INSTALLED_APPS = [
     'progress',
 ]
 
+# Custom user model (must be set before first migrate)
 AUTH_USER_MODEL = "tenancy.User"
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -56,7 +58,10 @@ ROOT_URLCONF = 'SkillBite.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+
+        # ✅ تعريف مجلد templates الرئيسي في جذر المشروع
+        'DIRS': [BASE_DIR / "templates"],
+
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

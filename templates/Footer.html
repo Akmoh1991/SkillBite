@@ -1,0 +1,249 @@
+<!-- Footer.html -->
+<footer class="sb-footer" dir="rtl">
+  <div class="sb-footer__wrap">
+    <div class="sb-footer__grid">
+      <div class="sb-footer__col">
+        <div class="sb-footer__brand">
+          <span class="sb-footer__mark" aria-hidden="true">SB</span>
+          <div>
+            <div class="sb-footer__name">SkillBite</div>
+            <div class="sb-footer__desc">
+              منصة تدريب داخلية للمطاعم والمقاهي: مسارات، اختبارات، تقارير، ولوحة متابعة للإدارة.
+            </div>
+          </div>
+        </div>
+
+        <div class="sb-footer__badges">
+          <span class="sb-pill">سهل التشغيل</span>
+          <span class="sb-pill">مناسب للفروع</span>
+          <span class="sb-pill">تقارير مباشرة</span>
+        </div>
+      </div>
+
+      <div class="sb-footer__col">
+        <div class="sb-footer__title">روابط سريعة</div>
+        <a class="sb-footer__link" href="#features">المزايا</a>
+        <a class="sb-footer__link" href="#tracks">المسارات</a>
+        <a class="sb-footer__link" href="#how">كيف يعمل</a>
+        <a class="sb-footer__link" href="#pricing">الأسعار</a>
+      </div>
+
+      <div class="sb-footer__col">
+        <div class="sb-footer__title">للمديرين</div>
+        <a class="sb-footer__link" href="#demo">طلب عرض</a>
+        <a class="sb-footer__link" href="#faq">الأسئلة الشائعة</a>
+        <a class="sb-footer__link" href="#security">الأمان والخصوصية</a>
+        <a class="sb-footer__link" href="#support">الدعم</a>
+      </div>
+
+      <div class="sb-footer__col">
+        <div class="sb-footer__title">تواصل</div>
+        <div class="sb-footer__contact">
+          <div><span>البريد:</span> support@skillbite.local</div>
+          <div><span>الهاتف:</span> +966 5X XXX XXXX</div>
+          <div><span>الوقت:</span> 9ص - 6م</div>
+        </div>
+
+        <div class="sb-footer__social">
+          <a class="sb-social" href="#" aria-label="X">X</a>
+          <a class="sb-social" href="#" aria-label="Instagram">IG</a>
+          <a class="sb-social" href="#" aria-label="LinkedIn">in</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="sb-footer__bottom">
+      <div class="sb-footer__copy">© <span id="sbYear"></span> SkillBite — جميع الحقوق محفوظة</div>
+      <div class="sb-footer__mini">
+        <a href="#terms">الشروط</a>
+        <span>•</span>
+        <a href="#privacy">الخصوصية</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<style>
+  /* Footer styles (isolated) */
+  :root{
+    --sb-green:#16a34a;
+    --sb-green-2:#22c55e;
+    --sb-ink:#0f172a;
+    --sb-muted:#475569;
+    --sb-border:#e5e7eb;
+    --sb-soft:#f8fafc;
+    --sb-shadow: 0 12px 30px rgba(2,6,23,.10);
+    --sb-radius: 16px;
+    --sb-max: 1180px;
+    --sb-font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Arial, "Noto Sans Arabic", "Noto Kufi Arabic", sans-serif;
+  }
+
+  .sb-footer{
+    font-family: var(--sb-font);
+    background: linear-gradient(180deg, #ffffff, #f7fbf8);
+    border-top: 1px solid var(--sb-border);
+    margin-top: 60px;
+  }
+  .sb-footer__wrap{
+    max-width: var(--sb-max);
+    margin: 0 auto;
+    padding: 34px 18px 18px;
+  }
+  .sb-footer__grid{
+    display:grid;
+    grid-template-columns: 1.2fr .8fr .8fr .9fr;
+    gap: 18px;
+  }
+
+  .sb-footer__brand{
+    display:flex;
+    gap: 12px;
+    align-items:flex-start;
+  }
+  .sb-footer__mark{
+    width: 44px;
+    height: 44px;
+    border-radius: 16px;
+    display:grid;
+    place-items:center;
+    background: linear-gradient(135deg, var(--sb-green), var(--sb-green-2));
+    color: #fff;
+    font-weight: 900;
+    box-shadow: 0 10px 20px rgba(34,197,94,.20);
+  }
+  .sb-footer__name{
+    font-weight: 900;
+    color: var(--sb-ink);
+    font-size: 16px;
+    margin-top: 2px;
+  }
+  .sb-footer__desc{
+    color: var(--sb-muted);
+    line-height: 1.8;
+    font-size: 13px;
+    margin-top: 6px;
+    max-width: 420px;
+  }
+
+  .sb-footer__badges{
+    display:flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 14px;
+  }
+  .sb-pill{
+    font-size: 12px;
+    font-weight: 800;
+    padding: 8px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(22,163,74,.22);
+    background: rgba(22,163,74,.06);
+    color: var(--sb-green);
+  }
+
+  .sb-footer__title{
+    font-weight: 900;
+    color: var(--sb-ink);
+    margin-bottom: 10px;
+  }
+  .sb-footer__link{
+    display:block;
+    text-decoration:none;
+    color: var(--sb-muted);
+    font-weight: 750;
+    padding: 8px 10px;
+    border-radius: 12px;
+    width: fit-content;
+    transition: .2s ease;
+  }
+  .sb-footer__link:hover{
+    color: var(--sb-ink);
+    background: var(--sb-soft);
+  }
+
+  .sb-footer__contact{
+    color: var(--sb-muted);
+    font-weight: 700;
+    line-height: 2;
+    font-size: 13px;
+    background: #fff;
+    border: 1px solid var(--sb-border);
+    border-radius: 16px;
+    padding: 12px;
+    box-shadow: 0 10px 22px rgba(2,6,23,.06);
+  }
+  .sb-footer__contact span{
+    color: var(--sb-ink);
+    font-weight: 900;
+    margin-left: 6px;
+  }
+
+  .sb-footer__social{
+    display:flex;
+    gap: 10px;
+    margin-top: 12px;
+  }
+  .sb-social{
+    width: 40px; height: 40px;
+    display:grid; place-items:center;
+    border-radius: 14px;
+    border: 1px solid var(--sb-border);
+    background:#fff;
+    text-decoration:none;
+    color: var(--sb-ink);
+    font-weight: 900;
+    transition:.2s ease;
+  }
+  .sb-social:hover{
+    border-color: rgba(22,163,74,.25);
+    background: rgba(22,163,74,.06);
+    color: var(--sb-green);
+  }
+
+  .sb-footer__bottom{
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid var(--sb-border);
+    display:flex;
+    align-items:center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .sb-footer__copy{
+    color: var(--sb-muted);
+    font-weight: 750;
+    font-size: 13px;
+  }
+  .sb-footer__mini{
+    display:flex;
+    gap: 10px;
+    align-items:center;
+    color: var(--sb-muted);
+    font-weight: 800;
+    font-size: 13px;
+  }
+  .sb-footer__mini a{
+    text-decoration:none;
+    color: var(--sb-muted);
+  }
+  .sb-footer__mini a:hover{ color: var(--sb-green); }
+
+  @media (max-width: 980px){
+    .sb-footer__grid{
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  @media (max-width: 560px){
+    .sb-footer__grid{
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
+<script>
+  (function(){
+    const y = document.getElementById("sbYear");
+    if(y) y.textContent = new Date().getFullYear();
+  })();
+</script>
