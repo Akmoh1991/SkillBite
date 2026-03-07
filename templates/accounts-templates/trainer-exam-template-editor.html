@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>محرر قالب الاختبار</title>
+
+<style>
+@import url('/static/branding/branding.css');
+/* نفس CSS حقك بدون تغيير */
+:root{
+  --blue-dark:#0027b9;
+  --blue-main:#0076ff;
+  --orange:#0076ff;
+  --bg:#f7f9fc;
+  --card:#ffffff;
+  --text:#1f2937;
+  --muted:#5f6f85;
+  --sidebar-w:260px;
+  --topbar-h:70px;
+}
+
+*{ box-sizing:border-box; }
+
+body{
+  margin:0;
+  font-family: "SE", "Segoe UI", Tahoma, Arial, sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+
+.main{
+  margin-right:var(--sidebar-w);
+  padding: calc(var(--topbar-h) + 24px) 28px 40px;
+  min-height:100vh;
+}
+
+.page-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  flex-wrap:wrap;
+  margin-bottom:18px;
+}
+.page-header h2{
+  margin:0;
+  font-size:18px;
+  color:var(--blue-main);
+}
+
+.card{
+  background:var(--card);
+  border-radius:16px;
+  box-shadow:0 14px 34px rgba(15,45,90,.12);
+  overflow:hidden;
+}
+
+.section{
+  padding:18px 22px;
+  border-top:1px solid #eef1f5;
+}
+.section:first-child{ border-top:none; }
+
+.section-title{
+  margin:0 0 10px;
+  font-size:14px;
+  color:var(--muted);
+  font-weight:700;
+}
+
+.msg{
+  border-radius:14px;
+  padding:12px 14px;
+  margin-bottom:12px;
+  font-size:13px;
+}
+.msg.success{ background:#ecfdf5; border:1px solid #a7f3d0; }
+.msg.error{ background:#fef2f2; border:1px solid #fecaca; }
+.msg.info{ background:#eff6ff; border:1px solid #bfdbfe; }
+
+.input, .select{
+  width:100%;
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid #d1d5db;
+  outline:none;
+  font-family: "SE", "Segoe UI", Tahoma, Arial, sans-serif;
+  background:#fff;
+}
+.textarea{
+  width:100%;
+  min-height:90px;
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid #d1d5db;
+  outline:none;
+  resize:vertical;
+  font-family: "SE", "Segoe UI", Tahoma, Arial, sans-serif;
+}
+
+.helper{
+  font-size:12px;
+  color:var(--muted);
+  margin-top:6px;
+  line-height:1.7;
+}
+
+.page-actions{ display:flex; gap:10px; flex-wrap:wrap; }
+.btn-row{ margin-top:14px; display:flex; gap:10px; flex-wrap:wrap; }
+.helper.compact{ margin-top:2px; }
+
+.btn{
+  display:inline-block;
+  padding:10px 14px;
+  border-radius:12px;
+  border:none;
+  cursor:pointer;
+  font-weight:800;
+  font-size:13px;
+  text-decoration:none;
+}
+.btn-primary{ background:var(--blue-main); color:#fff; }
+.btn-soft{ background:#e9eef6; color:var(--blue-main); }
+.btn-soft:hover{ background:#dfe8f6; }
+.btn-warning{ background:var(--orange); color:#111827; }
+.btn-danger{ background:#dc2626; color:#fff; }
+
+.hr{
+  height:1px;
+  background:#eef1f5;
+  margin:0;
+  border:0;
+}
+
+.grid-2{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px 18px;
+}
+
+.box{
+  background:#f5f8fd;
+  border:1px solid #eef1f5;
+  border-radius:14px;
+  padding:12px 14px;
+}
+.box .label{
+  font-size:12px;
+  color:var(--muted);
+  margin-bottom:6px;
+}
+.box .value{
+  font-size:14px;
+  font-weight:800;
+  color:var(--blue-main);
+}
+
+.inline{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  align-items:flex-start;
+}
+.inline > *{
+  flex:1;
+  min-width:220px;
+}
+
+.q-list{ display:flex; flex-direction:column; gap:10px; }
+.q-item{
+  background:#fff;
+  border:1px solid #eef1f5;
+  border-radius:14px;
+  padding:12px 14px;
+}
+.q-item-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  flex-wrap:wrap;
+}
+.q-item-actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  align-items:center;
+}
+.builder-grid{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:12px 18px;
+  margin-top:10px;
+}
+.builder-grid .col-span-2{ grid-column:1 / -1; }
+
+.options-wrap{
+  margin-top:12px;
+  background:#f5f8fd;
+  border:1px solid #eef1f5;
+  padding:12px 14px;
+  border-radius:14px;
+}
+.options-grid{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:10px 14px;
+  margin-top:10px;
+}
+.options-grid .col-span-2{ grid-column:1 / -1; }
+
+.opt-row{
+  display:flex;
+  gap:8px;
+  align-items:center;
+}
+.opt-row input[type="text"]{ flex:1; }
+
+.workspace{
+  display:grid;
+  grid-template-columns: 1fr;
+  gap:14px;
+  padding:16px;
+}
+.ws-panel{
+  background:#fff;
+  border:1px solid #eef1f5;
+  border-radius:16px;
+  overflow:hidden;
+}
+.ws-topbar{
+  background:var(--blue-dark);
+  color:#fff;
+  padding:10px 12px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  font-weight:900;
+  font-size:13px;
+}
+.ws-topbar small{
+  font-weight:700;
+  opacity:.9;
+}
+.ws-body{ padding:12px; }
+
+.ws-actions{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  align-items:center;
+  margin-bottom:10px;
+}
+.ws-actions .select{
+  min-width:220px;
+  max-width:320px;
+}
+.ws-search{
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+.ws-search input{ flex:1; }
+.ws-search .count{
+  min-width:34px;
+  text-align:center;
+  font-weight:900;
+  color:var(--muted);
+}
+
+.q-nav{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  max-height:520px;
+  overflow:auto;
+  padding-left:4px;
+}
+.q-nav-item{
+  border:1px solid #eef1f5;
+  border-radius:14px;
+  padding:10px 10px;
+  cursor:pointer;
+  background:#fff;
+  transition:.12s;
+}
+.q-nav-item:hover{ background:#f5f8fd; }
+.q-nav-item.active{
+  border-color:#bfdbfe;
+  background:#eff6ff;
+}
+.q-nav-title{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:6px;
+}
+.q-nav-title .num{
+  font-weight:900;
+  color:var(--blue-main);
+  font-size:12px;
+}
+.q-nav-title .type{
+  font-size:11px;
+  color:var(--muted);
+  font-weight:800;
+}
+.q-nav-text{
+  font-size:12px;
+  color:#111827;
+  line-height:1.6;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.editor-area{ padding:12px; }
+.editor-block{
+  border:1px solid #eef1f5;
+  border-radius:16px;
+  padding:14px;
+  background:#fff;
+}
+.editor-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-bottom:10px;
+}
+.editor-row .title{
+  font-weight:900;
+  color:var(--blue-main);
+  font-size:13px;
+}
+.editor-actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+.badges{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+.badge{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  font-size:12px;
+  padding:6px 10px;
+  border-radius:999px;
+  background:#f3f4f6;
+  border:1px solid #e5e7eb;
+  color:#111827;
+  font-weight:800;
+}
+.badge.primary{ background:#eff6ff; border-color:#bfdbfe; color:#0076ff; }
+.badge.warn{ background:#fff7ed; border-color:#fed7aa; color:#9a3412; }
+.badge.ok{ background:#ecfdf5; border-color:#a7f3d0; color:#065f46; }
+
+.divider{
+  height:1px;
+  background:#eef1f5;
+  margin:14px 0;
+}
+
+@media (max-width:1100px){
+  .workspace{ grid-template-columns: 1fr; }
+  .q-nav{ max-height:260px; }
+}
+@media (max-width:900px){
+  .main{ margin-right:0; padding-top:90px; }
+  .grid-2{ grid-template-columns:1fr; }
+  .builder-grid{ grid-template-columns:1fr; }
+  .options-grid{ grid-template-columns:1fr; }
+}
+</style>
+</head>
+
+<body>
+
+{% include "accounts-templates/trainer-sidebar.html" %}
+{% include "accounts-templates/trainer-topbar.html" %}
+
+<div class="main">
+
+  <div class="page-header">
+    <h2>{% if mode == 'create' %}إنشاء قالب اختبار{% else %}محرر قالب الاختبار{% endif %}</h2>
+    <div class="page-actions">
+      <a class="btn btn-soft" href="{% url 'trainer_exam_templates' %}">رجوع للقوالب</a>
+      <a class="btn btn-soft" href="{% url 'trainer_requests' %}">صفحة الطلبات</a>
+    </div>
+  </div>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="msg {% if message.tags %}{{ message.tags }}{% else %}info{% endif %}">
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="card">
+
+    {% if mode == 'create' %}
+      <div class="section">
+        <h3 class="section-title">بيانات القالب</h3>
+
+        <form method="post" action="" id="createTemplateForm">
+          {% csrf_token %}
+
+          <div class="grid-2">
+            <div>
+              <div class="helper compact">اسم القالب</div>
+              {{ template_form.name }}
+              {% if template_form.name.errors %}
+                <div class="helper" style="color:#b91c1c;">{{ template_form.name.errors }}</div>
+              {% endif %}
+            </div>
+
+            <div>
+              <div class="helper compact">مدة الاختبار (بالدقائق)</div>
+              {{ template_form.duration_minutes }}
+              {% if template_form.duration_minutes.errors %}
+                <div class="helper" style="color:#b91c1c;">{{ template_form.duration_minutes.errors }}</div>
+              {% endif %}
+            </div>
+
+            <div>
+              <div class="helper compact">نسبة النجاح (%)</div>
+              {{ template_form.passing_score_percent }}
+              {% if template_form.passing_score_percent.errors %}
+                <div class="helper" style="color:#b91c1c;">{{ template_form.passing_score_percent.errors }}</div>
+              {% endif %}
+            </div>
+
+           <!-- <div>
+              <div class="helper compact">خيارات</div>
+              <div class="box" style="background:#fff;">
+                <label style="display:flex; gap:10px; align-items:center;">
+                  {{ template_form.shuffle_questions }}
+                  <span>توزيع عشوائي للأسئلة</span>
+                </label>
+                <div style="height:10px;"></div>
+                <label style="display:flex; gap:10px; align-items:center;">
+                  {{ template_form.show_result_after_submit }}
+                  <span>إظهار النتيجة بعد الإنتهاء من الاختبار</span>
+                </label>
+              </div>
+              {% if template_form.shuffle_questions.errors %}
+                <div class="helper" style="color:#b91c1c;">{{ template_form.shuffle_questions.errors }}</div>
+              {% endif %}
+              {% if template_form.show_result_after_submit.errors %}
+                <div class="helper" style="color:#b91c1c;">{{ template_form.show_result_after_submit.errors }}</div>
+              {% endif %}
+            </div>-->
+
+            <!--<div style="grid-column:1 / -1;">
+              <div class="helper compact">تعليمات (اختياري)</div>
+              {{ template_form.instructions }}
+              {% if template_form.instructions.errors %}
+                <div class="helper" style="color:#b91c1c;">{{ template_form.instructions.errors }}</div>
+              {% endif %}
+            </div>-->
+          </div>
+
+          {% if template_form.non_field_errors %}
+            <div class="msg error" style="margin-top:12px;">{{ template_form.non_field_errors }}</div>
+          {% endif %}
+
+          <div class="btn-row">
+            <button class="btn btn-primary" type="submit" id="createTemplateBtn">إنشاء القالب</button>
+          </div>
+        </form>
+      </div>
+    {% endif %}
+
+    
+    <hr class="hr">
+
+    <!-- 2) Workspace -->
+    {% if mode == 'edit' %}
+      {% with t=template|default:template_obj %}
+      <div class="section" style="padding:0;">
+        <div class="workspace">
+          <!-- Right: Editor -->
+          <div class="ws-panel">
+            <div class="ws-topbar">
+              <span>المحرر</span>
+              <small>—</small>
+            </div>
+
+            <div class="editor-area">
+
+              <!-- Toolbar -->
+              <div class="editor-block" id="editorToolbar">
+                <div class="editor-row">
+                  <div class="title">الأسئلة</div>
+                  <div class="editor-actions">
+                    <button class="btn btn-soft" type="button" id="btnAddQuestion">＋ إضافة سؤال</button>
+                    <button class="btn btn-soft" type="button" id="btnExamView">استعرض الأسئلة</button>
+                  </div>
+                </div>
+
+                <div class="builder-grid" style="margin-top:0;">
+                  <div>
+                    <div class="helper compact">نوع السؤال الجديد</div>
+                    <select class="select" id="newQuestionType" aria-label="نوع السؤال الجديد">
+                      <option value="multiple_choice_single" selected>اختيار من متعدد (إجابة واحدة)</option>
+                      <option value="multiple_choice_multi">اختيار متعدد (أكثر من إجابة)</option>
+                      <option value="true_false">صح / خطأ</option>
+                      <option value="short_answer">إجابة قصيرة</option>
+                      <option value="essay">مقالي (تقييم يدوي)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <div class="helper compact">اختر سؤال للتعديل/الحذف</div>
+                    <select class="select" id="existingQuestionSelect" aria-label="اختر سؤال">
+                      <option value="">— اختر —</option>
+                      {% if questions %}
+                        {% for q in questions %}
+                          <option
+                            value="{{ q.id }}"
+                            data-text="{{ q.question_text|default_if_none:''|escape }}"
+                            data-delete-url="{% url 'trainer_exam_question_delete' t.id q.id %}"
+                            data-edit-url="{% url 'trainer_exam_question_edit' t.id q.id %}"
+                          >
+                            {{ forloop.counter|stringformat:"02d" }} — {{ q.question_text|default_if_none:""|truncatechars:60 }}
+                          </option>
+                        {% endfor %}
+                      {% endif %}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="editor-block" id="examViewBlock" style="display:none;">
+                <div class="editor-row">
+                  <div class="title">استعرض الأسئلة</div>
+                </div>
+
+                <div class="q-list">
+                  {% if questions %}
+                    {% for q in questions %}
+                      <div class="q-item">
+                        <div class="q-item-head">
+                          <div class="helper compact">س{{ forloop.counter }} — {{ q.question_type|default:"—" }}</div>
+                          <div class="q-item-actions">
+                            <button type="button" class="btn btn-soft js-show-question" data-qid="{{ q.id }}">عرض</button>
+                            <a class="btn btn-soft" href="{% url 'trainer_exam_question_edit' t.id q.id %}">تعديل</a>
+                          </div>
+                        </div>
+
+                        <div style="margin-top:6px; font-weight:800; color:var(--blue-main); line-height:1.7;">{{ q.question_text }}</div>
+                      </div>
+                    {% endfor %}
+                  {% else %}
+                    <div class="helper">لا توجد أسئلة حالياً.</div>
+                  {% endif %}
+                </div>
+              </div>
+
+              <!-- Add Manual Questions -->
+              <div class="editor-block" id="addQuestionBlock">
+                <div class="editor-row">
+                  <div class="title">إضافة سؤال جديد</div>
+                  <div class="editor-actions">
+                    <span class="badge primary">منشئ الأسئلة</span>
+                  </div>
+                </div>
+
+
+                {% with fs=manual_formset|default:question_formset %}
+                <form method="post" action="" id="manualQuestionsForm">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="add_manual_questions">
+
+                  {{ fs.management_form }}
+
+                  <div class="q-list">
+                    {% for f in fs %}
+                      <div class="q-item js-question-block" data-prefix="{{ f.prefix }}">
+
+                        <input type="hidden" class="js-question-type" name="{{ f.prefix }}-question_type" value="multiple_choice_single">
+                        <input type="hidden" name="{{ f.prefix }}-points" value="1">
+
+                        <div class="builder-grid">
+                          <div class="col-span-2">
+                            <div class="helper">نص السؤال</div>
+                            {{ f.question_text }}
+                            {% if f.errors %}
+                              <div class="helper" style="color:#b91c1c;">{{ f.errors }}</div>
+                            {% endif %}
+                          </div>
+
+                          <!--<div>
+                            <div class="helper">نوع السؤال</div>
+                            <select class="select js-question-type" name="{{ f.prefix }}-question_type">
+                              <option value="multiple_choice_single">اختيار من متعدد (إجابة واحدة)</option>
+                              <option value="multiple_choice_multi">اختيار متعدد (أكثر من إجابة)</option>
+                              <option value="true_false">صح / خطأ</option>
+                              <option value="short_answer">إجابة قصيرة</option>
+                              <option value="essay">مقالي (تقييم يدوي)</option>
+                            </select>
+                          </div>-->
+
+                          <!--<div>
+                            <div class="helper">درجة السؤال</div>
+                            <input class="input" type="number" name="{{ f.prefix }}-points" min="1" value="1">
+                          </div>-->
+                        </div>
+
+                        <div class="options-wrap js-options-area">
+                          <div class="options-grid">
+                            <div class="col-span-2 js-mc-options">
+
+                              <div style="display:grid; gap:10px; margin-top:10px;">
+                                <div class="opt-row">
+                                  <span class="badge">A</span>
+                                  <input class="input" type="text" name="{{ f.prefix }}-option_1" placeholder="الخيار الأول">
+                                </div>
+                                <div class="opt-row">
+                                  <span class="badge">B</span>
+                                  <input class="input" type="text" name="{{ f.prefix }}-option_2" placeholder="الخيار الثاني">
+                                </div>
+                                <div class="opt-row">
+                                  <span class="badge">C</span>
+                                  <input class="input" type="text" name="{{ f.prefix }}-option_3" placeholder="الخيار الثالث (اختياري)">
+                                </div>
+                                <div class="opt-row">
+                                  <span class="badge">D</span>
+                                  <input class="input" type="text" name="{{ f.prefix }}-option_4" placeholder="الخيار الرابع (اختياري)">
+                                </div>
+                              </div>
+
+                            </div>
+
+                            <div class="js-mc-single">
+                              <div class="helper">الإجابة الصحيحة</div>
+                              <select class="select" name="{{ f.prefix }}-correct_option">
+                                <option value="">— اختر —</option>
+                                <option value="1">A</option>
+                                <option value="2">B</option>
+                                <option value="3">C</option>
+                                <option value="4">D</option>
+                              </select>
+                            </div>
+
+                            <div class="js-mc-multi">
+                              <div class="helper">الإجابات الصحيحة (أكثر من إجابة)</div>
+                              <input class="input" type="text" name="{{ f.prefix }}-correct_options" placeholder="مثال: 1,3">
+                            </div>
+
+                            <div class="col-span-2 js-tf-answer">
+                              <div class="helper">الإجابة الصحيحة (صح/خطأ)</div>
+                              <select class="select" name="{{ f.prefix }}-correct_true_false">
+                                <option value="">— اختر —</option>
+                                <option value="true">صح</option>
+                                <option value="false">خطأ</option>
+                              </select>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div class="options-wrap js-short-answer-area" style="margin-top:12px;">
+                          <div class="builder-grid" style="margin-top:0;">
+                            <div class="col-span-2">
+                              <div class="helper">إجابات مقبولة </div>
+                              <input class="input" type="text" name="{{ f.prefix }}-accepted_answers" >
+                            </div>
+                          </div>
+                        </div>
+
+                      </div>
+                    {% endfor %}
+                  </div>
+
+                  <div class="btn-row">
+                    <button class="btn btn-primary" type="submit">حفظ السؤال</button>
+                  </div>
+                </form>
+                {% endwith %}
+              </div>
+
+              <div class="divider"></div>
+
+              <!-- Excel Import -->
+              <div class="editor-block">
+                <div class="title" style="margin-bottom:10px;">استيراد الأسئلة من ملف Excel</div>
+                <div class="editor-actions" style="justify-content:flex-start;">
+                  <a class="btn btn-soft" href="{% url 'trainer_exam_excel_template_download' %}">تحميل قالب Excel</a>
+                  <button class="btn btn-warning" type="button" id="excelImportBtn">استيراد من Excel</button>
+                </div>
+
+                <form method="post" action="" enctype="multipart/form-data" id="excelImportForm" style="display:none;">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="upload_excel_questions">
+
+                  {{ excel_form.excel_file }}
+                </form>
+                {% if excel_form.excel_file.errors %}
+                  <div class="helper" style="color:#b91c1c; margin-top:10px;">{{ excel_form.excel_file.errors }}</div>
+                {% endif %}
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      </div>
+      {% endwith %}
+    {% else %}
+    {% endif %}
+
+  </div>
+
+</div>
+
+<script>
+(function(){
+  const form = document.getElementById('createTemplateForm');
+  const btn  = document.getElementById('createTemplateBtn');
+
+  if(form && btn){
+    btn.addEventListener('click', function(){
+      setTimeout(function(){
+        try { form.submit(); } catch (_) {}
+      }, 0);
+    });
+  }
+
+  function syncQuestionBlock(block){
+    const typeEl = block.querySelector('.js-question-type');
+    const optionsArea = block.querySelector('.js-options-area');
+    const shortArea = block.querySelector('.js-short-answer-area');
+    const mcOptions = block.querySelector('.js-mc-options');
+    const mcSingle = block.querySelector('.js-mc-single');
+    const mcMulti = block.querySelector('.js-mc-multi');
+    const tfAnswer = block.querySelector('.js-tf-answer');
+    if(!typeEl || !optionsArea || !shortArea) return;
+
+    function setEnabled(container, enabled){
+      if(!container) return;
+      container.querySelectorAll('input, select, textarea').forEach(function(el){
+        if(el.type === 'hidden') return;
+        el.disabled = !enabled;
+      });
+    }
+
+    function show(el, on){
+      if(!el) return;
+      el.style.display = on ? '' : 'none';
+      setEnabled(el, on);
+    }
+
+    const t = (typeEl.value || '').toLowerCase();
+    // Default: hide both then enable only what we need
+    show(optionsArea, false);
+    show(shortArea, false);
+    show(mcOptions, false);
+    show(mcSingle, false);
+    show(mcMulti, false);
+    show(tfAnswer, false);
+
+    if(t === 'short_answer'){
+      show(shortArea, true);
+    }else if(t === 'essay'){
+      // Essay: no correct-answer inputs
+    }else if(t === 'true_false'){
+      show(optionsArea, true);
+      show(tfAnswer, true);
+    }else if(t === 'multiple_choice_multi'){
+      show(optionsArea, true);
+      show(mcOptions, true);
+      show(mcMulti, true);
+    }else{
+      // Default: single-choice MCQ
+      show(optionsArea, true);
+      show(mcOptions, true);
+      show(mcSingle, true);
+    }
+  }
+
+  // ====== ✅ الحل: نخفي/نعطّل بلوكات الفورم سِت حتى يضغط المستخدم "إضافة سؤال" ======
+  function toggleBlockEnabled(block, enabled){
+    if(!block) return;
+    const fields = block.querySelectorAll('input, select, textarea');
+    fields.forEach(function(el){
+      if(el.type === 'hidden') return; // نترك hidden شغال
+      el.disabled = !enabled;
+    });
+  }
+
+  function getAllBuilderBlocks(){
+    return Array.from(document.querySelectorAll('#manualQuestionsForm .js-question-block'));
+  }
+
+  function hideAllBuilderBlocks(){
+    getAllBuilderBlocks().forEach(function(block){
+      block.style.display = 'none';
+      toggleBlockEnabled(block, false);
+    });
+  }
+
+  function showNextBuilderBlock(){
+    const blocks = getAllBuilderBlocks();
+    const next = blocks.find(b => b.style.display === 'none');
+    if(!next) return null;
+
+    next.style.display = '';
+    toggleBlockEnabled(next, true);
+
+    const typeEl = next.querySelector('.js-question-type');
+    if(typeEl){
+      typeEl.addEventListener('change', function(){ syncQuestionBlock(next); });
+    }
+    syncQuestionBlock(next);
+
+    return next;
+  }
+
+  function firstVisibleBuilderBlock(){
+    return getAllBuilderBlocks().find(b => b.style.display !== 'none') || null;
+  }
+
+  const selectedText = document.getElementById('selectedQuestionText');
+  const deleteForm = document.getElementById('deleteSelectedForm');
+  const editLink = document.getElementById('editSelectedLink');
+  const deleteBtn = document.getElementById('deleteSelectedBtn');
+  const newQuestionType = document.getElementById('newQuestionType');
+  const existingQuestionSelect = document.getElementById('existingQuestionSelect');
+
+  function applySelection(text, delUrl, editUrl){
+    if(selectedText) selectedText.value = text || '';
+
+    if(deleteForm) deleteForm.setAttribute('action', delUrl || '');
+    if(deleteBtn) deleteBtn.disabled = !delUrl;
+
+    if(editLink){
+      if(editUrl){
+        editLink.setAttribute('href', editUrl);
+        editLink.style.display = 'inline-block';
+      }else{
+        editLink.setAttribute('href', '#');
+        editLink.style.display = 'none';
+      }
+    }
+  }
+
+  function applyNewQuestionType(targetBlock){
+    const block = targetBlock || firstVisibleBuilderBlock() || getAllBuilderBlocks()[0] || null;
+    if(!block || !newQuestionType) return;
+    const typeEl = block.querySelector('.js-question-type');
+    if(!typeEl) return;
+    typeEl.value = newQuestionType.value;
+    syncQuestionBlock(block);
+  }
+
+  if(existingQuestionSelect){
+    existingQuestionSelect.addEventListener('change', function(){
+      const opt = existingQuestionSelect.selectedOptions && existingQuestionSelect.selectedOptions[0];
+      if(!opt){
+        applySelection('', '', '');
+        return;
+      }
+      const text = opt.getAttribute('data-text') || '';
+      const delUrl = opt.getAttribute('data-delete-url') || '';
+      const editUrl = opt.getAttribute('data-edit-url') || '';
+      applySelection(text, delUrl, editUrl);
+    });
+  }
+
+  const btnAddQuestion = document.getElementById('btnAddQuestion');
+  if(btnAddQuestion){
+    btnAddQuestion.addEventListener('click', function(){
+      const addBlock = document.getElementById('addQuestionBlock');
+      if(addBlock) addBlock.style.display = '';
+
+      const shown = showNextBuilderBlock();
+      if(shown) applyNewQuestionType(shown);
+
+      if(addBlock) addBlock.scrollIntoView({behavior:'smooth', block:'start'});
+
+      const firstField = shown
+        ? (shown.querySelector('textarea, input[type="text"], input[type="number"], select') || null)
+        : null;
+
+      setTimeout(function(){ if(firstField) firstField.focus(); }, 200);
+    });
+  }
+
+  const btnExamView = document.getElementById('btnExamView');
+  const examViewBlock = document.getElementById('examViewBlock');
+  if(btnExamView && examViewBlock){
+    btnExamView.addEventListener('click', function(){
+      const hidden = (examViewBlock.style.display === 'none') || (window.getComputedStyle(examViewBlock).display === 'none');
+      examViewBlock.style.display = hidden ? '' : 'none';
+      if(hidden){
+        examViewBlock.scrollIntoView({behavior:'smooth', block:'start'});
+      }
+    });
+  }
+
+  if(examViewBlock){
+    examViewBlock.addEventListener('click', function(e){
+      const btn = e.target.closest('.js-show-question');
+      if(!btn) return;
+      const qid = btn.getAttribute('data-qid') || '';
+      if(!qid || !existingQuestionSelect) return;
+
+      existingQuestionSelect.value = qid;
+      existingQuestionSelect.dispatchEvent(new Event('change'));
+
+      const toolbar = document.getElementById('editorToolbar');
+      if(toolbar) toolbar.scrollIntoView({behavior:'smooth', block:'start'});
+    });
+  }
+
+  if(newQuestionType){
+    newQuestionType.addEventListener('change', function(){
+      applyNewQuestionType(firstVisibleBuilderBlock());
+    });
+  }
+
+  // ====== ✅ تهيئة الصفحة: لا نعرض ولا نختار أي سؤال تلقائيًا ======
+  const addQuestionBlock = document.getElementById('addQuestionBlock');
+  if(addQuestionBlock) addQuestionBlock.style.display = 'none';
+
+  hideAllBuilderBlocks();
+  applySelection('', '', '');
+
+  if(existingQuestionSelect){
+    existingQuestionSelect.selectedIndex = 0;
+  }
+
+  const excelForm = document.getElementById('excelImportForm');
+  const excelBtn = document.getElementById('excelImportBtn');
+  if(excelForm && excelBtn){
+    const excelInput = excelForm.querySelector('input[name="excel_file"]');
+
+    excelBtn.addEventListener('click', function(){
+      if(!excelInput) return;
+      if(excelInput.files && excelInput.files.length > 0){
+        excelForm.submit();
+        return;
+      }
+      excelInput.click();
+    });
+
+    if(excelInput){
+      excelInput.addEventListener('change', function(){
+        if(excelInput.files && excelInput.files.length > 0){
+          excelForm.submit();
+        }
+      });
+    }
+  }
+
+})();
+</script>
+
+</body>
+</html>

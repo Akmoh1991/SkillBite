@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تصحيح الاختبارات</title>
+
+<style>
+@import url('/static/branding/branding.css');
+:root{
+  --blue-main:#0076ff;
+  --bg:#f7f9fc;
+  --card:#ffffff;
+  --text:#1f2937;
+  --muted:#5f6f85;
+  --sidebar-w:260px;
+  --topbar-h:70px;
+}
+
+*{ box-sizing:border-box; }
+body{
+  margin:0;
+  font-family: "SE", "Segoe UI", Tahoma, Arial, sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+
+.main{
+  margin-right:var(--sidebar-w);
+  padding: calc(var(--topbar-h) + 24px) 28px 40px;
+  min-height:100vh;
+}
+
+.page-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  flex-wrap:wrap;
+  margin-bottom:18px;
+}
+
+.page-header h2{
+  margin:0;
+  font-size:18px;
+  color:var(--blue-main);
+}
+
+.layout{
+  display:grid;
+  grid-template-columns: 1fr;
+  gap:16px;
+}
+
+.card{
+  background:var(--card);
+  border-radius:16px;
+  box-shadow:0 14px 34px rgba(15,45,90,.12);
+  overflow:hidden;
+}
+
+.section{
+  padding:18px 22px;
+  border-top:1px solid #eef1f5;
+}
+.section:first-child{ border-top:none; }
+
+.section-title{
+  margin:0 0 10px;
+  font-size:14px;
+  color:var(--muted);
+  font-weight:700;
+}
+
+.msg{
+  border-radius:14px;
+  padding:12px 14px;
+  margin-bottom:12px;
+  font-size:13px;
+}
+.msg.success{ background:#ecfdf5; border:1px solid #a7f3d0; }
+.msg.error{ background:#fef2f2; border:1px solid #fecaca; }
+.msg.info{ background:#eff6ff; border:1px solid #bfdbfe; }
+
+.list{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+.list a{
+  display:block;
+  text-decoration:none;
+  border:1px solid #e5eaf2;
+  border-radius:12px;
+  padding:11px 12px;
+  color:inherit;
+}
+
+.list a.active{
+  border-color:#bfd3f4;
+  background:#f3f8ff;
+}
+
+.meta{
+  margin-top:4px;
+  color:var(--muted);
+  font-size:12px;
+}
+
+.info-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px 18px;
+}
+
+.info-item{
+  background:#f5f8fd;
+  border:1px solid #eef1f5;
+  border-radius:14px;
+  padding:12px 14px;
+}
+
+.info-label{
+  font-size:12px;
+  color:var(--muted);
+  margin-bottom:6px;
+}
+
+.info-value{
+  font-size:14px;
+  font-weight:700;
+  color:var(--blue-main);
+}
+
+.input{
+  width:100%;
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid #d1d5db;
+  outline:none;
+  background:#fff;
+  font-family: "SE", "Segoe UI", Tahoma, Arial, sans-serif;
+}
+
+.btn{
+  display:inline-block;
+  padding:10px 14px;
+  border-radius:12px;
+  border:none;
+  cursor:pointer;
+  font-weight:800;
+  font-size:13px;
+  text-decoration:none;
+}
+
+.btn-primary{ background:#0076ff; color:#fff; }
+.btn-soft{ background:#e9eef6; color:var(--blue-main); }
+
+.picker-shell{
+  width:min(760px, 100%);
+  display:flex;
+  align-items:center;
+  gap:10px;
+  background:#fff;
+  border:1px solid #e1e7ef;
+  border-radius:14px;
+  padding:10px;
+}
+
+.picker-native{
+  position:absolute;
+  width:1px;
+  height:1px;
+  padding:0;
+  margin:-1px;
+  overflow:hidden;
+  clip:rect(0, 0, 0, 0);
+  white-space:nowrap;
+  border:0;
+}
+
+.picker-choose{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  height:40px;
+  min-width:110px;
+  padding:0 14px;
+  border-radius:12px;
+  background:#e9eef6;
+  color:#0b52c0;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.picker-name{
+  min-width:0;
+  flex:1;
+  color:#64748b;
+  font-size:13px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.helper{
+  color:var(--muted);
+  font-size:13px;
+}
+
+.requests-table-wrap{
+  overflow:auto;
+  border:1px solid #e6ebf2;
+  border-radius:14px;
+}
+
+.requests-table{
+  width:100%;
+  border-collapse:collapse;
+  min-width:920px;
+}
+
+.requests-table th,
+.requests-table td{
+  padding:11px 10px;
+  border-bottom:1px solid #eef1f5;
+  text-align:right;
+  vertical-align:middle;
+  font-size:13px;
+}
+
+.requests-table th{
+  background:#f7f9fc;
+  color:#4b5d78;
+  font-weight:800;
+}
+
+.requests-table tr:last-child td{
+  border-bottom:none;
+}
+
+.requests-table tr.clickable{
+  cursor:pointer;
+}
+
+.requests-table tr.clickable:hover{
+  background:#f9fbff;
+}
+
+.status-pill{
+  display:inline-block;
+  padding:6px 14px;
+  border-radius:999px;
+  background:#d9f6ea;
+  color:#046c4e;
+  font-size:13px;
+  font-weight:800;
+}
+
+.program-link{
+  color:var(--blue-main);
+  text-decoration:none;
+  font-weight:800;
+}
+
+.program-link:hover{
+  text-decoration:underline;
+}
+
+.scores-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(220px, 1fr));
+  gap:10px;
+}
+
+.pdf-visible-link{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:40px;
+  padding:10px 16px;
+  border-radius:12px;
+  background:#e9eef6;
+  color:#0b52c0;
+  font-weight:800;
+  text-decoration:none;
+}
+
+.pdf-visible-link:hover{
+  background:#dfe7f4;
+}
+
+@media (max-width:900px){
+  .main{
+    margin-right:0;
+    padding-top:90px;
+  }
+  .layout{
+    grid-template-columns:1fr;
+  }
+  .info-grid{
+    grid-template-columns:1fr;
+  }
+}
+</style>
+</head>
+<body>
+{% include "accounts-templates/trainer-sidebar.html" %}
+{% include "accounts-templates/trainer-topbar.html" %}
+
+<div class="main">
+  <div class="page-header">
+    <h2>تصحيح الاختبارات</h2>
+    {% if selected_enrollment %}
+      <a class="btn btn-soft" href="{% url 'trainer_exam_grading_view' %}">رجوع لقائمة الطلبات</a>
+    {% else %}
+      <a class="btn btn-soft" href="{% url 'trainer_requests' %}">رجوع لصفحة الطلبات</a>
+    {% endif %}
+  </div>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="msg {% if message.tags %}{{ message.tags }}{% endif %}">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="layout">
+    {% if selected_enrollment %}
+      <div class="card">
+        <div class="section">
+          <div class="section-title" style="margin:0;">إدخال التقييم الخارجي (عملي/مشروع)</div>
+        </div>
+
+        <div class="section">
+          <div class="info-grid" style="margin-bottom:12px;">
+            <div class="info-item">
+              <div class="info-label">رقم الطلب</div>
+              <div class="info-value">#{{ selected_enrollment.id }}</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">المقاول</div>
+              <div class="info-value">{{ selected_enrollment.contractor.username }}</div>
+            </div>
+          </div>
+
+          {% if selected_parts_scores|length > 1 %}
+            <div class="section-title" style="margin:0 0 10px;">درجات أجزاء الاختبار</div>
+            <div class="scores-grid" style="margin-bottom:12px;">
+              {% for item in selected_parts_scores %}
+                <div class="info-item">
+                  <div class="info-label">{{ item.part_label }}</div>
+                  <div class="info-value">{{ item.score_text }}%</div>
+                  <div class="helper" style="margin-top:6px;">الحالة: {{ item.pass_text }}</div>
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+
+          {% if selected_assessment_pdf_url %}
+            <div class="info-item" style="margin-bottom:12px;">
+              <div class="info-label">ملف التقييم</div>
+              <div class="info-value">
+                <a class="pdf-visible-link" href="{{ selected_assessment_pdf_url }}" target="_blank" rel="noopener">عرض ملف التقييم PDF</a>
+              </div>
+            </div>
+          {% endif %}
+
+          {% if selected_can_enter_external_assessment %}
+            <form method="post" action="{% url 'trainer_external_assessment_submit_action' selected_enrollment.id %}" enctype="multipart/form-data">
+              {% csrf_token %}
+
+              {% if 'PRACTICAL' in selected_required_exam_parts and 'PROJECT' in selected_required_exam_parts %}
+                <div class="info-grid">
+                  <div class="info-item">
+                    <div class="info-label">درجة الجزء العملي (من 100%)</div>
+                    <div class="info-value">
+                      <input class="input" type="number" name="practical_grade_percent" min="0" max="100" required>
+                    </div>
+                  </div>
+                  <div class="info-item">
+                    <div class="info-label">درجة جزء المشروع (من 100%)</div>
+                    <div class="info-value">
+                      <input class="input" type="number" name="project_grade_percent" min="0" max="100" required>
+                    </div>
+                  </div>
+                </div>
+
+                <div style="margin-top:12px;" class="info-item">
+                  <div class="info-label">رفع ملف PDF للتقييم</div>
+                  <div class="info-value">
+                    <div class="picker-shell">
+                      <input id="trainer_assessment_pdf" class="picker-native" type="file" name="pdf_file" accept="application/pdf">
+                      <label for="trainer_assessment_pdf" class="picker-choose">اختيار ملف</label>
+                      <div id="trainerAssessmentPdfName" class="picker-name">لا يوجد ملف حالياً</div>
+                    </div>
+                  </div>
+                </div>
+              {% else %}
+                <div class="info-grid">
+                  <div class="info-item">
+                    <div class="info-label">نوع الجزء</div>
+                    <div class="info-value">
+                      <select class="input" name="part_type" required>
+                        {% if 'PRACTICAL' in selected_required_exam_parts %}
+                          <option value="PRACTICAL">عملي</option>
+                        {% endif %}
+                        {% if 'PROJECT' in selected_required_exam_parts %}
+                          <option value="PROJECT">مشروع</option>
+                        {% endif %}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="info-item">
+                    <div class="info-label">الدرجة (من 100%)</div>
+                    <div class="info-value">
+                      <input class="input" type="number" name="grade_percent" min="0" max="100" required>
+                    </div>
+                  </div>
+                </div>
+
+                <div style="margin-top:12px;" class="info-item">
+                  <div class="info-label">رفع ملف PDF للتقييم</div>
+                  <div class="info-value">
+                    <div class="picker-shell">
+                      <input id="trainer_assessment_pdf" class="picker-native" type="file" name="pdf_file" accept="application/pdf">
+                      <label for="trainer_assessment_pdf" class="picker-choose">اختيار ملف</label>
+                      <div id="trainerAssessmentPdfName" class="picker-name">لا يوجد ملف حالياً</div>
+                    </div>
+                  </div>
+                </div>
+              {% endif %}
+
+              <div style="margin-top:12px;">
+                <button class="btn btn-primary" type="submit">حفظ التقييم</button>
+              </div>
+            </form>
+          {% else %}
+          {% endif %}
+        </div>
+
+      </div>
+    {% else %}
+      <div class="card">
+        <div class="section">
+          <div class="section-title">طلبات متاحة للتصحيح</div>
+          {% if grade_requests %}
+            <div class="requests-table-wrap">
+              <table class="requests-table">
+                <thead>
+                  <tr>
+                    <th>البرنامج</th>
+                    <th>المقاول</th>
+                    <th>التاريخ</th>
+                    <th>النوع</th>
+                    <th>الحالة</th>
+                    <th>الإجراء</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for row in grade_requests %}
+                    <tr class="clickable" onclick="window.location.href='{% url 'trainer_exam_grading_view' %}?request_id={{ row.enrollment.id }}'">
+                      <td><a class="program-link" href="{% url 'trainer_exam_grading_view' %}?request_id={{ row.enrollment.id }}">{{ row.program_name }}</a></td>
+                      <td>{{ row.enrollment.contractor.username }}</td>
+                      <td>{{ row.enrollment.created_at|date:"Y-m-d" }}</td>
+                      <td>{{ row.enrollment.program.get_program_type_display }}</td>
+                      <td><span class="status-pill">{{ row.status_display }}</span></td>
+                      <td><a class="btn btn-primary" href="{% url 'trainer_exam_grading_view' %}?request_id={{ row.enrollment.id }}">إدخال تقييم</a></td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <div class="helper">لا توجد طلبات متاحة للتصحيح حالياً.</div>
+          {% endif %}
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+(function(){
+  function bindPicker(inputId, nameId){
+    const input = document.getElementById(inputId);
+    const nameBox = document.getElementById(nameId);
+    if(!input || !nameBox) return;
+    input.addEventListener('change', function(){
+      const fileName = input.files && input.files.length ? input.files[0].name : 'لا يوجد ملف حالياً';
+      nameBox.textContent = fileName;
+    });
+  }
+
+  bindPicker('trainer_assessment_pdf', 'trainerAssessmentPdfName');
+})();
+</script>
+
+</body>
+</html>

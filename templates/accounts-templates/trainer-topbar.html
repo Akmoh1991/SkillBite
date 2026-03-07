@@ -1,0 +1,56 @@
+<style>
+@import url('/static/branding/branding.css');
+.topbar{
+  position:fixed;
+  top:0;
+  right:var(--sidebar-w);
+  left:0;
+  height:var(--topbar-h);
+  background:#ffffff;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 28px;
+  box-shadow:0 8px 24px rgba(15,45,90,.08);
+  border-bottom:1px solid #e8edf5;
+  z-index:1200;
+}
+
+.topbar .user{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-size:14px;
+  color:var(--text);
+}
+
+.topbar .user strong{
+  font-weight:700;
+}
+
+.topbar .actions{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  color:var(--muted);
+  font-size:14px;
+}
+
+/* ===== Responsive ===== */
+@media (max-width:900px){
+  .topbar{
+    right:0; /* لأن الشريط الجانبي مخفي */
+  }
+}
+</style>
+
+<header class="topbar">
+
+  <!-- User -->
+  <div class="user">
+    <strong><span>مرحباً بك {{ request.user.username }} 👋</span></strong>
+  </div>
+
+  
+
+</header>

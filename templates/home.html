@@ -1,0 +1,406 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>نظام الشهادات الحرفية</title>
+
+<style>
+@import url('/static/branding/branding.css');
+:root {
+  --blue-dark: #0027b9;
+  --blue-main: #0076ff;
+  --orange: #0076ff;
+  --text-dark: #1a1a1a;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: "SE", "Segoe UI", Tahoma, Arial, sans-serif;
+  background: #fff;
+  color: var(--text-dark);
+}
+
+/* ================= HERO ================= */
+.hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  color: #fff;
+}
+
+.hero video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 1;
+}
+
+.hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    rgba(10, 37, 64, 0.65),
+    rgba(10, 37, 64, 0.85)
+  );
+  z-index: 2;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 3;
+  max-width: 620px;
+  padding: 0 60px;
+  margin-top: 95px;
+}
+
+.hero h1 {
+  font-size: 42px;
+  margin-bottom: 20px;
+}
+
+.hero p {
+  font-size: 16px;
+  line-height: 1.9;
+}
+
+.hero button {
+  margin-top: 30px;
+  padding: 14px 36px;
+  background: var(--orange);
+  border: none;
+  border-radius: 30px;
+  color: #fff;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+/* ================= COMMON ================= */
+section {
+  padding: 90px 70px;
+}
+
+.section-title {
+  text-align: center;
+  margin-bottom: 45px;
+}
+
+.section-title small {
+  display: block;
+  color: #777;
+  margin-bottom: 10px;
+}
+
+.section-title h2 {
+  font-size: 30px;
+  margin: 0;
+}
+
+/* ================= CERTIFICATES & COURSES ================= */
+.discover-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+}
+
+.discover-card {
+  position: relative;
+  height: 420px;
+  border-radius: 18px;
+  overflow: hidden;
+  color: #fff;
+}
+
+.discover-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.discover-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(0,0,0,.75),
+    rgba(0,0,0,.15)
+  );
+}
+
+.discover-content {
+  position: absolute;
+  bottom: 25px;
+  right: 25px;
+  left: 25px;
+  z-index: 2;
+}
+
+.discover-content h4 {
+  margin: 0 0 8px;
+  font-size: 16px;
+}
+
+.discover-content p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* ================= FEATURES ================= */
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px,1fr));
+  gap: 30px;
+}
+
+.feature {
+  padding: 30px;
+  border-right: 4px solid var(--orange);
+  background: #f9fbfd;
+}
+
+.feature h3 {
+  color: var(--blue-main);
+  margin-bottom: 10px;
+}
+
+/* ================= STATS ================= */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px,1fr));
+  gap: 30px;
+  text-align: center;
+}
+
+.stat {
+  background: #fff;
+  padding: 35px;
+  border-radius: 10px;
+  box-shadow: 0 10px 25px rgba(0,0,0,.08);
+}
+
+.stat h2 {
+  color: var(--blue-main);
+  font-size: 34px;
+  margin-bottom: 8px;
+}
+
+/* ================= MAGAZINE ================= */
+.magazine-layout {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 30px;
+}
+
+.magazine-main,
+.magazine-card {
+  background: #f5f5f5;
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.magazine-main img {
+  width: 100%;
+  height: 360px;
+  object-fit: cover;
+}
+
+.magazine-main .content,
+.magazine-card .content {
+  padding: 22px;
+}
+
+.magazine-main h3 {
+  margin: 15px 0;
+  font-size: 22px;
+}
+
+.magazine-side {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.magazine-card img {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+}
+
+.magazine-card h4 {
+  margin: 0 0 10px;
+  font-size: 15px;
+}
+
+.magazine-layout a {
+  color: var(--blue-main);
+  text-decoration: none;
+  font-size: 14px;
+}
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 1100px) {
+  .discover-grid { grid-template-columns: repeat(2, 1fr); }
+  .magazine-layout { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 900px) {
+  .hero-content{
+    padding: 0 28px;
+    margin-top: 84px;
+    max-width: 680px;
+  }
+  .hero h1{ font-size: 34px; line-height: 1.25; }
+}
+
+@media (max-width: 600px) {
+  section { padding: 60px 20px; }
+  .discover-grid { grid-template-columns: 1fr; }
+
+  .hero{
+    min-height: 100vh;
+    align-items: flex-start;
+  }
+  .hero-content{
+    padding: 0 18px;
+    margin-top: 120px;
+    max-width: 100%;
+  }
+  .hero h1{ font-size: 28px; margin-bottom: 14px; }
+  .hero p{ font-size: 14px; }
+  .hero button{
+    width: 100%;
+    max-width: 340px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<!-- ===== HEADER ===== -->
+{% include "header.html" %}
+
+<!-- HERO -->
+<section class="hero">
+  <video autoplay muted loop playsinline preload="auto">
+    <!-- ✅ الحل النهائي: الفيديو من static -->
+    <source src="{% static 'media/video.mp4' %}" type="video/mp4">
+  </video>
+
+  <div class="hero-content">
+    <h1>نظام الشهادات الحرفية</h1>
+    <p>
+       نظام تدريب و تأهيل مقاولي الشركة السعودية للكهرباء يسعى لرفع مستوى السلامة وجودة تنفيذ الأعمال
+    </p>
+    <button>اكتشف البرامج</button>
+  </div>
+</section>
+
+<!-- 1️⃣ CERTIFICATES & COURSES -->
+<section>
+  <div class="section-title">
+    <small>برامجنا التدريبية</small>
+    <h2>الإختبارات و الدورات</h2>
+  </div>
+
+  <div class="discover-grid">
+    <!-- ✅ الحل النهائي: الصور من static بدل /media -->
+    <div class="discover-card">
+      <img src="{% static 'media/1.jpg' %}" alt="الشهادات">
+      <div class="discover-content"><h4>إختبار الطاقة الشمسية</h4><p>اعتماد مهني موثوق</p></div>
+    </div>
+
+    <div class="discover-card">
+      <img src="{% static 'media/2.jpg' %}" alt="الدورات">
+      <div class="discover-content"><h4>إختبار التأهيل الفني</h4><p>برامج تدريبية متخصصة</p></div>
+    </div>
+
+    <div class="discover-card">
+      <img src="{% static 'media/3.jpg' %}" alt="التأهيل">
+      <div class="discover-content"><h4>الدورات الحضورية</h4><p>رفع الجاهزية المهنية</p></div>
+    </div>
+ 
+    <div class="discover-card">
+      <img src="{% static 'media/4.jpg' %}" alt="المسارات">
+      <div class="discover-content"><h4>الدورات الإلكترونية</h4><p>تطوير مهني مستدام</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 2️⃣ FEATURES -->
+<section>
+  <div class="section-title">
+    <h2>مميزات النظام</h2>
+  </div>
+
+  <div class="features-grid">
+    <div class="feature"><h3>تدريب متخصص</h3><p>محتوى احترافي وفق المعايير.</p></div>
+    <div class="feature"><h3>اختبارات رقمية</h3><p>تقييم دقيق وشفاف.</p></div>
+    <div class="feature"><h3>شهادات معتمدة</h3><p>قابلة للتحقق والاعتماد.</p></div>
+  </div>
+</section>
+
+<!-- 3️⃣ STATS 
+<section>
+  <div class="section-title">
+    <h2>إحصائيات</h2>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><h2>120+</h2><p>برنامج تدريبي</p></div>
+    <div class="stat"><h2>45K</h2><p>مقاول معتمد</p></div>
+    <div class="stat"><h2>98%</h2><p>معدل اجتياز</p></div>
+  </div>
+</section>
+-->
+
+<!-- 4️⃣ MAGAZINE -->
+<section>
+  <div class="section-title">
+    <h2>أحدث الدورات</h2>
+  </div>
+
+  <div class="magazine-layout">
+    <div class="magazine-main">
+      <img src="{% static 'media/6.jpg' %}" alt="أحدث الدورات">
+      <div class="content">
+        <h3>يعملون بإتقان في شتى أنحاء المملكة</h3>
+        <a href="#">اقرأ المزيد ←</a>
+      </div>
+    </div>
+
+    <div class="magazine-side">
+      <div class="magazine-card">
+        <img src="{% static 'media/7.jpg' %}" alt="برنامج يدعم نمو المنشآت">
+        <div class="content">
+          <h4>برنامج يدعم نمو المنشآت</h4>
+          <a href="#">اقرأ المزيد ←</a>
+        </div>
+      </div>
+
+      <div class="magazine-card">
+        <img src="{% static 'media/5.jpg' %}" alt="إرث الشركة السعودية الكهرباء">
+        <div class="content">
+          <h4>إرث الشركة السعودية للكهرباء  </h4>
+          <a href="#">اقرأ المزيد ←</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+{% include "footer.html" %}
+
+</body>
+</html>

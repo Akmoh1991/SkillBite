@@ -1,0 +1,306 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>إنشاء حساب</title>
+
+    <style>
+@import url('/static/branding/branding.css');
+        body {
+            margin: 0;
+            font-family: "SE", "Segoe UI", Tahoma, Arial, sans-serif;
+            background: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 24px 16px;
+            box-sizing: border-box;
+        }
+
+        .register-container {
+            background: #ffffff;
+            width: 100%;
+            max-width: 480px;
+            padding: 40px 32px;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            margin: 24px 0;
+        }
+
+        @media (max-height: 720px) {
+            body {
+                align-items: flex-start;
+            }
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .logo img {
+            height: 74px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 32px;
+            color: #0027b9;
+            font-size: 26px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 14px;
+            color: #333;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 10px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+            transition: border 0.3s, box-shadow 0.3s;
+            background: #fff;
+            box-sizing: border-box;
+            min-height: 46px;
+            line-height: 1.4;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #0076ff;
+            box-shadow: 0 0 0 3px rgba(0,118,255,0.20);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            background: #0076ff;
+            color: #fff;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.2s;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            background: #005fce;
+            transform: translateY(-1px);
+        }
+
+        .messages {
+            margin-bottom: 20px;
+        }
+
+        .messages p {
+            background: #e7f7ee;
+            color: #0f5132;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .messages p.error {
+            background: #fff1f2;
+            color: #9f1239;
+        }
+
+        .messages p.warning {
+            background: #fff7ed;
+            color: #9a3412;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 24px;
+            font-size: 14px;
+        }
+
+        .footer a {
+            color: #0076ff;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+<div class="register-container">
+
+    <div class="logo">
+        <img src="/static/SEC_logo.svg" alt="Logo">
+    </div>
+
+    <h1>إنشاء حساب جديد</h1>
+
+    <div style="display:flex; gap:10px; margin-bottom:18px;">
+        <button type="button" id="tab-individual" class="btn" style="width:auto; flex:1; padding:12px; border-radius:12px; background:#e9eef6; color:#0076ff;">
+            أفراد
+        </button>
+        <button type="button" id="tab-company" class="btn" style="width:auto; flex:1; padding:12px; border-radius:12px; background:#e9eef6; color:#0076ff;">
+            شركات
+        </button>
+    </div>
+
+    <div id="tab-hint" style="margin:-6px 0 18px; font-size:13px; color:#6b7280; text-align:center; font-weight:600;"></div>
+
+    {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+                <p class="{{ message.tags }}">{{ message }}</p>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+        {% if form.non_field_errors %}
+            <div class="messages">
+                {% for err in form.non_field_errors %}
+                    <p style="background:#fff1f2; color:#9f1239;">{{ err }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+        <input type="hidden" id="role-input" name="role" value="{{ default_role|default:'contractor' }}">
+
+        <div class="form-group">
+            <label>اسم المستخدم</label>
+            {{ form.username }}
+                        {% if form.username.errors %}
+                            <div style="margin-top:6px; color:#9f1239; font-size:13px;">{{ form.username.errors|striptags }}</div>
+                        {% endif %}
+        </div>
+
+                <div class="form-group">
+                        <label>البريد الإلكتروني </label>
+                        {{ form.email }}
+                        {% if form.email.errors %}
+                            <div style="margin-top:6px; color:#9f1239; font-size:13px;">{{ form.email.errors|striptags }}</div>
+                        {% endif %}
+                </div>
+
+        <div class="form-group">
+            <label>Full Name (English)</label>
+            {{ form.full_name_en }}
+                        {% if form.full_name_en.errors %}
+                            <div style="margin-top:6px; color:#9f1239; font-size:13px;">{{ form.full_name_en.errors|striptags }}</div>
+                        {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label>الاسم الكامل (بالعربية)</label>
+            {{ form.full_name_ar }}
+                        {% if form.full_name_ar.errors %}
+                            <div style="margin-top:6px; color:#9f1239; font-size:13px;">{{ form.full_name_ar.errors|striptags }}</div>
+                        {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label>كلمة المرور</label>
+            {{ form.password }}
+                        {% if form.password.errors %}
+                            <div style="margin-top:6px; color:#9f1239; font-size:13px;">{{ form.password.errors|striptags }}</div>
+                        {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label>اسم الشركة</label>
+            {{ form.company_name }}
+                        {% if form.company_name.errors %}
+                            <div style="margin-top:6px; color:#9f1239; font-size:13px;">{{ form.company_name.errors|striptags }}</div>
+                        {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label>SEC Business line</label>
+            {{ form.sec_business_line }}
+                        {% if form.sec_business_line.errors %}
+                            <div style="margin-top:6px; color:#9f1239; font-size:13px;">{{ form.sec_business_line.errors|striptags }}</div>
+                        {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label>رقم الهوية</label>
+            {{ form.id_number }}
+                        {% if form.id_number.errors %}
+                            <div style="margin-top:6px; color:#9f1239; font-size:13px;">{{ form.id_number.errors|striptags }}</div>
+                        {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label>المنطقة</label>
+            {{ form.region }}
+                        {% if form.region.errors %}
+                            <div style="margin-top:6px; color:#9f1239; font-size:13px;">{{ form.region.errors|striptags }}</div>
+                        {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label>رقم الجوال</label>
+            {{ form.phone_number }}
+                        {% if form.phone_number.errors %}
+                            <div style="margin-top:6px; color:#9f1239; font-size:13px;">{{ form.phone_number.errors|striptags }}</div>
+                        {% endif %}
+        </div>
+
+        <button type="submit" class="btn">إنشاء الحساب</button>
+    </form>
+
+    <div class="footer">
+        لديك حساب؟
+        <a href="{% url 'login' %}">تسجيل الدخول</a>
+    </div>
+
+</div>
+
+<script>
+    (function(){
+        var roleInput = document.getElementById('role-input');
+        var tabIndividual = document.getElementById('tab-individual');
+        var tabCompany = document.getElementById('tab-company');
+        var hint = document.getElementById('tab-hint');
+
+        function setActive(which){
+            var isCompany = which === 'company';
+            roleInput.value = isCompany ? 'coordinator' : 'contractor';
+
+            tabIndividual.style.background = isCompany ? '#e9eef6' : '#0076ff';
+            tabIndividual.style.color = isCompany ? '#0076ff' : '#fff';
+
+            tabCompany.style.background = isCompany ? '#0076ff' : '#e9eef6';
+            tabCompany.style.color = isCompany ? '#fff' : '#0076ff';
+
+            hint.textContent = isCompany
+                  ? 'سيتم إنشاء حساب منسق تدريب (للشركات)'
+                 : 'سيتم إنشاء حساب مقاول (للأفراد)';
+        }
+
+        tabIndividual.addEventListener('click', function(){ setActive('individual'); });
+        tabCompany.addEventListener('click', function(){ setActive('company'); });
+
+        // Initial
+        var initialRole = (roleInput.value || 'contractor').toLowerCase();
+        setActive(initialRole === 'coordinator' ? 'company' : 'individual');
+    })();
+</script>
+
+</body>
+</html>

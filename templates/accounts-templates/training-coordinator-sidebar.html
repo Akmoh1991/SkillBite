@@ -1,0 +1,138 @@
+<style>
+@import url('/static/branding/branding.css');
+:root{
+  --blue-dark:#0027b9;
+  --blue-main:#0076ff;
+  --orange:#0076ff;
+  --sidebar-w:260px;
+}
+
+.sidebar{
+  position:fixed;
+  top:0;
+  right:0;
+  width:var(--sidebar-w);
+  height:100vh;
+  background:linear-gradient(180deg, #001F5E 0%, #0080FF 100%);
+  color:#fff;
+  padding:25px 20px;
+  z-index:1100;
+}
+
+.sidebar .logo{
+  text-align:center;
+  margin-bottom:28px;
+}
+
+.sidebar .logo img{
+  width: 124px;
+  height:auto;
+  display:inline-block;
+}
+
+.sidebar ul{
+  list-style:none;
+  padding:0;
+  margin:0;
+}
+
+.sidebar li{
+  margin-bottom:10px;
+}
+
+.sidebar a{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:12px 14px;
+  color:#fff;
+  font-weight:600;
+  text-decoration:none;
+  font-size:14px;
+  border-radius:12px;
+  opacity:.94;
+  border:1px solid transparent;
+  transition:background .2s ease, opacity .2s ease, border-color .2s ease, transform .2s ease;
+}
+
+.sidebar a:hover{
+  background:rgba(255,255,255,.12);
+  border-color:rgba(255,255,255,.2);
+  opacity:1;
+  transform:translateX(-1px);
+}
+
+.sidebar a.active{
+  background:rgba(255,255,255,.20);
+  border-color:rgba(255,255,255,.24);
+  box-shadow:inset 3px 0 0 rgba(255,255,255,.9);
+  opacity:1;
+}
+
+.sidebar .logout{
+  position:absolute;
+  bottom:22px;
+  right:20px;
+  left:20px;
+}
+
+.sidebar .logout a{
+  justify-content:center;
+  background:#ffffff;
+  color:#003b9a;
+  font-weight:800;
+  border:1px solid rgba(255,255,255,.9);
+  box-shadow:0 8px 18px rgba(0, 25, 84, .28);
+}
+
+.sidebar .logout a:hover{
+  background:#eaf3ff;
+  color:#002f86;
+  border-color:#ffffff;
+}
+
+@media (max-width:900px){
+  .sidebar{ display:none; }
+}
+</style>
+
+<aside class="sidebar">
+  <div class="logo">
+    <img src="/static/SEC_logo.svg" alt="SEC">
+  </div>
+
+  <ul>
+<li>
+      <a href="{% url 'training_coordinator_requests' %}"
+         class="{% if request.resolver_match.url_name == 'training_coordinator_requests' or request.resolver_match.url_name == 'training_coordinator_request_detail' %}active{% endif %}">
+        طلبات التدريب
+      </a>
+    </li>
+
+    <li>
+      <a href="{% url 'training:program_categories' %}"
+         class="{% if request.resolver_match.url_name == 'program_categories' or request.resolver_match.url_name == 'programs_list' %}active{% endif %}">
+        البرامج التدريبية
+      </a>
+    </li>
+
+    <li>
+      <a href="{% url 'training_coordinator_contractors_list' %}"
+         class="{% if request.resolver_match.url_name == 'training_coordinator_contractors_list' or request.resolver_match.url_name == 'training_coordinator_contractor_documents' %}active{% endif %}">
+       قائمة المقاولين المسجلين
+      </a>
+    </li>
+
+    <li>
+      <a href="{% url 'training_coordinator_register_contractor' %}"
+         class="{% if request.resolver_match.url_name == 'training_coordinator_register_contractor' %}active{% endif %}">
+        تسجيل مقاول جديد
+      </a>
+    </li>
+    
+  </ul>
+
+  <div class="logout">
+    <a href="{% url 'logout' %}">تسجيل الخروج</a>
+  </div>
+</aside>

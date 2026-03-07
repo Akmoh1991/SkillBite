@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>متابعة الطلبات</title>
+
+<style>
+@import url('/static/branding/branding.css');
+:root{
+  --blue-dark:#0027b9;
+  --blue-main:#0076ff;
+  --orange:#0076ff;
+
+  --bg:#f7f9fc;
+  --card:#ffffff;
+
+  --text:#1f2937;
+  --muted:#5f6f85;
+
+  --sidebar-w:260px;
+  --topbar-h:70px;
+}
+
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  font-family: "SE", "Segoe UI", Tahoma, Arial, sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+
+/* ===== Sidebar ===== */
+.sidebar{
+  position:fixed;
+  top:0;
+  right:0;
+  width:var(--sidebar-w);
+  height:100vh;
+  background:linear-gradient(180deg, #0027b9, #001f8c);
+  color:#fff;
+  padding:22px 18px;
+}
+
+.sidebar__link.is-active{
+  background:rgba(255,255,255,.15);
+}
+
+/* ===== Topbar ===== */
+.topbar{
+  position:fixed;
+  top:0;
+  right:var(--sidebar-w);
+  left:0;
+  height:var(--topbar-h);
+  background:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 26px;
+  box-shadow:0 4px 12px rgba(0,0,0,.06);
+  z-index:1000;
+}
+
+/* ===== Main ===== */
+.main{
+  margin-right:var(--sidebar-w);
+  padding: calc(var(--topbar-h) + 36px) 28px 40px;
+}
+
+/* ===== Header ===== */
+.page-header{
+  margin-bottom:18px;
+}
+
+.page-header h2{
+  margin:0;
+  font-size:18px;
+  color:var(--blue-main);
+}
+
+/* ===== List Wrapper ===== */
+.list-wrapper{
+  background:var(--card);
+  border-radius:16px;
+  box-shadow:0 14px 34px rgba(15,45,90,.12);
+  overflow:hidden;
+}
+
+/* ===== Header Row ===== */
+.list-header,
+.list-row{
+  display:grid;
+  grid-template-columns: 2.2fr 1fr 1fr .9fr;
+  align-items:center;
+  padding:16px 22px;
+}
+
+.list-header.is-coordinator,
+.list-row.is-coordinator{
+  grid-template-columns: 2fr 1.3fr 1fr 1fr .9fr;
+}
+
+.list-header{
+  background:#f5f8fd;
+  font-size:13px;
+  font-weight:600;
+  color:var(--muted);
+}
+
+/* ===== Rows ===== */
+.list-row{
+  border-top:1px solid #eef1f5;
+  font-size:14px;
+}
+
+.list-row:hover{
+  background:#f4f8ff;
+}
+
+/* ===== Program ===== */
+.program-name{
+  font-weight:600;
+  color:var(--blue-main);
+}
+
+.program-link{
+  color:inherit;
+  text-decoration:none;
+}
+
+.program-link:hover{
+  text-decoration:underline;
+}
+
+.reject-reason{
+  margin-top:6px;
+  font-size:12px;
+  color:#dc2626;
+}
+
+/* ===== Trainer ===== */
+.trainer{
+  color:var(--muted);
+  font-size:13px;
+}
+
+/* ===== Status ===== */
+.status{
+  display:inline-block;
+  padding:6px 14px;
+  border-radius:999px;
+  font-size:12px;
+  color:#fff;
+  width:max-content;
+}
+
+.status.pending{ background:#f59e0b; }
+.status.approved{ background:#16a34a; }
+.status.rejected{ background:#dc2626; }
+.status.other{ background:#6b7280; }
+
+/* ===== Details Button ===== */
+.action-btn{
+  display:inline-block;
+  padding:8px 12px;
+  border-radius:12px;
+  background:#e9eef6;
+  color:var(--blue-main);
+  font-weight:700;
+  font-size:12px;
+  text-decoration:none;
+  width:max-content;
+}
+.action-btn:hover{
+  background:#dfe8f6;
+}
+
+/* ===== Empty ===== */
+.empty{
+  background:#fff;
+  padding:40px;
+  border-radius:16px;
+  text-align:center;
+  color:var(--muted);
+}
+
+/* ===== Responsive ===== */
+@media (max-width:900px){
+  .sidebar{ display:none; }
+  .topbar{ right:0; }
+  .main{ margin-right:0; }
+
+  .list-header,
+  .list-row{
+    grid-template-columns:1fr;
+    row-gap:8px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+{% if is_coordinator %}
+  {% include "accounts-templates/training-coordinator-sidebar.html" %}
+  {% include "accounts-templates/training-coordinator-topbar.html" %}
+{% else %}
+  {% include "accounts-templates/sidebar.html" %}
+  {% include "accounts-templates/topbar.html" %}
+{% endif %}
+
+<div class="main">
+
+  <div class="page-header">
+    <h2>📋 طلبات التدريب</h2>
+  </div>
+
+  {% if requests %}
+  <div class="list-wrapper">
+
+    <div class="list-header{% if is_coordinator %} is-coordinator{% endif %}">
+      <div>البرنامج</div>
+      {% if is_coordinator %}<div>اسم المقاول</div>{% endif %}
+      <div>تاريخ التقديم</div>
+      <div>الحالة</div>
+      <div>تفاصيل</div>
+    </div>
+
+    {% for request in requests %}
+    <div class="list-row{% if is_coordinator %} is-coordinator{% endif %}">
+
+      <div>
+        <div class="program-name">
+          {% if request.program %}
+            <!-- ✅✅✅ FIX: رابط التفاصيل للمقاول -->
+            {% if is_coordinator %}
+              <a class="program-link" href="{% url 'training_coordinator_request_detail' request.id %}">
+            {% else %}
+              <a class="program-link" href="{% url 'contractor_request_detail' request.id %}">
+            {% endif %}
+              {{ request.program.title }}
+            </a>
+          {% else %}
+            —
+          {% endif %}
+        </div>
+
+        {% if request.status == 'REJECTED' and request.rejection_reason %}
+          <div class="reject-reason">
+            سبب الرفض: {{ request.rejection_reason }}
+          </div>
+        {% endif %}
+      </div>
+
+      {% if is_coordinator %}
+      <div>
+        {{ request.contractor.username|default:"—" }}
+      </div>
+      {% endif %}
+
+      <div>
+        {{ request.created_at|date:"Y-m-d" }}
+      </div>
+
+      <div>
+        {% if request.status == 'NEW_REQUEST' or request.status == 'INVOICE_ISSUED' or request.status == 'PAYMENT_VERIFICATION' or request.status == 'WAITING_EXAM_SCHEDULING' %}
+          <span class="status pending">{{ request.get_status_display }}</span>
+        {% elif request.status == 'REJECTED' %}
+          <span class="status rejected">{{ request.get_status_display }}</span>
+        {% elif request.status == 'CERTIFIED' or request.status == 'COMPLETED_WITH_PASS_CARD' %}
+          <span class="status approved">{{ request.get_status_display }}</span>
+        {% else %}
+          <span class="status other">{{ request.get_status_display }}</span>
+        {% endif %}
+      </div>
+
+      <!-- ✅ زر التفاصيل -->
+      <div>
+        <!-- ✅✅✅ FIX: زر التفاصيل للمقاول -->
+        <a class="action-btn" href="{% url 'contractor_request_detail' request.id %}">عرض</a>
+      </div>
+
+    </div>
+    {% endfor %}
+
+  </div>
+  {% else %}
+    <div class="empty">
+      لم تقم بتقديم أي طلبات تدريب حتى الآن.
+    </div>
+  {% endif %}
+
+</div>
+
+</body>
+</html>

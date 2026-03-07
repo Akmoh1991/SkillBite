@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>تفاصيل الطلب - المدرب</title>
+
+<style>
+@import url('/static/branding/branding.css');
+:root{
+  --blue-dark:#0027b9;
+  --blue-main:#0076ff;
+  --orange:#0076ff;
+
+  --bg:#f7f9fc;
+  --card:#ffffff;
+
+  --text:#1f2937;
+  --muted:#5f6f85;
+
+  --sidebar-w:260px;
+  --topbar-h:70px;
+
+  --shadow:0 18px 45px rgba(0,0,0,.18);
+}
+
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  font-family: "SE", "Segoe UI", Tahoma, Arial, sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+
+/* ===== Main ===== */
+.main{
+  margin-right:var(--sidebar-w);
+  padding: calc(var(--topbar-h) + 36px) 28px 40px;
+}
+
+/* ===== Header ===== */
+.page-header{
+  margin-bottom:18px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  flex-wrap:wrap;
+}
+
+.page-header__actions{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+
+.page-header h2{
+  margin:0;
+  font-size:18px;
+  color:var(--blue-main);
+}
+
+/* ===== Wrapper ===== */
+.card{
+  background:var(--card);
+  border-radius:16px;
+  box-shadow:0 14px 34px rgba(15,45,90,.12);
+  overflow:hidden;
+}
+
+/* ===== Sections ===== */
+.section{
+  padding:18px 22px;
+  border-top:1px solid #eef1f5;
+}
+
+.section:first-child{
+  border-top:none;
+}
+
+.section-title{
+  margin:0 0 10px;
+  font-size:14px;
+  color:var(--muted);
+  font-weight:700;
+}
+
+/* ===== Grid Info ===== */
+.info-grid{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:12px 18px;
+}
+
+.info-item{
+  background:#f5f8fd;
+  border:1px solid #eef1f5;
+  border-radius:14px;
+  padding:12px 14px;
+}
+
+.info-label{
+  font-size:12px;
+  color:var(--muted);
+  margin-bottom:6px;
+}
+
+.info-value{
+  font-size:14px;
+  font-weight:700;
+  color:var(--blue-main);
+}
+
+/* ===== Status ===== */
+.status{
+  display:inline-block;
+  padding:5px 14px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:700;
+  white-space:nowrap;
+  width:max-content;
+}
+
+.status.status-new{ background:#e0f2fe; color:#0369a1; }
+.status.status-invoice{ background:#ffedd5; color:#9a3412; }
+.status.status-waiting{ background:#ede9fe; color:#5b21b6; }
+.status.status-scheduled{ background:#ccfbf1; color:#065f46; }
+.status.status-exam{ background:#e5e7eb; color:#1f2937; }
+.status.status-rejected{ background:#fee2e2; color:#991b1b; }
+.status.status-completed{ background:#dcfce7; color:#166534; }
+.status.status-other{ background:#e5e7eb; color:#374151; }
+
+/* ===== Messages ===== */
+.msg{
+  border-radius:14px;
+  padding:12px 14px;
+  margin-bottom:12px;
+  font-size:13px;
+}
+
+.msg.success{ background:#ecfdf5; border:1px solid #a7f3d0; }
+.msg.error{ background:#fef2f2; border:1px solid #fecaca; }
+.msg.info{ background:#eff6ff; border:1px solid #bfdbfe; }
+
+/* ===== Actions ===== */
+.actions{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  align-items:flex-start;
+}
+
+.btn{
+  display:inline-block;
+  padding:10px 14px;
+  border-radius:12px;
+  border:none;
+  cursor:pointer;
+  font-weight:800;
+  font-size:13px;
+  text-decoration:none;
+}
+
+.btn-primary{ background:#0076ff; color:#fff; }
+.btn-danger{ background:#dc2626; color:#fff; }
+.btn-warning{ background:#0076ff; color:#111827; }
+.btn-soft{
+  background:#e9eef6;
+  color:var(--blue-main);
+}
+.btn-soft:hover{ background:#dfe8f6; }
+
+.btn-teal{
+  background:linear-gradient(135deg, #0076ff, #0027b9);
+  color:#fff;
+}
+.btn-teal:hover{ filter:brightness(1.05); }
+
+.textarea{
+  width:100%;
+  min-height:90px;
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid #d1d5db;
+  outline:none;
+  resize:vertical;
+  font-family: "SE", "Segoe UI", Tahoma, Arial, sans-serif;
+}
+
+.input{
+  width:100%;
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid #d1d5db;
+  outline:none;
+  font-family: "SE", "Segoe UI", Tahoma, Arial, sans-serif;
+  background:#fff;
+}
+
+.picker-shell{
+  width:min(760px, 100%);
+  display:flex;
+  align-items:center;
+  gap:10px;
+  background:#fff;
+  border:1px solid #e1e7ef;
+  border-radius:14px;
+  padding:10px;
+}
+
+.picker-native{
+  position:absolute;
+  width:1px;
+  height:1px;
+  padding:0;
+  margin:-1px;
+  overflow:hidden;
+  clip:rect(0, 0, 0, 0);
+  border:0;
+}
+
+.picker-choose{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  background:#f3f8fd;
+  color:var(--blue-main);
+  border:1px solid #b8d0e6;
+  padding:8px 12px;
+  border-radius:9px;
+  font-size:13px;
+  font-weight:700;
+  cursor:pointer;
+  white-space:nowrap;
+}
+
+.picker-name{
+  flex:1 1 320px;
+  min-width:220px;
+  background:#fdfefe;
+  border:1px solid #dbe4ee;
+  color:#52606d;
+  border-radius:10px;
+  padding:10px 12px;
+  font-size:13px;
+  line-height:1.4;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.helper{
+  font-size:12px;
+  color:var(--muted);
+  margin-top:6px;
+}
+
+.hr{
+  height:1px;
+  background:#eef1f5;
+  margin:0;
+  border:0;
+}
+
+.reject-box{
+  margin-top:10px;
+  background:#fff1f2;
+  border:1px dashed #fecaca;
+  color:#991b1b;
+  border-radius:14px;
+  padding:12px 14px;
+  font-size:13px;
+}
+
+/* =========================
+   ✅ Modal (Popup) - Schedule Exam
+   ========================= */
+.modal{
+  position:fixed;
+  inset:0;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:18px;
+  z-index:2000;
+}
+
+.modal.is-open{ display:flex; }
+
+.modal__backdrop{
+  position:absolute;
+  inset:0;
+  background:rgba(2, 6, 23, .55);
+  backdrop-filter: blur(6px);
+}
+
+.modal__panel{
+  position:relative;
+  width:min(560px, 100%);
+  background:#fff;
+  border-radius:18px;
+  box-shadow: var(--shadow);
+  overflow:hidden;
+  transform: translateY(10px);
+  opacity:0;
+  animation: pop .18s ease-out forwards;
+}
+
+@keyframes pop{
+  to{ transform: translateY(0); opacity:1; }
+}
+
+.modal__header{
+  padding:16px 18px;
+  background:linear-gradient(135deg, #0076ff, #0027b9);
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+
+.modal__title{
+  margin:0;
+  font-size:14px;
+  font-weight:900;
+}
+
+.modal__close{
+  width:36px;
+  height:36px;
+  border-radius:12px;
+  border:none;
+  cursor:pointer;
+  background:rgba(255,255,255,.15);
+  color:#fff;
+  font-weight:900;
+}
+
+.modal__close:hover{ background:rgba(255,255,255,.25); }
+
+.modal__body{
+  padding:16px 18px 18px;
+}
+
+.modal__grid{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:12px;
+  margin-top:10px;
+}
+
+.modal__hint{
+  margin:0;
+  font-size:12px;
+  color:var(--muted);
+  line-height:1.7;
+}
+
+.modal__footer{
+  display:flex;
+  gap:10px;
+  justify-content:flex-start;
+  margin-top:14px;
+  flex-wrap:wrap;
+}
+
+.code-box{
+  margin-top:12px;
+  background:#f5f8fd;
+  border:1px solid #eef1f5;
+  border-radius:14px;
+  padding:12px 14px;
+}
+
+.code-row{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+
+.code-input{
+  flex:1;
+  min-width:220px;
+  letter-spacing:2px;
+  font-weight:900;
+  text-align:center;
+}
+
+.select{
+  width:100%;
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid #d1d5db;
+  background:#fff;
+  outline:none;
+  font-family: "SE", "Segoe UI", Tahoma, Arial, sans-serif;
+}
+
+/* ✅ New: disabled button state */
+.btn[disabled]{
+  opacity:.55;
+  cursor:not-allowed;
+}
+
+/* ✅ New: inline error inside modal */
+.inline-error{
+  margin-top:12px;
+  border-radius:12px;
+  padding:10px 12px;
+  font-size:13px;
+  background:#fef2f2;
+  border:1px solid #fecaca;
+  color:#991b1b;
+  display:none;
+}
+.inline-error.is-show{ display:block; }
+
+/* ===== Responsive ===== */
+@media (max-width:900px){
+  .main{ margin-right:0; }
+  .info-grid{ grid-template-columns: 1fr; }
+  .modal__grid{ grid-template-columns: 1fr; }
+}
+</style>
+</head>
+
+<body>
+
+{% include "accounts-templates/trainer-sidebar.html" %}
+{% include "accounts-templates/trainer-topbar.html" %}
+
+<div class="main">
+
+  <div class="page-header">
+    <h2> تفاصيل الطلب </h2>
+    <div class="page-header__actions">
+      {% if enrollment.status == 'PAYMENT_VERIFICATION' and enrollment.program.requires_payment %}
+        <form method="post" action="{% url 'trainer_confirm_payment_action' enrollment.id %}" style="display:inline-block;">
+          {% csrf_token %}
+          <button class="btn btn-primary" type="submit">تأكيد التحقق من السداد</button>
+        </form>
+      {% endif %}
+      <a class="btn btn-soft" href="{% url 'trainer_requests' %}">رجوع لقائمة الطلبات</a>
+    </div>
+  </div>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="msg {% if message.tags %}{{ message.tags }}{% endif %}">
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="card">
+
+    <!-- ===== بيانات الطلب ===== -->
+    <div class="section">
+      <div class="section-title">معلومات الطلب</div>
+
+      
+
+      <div class="info-grid">
+        <div class="info-item">
+          <div class="info-label">رقم الطلب</div>
+          <div class="info-value">#{{ enrollment.id }}</div>
+        </div>
+
+        <div class="info-item">
+          <div class="info-label">اسم البرنامج</div>
+          <div class="info-value">
+            {% if enrollment.program %}
+              {{ enrollment.program.title }}
+            {% else %}
+              —
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="info-item">
+          <div class="info-label">تاريخ الإنشاء</div>
+          <div class="info-value">{{ enrollment.created_at|date:"Y-m-d H:i" }}</div>
+        </div>
+
+        <div class="info-item">
+          <div class="info-label">المقاول</div>
+          <div class="info-value">{{ enrollment.contractor }}</div>
+        </div>
+
+        {% if enrollment.invoice_number %}
+        <div class="info-item">
+          <div class="info-label">رقم سداد</div>
+          <div class="info-value">{{ enrollment.invoice_number }}</div>
+        </div>
+        {% endif %}
+
+        {% if enrollment.exam_date %}
+        <div class="info-item">
+          <div class="info-label">موعد الاختبار</div>
+          <div class="info-value">{{ enrollment.exam_date|date:"Y-m-d H:i" }}</div>
+        </div>
+        {% endif %}
+
+        {% if enrollment.exam_template %}
+        <div class="info-item">
+          <div class="info-label">قالب الاختبار</div>
+          <div class="info-value">{{ enrollment.exam_template.name }}</div>
+        </div>
+        {% endif %}
+
+        <!--<div class="info-item">
+          <div class="info-label">المدرب المعيّن</div>
+          <div class="info-value">
+            {% if enrollment.trainer %}
+              {{ enrollment.trainer.username }}
+            {% else %}
+              —
+            {% endif %}
+          </div>
+        </div>-->
+
+        
+
+        <div class="info-item">
+          <div class="info-label">الحالة الحالية</div>
+          <div class="info-value">
+            {% if enrollment.status == 'NEW_REQUEST' %}
+              <span class="status status-new">{{ enrollment.get_status_display }}</span>
+            {% elif enrollment.status == 'INVOICE_ISSUED' or enrollment.status == 'PAYMENT_VERIFICATION' %}
+              <span class="status status-invoice">{{ enrollment.get_status_display }}</span>
+            {% elif enrollment.status == 'WAITING_EXAM_SCHEDULING' or enrollment.status == 'WAITING_PRACTICAL_GRADE' %}
+              <span class="status status-waiting">{{ enrollment.get_status_display }}</span>
+            {% elif enrollment.status == 'EXAM_SCHEDULED' or enrollment.status == 'EXAM_CONFIRMED' %}
+              <span class="status status-scheduled">{{ enrollment.get_status_display }}</span>
+            {% elif enrollment.status == 'IN_EXAM' %}
+              <span class="status status-exam">{{ enrollment.get_status_display }}</span>
+            {% elif enrollment.status == 'REJECTED' or enrollment.status == 'FAILED' %}
+              <span class="status status-rejected">{{ enrollment.get_status_display }}</span>
+            {% elif enrollment.status == 'CERTIFIED' or enrollment.status == 'COMPLETED_WITH_PASS_CARD' %}
+              <span class="status status-completed">{{ enrollment.get_status_display }}</span>
+            {% else %}
+              <span class="status status-other">{{ enrollment.get_status_display }}</span>
+            {% endif %}
+          </div>
+        </div>
+
+        <!--<div class="info-item">
+          <div class="info-label">سبب الرفض</div>
+          <div class="info-value">
+            {% if enrollment.status == 'REJECTED' and enrollment.rejection_reason %}
+              {{ enrollment.rejection_reason }}
+            {% else %}
+              —
+            {% endif %}
+          </div>
+        </div>-->
+
+      </div>
+
+      {% if enrollment.status == 'REJECTED' and enrollment.rejection_reason %}
+        <div class="reject-box">
+          <strong>سبب الرفض:</strong> {{ enrollment.rejection_reason }}
+        </div>
+      {% endif %}
+    </div>
+
+    <hr class="hr">
+
+
+    
+    <!-- ===== مرفقات المقاول ===== -->
+    <div class="section">
+      <div class="section-title">مرفقات المقاول</div>
+
+      {% with snapshots=enrollment.supporting_document_snapshots.all %}
+        {% if snapshots %}
+          <div style="overflow:auto;">
+            <table style="width:100%; border-collapse:collapse;">
+              <thead>
+                <tr>
+                  <th style="text-align:right; padding:10px; border-bottom:1px solid #e5e7eb;">الملف</th>
+                  <th style="text-align:right; padding:10px; border-bottom:1px solid #e5e7eb;">تاريخ الرفع</th>
+                  <th style="text-align:right; padding:10px; border-bottom:1px solid #e5e7eb;">PDF</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for d in snapshots %}
+                  <tr>
+                    <td style="padding:10px; border-bottom:1px solid #f1f5f9;">
+                      {% if d.title %}
+                        {{ d.title }}
+                      {% else %}
+                        الملفات الشخصية للمقاول{% if snapshots|length > 1 %} #{{ forloop.counter }}{% endif %}
+                      {% endif %}
+                    </td>
+                    <td style="padding:10px; border-bottom:1px solid #f1f5f9;">{{ d.uploaded_at|date:"Y-m-d" }}</td>
+                    <td style="padding:10px; border-bottom:1px solid #f1f5f9;">
+                      {% if d.pdf_file %}
+                        <a class="btn btn-soft" style="text-decoration:none;" href="{{ d.pdf_file.url }}" target="_blank" rel="noopener">تحميل</a>
+                      {% else %}
+                        —
+                      {% endif %}
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          {% with docs=enrollment.supporting_documents.all %}
+            {% if docs %}
+              <div style="overflow:auto;">
+                <table style="width:100%; border-collapse:collapse;">
+                  <thead>
+                    <tr>
+                      <th style="text-align:right; padding:10px; border-bottom:1px solid #e5e7eb;">الملف</th>
+                      <th style="text-align:right; padding:10px; border-bottom:1px solid #e5e7eb;">تاريخ الرفع</th>
+                      <th style="text-align:right; padding:10px; border-bottom:1px solid #e5e7eb;">PDF</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for d in docs %}
+                      <tr>
+                        <td style="padding:10px; border-bottom:1px solid #f1f5f9;">
+                          {% if d.title %}
+                            {{ d.title }}
+                          {% else %}
+                            الملفات الشخصية للمقاول{% if docs|length > 1 %} #{{ forloop.counter }}{% endif %}
+                          {% endif %}
+                        </td>
+                        <td style="padding:10px; border-bottom:1px solid #f1f5f9;">{{ d.uploaded_at|date:"Y-m-d" }}</td>
+                        <td style="padding:10px; border-bottom:1px solid #f1f5f9;">
+                          {% if d.pdf_file %}
+                            <a class="btn btn-soft" style="text-decoration:none;" href="{{ d.pdf_file.url }}" target="_blank" rel="noopener">تحميل</a>
+                          {% else %}
+                            —
+                          {% endif %}
+                        </td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            {% else %}
+              <div class="helper">لا توجد مرفقات مضافة لهذا الطلب.</div>
+            {% endif %}
+          {% endwith %}
+        {% endif %}
+      {% endwith %}
+    </div>
+
+    <hr class="hr">
+
+    <!-- ===== إجراءات المدرب ===== -->
+    <div class="section">
+      <!--<div class="section-title">إجراءات المدرب</div>-->
+
+      <div class="actions">
+
+        <!-- ✅ اعتماد / رفض: فقط إذا الطلب جديد -->
+        {% if enrollment.status == 'NEW_REQUEST' %}
+
+          <!-- اعتماد (SADAD Modal) -->
+          <button class="btn btn-primary" type="button" id="openSadadModalBtn">اعتماد الطلب</button>
+
+          <!-- رفض (Popup) -->
+          <button class="btn btn-danger" type="button" id="openRejectModalBtn">رفض الطلب</button>
+          
+        <!---->
+        {% else %}
+         <!-- <div class="helper">لا يمكن (اعتماد/رفض) إلا في مرحلة: طلب جديد.</div>-->
+        {% endif %}
+
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+{% if enrollment.status == 'NEW_REQUEST' %}
+  {% include "accounts-templates/_sadad-modal-fragment.html" %}
+
+  <script>
+  (function(){
+    const btn = document.getElementById('openSadadModalBtn');
+    if(!btn) return;
+
+    const actionUrl = "{% url 'trainer_request_action' enrollment.id %}";
+    const requiresPayment = "{% if enrollment.program and enrollment.program.requires_payment %}1{% else %}0{% endif %}";
+
+    btn.addEventListener('click', function(){
+      if (window.__openSadadModal){
+        window.__openSadadModal(actionUrl, requiresPayment);
+      }
+    });
+  })();
+  </script>
+{% endif %}
+
+{% if enrollment.status == 'NEW_REQUEST' %}
+<!-- =========================
+     ✅ Modal: Reject Request
+     ========================= -->
+<div class="modal" id="rejectModal" aria-hidden="true">
+  <div class="modal__backdrop" data-close-reject="true"></div>
+
+  <div class="modal__panel" role="dialog" aria-modal="true" aria-labelledby="rejectModalTitle">
+    <div class="modal__header">
+      <h3 class="modal__title" id="rejectModalTitle">رفض الطلب</h3>
+      <button class="modal__close" type="button" data-close-reject="true">✕</button>
+    </div>
+
+    <div class="modal__body">
+      <p class="modal__hint" style="margin-top:0;">
+        اكتب سبب الرفض بوضوح (إلزامي) ثم اضغط تأكيد الرفض.
+      </p>
+
+      <form method="post" action="{% url 'trainer_request_action' enrollment.id %}" id="rejectRequestForm" style="margin-top:12px;">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="reject">
+
+        <textarea class="textarea" name="rejection_reason" id="rejection_reason" placeholder="اكتب سبب الرفض بوضوح..." required></textarea>
+        <div class="helper">سبب الرفض إلزامي عند الرفض.</div>
+
+        <div class="modal__footer" style="margin-top:12px;">
+          <button class="btn btn-danger" type="submit">تأكيد الرفض</button>
+          <button class="btn btn-soft" type="button" data-close-reject="true">إلغاء</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- =========================
+     ✅ Modal: Schedule Exam
+     ========================= -->
+<div class="modal" id="examModal" aria-hidden="true">
+  <div class="modal__backdrop" data-close-modal="true"></div>
+
+  <div class="modal__panel" role="dialog" aria-modal="true" aria-labelledby="examModalTitle">
+    <div class="modal__header">
+      <h3 class="modal__title" id="examModalTitle">📅 إنشاء موعد اختبار</h3>
+      <button class="modal__close" type="button" data-close-modal="true">✕</button>
+    </div>
+
+    <div class="modal__body">
+      
+
+      <form method="post" action="{% url 'trainer_schedule_exam_action' enrollment.id %}" id="scheduleExamForm" style="margin-top:12px;">
+        {% csrf_token %}
+
+        <div class="modal__grid">
+          <div>
+            <div class="info-label">موعد الاختبار</div>
+            <input
+              class="input"
+              type="datetime-local"
+              name="exam_date"
+              id="exam_date"
+              required
+            >
+          </div>
+
+          {% if not is_technical_exam %}
+          <div>
+            <div class="info-label">قالب الاختبار </div>
+
+            <!-- ✅ UPDATED: لم يعد اختياري -->
+            <select class="select" name="exam_template_id" id="exam_template_id" required>
+              <option value="">— اختر قالب —</option>
+              {% for t in exam_templates %}
+                <option value="{{ t.id }}">{{ t.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          {% endif %}
+        </div>
+
+        {% if not is_technical_exam %}
+          <!-- ✅ Exam code (mandatory) -->
+          <div class="code-box">
+            <div class="info-label">كود دخول الاختبار </div>
+            <div class="code-row" style="margin-top:8px;">
+              <input class="input code-input" type="text" id="exam_code_display" placeholder="اضغط توليد الكود" readonly>
+              <button class="btn btn-soft" type="button" id="generateExamCodeBtn">توليد كود</button>
+              <button class="btn btn-soft" type="button" id="copyExamCodeBtn" disabled>نسخ</button>
+            </div>
+            <input type="hidden" name="exam_code" id="exam_code" required>
+          </div>
+        {% endif %}
+
+        <!-- ✅ New inline error area -->
+        <div class="inline-error" id="inlineError"></div>
+
+        <div class="modal__footer">
+          <button class="btn btn-primary" type="submit" id="saveExamBtn">حفظ الموعد</button>
+          <button class="btn btn-soft" type="button" data-close-modal="true">إلغاء</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const modal = document.getElementById('examModal');
+  const openBtn = document.getElementById('openExamModalBtn');
+  const form = document.getElementById('scheduleExamForm');
+
+  const dtInput = document.getElementById('exam_date');
+  const templateSelect = document.getElementById('exam_template_id');
+  const saveBtn = document.getElementById('saveExamBtn');
+  const inlineError = document.getElementById('inlineError');
+
+  const genBtn = document.getElementById('generateExamCodeBtn');
+  const copyBtn = document.getElementById('copyExamCodeBtn');
+  const codeHidden = document.getElementById('exam_code');
+  const codeDisplay = document.getElementById('exam_code_display');
+
+  function setError(msg){
+    if(!inlineError) return;
+    inlineError.textContent = msg || '';
+    inlineError.classList.toggle('is-show', Boolean(msg));
+  }
+
+  function generate8DigitCode(){
+    // cryptographically-strong random digits
+    if (window.crypto && window.crypto.getRandomValues){
+      const buf = new Uint32Array(1);
+      window.crypto.getRandomValues(buf);
+      const num = buf[0] % 100000000;
+      return String(num).padStart(8, '0');
+    }
+    // fallback (should rarely happen)
+    const num = Math.floor(Math.random() * 100000000);
+    return String(num).padStart(8, '0');
+  }
+
+  function setCode(code){
+    if(codeHidden) codeHidden.value = code || '';
+    if(codeDisplay) codeDisplay.value = code || '';
+    if(copyBtn) copyBtn.disabled = !code;
+  }
+
+  function openModal(){
+    if(!modal) return;
+    modal.classList.add('is-open');
+    modal.setAttribute('aria-hidden', 'false');
+
+    // اقتراح وقت افتراضي بعد 30 دقيقة
+    if(dtInput && !dtInput.value){
+      const now = new Date();
+      now.setMinutes(now.getMinutes() + 30);
+      const pad = (n) => String(n).padStart(2, '0');
+      const v = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+      dtInput.value = v;
+    }
+
+    setError('');
+    // لا تولّد تلقائيًا عشان المدرب ينتبه للكود
+    if(codeHidden && !codeHidden.value){
+      setCode('');
+    }
+    setTimeout(() => dtInput && dtInput.focus(), 50);
+  }
+
+  function closeModal(){
+    if(!modal) return;
+    modal.classList.remove('is-open');
+    modal.setAttribute('aria-hidden', 'true');
+  }
+
+  if(openBtn){
+    openBtn.addEventListener('click', openModal);
+  }
+
+  if(genBtn){
+    genBtn.addEventListener('click', function(){
+      const c = generate8DigitCode();
+      setCode(c);
+      setError('');
+    });
+  }
+
+  if(copyBtn){
+    copyBtn.addEventListener('click', async function(){
+      const c = (codeHidden && codeHidden.value) ? codeHidden.value : (codeDisplay ? codeDisplay.value : '');
+      if(!c) return;
+      try{
+        await navigator.clipboard.writeText(c);
+        setError('تم نسخ كود الاختبار ✅');
+        setTimeout(() => setError(''), 1200);
+      }catch(e){
+        // fallback: select text
+        if(codeDisplay){
+          codeDisplay.focus();
+          codeDisplay.select();
+          document.execCommand && document.execCommand('copy');
+          setError('انسخ الكود يدويًا من الحقل');
+        }
+      }
+    });
+  }
+
+  // close on backdrop / close btn
+  if(modal){
+    modal.addEventListener('click', function(e){
+      const target = e.target;
+      if(target && target.getAttribute && target.getAttribute('data-close-modal') === 'true'){
+        closeModal();
+      }
+    });
+  }
+
+  // close on ESC
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape' && modal && modal.classList.contains('is-open')){
+      closeModal();
+    }
+  });
+
+  // ✅ front-end validation:
+  // - datetime must be in the future
+  // - template is required
+  // - disable button while submitting (UX)
+  if(form && dtInput && templateSelect && saveBtn){
+    form.addEventListener('submit', function(e){
+      setError('');
+
+      const raw = (dtInput.value || '').trim();
+      const templateId = (templateSelect.value || '').trim();
+      const code = (codeHidden && codeHidden.value) ? codeHidden.value.trim() : '';
+
+      if(!code){
+        e.preventDefault();
+        setError('لازم تولّد كود الاختبار قبل حفظ الموعد.');
+        genBtn && genBtn.focus();
+        return;
+      }
+
+      if(!/^\d{8}$/.test(code)){
+        e.preventDefault();
+        setError('كود الاختبار لازم يكون 8 أرقام فقط.');
+        genBtn && genBtn.focus();
+        return;
+      }
+
+      if(!templateId){
+        e.preventDefault();
+        setError('لازم تختار قالب اختبار قبل حفظ الموعد.');
+        templateSelect.focus();
+        return;
+      }
+
+      if(!raw){
+        e.preventDefault();
+        setError('حدد موعد الاختبار أولاً.');
+        dtInput.focus();
+        return;
+      }
+
+      const chosen = new Date(raw);
+      const now = new Date();
+
+      if(!(chosen instanceof Date) || isNaN(chosen.getTime())){
+        e.preventDefault();
+        setError('صيغة التاريخ غير صحيحة.');
+        dtInput.focus();
+        return;
+      }
+
+      if(chosen <= now){
+        e.preventDefault();
+        setError('اختر موعدًا في المستقبل.');
+        dtInput.focus();
+        return;
+      }
+
+      // submit lock
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'جارِ الحفظ...';
+    });
+  }
+})();
+</script>
+
+{% if enrollment.status == 'NEW_REQUEST' %}
+<script>
+(function () {
+  const modal = document.getElementById('rejectModal');
+  const openBtn = document.getElementById('openRejectModalBtn');
+  const reason = document.getElementById('rejection_reason');
+
+  function openModal(){
+    if(!modal) return;
+    modal.classList.add('is-open');
+    modal.setAttribute('aria-hidden', 'false');
+    setTimeout(() => reason && reason.focus(), 50);
+  }
+
+  function closeModal(){
+    if(!modal) return;
+    modal.classList.remove('is-open');
+    modal.setAttribute('aria-hidden', 'true');
+  }
+
+  if(openBtn){
+    openBtn.addEventListener('click', openModal);
+  }
+
+  if(modal){
+    modal.addEventListener('click', function(e){
+      const target = e.target;
+      if(target && target.getAttribute && target.getAttribute('data-close-reject') === 'true'){
+        closeModal();
+      }
+    });
+  }
+
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape' && modal && modal.classList.contains('is-open')){
+      closeModal();
+    }
+  });
+})();
+</script>
+{% endif %}
+
+</body>
+</html>

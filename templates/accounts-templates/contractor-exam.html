@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>اختبار المقاول</title>
+
+<style>
+@import url('/static/branding/branding.css');
+
+/* لا تعيد تعريف :root هنا (الـ sidebar/topbar يعرّفون متغيرات عامة)
+   فقط أضف المتغيرات/الأساسيات الخاصة بهذه الصفحة */
+:root{
+  --card:#ffffff;
+}
+
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  font-family: "SE", "Segoe UI", Tahoma, Arial, sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+
+.topbar{
+  position:fixed;
+  top:0;
+  right:var(--sidebar-w);
+  left:0;
+  height:var(--topbar-h);
+  background:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 26px;
+  box-shadow:0 4px 12px rgba(0,0,0,.06);
+  z-index:1000;
+}
+
+.main{
+  margin-right:var(--sidebar-w);
+  padding: calc(var(--topbar-h) + 22px) 28px 30px;
+}
+
+/* ===== Messages ===== */
+.msg{
+  margin-bottom:14px;
+  padding:12px 14px;
+  border-radius:14px;
+  font-size:13px;
+  font-weight:700;
+}
+.msg-error, .msg.error{ background:#fff1f2; border:1px solid #fecdd3; color:#9f1239; }
+.msg-success, .msg.success{ background:#ecfdf5; border:1px solid #bbf7d0; color:#166534; }
+.msg-info, .msg.info{ background:#eff6ff; border:1px solid #bfdbfe; color:#1e3a8a; }
+
+/* ===== Exam Shell ===== */
+.exam-shell{
+  display:grid;
+  grid-template-columns: 1fr;
+  gap:18px;
+}
+
+/* ===== Cards ===== */
+.card{
+  background:var(--card);
+  border-radius:16px;
+  box-shadow:0 14px 34px rgba(15,45,90,.12);
+  overflow:hidden;
+}
+
+.card-head{
+  padding:16px 18px;
+  border-bottom:1px solid #eef1f5;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+
+.card-body{ padding:18px; }
+
+.hint{
+  color:var(--muted);
+  font-size:12px;
+  font-weight:700;
+}
+
+.title{
+  margin:0;
+  font-size:14px;
+  color:var(--blue-main);
+  font-weight:800;
+}
+
+/* ===== Timer / Exit ===== */
+.timer{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.timer-box{
+  background:#f5f8fd;
+  border:1px solid #eef1f5;
+  padding:8px 12px;
+  border-radius:12px;
+  font-weight:900;
+  font-size:14px;
+  color:#111827;
+}
+
+.btn{
+  border:none;
+  padding:10px 14px;
+  border-radius:12px;
+  font-weight:800;
+  cursor:pointer;
+  text-decoration:none;
+  display:inline-block;
+  font-size:13px;
+}
+
+.btn-secondary{ background:#e9eef6; color:var(--blue-main); }
+.btn-primary{ background:var(--blue-main); color:#fff; }
+.btn-danger{ background:#dc2626; color:#fff; }
+
+/* ===== Question Nav ===== */
+.qnav{
+  padding:16px 18px;
+}
+
+.qgrid{
+  display:grid;
+  grid-template-columns:repeat(5, 1fr);
+  gap:10px;
+  margin-top:12px;
+}
+
+.qnum{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  height:42px;
+  border-radius:12px;
+  border:1px solid #e5e7eb;
+  background:#fff;
+  color:#111827;
+  font-weight:900;
+  text-decoration:none;
+  transition:.15s ease;
+}
+.qnum:hover{ transform:translateY(-1px); }
+
+.qnum.is-current{
+  border-color:rgba(15,60,104,.35);
+  box-shadow:0 0 0 3px rgba(147,197,253,.35);
+}
+
+.qnum.is-answered{
+  background:#ecfdf5;
+  border-color:#bbf7d0;
+  color:#166534;
+}
+
+/* ===== Question Area ===== */
+.qmeta{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:10px;
+}
+.qmeta strong{ color:#111827; }
+.qtext{
+  background:#f5f8fd;
+  border:1px solid #eef1f5;
+  border-radius:14px;
+  padding:14px;
+  line-height:1.9;
+  font-weight:800;
+  margin-bottom:14px;
+}
+
+/* Options */
+.option{
+  border:1px solid #eef1f5;
+  background:#fff;
+  border-radius:14px;
+  padding:12px 12px;
+  display:flex;
+  align-items:flex-start;
+  gap:10px;
+  margin-bottom:10px;
+}
+
+.option input{ margin-top:4px; }
+
+textarea{
+  width:100%;
+  min-height:140px;
+  border-radius:12px;
+  border:1px solid #d1d5db;
+  padding:10px;
+  font-size:13px;
+  outline:none;
+}
+textarea:focus{
+  border-color:#93c5fd;
+  box-shadow:0 0 0 3px rgba(147,197,253,.35);
+}
+
+.actions{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-top:14px;
+  justify-content:flex-start;
+}
+.left-actions{ display:flex; gap:10px; flex-wrap:wrap; }
+.right-actions{ display:flex; gap:10px; flex-wrap:wrap; }
+
+/* Responsive */
+@media (max-width:1100px){
+  .exam-shell{ grid-template-columns: 1fr; }
+}
+@media (max-width:900px){
+  .sidebar{ display:none; }
+  .topbar{ right:0; }
+  .main{ margin-right:0; }
+}
+</style>
+</head>
+
+<body>
+
+{% include "accounts-templates/sidebar.html" %}
+{% include "accounts-templates/topbar.html" %}
+
+<div class="main">
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="msg {{ message.tags|default:'info' }}">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="exam-shell">
+
+    <!-- ===== Left: Question Navigator ===== -->
+    
+
+    <!-- ===== Right: Question View ===== -->
+    <div class="card">
+      <div class="card-head">
+        <div class="qmeta" style="width:100%;">
+          <div>
+            <div class="hint">Question {{ current_index }} of {{ total_questions }}</div>
+            <div class="title" style="margin-top:4px;">اختبار المقاول</div>
+          </div>
+
+          <div class="timer">
+            <div class="timer-box" id="timerBox">--:--</div>
+            <a class="btn btn-danger" id="endExamBtn" href="{% url 'contractor_request_detail' enrollment.id %}">إنهاء الإختبار</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-body">
+
+        <div class="qtext">
+          {{ current_question.question_text }}
+        </div>
+
+        <form method="post" id="examForm">
+          {% csrf_token %}
+          <input type="hidden" name="question_id" value="{{ current_question.id }}">
+          <input type="hidden" name="current_q" value="{{ current_index }}">
+
+          {# ===== Render by question type ===== #}
+          {% if current_question.question_type == 'TRUE_FALSE' or current_question.question_type == 'MCQ_SINGLE' %}
+            {% if current_question_options %}
+              {% for opt in current_question_options %}
+                <label class="option">
+                  <input type="radio" name="answer" value="{{ opt.id }}"
+                    {% if current_saved|stringformat:"s" == opt.id|stringformat:"s" %}checked{% endif %}>
+                  <div>{{ opt.option_text }}</div>
+                </label>
+              {% endfor %}
+            {% else %}
+              <div class="hint">لا توجد خيارات لهذا السؤال (أضف خيارات من لوحة المدرب)</div>
+            {% endif %}
+
+          {% elif current_question.question_type == 'MCQ_MULTI' %}
+            {% if current_question_options %}
+              {% for opt in current_question_options %}
+                <label class="option">
+                  <input type="checkbox" name="answers_multi" value="{{ opt.id }}"
+                    {% if current_saved and opt.id|stringformat:"s" in current_saved %}checked{% endif %}>
+                  <div>{{ opt.option_text }}</div>
+                </label>
+              {% endfor %}
+            {% else %}
+              <div class="hint">لا توجد خيارات لهذا السؤال (أضف خيارات من لوحة المدرب)</div>
+            {% endif %}
+
+          {% elif current_question.question_type == 'SHORT_ANSWER' or current_question.question_type == 'ESSAY' %}
+            <textarea name="answer_text" placeholder="اكتب إجابتك هنا...">{{ current_saved|default_if_none:"" }}</textarea>
+
+          {% else %}
+            {# fallback #}
+            <textarea name="answer_text" placeholder="اكتب إجابتك هنا...">{{ current_saved|default_if_none:"" }}</textarea>
+          {% endif %}
+
+          <div class="actions">
+            <div class="left-actions">
+              {% if current_index > 1 %}
+                <button class="btn btn-secondary" type="submit" name="go" value="prev">السابق</button>
+              {% else %}
+                <button class="btn btn-secondary" type="button" disabled style="opacity:.6;cursor:not-allowed;">السابق</button>
+              {% endif %}
+
+              {% if current_index < total_questions %}
+                <button class="btn btn-primary" type="submit" name="go" value="next">التالي</button>
+              {% else %}
+                <button class="btn btn-primary" type="button" disabled style="opacity:.6;cursor:not-allowed;">التالي</button>
+              {% endif %}
+            </div>
+          </div>
+        </form>
+
+      </div>
+      
+    </div>
+
+  </div>
+</div>
+
+<script>
+window.addEventListener('DOMContentLoaded', function(){
+  // عداد تنازلي
+  let remaining = parseInt("{{ remaining_seconds|default:0 }}", 10);
+  if (isNaN(remaining) || remaining < 0) remaining = 0;
+
+  const el = document.getElementById("timerBox");
+
+  function pad(n){ return (n < 10 ? "0" : "") + n; }
+
+  function getCookie(name){
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return null;
+  }
+
+  const submitUrl = "{% url 'contractor_exam_submit_action' enrollment.id %}";
+  const retakeUrl = "{% url 'contractor_exam_view' enrollment.id %}?q=1";
+  const dashboardUrl = "{% url 'contractor_dashboard' %}";
+
+  const modal = document.getElementById('resultModal');
+  const resultText = document.getElementById('resultText');
+  const scoreText = document.getElementById('scoreText');
+  const retryBtn = document.getElementById('retryBtn');
+  const printBtn = document.getElementById('printBtn');
+  const closeBtn = document.getElementById('closeModalBtn');
+  const endBtn = document.getElementById('endExamBtn');
+
+  // confirm modal
+  const confirmModal = document.getElementById('confirmModal');
+  const confirmYesBtn = document.getElementById('confirmYesBtn');
+  const confirmNoBtn = document.getElementById('confirmNoBtn');
+
+  let isSubmitting = false;
+
+  function showModal(){
+    if (modal) modal.style.display = 'flex';
+  }
+  function hideModal(){
+    if (modal) modal.style.display = 'none';
+  }
+
+  function showConfirm(){
+    if (confirmModal) confirmModal.style.display = 'flex';
+  }
+  function hideConfirm(){
+    if (confirmModal) confirmModal.style.display = 'none';
+  }
+
+  async function submitExam(){
+    if (isSubmitting) return;
+    isSubmitting = true;
+
+    try{
+      const csrf = getCookie('csrftoken');
+
+      // Include current question answer in the finish request,
+      // so the last answered question is not lost.
+      const params = new URLSearchParams();
+      params.set('finish', '1');
+
+      const form = document.getElementById('examForm');
+      if (form){
+        const qidEl = form.querySelector('input[name="question_id"]');
+        const cqEl = form.querySelector('input[name="current_q"]');
+        if (qidEl && qidEl.value) params.set('question_id', qidEl.value);
+        if (cqEl && cqEl.value) params.set('current_q', cqEl.value);
+
+        const checkedMulti = Array.from(form.querySelectorAll('input[name="answers_multi"]:checked'));
+        if (checkedMulti.length){
+          checkedMulti.forEach((el) => {
+            if (el && el.value) params.append('answers_multi', el.value);
+          });
+        } else {
+          const textEl = form.querySelector('textarea[name="answer_text"]');
+          if (textEl){
+            params.set('answer_text', textEl.value || '');
+          } else {
+            const checkedSingle = form.querySelector('input[name="answer"]:checked');
+            if (checkedSingle && checkedSingle.value){
+              params.set('answer', checkedSingle.value);
+            }
+          }
+        }
+      }
+
+      const resp = await fetch(submitUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+          'X-CSRFToken': csrf || '',
+        },
+        body: params.toString()
+      });
+
+      const data = await resp.json().catch(()=>null);
+      if(!resp.ok || !data || !data.ok){
+        const msg = (data && data.message) ? data.message : 'تعذر إنهاء الاختبار';
+        if (resultText) resultText.textContent = 'تعذر إنهاء الاختبار';
+        if (scoreText) scoreText.textContent = msg;
+        if (retryBtn) retryBtn.style.display = 'none';
+        if (printBtn) printBtn.style.display = 'none';
+        showModal();
+        isSubmitting = false;
+        return;
+      }
+
+      const passed = !!data.passed;
+      const score = data.score_percent;
+      const passing = data.passing_percent;
+
+      const certErr = data.certificate_error;
+
+      if (resultText) {
+        resultText.textContent = passed ? '🎉 مبروك، لقد اجتزت الاختبار' : 'للأسف، لم تجتز الاختبار';
+        resultText.classList.remove('success','error','info','msg-success','msg-error','msg-info');
+        resultText.classList.add(passed ? 'success' : 'error');
+      }
+      if (scoreText) {
+        let line = `درجتك: ${score}% — الحد الأدنى للنجاح: ${passing}%`;
+        if (passed && !data.certificate_url && certErr) line += `\n${certErr}`;
+        scoreText.textContent = line;
+        scoreText.style.whiteSpace = 'pre-line';
+      }
+
+      if (retryBtn) retryBtn.style.display = passed ? 'none' : 'inline-block';
+      if (printBtn) {
+        printBtn.style.display = passed ? 'inline-block' : 'none';
+        printBtn.textContent = (passed && data.certificate_url) ? 'تحميل الشهادة (PDF)' : 'فتح الشهادات';
+      }
+
+      if (retryBtn){
+        retryBtn.onclick = function(){ window.location.href = retakeUrl; };
+      }
+
+      if (printBtn){
+        printBtn.onclick = function(){
+          if (data.certificate_url){
+            window.open(data.certificate_url, '_blank');
+            return;
+          }
+          window.location.href = dashboardUrl;
+        };
+      }
+
+      if (closeBtn){
+        closeBtn.onclick = function(){
+          hideModal();
+          // بعد الإنهاء الأفضل توجيه المستخدم للتفاصيل/اللوحة
+          window.location.href = passed ? dashboardUrl : retakeUrl;
+        };
+      }
+
+      showModal();
+    }catch(e){
+      if (resultText) resultText.textContent = 'حدث خطأ أثناء إنهاء الاختبار';
+      if (scoreText) scoreText.textContent = 'حاول مرة أخرى.';
+      if (retryBtn) retryBtn.style.display = 'none';
+      if (printBtn) printBtn.style.display = 'none';
+      showModal();
+    }finally{
+      isSubmitting = false;
+    }
+  }
+
+  if (endBtn){
+    endBtn.addEventListener('click', function(e){
+      // حافظ على شكل الرابط القديم، لكن امنع الانتقال واظهر التأكيد
+      if (e && e.preventDefault) e.preventDefault();
+      showConfirm();
+    });
+  }
+
+  if (confirmYesBtn){
+    confirmYesBtn.addEventListener('click', function(){
+      hideConfirm();
+      submitExam();
+    });
+  }
+  if (confirmNoBtn){
+    confirmNoBtn.addEventListener('click', function(){
+      hideConfirm();
+    });
+  }
+
+  function tick(){
+    const m = Math.floor(remaining / 60);
+    const s = remaining % 60;
+    el.textContent = pad(m) + ":" + pad(s);
+
+    if (remaining <= 0){
+      // انتهى الوقت — سلّم الاختبار تلقائياً
+      submitExam();
+      return;
+    }
+    remaining -= 1;
+    setTimeout(tick, 1000);
+  }
+
+  tick();
+});
+</script>
+
+<div id="resultModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;align-items:center;justify-content:center;padding:18px;">
+  <div class="exam-modal">
+    <h3>نتيجة الاختبار</h3>
+
+    <div id="resultText" class="msg info" role="status" aria-live="polite"></div>
+    <p id="scoreText" class="exam-modal__meta"></p>
+
+    <div class="exam-modal__actions">
+      <button id="retryBtn" class="btn btn-primary" type="button" style="display:none;">إعادة المحاولة</button>
+      <button id="printBtn" class="btn btn-primary" type="button" style="display:none;">تحميل الشهادة (PDF)</button>
+      <button id="closeModalBtn" class="btn btn-secondary" type="button">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<div id="confirmModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;align-items:center;justify-content:center;padding:18px;">
+  <div class="exam-modal">
+    <h3>تأكيد إنهاء الاختبار</h3>
+    <p class="exam-modal__meta" style="margin:0 0 16px;">هل أنت متأكد من إنهاء الاختبار؟ سيتم احتساب الدرجة.</p>
+    <div class="exam-modal__actions">
+      <button id="confirmYesBtn" class="btn btn-primary" type="button">إنهاء وحساب الدرجة</button>
+      <button id="confirmNoBtn" class="btn btn-secondary" type="button">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<style>
+@import url('/static/branding/branding.css');
+  .exam-modal{
+    background:#fff;
+    max-width:560px;
+    margin:0;
+    width:min(560px, 100%);
+    padding:18px 18px 16px;
+    border-radius:16px;
+    box-shadow:0 20px 60px rgba(0,0,0,.22);
+    border:1px solid rgba(0,0,0,.06);
+  }
+  .exam-modal h3{ margin:0 0 10px; font-size:18px; }
+  .exam-modal .msg{ margin:0 0 12px; }
+  .exam-modal__title{ margin:0 0 10px; color:#111; font-weight:700; }
+  .exam-modal__meta{ margin:0 0 14px; color:#6b7280; }
+  .exam-modal__actions{ display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap; }
+</style>
+
+</body>
+</html>

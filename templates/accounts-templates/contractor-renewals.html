@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>تجديد الشهادات</title>
+<style>
+@import url('/static/branding/branding.css');
+:root{
+  --blue-main:#0076ff;
+  --bg:#f7f9fc;
+  --card:#ffffff;
+  --text:#1f2937;
+  --muted:#5f6f85;
+  --border:#e5e7eb;
+  --sidebar-w:260px;
+  --topbar-h:70px;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:"SE","Segoe UI",Tahoma,Arial,sans-serif;background:var(--bg);color:var(--text)}
+.main{margin-right:var(--sidebar-w);padding:calc(var(--topbar-h) + 30px) 28px 36px}
+.title{margin:0 0 14px;color:var(--blue-main);font-size:20px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;box-shadow:0 14px 34px rgba(15,45,90,.1);padding:16px 18px;margin-bottom:16px}
+.table-wrap{overflow:auto}
+table{width:100%;border-collapse:collapse}
+th,td{padding:10px;border-bottom:1px solid #edf1f7;text-align:right;vertical-align:top;font-size:13px}
+th{font-size:12px;color:var(--muted);background:#f7f9fc}
+.btn{display:inline-block;padding:8px 12px;border:none;border-radius:10px;text-decoration:none;font-size:12px;font-weight:700;cursor:pointer}
+.btn-check{background:#e8f0ff;color:#0f3c68}
+.btn-renew{background:var(--blue-main);color:#fff}
+.status-ok{color:#166534;font-weight:700}
+.status-no{color:#991b1b;font-weight:700}
+.empty{color:var(--muted);text-align:center;padding:22px}
+@media (max-width:900px){.main{margin-right:0}}
+</style>
+</head>
+<body>
+{% include "accounts-templates/sidebar.html" %}
+{% include "accounts-templates/topbar.html" %}
+
+<main class="main">
+  <h1 class="title">تجديد الشهادات وبطاقات الاجتياز</h1>
+
+  <section class="card">
+    <h3 style="margin:0 0 10px;">الاعتمادات الحالية</h3>
+    {% if certificate_rows %}
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>البرنامج</th>
+              <th>نوع الاعتماد</th>
+              <th>تاريخ الإصدار</th>
+              <th>تاريخ الانتهاء</th>
+              <th>التحقق</th>
+              <th>النتيجة</th>
+              <th>الإجراء</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in certificate_rows %}
+              <tr>
+                <td>{{ row.certificate.program.title|default:"—" }}</td>
+                <td>{{ row.certificate.get_certificate_type_display }}</td>
+                <td>{{ row.certificate.issued_at|date:"Y-m-d" }}</td>
+                <td>{{ row.certificate.expires_at|date:"Y-m-d"|default:"—" }}</td>
+                <td>
+                  <form method="get" action="">
+                    <input type="hidden" name="check" value="{{ row.certificate.id }}">
+                    <button class="btn btn-check" type="submit">التحقق من الأهلية</button>
+                  </form>
+                </td>
+                <td>
+                  {% if row.is_checked %}
+                    <div class="{% if row.is_eligible %}status-ok{% else %}status-no{% endif %}">{{ row.status_text }}</div>
+                    {% if row.detail_text %}<div style="margin-top:5px;">{{ row.detail_text }}</div>{% endif %}
+                  {% else %}
+                    —
+                  {% endif %}
+                </td>
+                <td>
+                  {% if row.is_checked and row.is_eligible %}
+                    <form method="post" action="{% url 'training:apply_renewal' row.certificate.id %}">
+                      {% csrf_token %}
+                      <button class="btn btn-renew" type="submit">Renew</button>
+                    </form>
+                  {% else %}
+                    —
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty">لا توجد شهادات أو بطاقات اجتياز حالياً.</div>
+    {% endif %}
+  </section>
+
+  <section class="card">
+    <h3 style="margin:0 0 10px;">طلبات التجديد</h3>
+    {% if renewal_requests %}
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>البرنامج</th>
+              <th>تاريخ الطلب</th>
+              <th>الحالة</th>
+              <th>تفاصيل</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for req in renewal_requests %}
+              <tr>
+                <td>{{ req.program.title|default:"—" }}</td>
+                <td>{{ req.created_at|date:"Y-m-d" }}</td>
+                <td>{{ req.get_status_display }}</td>
+                <td><a class="btn btn-check" href="{% url 'contractor_request_detail' req.id %}">عرض</a></td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty">لا توجد طلبات تجديد حتى الآن.</div>
+    {% endif %}
+  </section>
+</main>
+</body>
+</html>

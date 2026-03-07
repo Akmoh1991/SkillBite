@@ -1,0 +1,177 @@
+{% load static %}
+
+<style>
+@import url('/static/branding/branding.css');
+:root {
+  --blue-dark: #0027b9;
+  --blue-main: #0076ff;
+  --orange: #0076ff;
+  --text-light: #e6e6e6;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* ================= FOOTER ================= */
+footer {
+  background: linear-gradient(180deg, #001a5f 0%, #002e9b 52%, #003da8 100%);
+  color: var(--text-light);
+  font-family: "SE", "Segoe UI", Tahoma, Arial, sans-serif;
+}
+
+/* ================= TOP AREA ================= */
+.footer-top {
+  padding: 70px 70px 40px;
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr 1fr;
+  gap: 40px;
+}
+
+/* ===== BRAND ===== */
+.footer-brand img {
+  height: 96px;
+  width: auto;
+  max-width: 100%;
+  margin-bottom: 18px;
+}
+
+.footer-brand p {
+  font-size: 14px;
+  line-height: 1.8;
+  opacity: 0.9;
+}
+
+/* ===== FOOTER COLUMNS ===== */
+.footer-col h4 {
+  margin-bottom: 18px;
+  font-size: 15px;
+  color: #ffffff;
+}
+
+.footer-col a {
+  display: block;
+  color: var(--text-light);
+  text-decoration: none;
+  font-size: 14px;
+  margin-bottom: 10px;
+  opacity: 0.85;
+  transition: color 0.25s ease;
+}
+
+.footer-col a:hover {
+  color: var(--orange);
+}
+
+/* ================= DIVIDER ================= */
+.footer-divider {
+  height: 1px;
+  background: rgba(255,255,255,0.1);
+  margin: 0 70px;
+}
+
+/* ================= BOTTOM AREA ================= */
+.footer-bottom {
+  padding: 22px 70px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  opacity: 0.85;
+}
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 900px) {
+  .footer-brand img {
+    height: 72px;
+  }
+
+  .footer-top {
+    grid-template-columns: 1fr 1fr;
+    padding: 60px 30px 30px;
+  }
+
+  .footer-divider {
+    margin: 0 30px;
+  }
+
+  .footer-bottom {
+    flex-direction: column;
+    gap: 10px;
+    padding: 20px 30px;
+    text-align: center;
+  }
+}
+
+@media (max-width: 500px) {
+  .footer-top {
+    grid-template-columns: 1fr;
+    padding: 50px 20px 28px;
+    gap: 26px;
+  }
+
+  .footer-divider {
+    margin: 0 20px;
+  }
+
+  .footer-bottom {
+    padding: 18px 20px;
+  }
+}
+</style>
+
+<footer>
+  <!-- ===== TOP ===== -->
+  <div class="footer-top">
+
+    <!-- BRAND -->
+    <div class="footer-brand">
+      <img src="/static/SEC_logo.svg" alt="SEC Logo">
+      <p>
+       نظام تدريب و تأهيل مقاولي الشركة السعودية للكهرباء يسعى لرفع مستوى السلامة وجودة تنفيذ الأعمال
+      </p>
+    </div>
+
+    <!-- COLUMN 1 -->
+    <div class="footer-col">
+      <h4>النظام</h4>
+      <a href="#">عن النظام</a>
+      <a href="#">البرامج</a>
+      <a href="#">الشهادات</a>
+      <a href="#">الاعتماد</a>
+    </div>
+
+    <!-- COLUMN 2 -->
+    <div class="footer-col">
+      <h4>الدعم</h4>
+      <a href="#">الأسئلة الشائعة</a>
+      <a href="#">الدعم الفني</a>
+      <a href="#">سياسة الخصوصية</a>
+      <a href="#">الشروط والأحكام</a>
+    </div>
+
+    <!-- COLUMN 3 -->
+    <div class="footer-col">
+      <h4>التواصل</h4>
+      <a href="#">اتصل بنا</a>
+      <a href="#">مركز المساعدة</a>
+      <a href="#">بلاغات</a>
+    </div>
+
+  </div>
+
+  <!-- DIVIDER -->
+  <div class="footer-divider"></div>
+
+  <!-- ===== BOTTOM ===== -->
+  <div class="footer-bottom">
+    <div>
+      © 2026 نظام الشهادات الحرفية – جميع الحقوق محفوظة
+    </div>
+    <!--
+    <div>
+      تصميم وتطوير المنصة الرقمية
+    </div>
+    -->
+  </div>
+</footer>

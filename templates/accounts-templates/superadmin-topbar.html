@@ -1,0 +1,64 @@
+<style>
+@import url('/static/branding/branding.css');
+.topbar{
+  position:fixed;
+  top:0;
+  right:var(--sidebar-w);
+  left:0;
+  height:var(--topbar-h);
+  background:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 28px;
+  box-shadow:0 8px 24px rgba(15,45,90,.08);
+  border-bottom:1px solid #e8edf5;
+  z-index:1200;
+}
+
+.topbar .user{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-size:14px;
+  color:var(--text);
+}
+
+.topbar .badge{
+  display:inline-block;
+  padding:4px 10px;
+  border-radius:999px;
+  font-size:12px;
+  color:#fff;
+  background:linear-gradient(135deg, #0076ff, #005fce);
+}
+
+.topbar .actions{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  color:var(--muted);
+  font-size:14px;
+}
+
+.topbar .actions a{
+  text-decoration:none;
+  background:var(--blue-main);
+  color:#fff;
+  padding:8px 12px;
+  border-radius:10px;
+  font-size:13px;
+}
+
+@media (max-width:900px){
+  .topbar{ right:0; }
+}
+</style>
+
+<header class="topbar">
+  <div class="user">
+    <strong><span>مرحباً بك {{ request.user.username }} 👋</span></strong>
+  </div>
+
+  
+</header>

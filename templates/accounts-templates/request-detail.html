@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>تفاصيل الطلب</title>
+
+<style>
+@import url('/static/branding/branding.css');
+:root{
+  --blue-dark:#0027b9;
+  --blue-main:#0076ff;
+  --orange:#0076ff;
+
+  --bg:#f7f9fc;
+  --card:#ffffff;
+
+  --text:#1f2937;
+  --muted:#5f6f85;
+
+  --sidebar-w:260px;
+  --topbar-h:70px;
+}
+
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  font-family: "SE", "Segoe UI", Tahoma, Arial, sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+
+/* ===== Sidebar ===== */
+.sidebar{
+  position:fixed;
+  top:0;
+  right:0;
+  width:var(--sidebar-w);
+  height:100vh;
+  background:linear-gradient(180deg, #0027b9, #001f8c);
+  color:#fff;
+  padding:22px 18px;
+}
+
+.sidebar__link.is-active{
+  background:rgba(255,255,255,.15);
+}
+
+/* ===== Topbar ===== */
+.topbar{
+  position:fixed;
+  top:0;
+  right:var(--sidebar-w);
+  left:0;
+  height:var(--topbar-h);
+  background:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 26px;
+  box-shadow:0 4px 12px rgba(0,0,0,.06);
+  z-index:1000;
+}
+
+/* ===== Main ===== */
+.main{
+  margin-right:var(--sidebar-w);
+  padding: calc(var(--topbar-h) + 36px) 28px 40px;
+}
+
+/* ===== Header ===== */
+.page-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:18px;
+}
+
+.page-header h2{
+  margin:0;
+  font-size:18px;
+  color:var(--blue-main);
+}
+
+.actions{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.btn{
+  border:none;
+  padding:10px 14px;
+  border-radius:12px;
+  font-weight:700;
+  cursor:pointer;
+  text-decoration:none;
+  display:inline-block;
+  font-size:13px;
+}
+
+.btn-secondary{
+  background:#e9eef6;
+  color:var(--blue-main);
+}
+
+.btn-primary{
+  background:var(--blue-main);
+  color:#fff;
+}
+
+.btn-danger{
+  background:#dc2626;
+  color:#fff;
+}
+
+.btn-success{
+  background:#16a34a;
+  color:#fff;
+}
+
+/* ===== Card ===== */
+.card{
+  background:var(--card);
+  border-radius:16px;
+  box-shadow:0 14px 34px rgba(15,45,90,.12);
+  overflow:hidden;
+}
+
+/* ===== Sections ===== */
+.section{
+  padding:18px 22px;
+  border-top:1px solid #eef1f5;
+}
+
+.section:first-child{
+  border-top:none;
+}
+
+.section-title{
+  margin:0 0 12px;
+  font-size:13px;
+  color:var(--muted);
+  font-weight:700;
+}
+
+/* ===== Info Grid ===== */
+.info-grid{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:12px;
+}
+
+.info-item{
+  background:#f5f8fd;
+  border:1px solid #eef1f5;
+  border-radius:14px;
+  padding:14px 14px;
+}
+
+.label{
+  font-size:12px;
+  color:var(--muted);
+  margin-bottom:6px;
+  font-weight:700;
+}
+
+.value{
+  font-size:14px;
+  font-weight:700;
+  color:var(--blue-main);
+}
+
+.value .muted{
+  color:var(--muted);
+  font-weight:600;
+}
+
+/* ===== Status Badge ===== */
+.status{
+  display:inline-block;
+  padding:6px 14px;
+  border-radius:999px;
+  font-size:12px;
+  color:#fff;
+  width:max-content;
+}
+
+.status.pending{ background:#f59e0b; }
+.status.approved{ background:#16a34a; }
+.status.rejected{ background:#dc2626; }
+.status.other{ background:#6b7280; }
+
+.note{
+  background:#fff7ed;
+  border:1px solid #fed7aa;
+  color:#9a3412;
+  border-radius:14px;
+  padding:14px 14px;
+  line-height:1.8;
+  font-size:13px;
+}
+
+.note.danger{
+  background:#fff1f2;
+  border:1px solid #fecdd3;
+  color:#9f1239;
+}
+
+/* ===== Action Box ===== */
+.action-box{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  align-items:center;
+}
+
+/* ===== Trainer Reject Box (optional) ===== */
+.reject-box{
+  display:none;
+  margin-top:12px;
+  background:#f5f8fd;
+  border:1px solid #eef1f5;
+  border-radius:14px;
+  padding:14px;
+}
+
+/* ===== Modal (Popup) ===== */
+.modal{
+  position:fixed;
+  inset:0;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:18px;
+  z-index:2000;
+}
+
+.modal.is-open{ display:flex; }
+
+.modal__backdrop{
+  position:absolute;
+  inset:0;
+  background:rgba(2, 6, 23, .55);
+  backdrop-filter: blur(6px);
+}
+
+.modal__panel{
+  position:relative;
+  width:min(560px, 100%);
+  background:#fff;
+  border-radius:18px;
+  box-shadow:0 20px 60px rgba(0,0,0,.25);
+  overflow:hidden;
+  transform: translateY(10px);
+  opacity:0;
+  animation: pop .18s ease-out forwards;
+}
+
+@keyframes pop{ to{ transform: translateY(0); opacity:1; } }
+
+.modal__header{
+  padding:16px 18px;
+  background:linear-gradient(135deg, #0076ff, #0027b9);
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+
+.modal__title{ margin:0; font-size:14px; font-weight:900; }
+
+.modal__close{
+  width:36px;
+  height:36px;
+  border-radius:12px;
+  border:none;
+  cursor:pointer;
+  background:rgba(255,255,255,.15);
+  color:#fff;
+  font-weight:900;
+}
+
+.modal__close:hover{ background:rgba(255,255,255,.25); }
+
+.modal__body{ padding:16px 18px 18px; }
+
+textarea{
+  width:100%;
+  min-height:110px;
+  border-radius:12px;
+  border:1px solid #d1d5db;
+  padding:10px;
+  font-size:13px;
+  outline:none;
+}
+
+textarea:focus{
+  border-color:#93c5fd;
+  box-shadow:0 0 0 3px rgba(147,197,253,.35);
+}
+
+/* ===== Messages ===== */
+.msg{
+  margin-bottom:14px;
+  padding:12px 14px;
+  border-radius:14px;
+  font-size:13px;
+  font-weight:700;
+}
+
+.msg-error{ background:#fff1f2; border:1px solid #fecdd3; color:#9f1239; }
+.msg-success{ background:#ecfdf5; border:1px solid #bbf7d0; color:#166534; }
+.msg-info{ background:#eff6ff; border:1px solid #bfdbfe; color:#1e3a8a; }
+
+/* ===== Responsive ===== */
+@media (max-width:900px){
+  .sidebar{ display:none; }
+  .topbar{ right:0; }
+  .main{ margin-right:0; }
+  .info-grid{ grid-template-columns:1fr; }
+  .page-header{ flex-direction:column; align-items:flex-start; }
+}
+</style>
+</head>
+
+<body>
+
+{% if is_coordinator %}
+  {% include "accounts-templates/training-coordinator-sidebar.html" %}
+  {% include "accounts-templates/training-coordinator-topbar.html" %}
+{% else %}
+  {% include "accounts-templates/sidebar.html" %}
+  {% include "accounts-templates/topbar.html" %}
+{% endif %}
+
+<div class="main">
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="msg
+        {% if message.tags == 'error' %}msg-error
+        {% elif message.tags == 'success' %}msg-success
+        {% else %}msg-info{% endif %}">
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="page-header">
+    <h2>🧾 تفاصيل الطلب #{{ enrollment.id }}</h2>
+
+    <div class="actions">
+      {% if is_contractor %}
+        <a class="btn btn-secondary" href="{% url 'contractor_requests' %}">رجوع للطلبات</a>
+      {% elif is_trainer %}
+        <a class="btn btn-secondary" href="{% url 'trainer_requests' %}">رجوع للطلبات</a>
+      {% elif is_coordinator %}
+        <a class="btn btn-secondary" href="{% url 'training_coordinator_requests' %}">رجوع للطلبات</a>
+      {% else %}
+        <a class="btn btn-secondary" href="{% url 'home' %}">الرئيسية</a>
+      {% endif %}
+    </div>
+
+  </div>
+
+  <div class="card">
+
+    <!-- ===== Status ===== -->
+    <div class="section">
+      <p class="section-title">حالة الطلب</p>
+
+      <div>
+        {% if enrollment.status == 'NEW_REQUEST' or enrollment.status == 'WAITING_EXAM_SCHEDULING' or enrollment.status == 'WAITING_PRACTICAL_GRADE' %}
+          <span class="status pending">{{ enrollment.get_status_display }}</span>
+        {% elif enrollment.status == 'REJECTED' %}
+          <span class="status rejected">{{ enrollment.get_status_display }}</span>
+        {% elif enrollment.status == 'CERTIFIED' or enrollment.status == 'COMPLETED_WITH_PASS_CARD' %}
+          <span class="status approved">{{ enrollment.get_status_display }}</span>
+        {% else %}
+          <span class="status other">{{ enrollment.get_status_display }}</span>
+        {% endif %}
+      </div>
+
+      {% if enrollment.status == 'WAITING_PRACTICAL_GRADE' %}
+        <div style="margin-top:12px;" class="note">
+          تم اجتياز الجزء النظري. لا يمكن إصدار الشهادة/بطاقة الاجتياز حتى يقوم المدرب بإدخال درجة الجزء العملي (والمرفقات إن وجدت).
+        </div>
+      {% endif %}
+
+      {% if enrollment.status == 'REJECTED' and enrollment.rejection_reason %}
+        <div style="margin-top:12px;" class="note danger">
+          <strong>سبب الرفض:</strong><br>
+          <span style="white-space:pre-wrap;">{{ enrollment.rejection_reason }}</span>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- ===== Summary ===== -->
+    <div class="section">
+      <p class="section-title">ملخص سريع</p>
+
+      <div class="info-grid">
+        <div class="info-item">
+          <div class="label">البرنامج</div>
+          <div class="value">{{ program_name }}</div>
+        </div>
+
+        <div class="info-item">
+          <div class="label">تاريخ التقديم</div>
+          <div class="value">
+            {% if enrollment.created_at %}
+              {{ enrollment.created_at|date:"Y-m-d" }}
+            {% else %}
+              <span class="muted">—</span>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="info-item">
+          <div class="label">المقاول</div>
+          <div class="value">
+            {% if enrollment.contractor %}
+              {{ enrollment.contractor.username|default:enrollment.contractor }}
+            {% else %}
+              <span class="muted">—</span>
+            {% endif %}
+          </div>
+        </div>
+
+        <!--<div class="info-item">
+          <div class="label">المدرب</div>
+          <div class="value">
+            {% if enrollment.trainer %}
+              {{ enrollment.trainer.username|default:enrollment.trainer }}
+            {% else %}
+              <span class="muted">غير معيّن</span>
+            {% endif %}
+          </div>
+        </div>-->
+
+        <div class="info-item">
+          <div class="label">رقم سداد</div>
+          <div class="value">
+            {% if enrollment.invoice_number %}
+              {{ enrollment.invoice_number }}
+            {% else %}
+              <span class="muted">—</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== Extra Details (Safe Fields) ===== 
+    <div class="section">
+      <p class="section-title">تفاصيل إضافية</p>
+
+      <div class="info-grid">
+        <div class="info-item">
+          <div class="label">رقم الطلب</div>
+          <div class="value">#{{ enrollment.id }}</div>
+        </div>
+
+        <div class="info-item">
+          <div class="label">آخر تحديث (إن وجد)</div>
+          <div class="value">
+            {% if enrollment.updated_at %}
+              {{ enrollment.updated_at|date:"Y-m-d H:i" }}
+            {% else %}
+              <span class="muted">—</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+    </div>-->
+
+    <!-- ✅✅✅ Contractor – Exam / Confirmation -->
+    {% if is_contractor and enrollment.status != 'REJECTED' %}
+      {% if enrollment.status == 'WAITING_EXAM_SCHEDULING' or enrollment.status == 'EXAM_SCHEDULED' %}
+        <div class="section">
+          <p class="section-title">مواعيد الاختبار</p>
+          <div class="action-box">
+            <a class="btn btn-primary" href="{% url 'contractor_exam_sessions_view' enrollment.id %}">عرض المواعيد المتاحة</a>
+            <a class="btn btn-secondary" href="{% url 'contractor_requests' %}">رجوع</a>
+          </div>
+        </div>
+      {% elif enrollment.exam_date %}
+        {% if not requires_theoretical or enrollment.exam_template %}
+          {% if enrollment.status == 'EXAM_CONFIRMED' or enrollment.status == 'IN_EXAM' or enrollment.status == 'FAILED' %}
+            <div class="section">
+              <p class="section-title">الاختبار</p>
+
+              <div class="action-box">
+                {% if requires_theoretical %}
+                  {% if enrollment.status == 'FAILED' and locked_by_attempt_limit %}
+                    <a class="btn btn-secondary" href="{% url 'contractor_requests' %}">رجوع</a>
+                  {% else %}
+                    <a class="btn btn-primary" href="{% url 'contractor_exam_view' enrollment.id %}">دخول الاختبار</a>
+                    <a class="btn btn-secondary" href="{% url 'contractor_requests' %}">رجوع</a>
+                  {% endif %}
+                {% else %}
+                  <a class="btn btn-secondary" href="{% url 'contractor_requests' %}">رجوع</a>
+                {% endif %}
+              </div>
+
+              <div style="margin-top:12px;" class="note">
+                <strong>موعد الاختبار:</strong>
+                {{ enrollment.exam_date|date:"Y-m-d H:i" }}
+              </div>
+            </div>
+          {% endif %}
+        {% endif %}
+      {% endif %}
+    {% endif %}
+
+    <!-- ✅✅✅ Contractor Actions (Confirm Payment) -->
+    {% if is_contractor and enrollment.status == 'INVOICE_ISSUED' and enrollment.program.requires_payment %}
+      <div class="section">
+        <p class="section-title">إجراءات المقاول</p>
+
+        <div class="action-box">
+          <form method="post" action="{% url 'contractor_confirm_payment_action' enrollment.id %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary">تأكيد السداد</button>
+          </form>
+
+          <a class="btn btn-secondary" href="{% url 'contractor_requests' %}">رجوع</a>
+        </div>
+
+        <div style="margin-top:12px;" class="note">
+          بالضغط على "تأكيد السداد" سيتم نقل الطلب تلقائيًا للمرحلة التالية حسب تسلسل النظام.
+        </div>
+      </div>
+    {% endif %}
+
+    <!-- ===== Trainer Actions (يبقى موجود لو دخلها مدرب) ===== -->
+    {% if is_trainer %}
+      <div class="section">
+        <p class="section-title">إجراءات المدرب</p>
+
+        <div class="action-box">
+          <form method="post" action="{% url 'trainer_request_action' enrollment.id %}">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="approve">
+            <button type="submit" class="btn btn-success">اعتماد الطلب</button>
+          </form>
+
+          <button type="button" class="btn btn-danger" onclick="openRejectModal()">رفض الطلب</button>
+
+          <a class="btn btn-secondary" href="{% url 'trainer_requests' %}">رجوع</a>
+        </div>
+
+      </div>
+    {% endif %}
+
+  </div>
+</div>
+
+<!-- ===== Reject Modal ===== -->
+{% if is_trainer %}
+<div class="modal" id="rejectModal" aria-hidden="true">
+  <div class="modal__backdrop" onclick="closeRejectModal()"></div>
+
+  <div class="modal__panel" role="dialog" aria-modal="true" aria-labelledby="rejectModalTitle">
+    <div class="modal__header">
+      <h3 class="modal__title" id="rejectModalTitle">رفض الطلب</h3>
+      <button class="modal__close" type="button" onclick="closeRejectModal()">✕</button>
+    </div>
+
+    <div class="modal__body">
+      <div class="label" style="margin-bottom:8px;">سبب الرفض (إجباري)</div>
+      <form method="post" action="{% url 'trainer_request_action' enrollment.id %}" id="rejectForm">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="reject">
+        <textarea name="rejection_reason" id="rejectionReasonInput" placeholder="اكتب سبب الرفض هنا..." required></textarea>
+
+        <div class="action-box" style="margin-top:12px; justify-content:flex-start;">
+          <button type="submit" class="btn btn-danger">تأكيد الرفض</button>
+          <button type="button" class="btn btn-secondary" onclick="closeRejectModal()">إلغاء</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<script>
+function openRejectModal(){
+  const modal = document.getElementById('rejectModal');
+  const input = document.getElementById('rejectionReasonInput');
+  if(!modal) return;
+  modal.classList.add('is-open');
+  modal.setAttribute('aria-hidden','false');
+  setTimeout(() => input && input.focus(), 50);
+}
+
+function closeRejectModal(){
+  const modal = document.getElementById('rejectModal');
+  if(!modal) return;
+  modal.classList.remove('is-open');
+  modal.setAttribute('aria-hidden','true');
+}
+
+document.addEventListener('keydown', function(e){
+  const modal = document.getElementById('rejectModal');
+  if(e.key === 'Escape' && modal && modal.classList.contains('is-open')){
+    closeRejectModal();
+  }
+});
+</script>
+
+</body>
+</html>

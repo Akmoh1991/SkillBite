@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ business.name }} | Business Owner</title>
+<style>
+body{margin:0;font-family:"Segoe UI",Tahoma,Arial,sans-serif;background:#f5f7fb;color:#122033}
+.layout{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
+.sidebar{background:linear-gradient(180deg,#113b67,#1f7a8c);color:#fff;padding:24px}
+.brand{font-size:24px;font-weight:800;letter-spacing:.02em}
+.brand small{display:block;margin-top:6px;font-size:13px;font-weight:500;opacity:.8}
+.menu{margin:28px 0 0;padding:0;list-style:none}
+.menu a{display:block;padding:12px 14px;border-radius:12px;color:#fff;text-decoration:none;background:rgba(255,255,255,.08);margin-bottom:10px}
+.menu a:hover{background:rgba(255,255,255,.16)}
+.logout{margin-top:28px;display:inline-block;color:#113b67;background:#fff;padding:10px 14px;border-radius:10px;text-decoration:none;font-weight:700}
+.main{padding:28px}
+.hero{background:linear-gradient(135deg,#fff7ed,#ffffff);border:1px solid #fed7aa;border-radius:20px;padding:24px 26px;margin-bottom:22px}
+.hero h1{margin:0 0 8px;font-size:30px}
+.hero p{margin:0;color:#5b6472}
+.messages{margin-bottom:18px}
+.msg{background:#fff;border:1px solid #d9e2ec;border-radius:12px;padding:12px 14px;margin-bottom:10px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:22px}
+.stat{background:#fff;border-radius:16px;padding:18px;border:1px solid #e2e8f0}
+.stat b{display:block;font-size:28px;margin-top:8px;color:#0f766e}
+.section{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:18px;margin-bottom:18px}
+.card{background:#fff;border:1px solid #e2e8f0;border-radius:18px;padding:18px}
+.card h2{margin:0 0 14px;font-size:18px}
+.card h3{margin:18px 0 10px;font-size:15px}
+.field{margin-bottom:10px}
+.field label{display:block;font-size:13px;font-weight:700;margin-bottom:5px}
+.field input,.field select,.field textarea{width:100%;padding:10px 12px;border-radius:10px;border:1px solid #cbd5e1;font:inherit;box-sizing:border-box}
+.field textarea{min-height:92px;resize:vertical}
+.btn{display:inline-block;border:0;background:#0f766e;color:#fff;padding:10px 14px;border-radius:10px;font-weight:700;cursor:pointer}
+.muted{color:#64748b;font-size:13px}
+.list{margin:0;padding:0;list-style:none}
+.list li{padding:12px 0;border-bottom:1px solid #edf2f7}
+.list li:last-child{border-bottom:0}
+.pill{display:inline-block;background:#ecfeff;color:#155e75;border-radius:999px;padding:4px 10px;font-size:12px;font-weight:700}
+@media (max-width: 900px){.layout{grid-template-columns:1fr}.sidebar{padding-bottom:18px}.main{padding:18px}}
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand">SkillBite<small>{{ business.name }}</small></div>
+    <ul class="menu">
+      <li><a href="{% url 'business_owner_dashboard' %}">Dashboard</a></li>
+      <li><a href="#employees">Employees</a></li>
+      <li><a href="#courses">Courses</a></li>
+      <li><a href="#checklists">SOP Checklists</a></li>
+    </ul>
+    <a class="logout" href="{% url 'logout' %}">Logout</a>
+  </aside>
+
+  <main class="main">
+    <section class="hero">
+      <h1>{{ business.name }}</h1>
+      <p>Minimal multi-tenant LMS for employee training and daily SOP execution.</p>
+    </section>
+
+    {% if messages %}
+      <div class="messages">
+        {% for message in messages %}
+          <div class="msg">{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <section class="stats">
+      <div class="stat">Employees<b>{{ employees|length }}</b></div>
+      <div class="stat">Job Titles<b>{{ job_titles|length }}</b></div>
+      <div class="stat">Courses<b>{{ courses|length }}</b></div>
+      <div class="stat">SOP Checklists<b>{{ checklists|length }}</b></div>
+    </section>
+
+    <section class="section" id="employees">
+      <div class="card">
+        <h2>Add Job Title</h2>
+        <form method="post" action="{% url 'business_owner_job_title_create' %}">
+          {% csrf_token %}
+          <div class="field">
+            <label for="job-title-name">Title</label>
+            <input id="job-title-name" type="text" name="name" required>
+          </div>
+          <button class="btn" type="submit">Save Job Title</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2>Add Employee</h2>
+        <form method="post" action="{% url 'business_owner_employee_create' %}">
+          {% csrf_token %}
+          <div class="field">
+            <label for="employee-username">Username</label>
+            <input id="employee-username" type="text" name="username" required>
+          </div>
+          <div class="field">
+            <label for="employee-email">Email</label>
+            <input id="employee-email" type="email" name="email">
+          </div>
+          <div class="field">
+            <label for="employee-name">Full Name</label>
+            <input id="employee-name" type="text" name="full_name" required>
+          </div>
+          <div class="field">
+            <label for="employee-password">Password</label>
+            <input id="employee-password" type="password" name="password" required>
+          </div>
+          <div class="field">
+            <label for="employee-job-title">Job Title</label>
+            <select id="employee-job-title" name="job_title">
+              <option value="">No job title yet</option>
+              {% for job_title in job_titles %}
+                <option value="{{ job_title.id }}">{{ job_title.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <button class="btn" type="submit">Create Employee</button>
+        </form>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="card">
+        <h2>Current Team</h2>
+        <ul class="list">
+          {% for employee in employees %}
+            <li>
+              <strong>{{ employee.user.get_full_name|default:employee.user.username }}</strong><br>
+              <span class="muted">{{ employee.user.username }}{% if employee.job_title %} | {{ employee.job_title.name }}{% endif %}</span>
+            </li>
+          {% empty %}
+            <li class="muted">No employees yet.</li>
+          {% endfor %}
+        </ul>
+      </div>
+
+      <div class="card">
+        <h2>Job Titles</h2>
+        <ul class="list">
+          {% for job_title in job_titles %}
+            <li>
+              <strong>{{ job_title.name }}</strong><br>
+              <span class="muted">{{ job_title.employees.count }} employees</span>
+            </li>
+          {% empty %}
+            <li class="muted">No job titles yet.</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </section>
+
+    <section class="section" id="courses">
+      <div class="card">
+        <h2>Create Course</h2>
+        <form method="post" action="{% url 'business_owner_course_create' %}">
+          {% csrf_token %}
+          <div class="field">
+            <label for="course-title">Title</label>
+            <input id="course-title" type="text" name="title" required>
+          </div>
+          <div class="field">
+            <label for="course-description">Description</label>
+            <textarea id="course-description" name="description"></textarea>
+          </div>
+          <div class="field">
+            <label for="course-minutes">Estimated Minutes</label>
+            <input id="course-minutes" type="number" name="estimated_minutes" value="15" min="1" required>
+          </div>
+          <div class="field">
+            <label><input type="checkbox" name="is_active" checked> Active</label>
+          </div>
+          <button class="btn" type="submit">Create Course</button>
+        </form>
+
+        <h3>Assign Course By Job Title</h3>
+        <form method="post" action="{% url 'business_owner_course_rule_create' %}">
+          {% csrf_token %}
+          <div class="field">
+            <label for="course-rule-job-title">Job Title</label>
+            <select id="course-rule-job-title" name="job_title" required>
+              <option value="">Choose</option>
+              {% for job_title in job_titles %}
+                <option value="{{ job_title.id }}">{{ job_title.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="field">
+            <label for="course-rule-course">Course</label>
+            <select id="course-rule-course" name="course" required>
+              <option value="">Choose</option>
+              {% for course in courses %}
+                <option value="{{ course.id }}">{{ course.title }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <button class="btn" type="submit">Save Assignment Rule</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2>Course Library</h2>
+        <ul class="list">
+          {% for course in courses %}
+            <li>
+              <strong>{{ course.title }}</strong>
+              <span class="pill">{{ course.assignment_total }} assigned</span><br>
+              <span class="muted">{{ course.estimated_minutes }} min{% if course.description %} | {{ course.description }}{% endif %}</span>
+            </li>
+          {% empty %}
+            <li class="muted">No courses yet.</li>
+          {% endfor %}
+        </ul>
+
+        <h3>Course Rules</h3>
+        <ul class="list">
+          {% for rule in course_rules %}
+            <li><strong>{{ rule.job_title.name }}</strong><br><span class="muted">{{ rule.course.title }}</span></li>
+          {% empty %}
+            <li class="muted">No course assignment rules yet.</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </section>
+
+    <section class="section" id="checklists">
+      <div class="card">
+        <h2>Create SOP Checklist</h2>
+        <form method="post" action="{% url 'business_owner_checklist_create' %}">
+          {% csrf_token %}
+          <div class="field">
+            <label for="checklist-title">Title</label>
+            <input id="checklist-title" type="text" name="title" required>
+          </div>
+          <div class="field">
+            <label for="checklist-description">Description</label>
+            <textarea id="checklist-description" name="description"></textarea>
+          </div>
+          <div class="field">
+            <label for="checklist-frequency">Frequency</label>
+            <select id="checklist-frequency" name="frequency">
+              <option value="DAILY">Daily</option>
+              <option value="WEEKLY">Weekly</option>
+              <option value="ON_DEMAND">On demand</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="checklist-items">Items</label>
+            <textarea id="checklist-items" name="item_lines" required placeholder="One item per line"></textarea>
+          </div>
+          <div class="field">
+            <label><input type="checkbox" name="is_active" checked> Active</label>
+          </div>
+          <button class="btn" type="submit">Create Checklist</button>
+        </form>
+
+        <h3>Assign Checklist By Job Title</h3>
+        <form method="post" action="{% url 'business_owner_checklist_rule_create' %}">
+          {% csrf_token %}
+          <div class="field">
+            <label for="checklist-rule-job-title">Job Title</label>
+            <select id="checklist-rule-job-title" name="job_title" required>
+              <option value="">Choose</option>
+              {% for job_title in job_titles %}
+                <option value="{{ job_title.id }}">{{ job_title.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="field">
+            <label for="checklist-rule-checklist">Checklist</label>
+            <select id="checklist-rule-checklist" name="checklist" required>
+              <option value="">Choose</option>
+              {% for checklist in checklists %}
+                <option value="{{ checklist.id }}">{{ checklist.title }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <button class="btn" type="submit">Save SOP Rule</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2>SOP Checklist Library</h2>
+        <ul class="list">
+          {% for checklist in checklists %}
+            <li>
+              <strong>{{ checklist.title }}</strong>
+              <span class="pill">{{ checklist.completion_total_today }} done today</span><br>
+              <span class="muted">{{ checklist.get_frequency_display }} | {{ checklist.items.count }} items</span>
+            </li>
+          {% empty %}
+            <li class="muted">No SOP checklists yet.</li>
+          {% endfor %}
+        </ul>
+
+        <h3>SOP Rules</h3>
+        <ul class="list">
+          {% for rule in checklist_rules %}
+            <li><strong>{{ rule.job_title.name }}</strong><br><span class="muted">{{ rule.checklist.title }}</span></li>
+          {% empty %}
+            <li class="muted">No SOP assignment rules yet.</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </section>
+  </main>
+</div>
+</body>
+</html>

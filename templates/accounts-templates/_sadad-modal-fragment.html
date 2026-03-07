@@ -1,0 +1,185 @@
+<!-- SADAD Modal (shared fragment) -->
+<style>
+@import url('/static/branding/branding.css');
+#sadadModal{
+  position:fixed;
+  inset:0;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:18px;
+  z-index:3000;
+}
+#sadadModal.is-open{ display:flex; }
+
+#sadadModal .modal__backdrop{
+  position:absolute;
+  inset:0;
+  background:rgba(2, 6, 23, .55);
+  backdrop-filter: blur(6px);
+}
+
+#sadadModal .modal__panel{
+  position:relative;
+  width:min(520px, 100%);
+  background:#fff;
+  border-radius:18px;
+  box-shadow:0 20px 60px rgba(0,0,0,.25);
+  overflow:hidden;
+}
+
+#sadadModal .modal__head{
+  padding:14px 16px;
+  border-bottom:1px solid #eef1f5;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+#sadadModal .modal__title{ margin:0; font-size:14px; font-weight:800; color:#0076ff; }
+
+#sadadModal .modal__close{
+  width:36px;
+  height:36px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border:none;
+  background:#eef2ff;
+  color:#3730a3;
+  border-radius:12px;
+  padding:0;
+  cursor:pointer;
+  font-weight:800;
+  line-height:1;
+}
+
+#sadadModal .modal__body{ padding:14px 16px; }
+
+#sadadModal .modal__footer{
+  padding:14px 16px;
+  border-top:1px solid #eef1f5;
+  display:flex;
+  gap:10px;
+  justify-content:flex-start;
+  flex-wrap:wrap;
+}
+
+#sadadModal .modal__field label{
+  display:block;
+  font-size:12px;
+  font-weight:800;
+  color:#374151;
+  margin-bottom:6px;
+}
+
+#sadadModal .modal__input{
+  width:100%;
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid #d1d5db;
+  outline:none;
+  font-family:inherit;
+}
+
+#sadadModal .modal__hint{ margin-top:8px; font-size:12px; color:#6b7280; line-height:1.6; }
+
+/* Buttons inside the SADAD modal (in case the host page doesn't define btn-approve/btn-outline) */
+#sadadModal .btn{
+  display:inline-block;
+  padding:10px 14px;
+  border-radius:12px;
+  border:none;
+  cursor:pointer;
+  font-weight:800;
+  font-size:13px;
+  text-decoration:none;
+}
+
+#sadadModal .btn-approve{ background:#0076ff; color:#fff; }
+#sadadModal .btn-outline{ background:#eef2ff; color:#0076ff; }
+</style>
+
+<div class="modal" id="sadadModal" aria-hidden="true">
+  <div class="modal__backdrop" data-close="1"></div>
+  <div class="modal__panel" role="dialog" aria-modal="true" aria-labelledby="sadadTitle">
+    <div class="modal__head">
+      <h3 class="modal__title" id="sadadTitle">إدخال رقم سداد</h3>
+      <button type="button" class="modal__close" data-close="1" aria-label="إغلاق">✕</button>
+    </div>
+
+    <form method="post" id="sadadApproveForm">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="approve">
+
+      <div class="modal__body">
+        <div class="modal__field">
+          <label for="sadad_number">رقم سداد</label>
+          <input class="modal__input" id="sadad_number" name="sadad_number" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" >
+          <div class="modal__hint" id="sadadHint"></div>
+        </div>
+      </div>
+
+      <div class="modal__footer">
+        <button type="submit" class="btn btn-approve" id="sadadApproveBtn">اعتماد</button>
+        <button type="button" class="btn btn-outline" data-close="1">إلغاء</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+(function(){
+  const modal = document.getElementById('sadadModal');
+  const form = document.getElementById('sadadApproveForm');
+  const input = document.getElementById('sadad_number');
+  const hint = document.getElementById('sadadHint');
+  const approveBtn = document.getElementById('sadadApproveBtn');
+
+  function openModal(actionUrl, requiresPayment){
+    if (!modal || !form) return;
+    form.action = actionUrl;
+    input.value = '';
+    const required = requiresPayment === '1';
+
+    input.required = required;
+    
+    approveBtn.textContent = 'اعتماد';
+    modal.classList.add('is-open');
+    modal.setAttribute('aria-hidden', 'false');
+    setTimeout(() => input && input.focus(), 0);
+  }
+
+  function normalizeSadadDigits(value){
+    return (value || '')
+      .replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 1632))
+      .replace(/[۰-۹]/g, (d) => String(d.charCodeAt(0) - 1776))
+      .replace(/\D+/g, '');
+  }
+
+  function closeModal(){
+    if (!modal) return;
+    modal.classList.remove('is-open');
+    modal.setAttribute('aria-hidden', 'true');
+  }
+
+  // Expose a tiny hook
+  window.__openSadadModal = openModal;
+
+  // Close handlers
+  modal && modal.addEventListener('click', (e) => {
+    const t = e.target;
+    if (t && t.getAttribute && t.getAttribute('data-close') === '1') closeModal();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal && modal.classList.contains('is-open')) closeModal();
+  });
+
+  if (input){
+    input.addEventListener('input', () => {
+      input.value = normalizeSadadDigits(input.value);
+    });
+  }
+})();
+</script>

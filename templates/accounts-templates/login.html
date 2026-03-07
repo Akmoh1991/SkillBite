@@ -1,0 +1,203 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>تسجيل الدخول</title>
+
+    <style>
+@import url('/static/branding/branding.css');
+        body {
+            margin: 0;
+            font-family: "SE", "Segoe UI", Tahoma, Arial, sans-serif;
+            background: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .login-container {
+            background: #ffffff;
+            width: 100%;
+            max-width: 420px;
+            padding: 40px 32px;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .logo img {
+            height: 74px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 32px;
+            color: #001F5E;
+            font-size: 26px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 14px;
+            color: #333;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 10px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+            transition: border 0.3s, box-shadow 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #0076ff;
+            box-shadow: 0 0 0 3px rgba(0,118,255,0.20);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            background: #0076ff;
+            color: #fff;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.2s;
+        }
+
+        .btn:hover {
+            background: #005fce;
+            transform: translateY(-1px);
+        }
+
+        .messages {
+            margin-bottom: 20px;
+        }
+
+        .messages p {
+            background: #ffe5e5;
+            color: #b30000;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 24px;
+            font-size: 14px;
+        }
+
+        .footer a {
+            color: #0076ff;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+<div class="login-container">
+
+    <div class="logo">
+        <img src="/static/SEC_logo.svg" alt="Logo">
+    </div>
+
+    <h1>تسجيل الدخول</h1>
+
+    <div style="display:flex; gap:10px; margin: -10px 0 18px;">
+        <button type="button" id="login-tab-individual" class="btn" style="width:auto; flex:1; padding:12px; border-radius:12px; background:#e9eef6; color:#0076ff;">
+            أفراد
+        </button>
+        <button type="button" id="login-tab-company" class="btn" style="width:auto; flex:1; padding:12px; border-radius:12px; background:#e9eef6; color:#0076ff;">
+            شركات
+        </button>
+    </div>
+
+    {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+                <p>{{ message }}</p>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+
+        {% if next %}
+            <input type="hidden" name="next" value="{{ next }}">
+        {% endif %}
+
+        <div class="form-group">
+            <label>اسم المستخدم</label>
+            <input type="text" name="username" required>
+        </div>
+
+        <div class="form-group">
+            <label>كلمة المرور</label>
+            <input type="password" name="password" required>
+        </div>
+
+        <button type="submit" class="btn">دخول</button>
+    </form>
+
+    <div class="footer">
+        لا تملك حساب؟  
+        <a id="register-link" href="{% url 'register' %}">إنشاء حساب جديد</a>
+    </div>
+
+</div>
+
+<script>
+    (function(){
+        var tabIndividual = document.getElementById('login-tab-individual');
+        var tabCompany = document.getElementById('login-tab-company');
+        var registerLink = document.getElementById('register-link');
+
+        function setActive(which){
+            var isCompany = which === 'company';
+            tabIndividual.style.background = isCompany ? '#e9eef6' : '#0076ff';
+            tabIndividual.style.color = isCompany ? '#0076ff' : '#fff';
+            tabCompany.style.background = isCompany ? '#0076ff' : '#e9eef6';
+            tabCompany.style.color = isCompany ? '#fff' : '#0076ff';
+            registerLink.href = "{% url 'register' %}" + (isCompany ? '?type=company' : '?type=individual');
+            try {
+                var url = new URL(window.location.href);
+                url.searchParams.set('type', isCompany ? 'company' : 'individual');
+                window.history.replaceState({}, '', url.toString());
+            } catch(e) {}
+        }
+
+        tabIndividual.addEventListener('click', function(){ setActive('individual'); });
+        tabCompany.addEventListener('click', function(){ setActive('company'); });
+
+        // Initial from view context (safe default)
+        var initial = "{{ login_type|default:'individual' }}".toLowerCase();
+        setActive(initial === 'company' ? 'company' : 'individual');
+    })();
+</script>
+
+</body>
+</html>

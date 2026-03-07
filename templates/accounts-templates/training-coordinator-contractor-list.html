@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>قائمة المقاولين المسجلين</title>
+
+<style>
+@import url('/static/branding/branding.css');
+:root{
+  --blue-dark:#0027b9;
+  --blue-main:#0076ff;
+  --orange:#0076ff;
+  --bg:#f7f9fc;
+  --card:#ffffff;
+  --text:#1f2937;
+  --muted:#5f6f85;
+  --sidebar-w:260px;
+  --topbar-h:70px;
+}
+
+*{ box-sizing:border-box; }
+
+body{
+  margin:0;
+  font-family: "SE", "Segoe UI", Tahoma, Arial, sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+
+.main{
+  margin-right:var(--sidebar-w);
+  padding: calc(var(--topbar-h) + 24px) 28px 40px;
+  min-height:100vh;
+}
+
+.card{
+  background:var(--card);
+  border-radius:16px;
+  padding:18px;
+  box-shadow:0 14px 34px rgba(15,45,90,.12);
+}
+
+.header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  flex-wrap:wrap;
+  margin-bottom:12px;
+}
+
+h2{ margin:0; font-size:18px; color:var(--blue-main); }
+
+.counter{
+  background:#e9eef6;
+  color:var(--blue-main);
+  border-radius:12px;
+  padding:8px 12px;
+  font-weight:800;
+  font-size:13px;
+}
+
+.filter-row{
+  display:flex;
+  gap:10px;
+  align-items:end;
+  flex-wrap:wrap;
+  margin-bottom:12px;
+}
+
+.filter-field{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  min-width:240px;
+}
+
+.filter-field label{
+  font-size:12px;
+  color:var(--muted);
+  font-weight:700;
+}
+
+.input{
+  padding:10px 12px;
+  border:1px solid #d1d5db;
+  border-radius:10px;
+  background:#fff;
+  min-width:220px;
+}
+
+.filter-actions{
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+
+.table-wrap{ width:100%; overflow:auto; border-top:1px solid #eef1f5; }
+
+.table{ width:100%; border-collapse:collapse; }
+
+.table th,
+.table td{
+  text-align:right;
+  padding:10px;
+  border-bottom:1px solid #eef1f5;
+  font-size:13px;
+  vertical-align:top;
+}
+
+.table th{
+  color:var(--muted);
+  font-weight:800;
+  font-size:12px;
+  background:#f5f8fd;
+}
+
+.empty{ color:var(--muted); font-weight:700; }
+
+.btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:9px 12px;
+  border-radius:12px;
+  border:none;
+  cursor:pointer;
+  font-weight:800;
+  font-size:13px;
+  text-decoration:none;
+  background:#e9eef6;
+  color:var(--blue-main);
+}
+
+.btn-primary{ background:var(--blue-main); color:#fff; }
+.btn-soft{ background:#e9eef6; color:var(--blue-main); }
+
+.msg{
+  border-radius:14px;
+  padding:12px 14px;
+  margin-bottom:12px;
+  font-size:13px;
+  font-weight:700;
+  background:#fff;
+  border:1px solid #e5e7eb;
+}
+
+/* Modal */
+.modal{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.45);
+  z-index:2000;
+}
+
+.modal__panel{
+  background:#fff;
+  max-width:680px;
+  margin:8vh auto;
+  padding:18px;
+  border-radius:14px;
+  box-shadow:0 20px 60px rgba(0,0,0,.2);
+}
+
+.modal__title{
+  margin:0 0 12px;
+  color:var(--blue-main);
+  font-size:16px;
+}
+
+.form-row{ margin-bottom:12px; }
+
+.form-row label{
+  display:block;
+  margin-bottom:6px;
+  font-size:12px;
+  color:var(--muted);
+  font-weight:700;
+}
+
+.select{
+  width:100%;
+  padding:10px 12px;
+  border:1px solid #d1d5db;
+  border-radius:10px;
+}
+
+.docs-box{
+  max-height:260px;
+  overflow:auto;
+  border:1px solid #e5e7eb;
+  border-radius:10px;
+  padding:8px 10px;
+}
+
+.doc-row{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 0;
+  border-top:1px solid #eef1f5;
+}
+
+.doc-row:first-child{ border-top:0; }
+
+.doc-name{ font-weight:700; color:var(--blue-main); }
+.doc-date{ color:var(--muted); font-size:12px; margin-right:auto; }
+
+.notice{
+  background:#fff7ed;
+  border:1px solid #fed7aa;
+  color:#9a3412;
+  padding:10px 12px;
+  border-radius:10px;
+  font-size:13px;
+}
+
+.modal__actions{
+  display:flex;
+  gap:10px;
+  justify-content:flex-end;
+  margin-top:14px;
+  flex-wrap:wrap;
+}
+
+@media (max-width:900px){
+  .main{ margin-right:0; padding-top:90px; }
+  .input{ min-width:180px; }
+}
+</style>
+</head>
+
+<body>
+
+{% include "accounts-templates/training-coordinator-sidebar.html" %}
+{% include "accounts-templates/training-coordinator-topbar.html" %}
+
+<div class="main">
+  {% if messages %}
+    {% for message in messages %}
+      <div class="msg {{ message.tags|default:'info' }}">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="card">
+    <div class="header">
+      <h2>قائمة المقاولين المسجلين</h2>
+      <div class="counter">الإجمالي: {{ managed_contractors_count|default:"0" }}{% if has_filters %} / {{ managed_contractors_total_count|default:"0" }}{% endif %}</div>
+    </div>
+
+    <form method="get" class="filter-row">
+      <div class="filter-field">
+        <label for="contractor_id">رقم هوية المقاول</label>
+        <input id="contractor_id" class="input" type="text" name="contractor_id" value="{{ contractor_id_query|default:'' }}"  />
+      </div>
+      <div class="filter-field">
+        <label for="region">المنطقة</label>
+        <select id="region" class="select" name="region">
+          <option value="">الكل</option>
+          {% for r in available_regions %}
+            <option value="{{ r }}" {% if region_query == r %}selected{% endif %}>{{ r }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="filter-field">
+        <label for="username">اسم المستخدم</label>
+        <input id="username" class="input" type="text" name="username" value="{{ username_query|default:'' }}" />
+      </div>
+      <div class="filter-actions">
+        <button class="btn btn-primary" type="submit">تطبيق</button>
+      {% if has_filters %}
+        <a class="btn btn-soft" href="{% url 'training_coordinator_contractors_list' %}">إعادة ضبط</a>
+      {% endif %}
+      </div>
+    </form>
+
+    {% if managed_contractors %}
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>اسم المستخدم</th>
+              <th>الشركة</th>
+              <th>المنطقة</th>
+              <th>الهوية</th>
+              <th>المرفقات</th>
+              <th>التسجيل في برنامج</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for c in managed_contractors %}
+              <tr>
+                <td><strong>{{ c.user.username }}</strong></td>
+                <td>{{ c.company_name|default:"—" }}</td>
+                <td>{{ c.region|default:"—" }}</td>
+                <td>{{ c.id_number|default:"—" }}</td>
+                <td>
+                  <a class="btn" href="{% url 'training_coordinator_contractor_documents' c.user.id %}">إدارة المرفقات</a>
+                </td>
+                <td>
+                  <button class="btn btn-primary" type="button" onclick="openEnrollModal('enrollModal{{ c.user.id }}')">تسجيل</button>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {% for c in managed_contractors %}
+        <div class="modal" id="enrollModal{{ c.user.id }}" aria-hidden="true">
+          <div class="modal__panel" role="dialog" aria-modal="true">
+            <h3 class="modal__title">تسجيل المقاول: {{ c.user.username }}</h3>
+            <form method="post" action="{% url 'training_coordinator_register_existing_contractor_action' c.user.id %}">
+              {% csrf_token %}
+
+              <div class="form-row">
+                <label>اسم البرنامج</label>
+                <select class="select" name="program_id" required>
+                  <option value="">اختر برنامجاً</option>
+                  {% for p in available_programs %}
+                    <option value="{{ p.id }}">{{ p.title }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <div class="form-row">
+                <label>اختر ملف PDF</label>
+                {% with docs=c.user.contractor_documents.all %}
+                  {% if docs %}
+                    <div class="docs-box">
+                      {% for d in docs %}
+                        <label class="doc-row">
+                          <input type="radio" name="document_id" value="{{ d.id }}" required />
+                          <span class="doc-name">{{ d.title|default:'PDF' }}</span>
+                          <span class="doc-date">{{ d.uploaded_at|date:"Y-m-d" }}</span>
+                          <a href="{{ d.pdf_file.url }}" target="_blank" rel="noopener" class="btn btn-soft" style="padding:6px 10px; font-size:12px;">عرض</a>
+                        </label>
+                      {% endfor %}
+                    </div>
+                  {% else %}
+                    <div class="notice">
+                      لا توجد ملفات PDF لهذا المقاول.
+                      <a class="btn btn-soft" style="margin-top:8px;" href="{% url 'training_coordinator_contractor_documents' c.user.id %}">اذهب لإدارة المرفقات</a>
+                    </div>
+                  {% endif %}
+                {% endwith %}
+              </div>
+
+              <div class="modal__actions">
+                <button class="btn btn-soft" type="button" onclick="closeEnrollModal('enrollModal{{ c.user.id }}')">إلغاء</button>
+                <button class="btn btn-primary" type="submit">بدء إجراءات التسجيل</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty">لا يوجد مقاولون مطابقون لنتيجة البحث.</div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+function openEnrollModal(id){
+  var modal = document.getElementById(id);
+  if(!modal) return;
+  modal.style.display = 'block';
+}
+
+function closeEnrollModal(id){
+  var modal = document.getElementById(id);
+  if(!modal) return;
+  modal.style.display = 'none';
+}
+
+document.addEventListener('click', function(e){
+  var target = e.target;
+  if(target && target.classList && target.classList.contains('modal')){
+    target.style.display = 'none';
+  }
+});
+</script>
+
+</body>
+</html>

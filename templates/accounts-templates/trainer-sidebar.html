@@ -1,0 +1,192 @@
+<style>
+@import url('/static/branding/branding.css');
+
+.sidebar{
+  position:fixed;
+  top:0;
+  right:0;
+  width:var(--sidebar-w);
+  height:100vh;
+  background:linear-gradient(180deg, #001F5E 0%, #0080FF 100%);
+  color:#fff;
+  padding:25px 20px;
+  z-index:1100;
+}
+
+.sidebar .logo{
+  text-align:center;
+  margin-bottom:28px;
+}
+
+.sidebar .logo img{
+  width: 124px;
+  height:auto;
+  display:inline-block;
+}
+
+.sidebar ul{
+  list-style:none;
+  padding:0;
+  margin:0;
+}
+
+.sidebar li{
+  margin-bottom:10px;
+}
+
+.sidebar a{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:12px 14px;
+  color:#fff;
+  font-weight:600;
+  text-decoration:none;
+  font-size:14px;
+  border-radius:12px;
+  opacity:.94;
+  border:1px solid transparent;
+  transition:background .2s ease, opacity .2s ease, border-color .2s ease, transform .2s ease;
+}
+
+.sidebar a:hover{
+  background:rgba(255,255,255,.12);
+  border-color:rgba(255,255,255,.2);
+  opacity:1;
+  transform:translateX(-1px);
+}
+
+.sidebar a.active{
+  background:rgba(255,255,255,.20);
+  border-color:rgba(255,255,255,.24);
+  box-shadow:inset 3px 0 0 rgba(255,255,255,.9);
+  opacity:1;
+}
+
+.sidebar .logout{
+  position:absolute;
+  bottom:22px;
+  right:20px;
+  left:20px;
+}
+
+.sidebar .logout a{
+  justify-content:center;
+  background:#ffffff;
+  color:#003b9a;
+  font-weight:800;
+  border:1px solid rgba(255,255,255,.9);
+  box-shadow:0 8px 18px rgba(0, 25, 84, .28);
+}
+
+.sidebar .logout a:hover{
+  background:#eaf3ff;
+  color:#002f86;
+  border-color:#ffffff;
+}
+
+/* ===== Responsive ===== */
+@media (max-width:900px){
+  .sidebar{
+    display:none;
+  }
+}
+</style>
+
+<aside class="sidebar">
+
+  <!-- Logo -->
+  <div class="logo">
+    <img src="/static/SEC_logo.svg" alt="aaSEokk">
+  </div>
+
+  <!-- Navigation -->
+  <ul>
+
+    <!-- داشبورد المدرب -->
+    <li>
+      <!--<a href="{% url 'trainer_dashboard' %}"
+         class="{% if request.resolver_match.url_name == 'trainer_dashboard' %}active{% endif %}">
+        الصفحة الرئيسية
+      </a>
+    </li>-->
+
+    <!-- الطلبات -->
+    <li>
+      <a href="{% url 'trainer_requests' %}"
+         class="{% if request.resolver_match.url_name == 'trainer_requests' %}active{% endif %}">
+        صفحة الطلبات
+      </a>
+    </li>
+
+    <li>
+      <a href="{% url 'trainer_renewal_requests' %}"
+         class="{% if request.resolver_match.url_name == 'trainer_renewal_requests' %}active{% endif %}">
+        طلبات التجديد
+      </a>
+    </li>
+
+    <li>
+      <a href="{% url 'trainer_exam_sessions_view' %}"
+         class="{% if request.resolver_match.url_name == 'trainer_exam_sessions_view' %}active{% endif %}">
+        مواعيد الاختبار
+      </a>
+    </li>
+
+    <li>
+      <a href="{% url 'trainer_exam_grading_view' %}"
+         class="{% if request.resolver_match.url_name == 'trainer_exam_grading_view' %}active{% endif %}">
+        تصحيح الاختبارات
+      </a>
+    </li>
+
+    <!-- بنك الاسئلة -->
+    <li>
+      <a href="{% url 'trainer_exam_templates' %}"
+         class="{% if request.resolver_match.url_name == 'trainer_exam_templates' or request.resolver_match.url_name == 'trainer_exam_template_create' or request.resolver_match.url_name == 'trainer_exam_template_editor' or request.resolver_match.url_name == 'trainer_exam_template_editor_v2' or request.resolver_match.url_name == 'trainer_exam_template_editor_create_redirect' or request.resolver_match.url_name == 'trainer_exam_question_edit' or request.resolver_match.url_name == 'trainer_exam_question_delete' %}active{% endif %}">
+        بنك الاسئلة
+      </a>
+    </li>
+
+    <!-- SCORM -->
+    <li>
+      <!--<a href="{% url 'trainer_scorm_upload' %}"
+         class="{% if request.resolver_match.url_name == 'trainer_scorm_upload' %}active{% endif %}">
+      قائمة الدورات الإلكترونية
+
+      </a>
+    </li>-->
+
+    <!-- البرامج التدريبية 
+    <li>
+      <a href="{% url 'training:programs_list' %}"
+         class="{% if request.resolver_match.url_name == 'programs_list' %}active{% endif %}">
+        البرامج التدريبية
+      </a>
+    </li>
+    -->
+
+    <!-- المتدربون 
+    <li>
+      <a href="{% url 'trainer_registered_trainees' %}"
+         class="{% if request.resolver_match.url_name == 'trainer_registered_trainees' %}active{% endif %}">
+        قائمة المتدربين
+      </a>
+    </li>-->
+
+    <!-- التقارير -->
+    <li>
+      <a href="{% url 'trainer_reports' %}"
+         class="{% if request.resolver_match.url_name == 'trainer_reports' %}active{% endif %}">
+        التقارير
+      </a>
+    </li>
+
+  </ul>
+
+  <!-- Logout -->
+  <div class="logout">
+    <a href="{% url 'logout' %}">تسجيل الخروج</a>
+  </div>
+
+</aside>

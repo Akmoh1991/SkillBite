@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>تسجيل مستخدم في برنامج (مدير النظام)</title>
+
+<style>
+@import url('/static/branding/branding.css');
+:root{
+  --blue-dark:#0027b9;
+  --blue-main:#0076ff;
+  --orange:#0076ff;
+  --bg:#f7f9fc;
+  --card:#ffffff;
+  --text:#1f2937;
+  --muted:#5f6f85;
+  --sidebar-w:260px;
+  --topbar-h:70px;
+}
+
+*{ box-sizing:border-box; }
+
+body{
+  margin:0;
+  font-family: "SE", "Segoe UI", Tahoma, Arial, sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+
+.main{
+  margin-right:var(--sidebar-w);
+  padding: calc(var(--topbar-h) + 24px) 28px 40px;
+  min-height:100vh;
+}
+
+.page-header{ margin-bottom:14px; }
+.page-header h2{ margin:0; font-size:18px; color:var(--blue-main); }
+
+.card{
+  background:var(--card);
+  border-radius:16px;
+  box-shadow:0 14px 34px rgba(15,45,90,.12);
+  overflow:hidden;
+}
+
+.section{ padding:18px 22px; border-top:1px solid #eef1f5; }
+.section:first-child{ border-top:none; }
+
+.msg{
+  border-radius:14px;
+  padding:12px 14px;
+  margin-bottom:12px;
+  font-size:13px;
+  font-weight:700;
+  background:#fff;
+  border:1px solid #e5e7eb;
+}
+
+.msg.success{ background:#ecfdf5; border-color:#a7f3d0; color:#166534; }
+.msg.error{ background:#fef2f2; border-color:#fecaca; color:#991b1b; }
+.msg.info{ background:#eff6ff; border-color:#bfdbfe; color:#1e3a8a; }
+.msg.warning{ background:#fff7ed; border-color:#fed7aa; color:#9a3412; }
+
+.label{ display:block; font-size:13px; color:var(--muted); margin:0 0 6px; font-weight:800; }
+
+select{
+  width:100%;
+  padding:10px 12px;
+  border:1px solid #e5e7eb;
+  border-radius:12px;
+  font-size:14px;
+  background:#fff;
+}
+
+.grid{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:14px; }
+
+.btn{
+  display:inline-block;
+  padding:10px 14px;
+  border-radius:12px;
+  border:none;
+  cursor:pointer;
+  font-weight:800;
+  font-size:13px;
+  text-decoration:none;
+}
+
+.btn-primary{ background:var(--blue-main); color:#fff; }
+.btn-soft{ background:#e9eef6; color:var(--blue-main); }
+
+.docs{
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(260px, 1fr));
+  gap:12px;
+}
+
+.doc{
+  border:1px solid #eef1f5;
+  background:#fff;
+  border-radius:14px;
+  padding:12px;
+}
+
+.doc small{ color:var(--muted); }
+
+@media (max-width:900px){
+  .main{ margin-right:0; padding-top:90px; }
+  .grid{ grid-template-columns:1fr; }
+}
+</style>
+</head>
+
+<body>
+
+{% include "accounts-templates/superadmin-sidebar.html" %}
+{% include "accounts-templates/superadmin-topbar.html" %}
+
+<div class="main">
+
+  <div class="page-header">
+    <h2>تسجيل مستخدم في برنامج</h2>
+  </div>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="msg {{ message.tags|default:'info' }}">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="card">
+
+    <div class="section">
+      <form method="get">
+        <div class="grid">
+          <div>
+            <label class="label">اختر المستخدم</label>
+            <select name="user_id">
+              <option value="">— اختر —</option>
+              {% for u in users %}
+                <option value="{{ u.id }}" {% if selected_user and u.id == selected_user.id %}selected{% endif %}>{{ u.username }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div>
+            <label class="label">اختر البرنامج</label>
+            <select name="program_id">
+              <option value="">— اختر —</option>
+              {% for p in programs %}
+                <option value="{{ p.id }}" {% if selected_program and p.id == selected_program.id %}selected{% endif %}>
+                  {% if p.is_active %}✅{% else %}⛔{% endif %} {{ p.title }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;">
+          <button class="btn btn-soft" type="submit">تحميل المرفقات</button>
+          <a class="btn btn-soft" href="{% url 'super_admin_enroll_user' %}">مسح</a>
+        </div>
+      </form>
+    </div>
+
+    <div class="section">
+      <form method="post">
+        {% csrf_token %}
+
+        <input type="hidden" name="user_id" value="{% if selected_user %}{{ selected_user.id }}{% endif %}">
+        <input type="hidden" name="program_id" value="{% if selected_program %}{{ selected_program.id }}{% endif %}">
+
+        <div style="margin-bottom:10px; color:var(--muted); font-size:13px; font-weight:700;">
+        </div>
+
+        {% if selected_user %}
+          {% if contractor_documents %}
+            <div class="docs">
+              {% for d in contractor_documents %}
+                <label class="doc">
+                  <div style="display:flex; gap:10px; align-items:flex-start;">
+                    <input type="checkbox" name="document_ids" value="{{ d.id }}" style="margin-top:2px;">
+                    <div>
+                      <div style="font-weight:800;">{{ d.title|default:"PDF" }}</div>
+                      <small>{% if d.uploaded_at %}{{ d.uploaded_at }}{% endif %}</small>
+                    </div>
+                  </div>
+                </label>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div style="color:var(--muted); font-weight:700;">لا توجد مرفقات لهذا المستخدم.</div>
+          {% endif %}
+        {% else %}
+        {% endif %}
+
+        <div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap;">
+          <button class="btn btn-primary" type="submit">تسجيل في البرنامج</button>
+        </div>
+      </form>
+    </div>
+
+  </div>
+
+</div>
+
+</body>
+</html>
