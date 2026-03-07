@@ -47,7 +47,7 @@
         h1 {
             text-align: center;
             margin-bottom: 32px;
-            color: #0027b9;
+            color: #00B476;
             font-size: 26px;
         }
 
@@ -77,8 +77,8 @@
 
         input:focus, select:focus {
             outline: none;
-            border-color: #0076ff;
-            box-shadow: 0 0 0 3px rgba(0,118,255,0.20);
+            border-color: #00B476;
+            box-shadow: 0 0 0 3px rgba(0,180,118,0.20);
         }
 
         .btn {
@@ -86,7 +86,7 @@
             padding: 14px;
             border: none;
             border-radius: 12px;
-            background: #0076ff;
+            background: #00B476;
             color: #fff;
             font-size: 15px;
             font-weight: bold;
@@ -96,7 +96,7 @@
         }
 
         .btn:hover {
-            background: #005fce;
+            background: #009964;
             transform: translateY(-1px);
         }
 
@@ -130,7 +130,7 @@
         }
 
         .footer a {
-            color: #0076ff;
+            color: #00B476;
             text-decoration: none;
             font-weight: bold;
         }
@@ -145,21 +145,10 @@
 <div class="register-container">
 
     <div class="logo">
-        <img src="/static/SEC_logo.svg" alt="Logo">
+        <img src="{% static 'media/SkillBite_logo.png' %}" alt="Logo">
     </div>
 
     <h1>إنشاء حساب جديد</h1>
-
-    <div style="display:flex; gap:10px; margin-bottom:18px;">
-        <button type="button" id="tab-individual" class="btn" style="width:auto; flex:1; padding:12px; border-radius:12px; background:#e9eef6; color:#0076ff;">
-            أفراد
-        </button>
-        <button type="button" id="tab-company" class="btn" style="width:auto; flex:1; padding:12px; border-radius:12px; background:#e9eef6; color:#0076ff;">
-            شركات
-        </button>
-    </div>
-
-    <div id="tab-hint" style="margin:-6px 0 18px; font-size:13px; color:#6b7280; text-align:center; font-weight:600;"></div>
 
     {% if messages %}
         <div class="messages">
@@ -184,81 +173,57 @@
         <div class="form-group">
             <label>اسم المستخدم</label>
             {{ form.username }}
-                        {% if form.username.errors %}
-                            <div style="margin-top:6px; color:#9f1239; font-size:13px;">{{ form.username.errors|striptags }}</div>
-                        {% endif %}
+            {% if form.username.errors %}
+                <div style="margin-top:6px; color:#9f1239; font-size:13px;">{{ form.username.errors|striptags }}</div>
+            {% endif %}
         </div>
 
-                <div class="form-group">
-                        <label>البريد الإلكتروني </label>
-                        {{ form.email }}
-                        {% if form.email.errors %}
-                            <div style="margin-top:6px; color:#9f1239; font-size:13px;">{{ form.email.errors|striptags }}</div>
-                        {% endif %}
-                </div>
+        <div class="form-group">
+            <label>البريد الإلكتروني </label>
+            {{ form.email }}
+            {% if form.email.errors %}
+                <div style="margin-top:6px; color:#9f1239; font-size:13px;">{{ form.email.errors|striptags }}</div>
+            {% endif %}
+        </div>
 
         <div class="form-group">
-            <label>Full Name (English)</label>
+            <label>الاسم الكامل</label>
             {{ form.full_name_en }}
-                        {% if form.full_name_en.errors %}
-                            <div style="margin-top:6px; color:#9f1239; font-size:13px;">{{ form.full_name_en.errors|striptags }}</div>
-                        {% endif %}
-        </div>
-
-        <div class="form-group">
-            <label>الاسم الكامل (بالعربية)</label>
-            {{ form.full_name_ar }}
-                        {% if form.full_name_ar.errors %}
-                            <div style="margin-top:6px; color:#9f1239; font-size:13px;">{{ form.full_name_ar.errors|striptags }}</div>
-                        {% endif %}
+            {% if form.full_name_en.errors %}
+                <div style="margin-top:6px; color:#9f1239; font-size:13px;">{{ form.full_name_en.errors|striptags }}</div>
+            {% endif %}
         </div>
 
         <div class="form-group">
             <label>كلمة المرور</label>
             {{ form.password }}
-                        {% if form.password.errors %}
-                            <div style="margin-top:6px; color:#9f1239; font-size:13px;">{{ form.password.errors|striptags }}</div>
-                        {% endif %}
+            {% if form.password.errors %}
+                <div style="margin-top:6px; color:#9f1239; font-size:13px;">{{ form.password.errors|striptags }}</div>
+            {% endif %}
         </div>
 
         <div class="form-group">
             <label>اسم الشركة</label>
             {{ form.company_name }}
-                        {% if form.company_name.errors %}
-                            <div style="margin-top:6px; color:#9f1239; font-size:13px;">{{ form.company_name.errors|striptags }}</div>
-                        {% endif %}
-        </div>
-
-        <div class="form-group">
-            <label>SEC Business line</label>
-            {{ form.sec_business_line }}
-                        {% if form.sec_business_line.errors %}
-                            <div style="margin-top:6px; color:#9f1239; font-size:13px;">{{ form.sec_business_line.errors|striptags }}</div>
-                        {% endif %}
-        </div>
-
-        <div class="form-group">
-            <label>رقم الهوية</label>
-            {{ form.id_number }}
-                        {% if form.id_number.errors %}
-                            <div style="margin-top:6px; color:#9f1239; font-size:13px;">{{ form.id_number.errors|striptags }}</div>
-                        {% endif %}
+            {% if form.company_name.errors %}
+                <div style="margin-top:6px; color:#9f1239; font-size:13px;">{{ form.company_name.errors|striptags }}</div>
+            {% endif %}
         </div>
 
         <div class="form-group">
             <label>المنطقة</label>
             {{ form.region }}
-                        {% if form.region.errors %}
-                            <div style="margin-top:6px; color:#9f1239; font-size:13px;">{{ form.region.errors|striptags }}</div>
-                        {% endif %}
+            {% if form.region.errors %}
+                <div style="margin-top:6px; color:#9f1239; font-size:13px;">{{ form.region.errors|striptags }}</div>
+            {% endif %}
         </div>
 
         <div class="form-group">
             <label>رقم الجوال</label>
             {{ form.phone_number }}
-                        {% if form.phone_number.errors %}
-                            <div style="margin-top:6px; color:#9f1239; font-size:13px;">{{ form.phone_number.errors|striptags }}</div>
-                        {% endif %}
+            {% if form.phone_number.errors %}
+                <div style="margin-top:6px; color:#9f1239; font-size:13px;">{{ form.phone_number.errors|striptags }}</div>
+            {% endif %}
         </div>
 
         <button type="submit" class="btn">إنشاء الحساب</button>
@@ -270,37 +235,5 @@
     </div>
 
 </div>
-
-<script>
-    (function(){
-        var roleInput = document.getElementById('role-input');
-        var tabIndividual = document.getElementById('tab-individual');
-        var tabCompany = document.getElementById('tab-company');
-        var hint = document.getElementById('tab-hint');
-
-        function setActive(which){
-            var isCompany = which === 'company';
-            roleInput.value = isCompany ? 'coordinator' : 'contractor';
-
-            tabIndividual.style.background = isCompany ? '#e9eef6' : '#0076ff';
-            tabIndividual.style.color = isCompany ? '#0076ff' : '#fff';
-
-            tabCompany.style.background = isCompany ? '#0076ff' : '#e9eef6';
-            tabCompany.style.color = isCompany ? '#fff' : '#0076ff';
-
-            hint.textContent = isCompany
-                  ? 'سيتم إنشاء حساب منسق تدريب (للشركات)'
-                 : 'سيتم إنشاء حساب مقاول (للأفراد)';
-        }
-
-        tabIndividual.addEventListener('click', function(){ setActive('individual'); });
-        tabCompany.addEventListener('click', function(){ setActive('company'); });
-
-        // Initial
-        var initialRole = (roleInput.value || 'contractor').toLowerCase();
-        setActive(initialRole === 'coordinator' ? 'company' : 'individual');
-    })();
-</script>
-
 </body>
 </html>

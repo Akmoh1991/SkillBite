@@ -38,7 +38,7 @@
         h1 {
             text-align: center;
             margin-bottom: 32px;
-            color: #001F5E;
+            color: #00B476;
             font-size: 26px;
         }
 
@@ -64,8 +64,8 @@
 
         input:focus {
             outline: none;
-            border-color: #0076ff;
-            box-shadow: 0 0 0 3px rgba(0,118,255,0.20);
+            border-color: #00B476;
+            box-shadow: 0 0 0 3px rgba(0,180,118,0.20);
         }
 
         .btn {
@@ -73,7 +73,7 @@
             padding: 14px;
             border: none;
             border-radius: 12px;
-            background: #0076ff;
+            background: #00B476;
             color: #fff;
             font-size: 15px;
             font-weight: bold;
@@ -82,7 +82,7 @@
         }
 
         .btn:hover {
-            background: #005fce;
+            background: #009964;
             transform: translateY(-1px);
         }
 
@@ -106,7 +106,7 @@
         }
 
         .footer a {
-            color: #0076ff;
+            color: #00B476;
             text-decoration: none;
             font-weight: bold;
         }
@@ -121,19 +121,10 @@
 <div class="login-container">
 
     <div class="logo">
-        <img src="/static/SEC_logo.svg" alt="Logo">
+        <img src="{% static 'media/SkillBite_logo.png' %}" alt="Logo">
     </div>
 
     <h1>تسجيل الدخول</h1>
-
-    <div style="display:flex; gap:10px; margin: -10px 0 18px;">
-        <button type="button" id="login-tab-individual" class="btn" style="width:auto; flex:1; padding:12px; border-radius:12px; background:#e9eef6; color:#0076ff;">
-            أفراد
-        </button>
-        <button type="button" id="login-tab-company" class="btn" style="width:auto; flex:1; padding:12px; border-radius:12px; background:#e9eef6; color:#0076ff;">
-            شركات
-        </button>
-    </div>
 
     {% if messages %}
         <div class="messages">
@@ -164,40 +155,10 @@
     </form>
 
     <div class="footer">
-        لا تملك حساب؟  
+        لا تملك حساب؟
         <a id="register-link" href="{% url 'register' %}">إنشاء حساب جديد</a>
     </div>
 
 </div>
-
-<script>
-    (function(){
-        var tabIndividual = document.getElementById('login-tab-individual');
-        var tabCompany = document.getElementById('login-tab-company');
-        var registerLink = document.getElementById('register-link');
-
-        function setActive(which){
-            var isCompany = which === 'company';
-            tabIndividual.style.background = isCompany ? '#e9eef6' : '#0076ff';
-            tabIndividual.style.color = isCompany ? '#0076ff' : '#fff';
-            tabCompany.style.background = isCompany ? '#0076ff' : '#e9eef6';
-            tabCompany.style.color = isCompany ? '#fff' : '#0076ff';
-            registerLink.href = "{% url 'register' %}" + (isCompany ? '?type=company' : '?type=individual');
-            try {
-                var url = new URL(window.location.href);
-                url.searchParams.set('type', isCompany ? 'company' : 'individual');
-                window.history.replaceState({}, '', url.toString());
-            } catch(e) {}
-        }
-
-        tabIndividual.addEventListener('click', function(){ setActive('individual'); });
-        tabCompany.addEventListener('click', function(){ setActive('company'); });
-
-        // Initial from view context (safe default)
-        var initial = "{{ login_type|default:'individual' }}".toLowerCase();
-        setActive(initial === 'company' ? 'company' : 'individual');
-    })();
-</script>
-
 </body>
 </html>

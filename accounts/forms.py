@@ -57,7 +57,7 @@ class RegisterForm(forms.Form):
     username = forms.CharField(label='اسم المستخدم', max_length=150)
     email = forms.EmailField(label='البريد الإلكتروني', required=False)
     full_name_en = forms.CharField(label='Full Name (English)', max_length=255)
-    full_name_ar = forms.CharField(label='الاسم الكامل (بالعربية)', max_length=255)
+    full_name_ar = forms.CharField(label='الاسم الكامل (بالعربية)', max_length=255, required=False)
     password = forms.CharField(label='كلمة المرور', widget=forms.PasswordInput)
     role = forms.ChoiceField(label='نوع الحساب', choices=ROLE_CHOICES)
 
@@ -118,6 +118,7 @@ class RegisterForm(forms.Form):
         ('Eastern region', 'المنطقة الشرقية'),
         ('Central region', 'المنطقة الوسطى'),
         ('Western region', 'المنطقة الغربية'),
+        ('Northern region', 'المنطقة الشمالية'),
         ('Southern region', 'المنطقة الجنوبية'),
     )
 
