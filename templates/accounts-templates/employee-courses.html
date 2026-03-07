@@ -1,0 +1,45 @@
+{% extends "accounts-templates/business-owner-base.html" %}
+
+{% block page_title %}{{ business.name }} | دوراتي{% endblock %}
+{% block hero_title %}الدورات التدريبية{% endblock %}
+{% block hero_text %}اعرض الدورات المطلوبة منك وحدد ما أنجزته منها.{% endblock %}
+
+{% block content %}
+<section class="stats">
+  <div class="stat-card">
+    <h4>إجمالي الدورات</h4>
+    <span>{{ course_assignments|length }}</span>
+  </div>
+  <div class="stat-card">
+    <h4>الدورات المكتملة</h4>
+    <span>{{ completed_course_count }}</span>
+  </div>
+</section>
+
+<section class="section">
+  <div class="card" style="grid-column:1 / -1;">
+    <h2>الدورات المسندة لي</h2>
+    <ul class="list">
+      {% for assignment in course_assignments %}
+        <li>
+          <strong>{{ assignment.course.title }}</strong>
+          {% if assignment.status == 'COMPLETED' %}
+            <span class="pill">مكتملة</span>
+          {% endif %}
+          <div class="meta">{{ assignment.course.estimated_minutes }} دقيقة{% if assignment.course.description %} | {{ assignment.course.description }}{% endif %}</div>
+          {% if assignment.status != 'COMPLETED' %}
+            <form method="post" action="{% url 'employee_course_complete' assignment.id %}" style="margin-top:10px;">
+              {% csrf_token %}
+              <button class="btn secondary" type="submit">إكمال الدورة</button>
+            </form>
+          {% else %}
+            <div class="meta" style="margin-top:8px;">اكتملت في {{ assignment.completed_at|date:"Y-m-d H:i" }}</div>
+          {% endif %}
+        </li>
+      {% empty %}
+        <li class="muted">لا توجد دورات مسندة حالياً.</li>
+      {% endfor %}
+    </ul>
+  </div>
+</section>
+{% endblock %}

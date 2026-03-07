@@ -103,7 +103,22 @@
   </div>
 
   <ul>
-    {% if request.resolver_match.url_name == 'business_owner_dashboard' or request.resolver_match.url_name == 'business_owner_employees' or request.resolver_match.url_name == 'business_owner_courses' or request.resolver_match.url_name == 'business_owner_checklists' or business %}
+    {% if request.resolver_match.url_name == 'employee_dashboard' or request.resolver_match.url_name == 'employee_courses' or request.resolver_match.url_name == 'employee_checklists' or employee_profile %}
+      <li>
+        <a href="{% url 'employee_dashboard' %}"
+           class="{% if request.resolver_match.url_name == 'employee_dashboard' %}active{% endif %}">
+          الصفحة الرئيسية
+        </a>
+      </li>
+      <li>
+        <a href="{% url 'employee_courses' %}"
+           class="{% if request.resolver_match.url_name == 'employee_courses' %}active{% endif %}">الدورات التدريبية</a>
+      </li>
+      <li>
+        <a href="{% url 'employee_checklists' %}"
+           class="{% if request.resolver_match.url_name == 'employee_checklists' %}active{% endif %}">قوائم التشغيل اليومية</a>
+      </li>
+    {% elif request.resolver_match.url_name == 'business_owner_dashboard' or request.resolver_match.url_name == 'business_owner_employees' or request.resolver_match.url_name == 'business_owner_courses' or request.resolver_match.url_name == 'business_owner_checklists' or business %}
       <li>
         <a href="{% url 'business_owner_dashboard' %}"
            class="{% if request.resolver_match.url_name == 'business_owner_dashboard' %}active{% endif %}">

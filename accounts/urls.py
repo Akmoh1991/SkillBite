@@ -15,6 +15,8 @@ from .views import (
     business_owner_checklist_create_action,
     business_owner_checklist_assignment_rule_create_action,
     employee_dashboard_view,
+    employee_courses_view,
+    employee_checklists_view,
     employee_course_complete_action,
     employee_checklist_complete_action,
 
@@ -125,6 +127,8 @@ urlpatterns = [
     path('business-owner/checklists/create/', business_owner_checklist_create_action, name='business_owner_checklist_create'),
     path('business-owner/checklist-rules/create/', business_owner_checklist_assignment_rule_create_action, name='business_owner_checklist_rule_create'),
     path('employee/dashboard/', employee_dashboard_view, name='employee_dashboard'),
+    path('employee/courses/', employee_courses_view, name='employee_courses'),
+    path('employee/checklists/', employee_checklists_view, name='employee_checklists'),
     path('employee/courses/<int:assignment_id>/complete/', employee_course_complete_action, name='employee_course_complete'),
     path('employee/checklists/<int:checklist_id>/complete/', employee_checklist_complete_action, name='employee_checklist_complete'),
 

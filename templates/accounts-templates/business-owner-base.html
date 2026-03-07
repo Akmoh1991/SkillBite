@@ -69,6 +69,24 @@ body{
   border:1px solid #e2e8f0;
 }
 
+.message-card.success{
+  background:#ecfdf3;
+  border-color:#86efac;
+  color:#166534;
+}
+
+.message-card__content{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-weight:700;
+}
+
+.message-card__icon{
+  font-size:18px;
+  line-height:1;
+}
+
 .stats{
   display:grid;
   grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
@@ -166,6 +184,10 @@ body{
   cursor:pointer;
 }
 
+.btn.secondary{
+  background:var(--blue-main);
+}
+
 .list{
   margin:0;
   padding:0;
@@ -186,6 +208,11 @@ body{
   font-size:13px;
 }
 
+.meta{
+  color:var(--muted);
+  font-size:13px;
+}
+
 .pill{
   display:inline-block;
   margin-right:8px;
@@ -195,6 +222,31 @@ body{
   padding:4px 10px;
   font-size:12px;
   font-weight:700;
+}
+
+.checklist-form{
+  margin-top:12px;
+  padding:14px;
+  border-radius:14px;
+  background:#f8fafc;
+  border:1px solid #e2e8f0;
+}
+
+.checklist-form label{
+  display:block;
+  margin-bottom:8px;
+}
+
+.checklist-form textarea{
+  width:100%;
+  min-height:88px;
+  box-sizing:border-box;
+  padding:10px 12px;
+  border-radius:10px;
+  border:1px solid #cbd5e1;
+  font:inherit;
+  margin:10px 0;
+  resize:vertical;
 }
 
 @media (max-width:1100px){
@@ -224,7 +276,14 @@ body{
   {% if messages %}
     <div class="messages">
       {% for message in messages %}
-        <div class="card message-card">{{ message }}</div>
+        <div class="card message-card{% if message.tags == 'success' %} success{% endif %}">
+          <div class="message-card__content">
+            {% if message.tags == 'success' %}
+              <span class="message-card__icon">🎉</span>
+            {% endif %}
+            <span>{{ message }}</span>
+          </div>
+        </div>
       {% endfor %}
     </div>
   {% endif %}

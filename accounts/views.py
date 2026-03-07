@@ -242,6 +242,11 @@ def _provision_course_assignments_for_employee(employee_profile, assigned_by=Non
     if not employee_profile or not employee_profile.job_title_id:
         return
 
+    single_job_title_mode = (
+        JobTitle.objects
+        .filter(business=employee_profile.business)
+        .count() == 1
+    )
     rules = (
         CourseAssignmentRule.objects
         .filter(
@@ -251,6 +256,23 @@ def _provision_course_assignments_for_employee(employee_profile, assigned_by=Non
         )
         .select_related('course', 'job_title')
     )
+    if single_job_title_mode:
+        assigned_course_ids = set(rules.values_list('course_id', flat=True))
+        implicit_courses = (
+            Course.objects
+            .filter(business=employee_profile.business, is_active=True)
+            .exclude(id__in=assigned_course_ids)
+        )
+        for course in implicit_courses:
+            CourseAssignment.objects.get_or_create(
+                business=employee_profile.business,
+                course=course,
+                employee=employee_profile.user,
+                defaults={
+                    'assigned_by': assigned_by,
+                    'assigned_via_job_title': employee_profile.job_title,
+                },
+            )
     for rule in rules:
         CourseAssignment.objects.get_or_create(
             business=employee_profile.business,
@@ -290,7 +312,7 @@ def _assigned_checklists_queryset(employee_profile):
     if not employee_profile or not employee_profile.job_title_id:
         return SOPChecklist.objects.none()
 
-    return (
+    queryset = (
         SOPChecklist.objects
         .filter(
             business=employee_profile.business,
@@ -301,6 +323,26 @@ def _assigned_checklists_queryset(employee_profile):
         .distinct()
         .order_by('title', 'id')
     )
+    if queryset.exists():
+        return queryset
+
+    single_job_title_mode = (
+        JobTitle.objects
+        .filter(business=employee_profile.business)
+        .count() == 1
+    )
+    if single_job_title_mode:
+        return (
+            SOPChecklist.objects
+            .filter(
+                business=employee_profile.business,
+                is_active=True,
+            )
+            .prefetch_related('items')
+            .order_by('title', 'id')
+        )
+
+    return queryset
 
 
 def _handle_scorm_upload_post(request, success_redirect_name: str):
@@ -1433,7 +1475,7 @@ def business_owner_checklist_create_action(request):
                 title=item_title,
                 order=index,
             )
-        messages.success(request, 'تم إنشاء قائمة SOP')
+        messages.success(request, 'تم إنشاء قائمة تشغيلية')
     else:
         messages.error(request, form.errors.as_text())
     return redirect('business_owner_checklists')
@@ -1468,16 +1510,29 @@ def employee_dashboard_view(request):
         messages.error(request, 'غير مصرح لك بالدخول')
         return redirect('home')
 
+    return render(
+        request,
+        'accounts-templates/employee-dashboard.html',
+        _employee_dashboard_context(request),
+    )
+
+
+def _employee_dashboard_context(request):
     employee_profile = _get_employee_profile(request.user)
     business = employee_profile.business
     today = timezone.localdate()
+    # Backfill any missing course assignments so legacy or manually edited employee records stay in sync.
+    _provision_course_assignments_for_employee(employee_profile)
     course_assignments = (
         CourseAssignment.objects
         .filter(employee=request.user, business=business)
         .select_related('course')
         .order_by('status', 'course__title', 'id')
     )
-    completed_course_count = sum(1 for assignment in course_assignments if assignment.status == CourseAssignment.Status.COMPLETED)
+    completed_course_count = sum(
+        1 for assignment in course_assignments
+        if assignment.status == CourseAssignment.Status.COMPLETED
+    )
     assigned_checklists = list(_assigned_checklists_queryset(employee_profile))
     today_completions = {
         completion.checklist_id: completion
@@ -1494,19 +1549,41 @@ def employee_dashboard_view(request):
         .order_by('-completed_for', '-completed_at')[:10]
     )
 
+    return {
+        'employee_profile': employee_profile,
+        'business': business,
+        'course_assignments': course_assignments,
+        'completed_course_count': completed_course_count,
+        'assigned_checklists': assigned_checklists,
+        'today_completions': today_completions,
+        'recent_checklist_completions': recent_checklist_completions,
+        'today': today,
+    }
+
+
+@login_required
+def employee_courses_view(request):
+    if not _employee_guard(request):
+        messages.error(request, 'غير مصرح لك بالدخول')
+        return redirect('home')
+
     return render(
         request,
-        'accounts-templates/employee-dashboard.html',
-        {
-            'employee_profile': employee_profile,
-            'business': business,
-            'course_assignments': course_assignments,
-            'completed_course_count': completed_course_count,
-            'assigned_checklists': assigned_checklists,
-            'today_completions': today_completions,
-            'recent_checklist_completions': recent_checklist_completions,
-            'today': today,
-        },
+        'accounts-templates/employee-courses.html',
+        _employee_dashboard_context(request),
+    )
+
+
+@login_required
+def employee_checklists_view(request):
+    if not _employee_guard(request):
+        messages.error(request, 'غير مصرح لك بالدخول')
+        return redirect('home')
+
+    return render(
+        request,
+        'accounts-templates/employee-checklists.html',
+        _employee_dashboard_context(request),
     )
 
 
@@ -1528,7 +1605,7 @@ def employee_course_complete_action(request, assignment_id: int):
     assignment.completed_at = timezone.now()
     assignment.save(update_fields=['status', 'completed_at'])
     messages.success(request, f'تم إكمال الدورة: {assignment.course.title}')
-    return redirect('employee_dashboard')
+    return redirect('employee_courses')
 
 
 @login_required
@@ -1549,7 +1626,7 @@ def employee_checklist_complete_action(request, checklist_id: int):
     expected_item_ids = {item.id for item in items}
     if expected_item_ids and selected_item_ids != expected_item_ids:
         messages.error(request, 'يجب تحديد جميع عناصر قائمة SOP قبل الإكمال')
-        return redirect('employee_dashboard')
+        return redirect('employee_checklists')
 
     completion, _created = SOPChecklistCompletion.objects.get_or_create(
         business=employee_profile.business,
@@ -1570,7 +1647,7 @@ def employee_checklist_complete_action(request, checklist_id: int):
         )
 
     messages.success(request, f'تم إكمال قائمة SOP: {checklist.title}')
-    return redirect('employee_dashboard')
+    return redirect('employee_checklists')
 
 
 # =========================

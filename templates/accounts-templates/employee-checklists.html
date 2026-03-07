@@ -1,0 +1,60 @@
+{% extends "accounts-templates/business-owner-base.html" %}
+
+{% block page_title %}{{ business.name }} | قوائم التشغيل{% endblock %}
+{% block hero_title %}قوائم التشغيل اليومية{% endblock %}
+{% block hero_text %}اعرض القوائم المطلوبة منك وسجل إتمامها ضمن نفس الواجهة.{% endblock %}
+
+{% block content %}
+<section class="stats">
+  <div class="stat-card">
+    <h4>القوائم المسندة</h4>
+    <span>{{ assigned_checklists|length }}</span>
+  </div>
+  <div class="stat-card">
+    <h4>تاريخ اليوم</h4>
+    <span style="font-size:18px;">{{ today }}</span>
+  </div>
+</section>
+
+<section class="section">
+  <div class="card">
+    <h2>قوائم التشغيل المطلوبة</h2>
+    <ul class="list">
+      {% for checklist in assigned_checklists %}
+        <li>
+          <strong>{{ checklist.title }}</strong>
+          <div class="meta">{{ checklist.get_frequency_display }} | {{ checklist.items.count }} عنصر</div>
+          {% if checklist.id in today_completions %}
+            <div style="margin-top:10px;"><span class="pill">مكتملة اليوم</span></div>
+          {% else %}
+            <form class="checklist-form" method="post" action="{% url 'employee_checklist_complete' checklist.id %}">
+              {% csrf_token %}
+              {% for item in checklist.items.all %}
+                <label><input type="checkbox" name="item_ids" value="{{ item.id }}"> {{ item.title }}</label>
+              {% endfor %}
+              <textarea name="notes" placeholder="ملاحظات الوردية (اختياري)"></textarea>
+              <button class="btn" type="submit">إرسال القائمة</button>
+            </form>
+          {% endif %}
+        </li>
+      {% empty %}
+        <li class="muted">لا توجد قوائم تشغيل مسندة حالياً.</li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>السجل الأخير</h2>
+    <ul class="list">
+      {% for completion in recent_checklist_completions %}
+        <li>
+          <strong>{{ completion.checklist.title }}</strong><br>
+          <span class="meta">{{ completion.completed_for }}{% if completion.notes %} | {{ completion.notes }}{% endif %}</span>
+        </li>
+      {% empty %}
+        <li class="muted">لا يوجد سجل تشغيلي حتى الآن.</li>
+      {% endfor %}
+    </ul>
+  </div>
+</section>
+{% endblock %}

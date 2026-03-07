@@ -95,7 +95,7 @@ class MultiTenantFlowTests(TestCase):
         dashboard_response = self.client.get(reverse('employee_dashboard'))
         self.assertEqual(dashboard_response.status_code, 200)
         response = self.client.post(reverse('employee_course_complete', args=[assignment.id]))
-        self.assertRedirects(response, reverse('employee_dashboard'))
+        self.assertRedirects(response, reverse('employee_courses'))
 
         assignment.refresh_from_db()
         self.assertEqual(assignment.status, CourseAssignment.Status.COMPLETED)
@@ -113,7 +113,7 @@ class MultiTenantFlowTests(TestCase):
                 'notes': 'Morning shift done',
             },
         )
-        self.assertRedirects(response, reverse('employee_dashboard'))
+        self.assertRedirects(response, reverse('employee_checklists'))
 
         completion = SOPChecklistCompletion.objects.get(employee=employee_user, checklist=self.checklist)
         self.assertEqual(completion.notes, 'Morning shift done')
@@ -146,3 +146,48 @@ class MultiTenantFlowTests(TestCase):
         ):
             response = self.client.get(reverse(route_name))
             self.assertEqual(response.status_code, 200)
+
+    def test_employee_navigation_pages_render(self):
+        employee_user = User.objects.create_user(username='employee_nav', password='pass12345')
+        EmployeeProfile.objects.create(user=employee_user, business=self.business, job_title=self.job_title, created_by=self.owner)
+
+        self.client.login(username='employee_nav', password='pass12345')
+
+        for route_name in (
+            'employee_dashboard',
+            'employee_courses',
+            'employee_checklists',
+        ):
+            response = self.client.get(reverse(route_name))
+            self.assertEqual(response.status_code, 200)
+
+    def test_employee_dashboard_backfills_missing_course_assignments(self):
+        employee_user = User.objects.create_user(username='employee_backfill', password='pass12345')
+        EmployeeProfile.objects.create(user=employee_user, business=self.business, job_title=self.job_title, created_by=self.owner)
+
+        CourseAssignment.objects.filter(employee=employee_user, course=self.course).delete()
+
+        self.client.login(username='employee_backfill', password='pass12345')
+        response = self.client.get(reverse('employee_dashboard'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(CourseAssignment.objects.filter(employee=employee_user, course=self.course).exists())
+
+    def test_single_job_title_business_implicitly_assigns_course_without_rule(self):
+        CourseAssignmentRule.objects.all().delete()
+        employee_user = User.objects.create_user(username='employee_implicit_course', password='pass12345')
+        EmployeeProfile.objects.create(user=employee_user, business=self.business, job_title=self.job_title, created_by=self.owner)
+
+        self.client.login(username='employee_implicit_course', password='pass12345')
+        response = self.client.get(reverse('employee_courses'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(CourseAssignment.objects.filter(employee=employee_user, course=self.course).exists())
+
+    def test_single_job_title_business_implicitly_exposes_checklist_without_rule(self):
+        SOPChecklistAssignmentRule.objects.all().delete()
+        employee_user = User.objects.create_user(username='employee_implicit_checklist', password='pass12345')
+        EmployeeProfile.objects.create(user=employee_user, business=self.business, job_title=self.job_title, created_by=self.owner)
+
+        self.client.login(username='employee_implicit_checklist', password='pass12345')
+        response = self.client.get(reverse('employee_checklists'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.checklist.title)
