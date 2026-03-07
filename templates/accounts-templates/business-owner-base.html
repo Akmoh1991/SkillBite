@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block page_title %}SkillBite{% endblock %}</title>
+<style>
+@import url('/static/branding/branding.css');
+:root{
+  --blue-dark:#0027b9;
+  --blue-main:#0076ff;
+  --orange:#0076ff;
+  --bg:#f7f9fc;
+  --card:#ffffff;
+  --text:#1f2937;
+  --muted:#5f6f85;
+  --sidebar-w:260px;
+  --topbar-h:70px;
+}
+
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  font-family:"SE","Segoe UI",Tahoma,Arial,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+
+.main{
+  margin-right:var(--sidebar-w);
+  padding:calc(var(--topbar-h) + 36px) 28px 40px;
+}
+
+.hero-card,
+.stat-card,
+.card{
+  background:var(--card);
+  border-radius:14px;
+  box-shadow:0 14px 34px rgba(15,45,90,.12);
+}
+
+.hero-card{
+  padding:24px 28px;
+  margin-bottom:22px;
+  border:1px solid #fed7aa;
+}
+
+.hero-card h1{
+  margin:0 0 8px;
+  font-size:34px;
+  color:#0f172a;
+}
+
+.hero-card p{
+  margin:0;
+  font-size:15px;
+  color:var(--muted);
+}
+
+.messages{
+  display:grid;
+  gap:12px;
+  margin-bottom:18px;
+}
+
+.message-card{
+  padding:14px 16px;
+  border:1px solid #e2e8f0;
+}
+
+.stats{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
+  gap:18px;
+  margin-bottom:22px;
+}
+
+.stat-card{
+  padding:18px;
+}
+
+.stat-card h4{
+  margin:0 0 8px;
+  font-size:13px;
+  color:var(--muted);
+}
+
+.stat-card span{
+  font-size:24px;
+  font-weight:700;
+  color:var(--blue-main);
+}
+
+.section{
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0, 1fr));
+  gap:18px;
+  margin-bottom:18px;
+}
+
+.card{
+  padding:20px;
+}
+
+.card h2{
+  margin:0 0 14px;
+  font-size:17px;
+}
+
+.card h3{
+  margin:18px 0 12px;
+  font-size:15px;
+}
+
+.field{
+  margin-bottom:12px;
+}
+
+.field label{
+  display:block;
+  margin-bottom:6px;
+  font-size:13px;
+  font-weight:700;
+  color:#334155;
+}
+
+.field input,
+.field select,
+.field textarea{
+  width:100%;
+  border:1px solid #cbd5e1;
+  border-radius:10px;
+  padding:12px 14px;
+  font:inherit;
+  background:#fff;
+}
+
+.field textarea{
+  min-height:110px;
+  resize:vertical;
+}
+
+.inline-check{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:13px;
+  font-weight:700;
+  color:#334155;
+  margin-bottom:12px;
+}
+
+.inline-check input{
+  width:auto;
+}
+
+.btn{
+  border:0;
+  border-radius:10px;
+  padding:10px 16px;
+  background:#0f766e;
+  color:#fff;
+  font-size:14px;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.list{
+  margin:0;
+  padding:0;
+  list-style:none;
+}
+
+.list li{
+  padding:12px 0;
+  border-bottom:1px solid #edf2f7;
+}
+
+.list li:last-child{
+  border-bottom:0;
+}
+
+.muted{
+  color:var(--muted);
+  font-size:13px;
+}
+
+.pill{
+  display:inline-block;
+  margin-right:8px;
+  background:#eff6ff;
+  color:var(--blue-main);
+  border-radius:999px;
+  padding:4px 10px;
+  font-size:12px;
+  font-weight:700;
+}
+
+@media (max-width:1100px){
+  .section{
+    grid-template-columns:1fr;
+  }
+}
+
+@media (max-width:900px){
+  .main{
+    margin-right:0;
+    padding-top:calc(var(--topbar-h) + 24px);
+  }
+}
+</style>
+</head>
+<body>
+{% include "accounts-templates/sidebar.html" %}
+{% include "accounts-templates/topbar.html" %}
+
+<div class="main">
+  <section class="hero-card">
+    <h1>{% block hero_title %}{{ business.name }}{% endblock %}</h1>
+    <p>{% block hero_text %}إدارة بسيطة للتدريب والتشغيل اليومي داخل SkillBite.{% endblock %}</p>
+  </section>
+
+  {% if messages %}
+    <div class="messages">
+      {% for message in messages %}
+        <div class="card message-card">{{ message }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  {% block content %}{% endblock %}
+</div>
+</body>
+</html>

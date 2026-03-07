@@ -69,7 +69,7 @@ class MultiTenantFlowTests(TestCase):
                 'job_title': self.job_title.id,
             },
         )
-        self.assertRedirects(response, reverse('business_owner_dashboard'))
+        self.assertRedirects(response, reverse('business_owner_employees'))
 
         employee_user = User.objects.get(username='employee1')
         employee_profile = EmployeeProfile.objects.get(user=employee_user)
@@ -134,3 +134,15 @@ class MultiTenantFlowTests(TestCase):
         response = self.client.get(reverse('home'))
         self.assertRedirects(response, reverse('business_owner_dashboard'))
         self.assertTrue(BusinessTenant.objects.filter(owner=legacy_user, name='Legacy Cafe').exists())
+
+    def test_owner_navigation_pages_render(self):
+        self.client.login(username='owner', password='pass12345')
+
+        for route_name in (
+            'business_owner_dashboard',
+            'business_owner_employees',
+            'business_owner_courses',
+            'business_owner_checklists',
+        ):
+            response = self.client.get(reverse(route_name))
+            self.assertEqual(response.status_code, 200)

@@ -1,0 +1,95 @@
+{% extends "accounts-templates/business-owner-base.html" %}
+
+{% block page_title %}{{ business.name }} | الموظفون{% endblock %}
+{% block hero_title %}الموظفون{% endblock %}
+{% block hero_text %}إدارة الفريق، المسميات الوظيفية، وإنشاء حسابات الموظفين من نفس الواجهة.{% endblock %}
+
+{% block content %}
+<section class="stats">
+  <div class="stat-card">
+    <h4>عدد الموظفين</h4>
+    <span>{{ employees|length }}</span>
+  </div>
+  <div class="stat-card">
+    <h4>المسميات الوظيفية</h4>
+    <span>{{ job_titles|length }}</span>
+  </div>
+</section>
+
+<section class="section">
+  <div class="card">
+    <h2>إضافة مسمى وظيفي</h2>
+    <form method="post" action="{% url 'business_owner_job_title_create' %}">
+      {% csrf_token %}
+      <div class="field">
+        <label for="job-title-name">المسمى الوظيفي</label>
+        <input id="job-title-name" type="text" name="name" required>
+      </div>
+      <button class="btn" type="submit">حفظ المسمى</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2>إضافة موظف</h2>
+    <form method="post" action="{% url 'business_owner_employee_create' %}">
+      {% csrf_token %}
+      <div class="field">
+        <label for="employee-username">اسم المستخدم</label>
+        <input id="employee-username" type="text" name="username" required>
+      </div>
+      <div class="field">
+        <label for="employee-email">البريد الإلكتروني</label>
+        <input id="employee-email" type="email" name="email">
+      </div>
+      <div class="field">
+        <label for="employee-name">الاسم الكامل</label>
+        <input id="employee-name" type="text" name="full_name" required>
+      </div>
+      <div class="field">
+        <label for="employee-password">كلمة المرور</label>
+        <input id="employee-password" type="password" name="password" required>
+      </div>
+      <div class="field">
+        <label for="employee-job-title">المسمى الوظيفي</label>
+        <select id="employee-job-title" name="job_title">
+          <option value="">بدون مسمى حالياً</option>
+          {% for job_title in job_titles %}
+            <option value="{{ job_title.id }}">{{ job_title.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button class="btn" type="submit">إنشاء الموظف</button>
+    </form>
+  </div>
+</section>
+
+<section class="section">
+  <div class="card">
+    <h2>الفريق الحالي</h2>
+    <ul class="list">
+      {% for employee in employees %}
+        <li>
+          <strong>{{ employee.user.get_full_name|default:employee.user.username }}</strong><br>
+          <span class="muted">{{ employee.user.username }}{% if employee.job_title %} | {{ employee.job_title.name }}{% endif %}</span>
+        </li>
+      {% empty %}
+        <li class="muted">لا يوجد موظفون حتى الآن.</li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>المسميات الوظيفية</h2>
+    <ul class="list">
+      {% for job_title in job_titles %}
+        <li>
+          <strong>{{ job_title.name }}</strong><br>
+          <span class="muted">{{ job_title.employees.count }} موظف</span>
+        </li>
+      {% empty %}
+        <li class="muted">لا توجد مسميات وظيفية حتى الآن.</li>
+      {% endfor %}
+    </ul>
+  </div>
+</section>
+{% endblock %}

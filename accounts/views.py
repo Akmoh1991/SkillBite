@@ -1192,12 +1192,7 @@ def logout_view(request):
     return redirect('home')
 
 
-@login_required
-def business_owner_dashboard_view(request):
-    if not _business_owner_guard(request):
-        messages.error(request, 'غير مصرح لك بالدخول')
-        return redirect('home')
-
+def _business_owner_dashboard_context(request):
     business = _get_owned_business(request.user)
     employees = (
         EmployeeProfile.objects
@@ -1243,24 +1238,72 @@ def business_owner_dashboard_view(request):
     for checklist in checklists:
         checklist.completion_total_today = checklist_completion_counts.get(checklist.id, 0)
 
+    return {
+        'business': business,
+        'employees': employees,
+        'courses': courses,
+        'checklists': checklists,
+        'job_titles': job_titles,
+        'course_rules': course_rules,
+        'checklist_rules': checklist_rules,
+        'employee_form': BusinessEmployeeCreateForm(business=business),
+        'job_title_form': JobTitleForm(),
+        'course_form': CourseForm(),
+        'course_rule_form': CourseAssignmentRuleForm(business=business),
+        'checklist_form': SOPChecklistForm(),
+        'checklist_rule_form': SOPChecklistAssignmentRuleForm(business=business),
+    }
+
+
+@login_required
+def business_owner_dashboard_view(request):
+    if not _business_owner_guard(request):
+        messages.error(request, 'غير مصرح لك بالدخول')
+        return redirect('home')
+
     return render(
         request,
         'accounts-templates/business-owner-dashboard.html',
-        {
-            'business': business,
-            'employees': employees,
-            'courses': courses,
-            'checklists': checklists,
-            'job_titles': job_titles,
-            'course_rules': course_rules,
-            'checklist_rules': checklist_rules,
-            'employee_form': BusinessEmployeeCreateForm(business=business),
-            'job_title_form': JobTitleForm(),
-            'course_form': CourseForm(),
-            'course_rule_form': CourseAssignmentRuleForm(business=business),
-            'checklist_form': SOPChecklistForm(),
-            'checklist_rule_form': SOPChecklistAssignmentRuleForm(business=business),
-        },
+        _business_owner_dashboard_context(request),
+    )
+
+
+@login_required
+def business_owner_employees_view(request):
+    if not _business_owner_guard(request):
+        messages.error(request, 'غير مصرح لك بالدخول')
+        return redirect('home')
+
+    return render(
+        request,
+        'accounts-templates/business-owner-employees.html',
+        _business_owner_dashboard_context(request),
+    )
+
+
+@login_required
+def business_owner_courses_view(request):
+    if not _business_owner_guard(request):
+        messages.error(request, 'غير مصرح لك بالدخول')
+        return redirect('home')
+
+    return render(
+        request,
+        'accounts-templates/business-owner-courses.html',
+        _business_owner_dashboard_context(request),
+    )
+
+
+@login_required
+def business_owner_checklists_view(request):
+    if not _business_owner_guard(request):
+        messages.error(request, 'غير مصرح لك بالدخول')
+        return redirect('home')
+
+    return render(
+        request,
+        'accounts-templates/business-owner-checklists.html',
+        _business_owner_dashboard_context(request),
     )
 
 
@@ -1283,7 +1326,7 @@ def business_owner_job_title_create_action(request):
             messages.error(request, 'هذا المسمى الوظيفي موجود بالفعل')
     else:
         messages.error(request, form.errors.as_text())
-    return redirect('business_owner_dashboard')
+    return redirect('business_owner_employees')
 
 
 @login_required
@@ -1298,12 +1341,12 @@ def business_owner_employee_create_action(request):
     form = BusinessEmployeeCreateForm(request.POST, business=business)
     if not form.is_valid():
         messages.error(request, form.errors.as_text())
-        return redirect('business_owner_dashboard')
+        return redirect('business_owner_employees')
 
     username = form.cleaned_data['username']
     if User.objects.filter(username=username).exists():
         messages.error(request, 'اسم المستخدم مستخدم مسبقاً')
-        return redirect('business_owner_dashboard')
+        return redirect('business_owner_employees')
 
     full_name = form.cleaned_data['full_name']
     first_name, _, last_name = full_name.partition(' ')
@@ -1322,7 +1365,7 @@ def business_owner_employee_create_action(request):
     )
     _provision_course_assignments_for_employee(employee_profile, assigned_by=request.user)
     messages.success(request, 'تم إنشاء حساب الموظف')
-    return redirect('business_owner_dashboard')
+    return redirect('business_owner_employees')
 
 
 @login_required
@@ -1342,7 +1385,7 @@ def business_owner_course_create_action(request):
         messages.success(request, 'تم إنشاء الدورة')
     else:
         messages.error(request, form.errors.as_text())
-    return redirect('business_owner_dashboard')
+    return redirect('business_owner_courses')
 
 
 @login_required
@@ -1366,7 +1409,7 @@ def business_owner_course_assignment_rule_create_action(request):
             messages.error(request, 'هذه الدورة مسندة بالفعل لهذا المسمى الوظيفي')
     else:
         messages.error(request, form.errors.as_text())
-    return redirect('business_owner_dashboard')
+    return redirect('business_owner_courses')
 
 
 @login_required
@@ -1393,7 +1436,7 @@ def business_owner_checklist_create_action(request):
         messages.success(request, 'تم إنشاء قائمة SOP')
     else:
         messages.error(request, form.errors.as_text())
-    return redirect('business_owner_dashboard')
+    return redirect('business_owner_checklists')
 
 
 @login_required
@@ -1416,7 +1459,7 @@ def business_owner_checklist_assignment_rule_create_action(request):
             messages.error(request, 'هذه القائمة مسندة بالفعل لهذا المسمى الوظيفي')
     else:
         messages.error(request, form.errors.as_text())
-    return redirect('business_owner_dashboard')
+    return redirect('business_owner_checklists')
 
 
 @login_required
