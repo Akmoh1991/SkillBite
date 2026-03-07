@@ -3,7 +3,7 @@
 <style>
 @import url('/static/branding/branding.css');
 :root {
-  --orange: #0076ff;
+  --orange: #00B476 !important;
   --bg-transparent: rgba(10, 37, 64, 0.25);
   --bg-solid: rgba(10, 37, 64, 0.95);
 }
@@ -41,8 +41,9 @@ header {
 }
 
 .logo-area img {
-  height: 84px;
+  height: 46px;
   width: auto;
+  object-fit: contain;
 }
 
 /* ================= NAV (DESKTOP) ================= */
@@ -69,7 +70,7 @@ nav a:not(.cta)::after {
   right: 0;
   width: 0;
   height: 2px;
-  background: var(--orange);
+  background: #00B476;
   transition: width 0.3s ease;
 }
 
@@ -80,7 +81,7 @@ nav a:not(.cta):hover::after {
 /* ================= CTA ================= */
 .cta {
   padding: 10px 22px;
-  background: var(--orange);
+  background: #00B476;
   color: #fff !important;
   border-radius: 30px;
   font-size: 13px;
@@ -137,7 +138,7 @@ nav a:not(.cta):hover::after {
 /* ================= RESPONSIVE ================= */
 @media (max-width: 1024px) {
   header {
-    background: rgba(10, 37, 64, 0.85);
+    background: rgba(6, 78, 59, 0.88);
   }
 
   nav {
@@ -156,7 +157,7 @@ nav a:not(.cta):hover::after {
   }
 
   .logo-area img {
-    height: 60px;
+    height: 36px;
     width: auto;
   }
 
@@ -176,7 +177,7 @@ nav a:not(.cta):hover::after {
 
 <header>
   <div class="logo-area">
-    <img src="/static/SEC_logo.svg" alt="SEC Logo">
+    <img src="{% static 'media/SkillBite_logo.png' %}" alt="SkillBite Logo">
   </div>
 
   <!-- Desktop Nav -->

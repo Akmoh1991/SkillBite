@@ -9,10 +9,10 @@
 <style>
 @import url('/static/branding/branding.css');
 :root {
-  --blue-dark: #0027b9;
-  --blue-main: #0076ff;
-  --orange: #0076ff;
-  --text-dark: #1a1a1a;
+  --blue-dark: #0027b9 !important;
+  --blue-main: #00B476 !important;
+  --orange: #00B476 !important;
+  --text-dark: #1a1a1a !important;
 }
 
 * { box-sizing: border-box; }
@@ -46,7 +46,7 @@ body {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(rgba(10, 37, 64, 0.65), rgba(10, 37, 64, 0.85));
+  background: linear-gradient(rgba(0, 180, 118, 0.22), rgba(0, 180, 118, 0.38));
   z-index: 2;
 }
 
@@ -71,7 +71,7 @@ body {
 .hero button {
   margin-top: 30px;
   padding: 14px 36px;
-  background: var(--orange);
+  background: #00B476;
   border: none;
   border-radius: 30px;
   color: #fff;
@@ -153,12 +153,12 @@ section {
 
 .feature {
   padding: 30px;
-  border-right: 4px solid var(--orange);
+  border-right: 4px solid #00B476;
   background: #f9fbfd;
 }
 
 .feature h3 {
-  color: var(--blue-main);
+  color: #00B476;
   margin-bottom: 10px;
 }
 
@@ -209,7 +209,7 @@ section {
 }
 
 .magazine-layout a {
-  color: var(--blue-main);
+  color: #00B476;
   text-decoration: none;
   font-size: 14px;
 }
