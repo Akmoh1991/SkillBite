@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>نظام الشهادات الحرفية</title>
+<title>سكيل بايت | منصة التدريب وقوائم التشغيل</title>
 
 <style>
 @import url('/static/branding/branding.css');
@@ -24,7 +24,6 @@ body {
   color: var(--text-dark);
 }
 
-/* ================= HERO ================= */
 .hero {
   position: relative;
   min-height: 100vh;
@@ -47,10 +46,7 @@ body {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    rgba(10, 37, 64, 0.65),
-    rgba(10, 37, 64, 0.85)
-  );
+  background: linear-gradient(rgba(10, 37, 64, 0.65), rgba(10, 37, 64, 0.85));
   z-index: 2;
 }
 
@@ -83,7 +79,6 @@ body {
   cursor: pointer;
 }
 
-/* ================= COMMON ================= */
 section {
   padding: 90px 70px;
 }
@@ -104,7 +99,6 @@ section {
   margin: 0;
 }
 
-/* ================= CERTIFICATES & COURSES ================= */
 .discover-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -129,11 +123,7 @@ section {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    to top,
-    rgba(0,0,0,.75),
-    rgba(0,0,0,.15)
-  );
+  background: linear-gradient(to top, rgba(0,0,0,.75), rgba(0,0,0,.15));
 }
 
 .discover-content {
@@ -155,7 +145,6 @@ section {
   line-height: 1.6;
 }
 
-/* ================= FEATURES ================= */
 .features-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px,1fr));
@@ -173,28 +162,6 @@ section {
   margin-bottom: 10px;
 }
 
-/* ================= STATS ================= */
-.stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px,1fr));
-  gap: 30px;
-  text-align: center;
-}
-
-.stat {
-  background: #fff;
-  padding: 35px;
-  border-radius: 10px;
-  box-shadow: 0 10px 25px rgba(0,0,0,.08);
-}
-
-.stat h2 {
-  color: var(--blue-main);
-  font-size: 34px;
-  margin-bottom: 8px;
-}
-
-/* ================= MAGAZINE ================= */
 .magazine-layout {
   display: grid;
   grid-template-columns: 2fr 1fr;
@@ -247,7 +214,6 @@ section {
   font-size: 14px;
 }
 
-/* ================= RESPONSIVE ================= */
 @media (max-width: 1100px) {
   .discover-grid { grid-template-columns: repeat(2, 1fr); }
   .magazine-layout { grid-template-columns: 1fr; }
@@ -287,119 +253,97 @@ section {
 
 <body>
 
-<!-- ===== HEADER ===== -->
 {% include "header.html" %}
 
-<!-- HERO -->
 <section class="hero">
   <video autoplay muted loop playsinline preload="auto">
-    <!-- ✅ الحل النهائي: الفيديو من static -->
-    <source src="{% static 'media/video.mp4' %}" type="video/mp4">
+    <source src="{% static 'media/landingpage_video.mp4' %}" type="video/mp4">
   </video>
 
   <div class="hero-content">
-    <h1>نظام الشهادات الحرفية</h1>
+    <h1>تدريب فرق العمل في قطاع الأغذية والمشروبات</h1>
     <p>
-       نظام تدريب و تأهيل مقاولي الشركة السعودية للكهرباء يسعى لرفع مستوى السلامة وجودة تنفيذ الأعمال
+منصة مصممة لفرق العمل تساعدك على تنظيم التدريب وادارة المهام التشغيليةبشكل يومي .
     </p>
-    <button>اكتشف البرامج</button>
+    <button onclick="window.location.href='{% url 'login' %}'">ابدأ الآن</button>
   </div>
 </section>
 
-<!-- 1️⃣ CERTIFICATES & COURSES -->
 <section>
   <div class="section-title">
-    <small>برامجنا التدريبية</small>
-    <h2>الإختبارات و الدورات</h2>
+    <small>المميزات الأساسية</small>
+    <h2>الدورات وقوائم المهام</h2>
   </div>
 
   <div class="discover-grid">
-    <!-- ✅ الحل النهائي: الصور من static بدل /media -->
     <div class="discover-card">
-      <img src="{% static 'media/1.jpg' %}" alt="الشهادات">
-      <div class="discover-content"><h4>إختبار الطاقة الشمسية</h4><p>اعتماد مهني موثوق</p></div>
+      <img src="{% static 'media/1.jpg' %}" alt="الدورات">
+      <div class="discover-content"><h4>دورات حسب الدور الوظيفي</h4><p>قم بإسناد التدريب المناسب لكل فريق بحسب المسمى الوظيفي.</p></div>
     </div>
 
     <div class="discover-card">
-      <img src="{% static 'media/2.jpg' %}" alt="الدورات">
-      <div class="discover-content"><h4>إختبار التأهيل الفني</h4><p>برامج تدريبية متخصصة</p></div>
+      <img src="{% static 'media/2.jpg' %}" alt="الموظفون">
+      <div class="discover-content"><h4>متابعة تقدم الموظفين</h4><p>يرى الموظف ما تم إسناده إليه بوضوح ويكمله بسهولة.</p></div>
     </div>
 
     <div class="discover-card">
-      <img src="{% static 'media/3.jpg' %}" alt="التأهيل">
-      <div class="discover-content"><h4>الدورات الحضورية</h4><p>رفع الجاهزية المهنية</p></div>
+      <img src="{% static 'media/3.jpg' %}" alt="قوائم التشغيل">
+      <div class="discover-content"><h4>قوائم SOP اليومية</h4><p>تابع مهام الافتتاح والإغلاق والتنظيف والسلامة بشكل يومي.</p></div>
     </div>
- 
+
     <div class="discover-card">
-      <img src="{% static 'media/4.jpg' %}" alt="المسارات">
-      <div class="discover-content"><h4>الدورات الإلكترونية</h4><p>تطوير مهني مستدام</p></div>
+      <img src="{% static 'media/4.jpg' %}" alt="إدارة متعددة الشركات">
+      <div class="discover-content"><h4>إدارة متعددة الشركات</h4><p>كل منشأة تدير موظفيها ودوراتها وقوائمها بشكل مستقل.</p></div>
     </div>
   </div>
 </section>
 
-<!-- 2️⃣ FEATURES -->
 <section>
   <div class="section-title">
-    <h2>مميزات النظام</h2>
+    <h2>لماذا سكيل بايت</h2>
   </div>
 
   <div class="features-grid">
-    <div class="feature"><h3>تدريب متخصص</h3><p>محتوى احترافي وفق المعايير.</p></div>
-    <div class="feature"><h3>اختبارات رقمية</h3><p>تقييم دقيق وشفاف.</p></div>
-    <div class="feature"><h3>شهادات معتمدة</h3><p>قابلة للتحقق والاعتماد.</p></div>
+    <div class="feature"><h3>تشغيل بسيط وواضح</h3><p>بدون تعقيد في الإجراءات. فقط إسناد، تنفيذ، ومتابعة.</p></div>
+    <div class="feature"><h3>مصمم لفرق الأغذية والمشروبات</h3><p>يدعم المطاعم والمقاهي والمطابخ وفرق العمل المرتبطة بالورديات.</p></div>
+    <div class="feature"><h3>التدريب وSOP في مكان واحد</h3><p>اجمع بين تطوير الموظفين والانضباط التشغيلي اليومي داخل منصة واحدة.</p></div>
   </div>
 </section>
 
-<!-- 3️⃣ STATS 
 <section>
   <div class="section-title">
-    <h2>إحصائيات</h2>
-  </div>
-
-  <div class="stats">
-    <div class="stat"><h2>120+</h2><p>برنامج تدريبي</p></div>
-    <div class="stat"><h2>45K</h2><p>مقاول معتمد</p></div>
-    <div class="stat"><h2>98%</h2><p>معدل اجتياز</p></div>
-  </div>
-</section>
--->
-
-<!-- 4️⃣ MAGAZINE -->
-<section>
-  <div class="section-title">
-    <h2>أحدث الدورات</h2>
+    <h2>تركيز على التدريب التشغيلي</h2>
   </div>
 
   <div class="magazine-layout">
     <div class="magazine-main">
-      <img src="{% static 'media/6.jpg' %}" alt="أحدث الدورات">
+      <img src="{% static 'media/6.jpg' %}" alt="التدريب التشغيلي">
       <div class="content">
-        <h3>يعملون بإتقان في شتى أنحاء المملكة</h3>
-        <a href="#">اقرأ المزيد ←</a>
+        <h3>امنح كل موظف معايير واضحة يتعلمها ومهام واضحة ينفذها يومياً.</h3>
+        <a href="{% url 'login' %}">دخول المنصة</a>
       </div>
     </div>
 
     <div class="magazine-side">
       <div class="magazine-card">
-        <img src="{% static 'media/7.jpg' %}" alt="برنامج يدعم نمو المنشآت">
+        <img src="{% static 'media/7.jpg' %}" alt="إسناد حسب الدور">
         <div class="content">
-          <h4>برنامج يدعم نمو المنشآت</h4>
-          <a href="#">اقرأ المزيد ←</a>
+          <h4>أسند الدورات حسب الدور الوظيفي بدلاً من إدارة كل موظف يدوياً.</h4>
+          <a href="{% url 'login' %}">تسجيل الدخول</a>
         </div>
       </div>
 
       <div class="magazine-card">
-        <img src="{% static 'media/5.jpg' %}" alt="إرث الشركة السعودية الكهرباء">
+        <img src="{% static 'media/5.jpg' %}" alt="إكمال قوائم التشغيل">
         <div class="content">
-          <h4>إرث الشركة السعودية للكهرباء  </h4>
-          <a href="#">اقرأ المزيد ←</a>
+          <h4>اجعل إكمال قوائم SOP اليومية جزءاً طبيعياً من تشغيل الفرع.</h4>
+          <a href="{% url 'login' %}">الانتقال إلى اللوحة</a>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ===== FOOTER ===== -->
 {% include "footer.html" %}
 
 </body>

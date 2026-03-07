@@ -26,7 +26,7 @@
 }
 
 .sidebar .logo img{
-  width: 124px;
+  width:124px;
   height:auto;
   display:inline-block;
 }
@@ -99,64 +99,58 @@
 
 <aside class="sidebar">
   <div class="logo">
-    <img src="/static/SEC_logo.svg" alt="kkSEo">
+    <img src="/static/SEC_logo.svg" alt="Logo">
   </div>
 
   <ul>
-
-    <!-- الرئيسية -->
-    <li>
-      <a href="{% url 'contractor_dashboard' %}"
-         class="{% if request.resolver_match.url_name == 'contractor_dashboard' %}active{% endif %}">
-        الصفحة الرئيسية
-      </a>
-    </li>
-
-    <!-- البرامج التدريبية (من تطبيق programs) -->
-    <li>
-      <a href="{% url 'training:program_categories' %}"
-         class="{% if request.resolver_match.url_name == 'programs_list' or request.resolver_match.url_name == 'program_categories' %}active{% endif %}">
-        البرامج التدريبية
-      </a>
-    </li>
-
-    <!-- الطلبات -->
-    <li>
-      <a href="{% url 'contractor_requests' %}"
-         class="{% if request.resolver_match.url_name == 'contractor_requests' %}active{% endif %}">
-        الطلبات
-      </a>
-    </li>
-
-    <li>
-      <a href="{% url 'contractor_renewals' %}"
-         class="{% if request.resolver_match.url_name == 'contractor_renewals' %}active{% endif %}">
-        تجديد الشهادات
-      </a>
-    </li>
-
-    <!-- الدورات الإلكترونية (SCORM) -->
-    <li>
-      <a href="{% url 'contractor_scorm_courses' %}"
-         class="{% if request.resolver_match.url_name == 'contractor_scorm_courses' or request.resolver_match.url_name == 'contractor_scorm_course_view' %}active{% endif %}">
-        الدورات الإلكترونية
-      </a>
-    </li>
-
-    <!-- المتدربون 
-    <li>
-      <a href="#">
-        المتدربون
-      </a>
-    </li>-->
-
-    <!-- التقارير 
-    <li>
-      <a href="#">
-        التقارير
-      </a>
-    </li>-->
-
+    {% if request.resolver_match.url_name == 'business_owner_dashboard' or business %}
+      <li>
+        <a href="{% url 'business_owner_dashboard' %}"
+           class="{% if request.resolver_match.url_name == 'business_owner_dashboard' %}active{% endif %}">
+          الصفحة الرئيسية
+        </a>
+      </li>
+      <li>
+        <a href="{% url 'business_owner_dashboard' %}#employees">الموظفون</a>
+      </li>
+      <li>
+        <a href="{% url 'business_owner_dashboard' %}#courses">الدورات التدريبية</a>
+      </li>
+      <li>
+        <a href="{% url 'business_owner_dashboard' %}#checklists">قوائم التشغيل اليومية</a>
+      </li>
+    {% else %}
+      <li>
+        <a href="{% url 'contractor_dashboard' %}"
+           class="{% if request.resolver_match.url_name == 'contractor_dashboard' %}active{% endif %}">
+          الصفحة الرئيسية
+        </a>
+      </li>
+      <li>
+        <a href="{% url 'training:program_categories' %}"
+           class="{% if request.resolver_match.url_name == 'programs_list' or request.resolver_match.url_name == 'program_categories' %}active{% endif %}">
+          البرامج التدريبية
+        </a>
+      </li>
+      <li>
+        <a href="{% url 'contractor_requests' %}"
+           class="{% if request.resolver_match.url_name == 'contractor_requests' %}active{% endif %}">
+          الطلبات
+        </a>
+      </li>
+      <li>
+        <a href="{% url 'contractor_renewals' %}"
+           class="{% if request.resolver_match.url_name == 'contractor_renewals' %}active{% endif %}">
+          تجديد الشهادات
+        </a>
+      </li>
+      <li>
+        <a href="{% url 'contractor_scorm_courses' %}"
+           class="{% if request.resolver_match.url_name == 'contractor_scorm_courses' or request.resolver_match.url_name == 'contractor_scorm_course_view' %}active{% endif %}">
+          الدورات الإلكترونية
+        </a>
+      </li>
+    {% endif %}
   </ul>
 
   <div class="logout">

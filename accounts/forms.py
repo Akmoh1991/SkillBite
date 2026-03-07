@@ -159,7 +159,7 @@ class RegisterForm(forms.Form):
         cleaned_data = super().clean()
         role = cleaned_data.get('role')
 
-        if role in {'contractor', 'coordinator'}:
+        if role == 'business_owner':
             if not cleaned_data.get('company_name'):
                 self.add_error('company_name', ' اسم الشركة مطلوب')
             if not cleaned_data.get('phone_number'):

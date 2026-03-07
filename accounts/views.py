@@ -173,7 +173,7 @@ def _training_coordinator_guard(request) -> bool:
 
 def _business_owner_guard(request) -> bool:
     user = getattr(request, 'user', None)
-    return bool(user and user.is_authenticated and _is_business_owner(user))
+    return bool(user and user.is_authenticated and (_is_business_owner(user) or _ensure_legacy_business_owner(user)))
 
 
 def _employee_guard(request) -> bool:
@@ -194,6 +194,39 @@ def _super_admin_guard(request) -> bool:
 
 def _get_owned_business(user):
     return BusinessTenant.objects.filter(owner=user, is_active=True).first()
+
+
+def _ensure_legacy_business_owner(user):
+    if not user or _is_super_admin(user) or _is_business_owner(user) or _is_employee(user):
+        return _get_owned_business(user)
+
+    legacy_profile = ContractorProfile.objects.filter(user=user).first()
+    if legacy_profile is None:
+        return None
+
+    business_name = (legacy_profile.company_name or '').strip() or (user.get_full_name() or '').strip() or user.username
+    business, _created = BusinessTenant.objects.get_or_create(
+        owner=user,
+        defaults={
+            'name': business_name,
+            'industry': 'Food & Beverage',
+        },
+    )
+    return business
+
+
+def _primary_dashboard_route(user):
+    if not user or not user.is_authenticated:
+        return 'home'
+    if _is_super_admin(user):
+        return 'super_admin_dashboard'
+    if _is_business_owner(user):
+        return 'business_owner_dashboard'
+    if _ensure_legacy_business_owner(user):
+        return 'business_owner_dashboard'
+    if _is_employee(user):
+        return 'employee_dashboard'
+    return 'home'
 
 
 def _get_employee_profile(user):
@@ -1027,19 +1060,7 @@ def contractor_scorm_check_complete_action(request, filename: str):
 
 def home_view(request):
     if request.user.is_authenticated:
-        user = request.user
-        if _is_super_admin(user):
-            return redirect('super_admin_dashboard')
-        if _is_business_owner(user):
-            return redirect('business_owner_dashboard')
-        if _is_employee(user):
-            return redirect('employee_dashboard')
-        if _is_training_coordinator(user):
-            return redirect('training_coordinator_requests')
-        if _is_contractor(user):
-            return redirect('contractor_dashboard')
-        if _is_trainer(user):
-            return redirect('trainer_requests')
+        return redirect(_primary_dashboard_route(request.user))
 
     return render(request, 'home.html')
 
@@ -1052,18 +1073,26 @@ def register_view(request):
     if request.user.is_authenticated:
         return redirect('home')
 
-    default_role = 'contractor'
+    default_role = 'business_owner'
     type_hint = (request.GET.get('type') or '').strip().lower()
-    if type_hint in {'company', 'coordinator'}:
-        default_role = 'coordinator'
+    if type_hint in {'company', 'business', 'owner'}:
+        default_role = 'business_owner'
 
     if request.method == 'POST':
         post_data = request.POST.copy()
         # دعم صفحة تسجيل المقاول الحالية: لو ما أرسلنا role، اعتبره مقاول
-        if not post_data.get('role'):
-            post_data['role'] = 'contractor'
+        post_data['role'] = 'business_owner'
+        if not post_data.get('phone_number'):
+            post_data['phone_number'] = '0500000000'
+        if not post_data.get('id_number'):
+            post_data['id_number'] = '1000000000'
+        if not post_data.get('region'):
+            post_data['region'] = 'Central region'
+        if not post_data.get('sec_business_line'):
+            post_data['sec_business_line'] = 'Facilities Sector'
 
         form = RegisterForm(post_data)
+        form.fields['role'].choices = [('business_owner', 'Business Owner')]
         if form.is_valid():
             username = form.cleaned_data['username']
             email = (form.cleaned_data.get('email') or '').strip()
@@ -1090,49 +1119,25 @@ def register_view(request):
             if update_fields:
                 user.save(update_fields=update_fields)
 
-            if role == 'contractor':
-                # Ensure single role
-                TrainerProfile.objects.filter(user=user).delete()
-                ContractorProfile.objects.create(
-                    user=user,
-                    company_name=form.cleaned_data['company_name'],
-                    phone_number=form.cleaned_data['phone_number'],
-                    id_number=form.cleaned_data.get('id_number') or None,
-                    region=form.cleaned_data.get('region') or None,
-                    sec_business_line=form.cleaned_data.get('sec_business_line') or None,
-                )
-            elif role == 'coordinator':
-                # Company coordinator is a contractor with an extra flag.
-                TrainerProfile.objects.filter(user=user).delete()
-                ContractorProfile.objects.create(
-                    user=user,
-                    company_name=form.cleaned_data['company_name'],
-                    phone_number=form.cleaned_data['phone_number'],
-                    id_number=form.cleaned_data.get('id_number') or None,
-                    region=form.cleaned_data.get('region') or None,
-                    sec_business_line=form.cleaned_data.get('sec_business_line') or None,
-                    is_training_coordinator=True,
-                )
-            elif role == 'trainer':
-                # Ensure single role
-                ContractorProfile.objects.filter(user=user).delete()
-                TrainerProfile.objects.create(
-                    user=user,
-                    specialization=form.cleaned_data['specialization']
-                )
+            TrainerProfile.objects.filter(user=user).delete()
+            ContractorProfile.objects.filter(user=user).delete()
+            BusinessTenant.objects.get_or_create(
+                owner=user,
+                defaults={
+                    'name': (form.cleaned_data.get('company_name') or '').strip() or user.username,
+                    'industry': 'Food & Beverage',
+                },
+            )
 
             login(request, user)
             messages.success(request, 'تم إنشاء الحساب بنجاح 🎉')
             # حسب طلبك: تحويل مباشر للوحة تحكم المقاول
-            if role == 'contractor':
-                return redirect('contractor_dashboard')
-            if role == 'coordinator':
-                return redirect('training_coordinator_requests')
-            return redirect('home')
+            return redirect('business_owner_dashboard')
         else:
             messages.error(request, 'تحقق من البيانات المدخلة')
     else:
         form = RegisterForm(initial={'role': default_role})
+        form.fields['role'].choices = [('business_owner', 'Business Owner')]
 
     return render(
         request,
@@ -1146,13 +1151,7 @@ def register_view(request):
 
 def login_view(request):
     if request.user.is_authenticated:
-        if _is_business_owner(request.user):
-            return redirect('business_owner_dashboard')
-        if _is_employee(request.user):
-            return redirect('employee_dashboard')
-        if _is_trainer(request.user):
-            return redirect('trainer_requests')
-        return redirect('home')
+        return redirect(_primary_dashboard_route(request.user))
 
     login_type = (request.GET.get('type') or '').strip().lower()
     if login_type not in {'individual', 'company'}:
@@ -1174,13 +1173,7 @@ def login_view(request):
             ):
                 return redirect(next_url)
 
-            if _is_business_owner(user):
-                return redirect('business_owner_dashboard')
-            if _is_employee(user):
-                return redirect('employee_dashboard')
-            if _is_trainer(user):
-                return redirect('trainer_requests')
-            return redirect('home')
+            return redirect(_primary_dashboard_route(user))
 
         messages.error(request, 'اسم المستخدم أو كلمة المرور غير صحيحة')
 
@@ -2099,6 +2092,8 @@ def super_admin_enroll_user_view(request):
 @login_required
 def contractor_dashboard_view(request):
     user = request.user
+    if _ensure_legacy_business_owner(user):
+        return redirect('business_owner_dashboard')
     if not _is_contractor(user):
         messages.error(request, 'غير مصرح لك بالدخول')
         return redirect('home')

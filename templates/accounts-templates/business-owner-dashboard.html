@@ -1,310 +1,485 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{{ business.name }} | Business Owner</title>
+<title>{{ business.name }} | لوحة مالك النشاط</title>
 <style>
-body{margin:0;font-family:"Segoe UI",Tahoma,Arial,sans-serif;background:#f5f7fb;color:#122033}
-.layout{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
-.sidebar{background:linear-gradient(180deg,#113b67,#1f7a8c);color:#fff;padding:24px}
-.brand{font-size:24px;font-weight:800;letter-spacing:.02em}
-.brand small{display:block;margin-top:6px;font-size:13px;font-weight:500;opacity:.8}
-.menu{margin:28px 0 0;padding:0;list-style:none}
-.menu a{display:block;padding:12px 14px;border-radius:12px;color:#fff;text-decoration:none;background:rgba(255,255,255,.08);margin-bottom:10px}
-.menu a:hover{background:rgba(255,255,255,.16)}
-.logout{margin-top:28px;display:inline-block;color:#113b67;background:#fff;padding:10px 14px;border-radius:10px;text-decoration:none;font-weight:700}
-.main{padding:28px}
-.hero{background:linear-gradient(135deg,#fff7ed,#ffffff);border:1px solid #fed7aa;border-radius:20px;padding:24px 26px;margin-bottom:22px}
-.hero h1{margin:0 0 8px;font-size:30px}
-.hero p{margin:0;color:#5b6472}
-.messages{margin-bottom:18px}
-.msg{background:#fff;border:1px solid #d9e2ec;border-radius:12px;padding:12px 14px;margin-bottom:10px}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:22px}
-.stat{background:#fff;border-radius:16px;padding:18px;border:1px solid #e2e8f0}
-.stat b{display:block;font-size:28px;margin-top:8px;color:#0f766e}
-.section{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:18px;margin-bottom:18px}
-.card{background:#fff;border:1px solid #e2e8f0;border-radius:18px;padding:18px}
-.card h2{margin:0 0 14px;font-size:18px}
-.card h3{margin:18px 0 10px;font-size:15px}
-.field{margin-bottom:10px}
-.field label{display:block;font-size:13px;font-weight:700;margin-bottom:5px}
-.field input,.field select,.field textarea{width:100%;padding:10px 12px;border-radius:10px;border:1px solid #cbd5e1;font:inherit;box-sizing:border-box}
-.field textarea{min-height:92px;resize:vertical}
-.btn{display:inline-block;border:0;background:#0f766e;color:#fff;padding:10px 14px;border-radius:10px;font-weight:700;cursor:pointer}
-.muted{color:#64748b;font-size:13px}
-.list{margin:0;padding:0;list-style:none}
-.list li{padding:12px 0;border-bottom:1px solid #edf2f7}
-.list li:last-child{border-bottom:0}
-.pill{display:inline-block;background:#ecfeff;color:#155e75;border-radius:999px;padding:4px 10px;font-size:12px;font-weight:700}
-@media (max-width: 900px){.layout{grid-template-columns:1fr}.sidebar{padding-bottom:18px}.main{padding:18px}}
+@import url('/static/branding/branding.css');
+:root{
+  --blue-dark:#0027b9;
+  --blue-main:#0076ff;
+  --orange:#0076ff;
+  --bg:#f7f9fc;
+  --card:#ffffff;
+  --text:#1f2937;
+  --muted:#5f6f85;
+  --sidebar-w:260px;
+  --topbar-h:70px;
+}
+
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  font-family:"SE","Segoe UI",Tahoma,Arial,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+
+.main{
+  margin-right:var(--sidebar-w);
+  padding:calc(var(--topbar-h) + 36px) 28px 40px;
+}
+
+.hero-card,
+.stat-card,
+.card{
+  background:var(--card);
+  border-radius:14px;
+  box-shadow:0 14px 34px rgba(15,45,90,.12);
+}
+
+.hero-card{
+  padding:24px 28px;
+  margin-bottom:22px;
+  border:1px solid #fed7aa;
+}
+
+.hero-card h1{
+  margin:0 0 8px;
+  font-size:34px;
+  color:#0f172a;
+}
+
+.hero-card p{
+  margin:0;
+  font-size:15px;
+  color:var(--muted);
+}
+
+.messages{
+  display:grid;
+  gap:12px;
+  margin-bottom:18px;
+}
+
+.message-card{
+  padding:14px 16px;
+  border:1px solid #e2e8f0;
+}
+
+.stats{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
+  gap:18px;
+  margin-bottom:22px;
+}
+
+.stat-card{
+  padding:18px;
+}
+
+.stat-card h4{
+  margin:0 0 8px;
+  font-size:13px;
+  color:var(--muted);
+}
+
+.stat-card span{
+  font-size:24px;
+  font-weight:700;
+  color:var(--blue-main);
+}
+
+.section{
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0, 1fr));
+  gap:18px;
+  margin-bottom:18px;
+}
+
+.card{
+  padding:20px;
+}
+
+.card h2{
+  margin:0 0 14px;
+  font-size:17px;
+}
+
+.card h3{
+  margin:18px 0 12px;
+  font-size:15px;
+}
+
+.field{
+  margin-bottom:12px;
+}
+
+.field label{
+  display:block;
+  margin-bottom:6px;
+  font-size:13px;
+  font-weight:700;
+  color:#334155;
+}
+
+.field input,
+.field select,
+.field textarea{
+  width:100%;
+  border:1px solid #cbd5e1;
+  border-radius:10px;
+  padding:12px 14px;
+  font:inherit;
+  background:#fff;
+}
+
+.field textarea{
+  min-height:110px;
+  resize:vertical;
+}
+
+.inline-check{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:13px;
+  font-weight:700;
+  color:#334155;
+}
+
+.inline-check input{
+  width:auto;
+}
+
+.btn{
+  border:0;
+  border-radius:10px;
+  padding:10px 16px;
+  background:#0f766e;
+  color:#fff;
+  font-size:14px;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.list{
+  margin:0;
+  padding:0;
+  list-style:none;
+}
+
+.list li{
+  padding:12px 0;
+  border-bottom:1px solid #edf2f7;
+}
+
+.list li:last-child{
+  border-bottom:0;
+}
+
+.muted{
+  color:var(--muted);
+  font-size:13px;
+}
+
+.pill{
+  display:inline-block;
+  margin-right:8px;
+  background:#eff6ff;
+  color:var(--blue-main);
+  border-radius:999px;
+  padding:4px 10px;
+  font-size:12px;
+  font-weight:700;
+}
+
+@media (max-width:1100px){
+  .section{
+    grid-template-columns:1fr;
+  }
+}
+
+@media (max-width:900px){
+  .main{
+    margin-right:0;
+    padding-top:calc(var(--topbar-h) + 24px);
+  }
+}
 </style>
 </head>
 <body>
-<div class="layout">
-  <aside class="sidebar">
-    <div class="brand">SkillBite<small>{{ business.name }}</small></div>
-    <ul class="menu">
-      <li><a href="{% url 'business_owner_dashboard' %}">Dashboard</a></li>
-      <li><a href="#employees">Employees</a></li>
-      <li><a href="#courses">Courses</a></li>
-      <li><a href="#checklists">SOP Checklists</a></li>
-    </ul>
-    <a class="logout" href="{% url 'logout' %}">Logout</a>
-  </aside>
 
-  <main class="main">
-    <section class="hero">
-      <h1>{{ business.name }}</h1>
-      <p>Minimal multi-tenant LMS for employee training and daily SOP execution.</p>
-    </section>
+{% include "accounts-templates/sidebar.html" %}
+{% include "accounts-templates/topbar.html" %}
 
-    {% if messages %}
-      <div class="messages">
-        {% for message in messages %}
-          <div class="msg">{{ message }}</div>
+<div class="main">
+  <section class="hero-card">
+    <h1>{{ business.name }}</h1>
+    <p>نظام تدريبي مبسط لإدارة دورات الموظفين وقوائم التشغيل اليومية لنشاطك.</p>
+  </section>
+
+  {% if messages %}
+    <div class="messages">
+      {% for message in messages %}
+        <div class="card message-card">{{ message }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <section class="stats">
+    <div class="stat-card">
+      <h4>عدد الموظفين</h4>
+      <span>{{ employees|length }}</span>
+    </div>
+    <div class="stat-card">
+      <h4>المسميات الوظيفية</h4>
+      <span>{{ job_titles|length }}</span>
+    </div>
+    <div class="stat-card">
+      <h4>الدورات التدريبية</h4>
+      <span>{{ courses|length }}</span>
+    </div>
+    <div class="stat-card">
+      <h4>قوائم التشغيل اليومية</h4>
+      <span>{{ checklists|length }}</span>
+    </div>
+  </section>
+
+  <section class="section" id="employees">
+    <div class="card">
+      <h2>إضافة مسمى وظيفي</h2>
+      <form method="post" action="{% url 'business_owner_job_title_create' %}">
+        {% csrf_token %}
+        <div class="field">
+          <label for="job-title-name">المسمى الوظيفي</label>
+          <input id="job-title-name" type="text" name="name" required>
+        </div>
+        <button class="btn" type="submit">حفظ المسمى</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>إضافة موظف</h2>
+      <form method="post" action="{% url 'business_owner_employee_create' %}">
+        {% csrf_token %}
+        <div class="field">
+          <label for="employee-username">اسم المستخدم</label>
+          <input id="employee-username" type="text" name="username" required>
+        </div>
+        <div class="field">
+          <label for="employee-email">البريد الإلكتروني</label>
+          <input id="employee-email" type="email" name="email">
+        </div>
+        <div class="field">
+          <label for="employee-name">الاسم الكامل</label>
+          <input id="employee-name" type="text" name="full_name" required>
+        </div>
+        <div class="field">
+          <label for="employee-password">كلمة المرور</label>
+          <input id="employee-password" type="password" name="password" required>
+        </div>
+        <div class="field">
+          <label for="employee-job-title">المسمى الوظيفي</label>
+          <select id="employee-job-title" name="job_title">
+            <option value="">بدون مسمى حالياً</option>
+            {% for job_title in job_titles %}
+              <option value="{{ job_title.id }}">{{ job_title.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <button class="btn" type="submit">إنشاء الموظف</button>
+      </form>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="card">
+      <h2>الفريق الحالي</h2>
+      <ul class="list">
+        {% for employee in employees %}
+          <li>
+            <strong>{{ employee.user.get_full_name|default:employee.user.username }}</strong><br>
+            <span class="muted">{{ employee.user.username }}{% if employee.job_title %} | {{ employee.job_title.name }}{% endif %}</span>
+          </li>
+        {% empty %}
+          <li class="muted">لا يوجد موظفون حتى الآن.</li>
         {% endfor %}
-      </div>
-    {% endif %}
+      </ul>
+    </div>
 
-    <section class="stats">
-      <div class="stat">Employees<b>{{ employees|length }}</b></div>
-      <div class="stat">Job Titles<b>{{ job_titles|length }}</b></div>
-      <div class="stat">Courses<b>{{ courses|length }}</b></div>
-      <div class="stat">SOP Checklists<b>{{ checklists|length }}</b></div>
-    </section>
+    <div class="card">
+      <h2>المسميات الوظيفية</h2>
+      <ul class="list">
+        {% for job_title in job_titles %}
+          <li>
+            <strong>{{ job_title.name }}</strong><br>
+            <span class="muted">{{ job_title.employees.count }} موظف</span>
+          </li>
+        {% empty %}
+          <li class="muted">لا توجد مسميات وظيفية حتى الآن.</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </section>
 
-    <section class="section" id="employees">
-      <div class="card">
-        <h2>Add Job Title</h2>
-        <form method="post" action="{% url 'business_owner_job_title_create' %}">
-          {% csrf_token %}
-          <div class="field">
-            <label for="job-title-name">Title</label>
-            <input id="job-title-name" type="text" name="name" required>
-          </div>
-          <button class="btn" type="submit">Save Job Title</button>
-        </form>
-      </div>
+  <section class="section" id="courses">
+    <div class="card">
+      <h2>إنشاء دورة تدريبية</h2>
+      <form method="post" action="{% url 'business_owner_course_create' %}">
+        {% csrf_token %}
+        <div class="field">
+          <label for="course-title">عنوان الدورة</label>
+          <input id="course-title" type="text" name="title" required>
+        </div>
+        <div class="field">
+          <label for="course-description">الوصف</label>
+          <textarea id="course-description" name="description"></textarea>
+        </div>
+        <div class="field">
+          <label for="course-minutes">المدة التقديرية بالدقائق</label>
+          <input id="course-minutes" type="number" name="estimated_minutes" value="15" min="1" required>
+        </div>
+        <label class="inline-check">
+          <input type="checkbox" name="is_active" checked>
+          الدورة نشطة
+        </label>
+        <button class="btn" type="submit">إنشاء الدورة</button>
+      </form>
 
-      <div class="card">
-        <h2>Add Employee</h2>
-        <form method="post" action="{% url 'business_owner_employee_create' %}">
-          {% csrf_token %}
-          <div class="field">
-            <label for="employee-username">Username</label>
-            <input id="employee-username" type="text" name="username" required>
-          </div>
-          <div class="field">
-            <label for="employee-email">Email</label>
-            <input id="employee-email" type="email" name="email">
-          </div>
-          <div class="field">
-            <label for="employee-name">Full Name</label>
-            <input id="employee-name" type="text" name="full_name" required>
-          </div>
-          <div class="field">
-            <label for="employee-password">Password</label>
-            <input id="employee-password" type="password" name="password" required>
-          </div>
-          <div class="field">
-            <label for="employee-job-title">Job Title</label>
-            <select id="employee-job-title" name="job_title">
-              <option value="">No job title yet</option>
-              {% for job_title in job_titles %}
-                <option value="{{ job_title.id }}">{{ job_title.name }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          <button class="btn" type="submit">Create Employee</button>
-        </form>
-      </div>
-    </section>
+      <h3>إسناد دورة حسب المسمى الوظيفي</h3>
+      <form method="post" action="{% url 'business_owner_course_rule_create' %}">
+        {% csrf_token %}
+        <div class="field">
+          <label for="course-rule-job-title">المسمى الوظيفي</label>
+          <select id="course-rule-job-title" name="job_title" required>
+            <option value="">اختر</option>
+            {% for job_title in job_titles %}
+              <option value="{{ job_title.id }}">{{ job_title.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label for="course-rule-course">الدورة</label>
+          <select id="course-rule-course" name="course" required>
+            <option value="">اختر</option>
+            {% for course in courses %}
+              <option value="{{ course.id }}">{{ course.title }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <button class="btn" type="submit">حفظ قاعدة الإسناد</button>
+      </form>
+    </div>
 
-    <section class="section">
-      <div class="card">
-        <h2>Current Team</h2>
-        <ul class="list">
-          {% for employee in employees %}
-            <li>
-              <strong>{{ employee.user.get_full_name|default:employee.user.username }}</strong><br>
-              <span class="muted">{{ employee.user.username }}{% if employee.job_title %} | {{ employee.job_title.name }}{% endif %}</span>
-            </li>
-          {% empty %}
-            <li class="muted">No employees yet.</li>
-          {% endfor %}
-        </ul>
-      </div>
+    <div class="card">
+      <h2>مكتبة الدورات</h2>
+      <ul class="list">
+        {% for course in courses %}
+          <li>
+            <strong>{{ course.title }}</strong>
+            <span class="pill">{{ course.assignment_total }} مسند</span><br>
+            <span class="muted">{{ course.estimated_minutes }} دقيقة{% if course.description %} | {{ course.description }}{% endif %}</span>
+          </li>
+        {% empty %}
+          <li class="muted">لا توجد دورات حتى الآن.</li>
+        {% endfor %}
+      </ul>
 
-      <div class="card">
-        <h2>Job Titles</h2>
-        <ul class="list">
-          {% for job_title in job_titles %}
-            <li>
-              <strong>{{ job_title.name }}</strong><br>
-              <span class="muted">{{ job_title.employees.count }} employees</span>
-            </li>
-          {% empty %}
-            <li class="muted">No job titles yet.</li>
-          {% endfor %}
-        </ul>
-      </div>
-    </section>
+      <h3>قواعد إسناد الدورات</h3>
+      <ul class="list">
+        {% for rule in course_rules %}
+          <li><strong>{{ rule.job_title.name }}</strong><br><span class="muted">{{ rule.course.title }}</span></li>
+        {% empty %}
+          <li class="muted">لا توجد قواعد إسناد للدورات حتى الآن.</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </section>
 
-    <section class="section" id="courses">
-      <div class="card">
-        <h2>Create Course</h2>
-        <form method="post" action="{% url 'business_owner_course_create' %}">
-          {% csrf_token %}
-          <div class="field">
-            <label for="course-title">Title</label>
-            <input id="course-title" type="text" name="title" required>
-          </div>
-          <div class="field">
-            <label for="course-description">Description</label>
-            <textarea id="course-description" name="description"></textarea>
-          </div>
-          <div class="field">
-            <label for="course-minutes">Estimated Minutes</label>
-            <input id="course-minutes" type="number" name="estimated_minutes" value="15" min="1" required>
-          </div>
-          <div class="field">
-            <label><input type="checkbox" name="is_active" checked> Active</label>
-          </div>
-          <button class="btn" type="submit">Create Course</button>
-        </form>
+  <section class="section" id="checklists">
+    <div class="card">
+      <h2>إنشاء قائمة تشغيل يومية</h2>
+      <form method="post" action="{% url 'business_owner_checklist_create' %}">
+        {% csrf_token %}
+        <div class="field">
+          <label for="checklist-title">عنوان القائمة</label>
+          <input id="checklist-title" type="text" name="title" required>
+        </div>
+        <div class="field">
+          <label for="checklist-description">الوصف</label>
+          <textarea id="checklist-description" name="description"></textarea>
+        </div>
+        <div class="field">
+          <label for="checklist-frequency">التكرار</label>
+          <select id="checklist-frequency" name="frequency">
+            <option value="DAILY">يومي</option>
+            <option value="WEEKLY">أسبوعي</option>
+            <option value="ON_DEMAND">عند الحاجة</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="checklist-items">العناصر</label>
+          <textarea id="checklist-items" name="item_lines" required placeholder="كل عنصر في سطر مستقل"></textarea>
+        </div>
+        <label class="inline-check">
+          <input type="checkbox" name="is_active" checked>
+          القائمة نشطة
+        </label>
+        <button class="btn" type="submit">إنشاء القائمة</button>
+      </form>
 
-        <h3>Assign Course By Job Title</h3>
-        <form method="post" action="{% url 'business_owner_course_rule_create' %}">
-          {% csrf_token %}
-          <div class="field">
-            <label for="course-rule-job-title">Job Title</label>
-            <select id="course-rule-job-title" name="job_title" required>
-              <option value="">Choose</option>
-              {% for job_title in job_titles %}
-                <option value="{{ job_title.id }}">{{ job_title.name }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          <div class="field">
-            <label for="course-rule-course">Course</label>
-            <select id="course-rule-course" name="course" required>
-              <option value="">Choose</option>
-              {% for course in courses %}
-                <option value="{{ course.id }}">{{ course.title }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          <button class="btn" type="submit">Save Assignment Rule</button>
-        </form>
-      </div>
+      <h3>إسناد قائمة حسب المسمى الوظيفي</h3>
+      <form method="post" action="{% url 'business_owner_checklist_rule_create' %}">
+        {% csrf_token %}
+        <div class="field">
+          <label for="checklist-rule-job-title">المسمى الوظيفي</label>
+          <select id="checklist-rule-job-title" name="job_title" required>
+            <option value="">اختر</option>
+            {% for job_title in job_titles %}
+              <option value="{{ job_title.id }}">{{ job_title.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label for="checklist-rule-checklist">القائمة</label>
+          <select id="checklist-rule-checklist" name="checklist" required>
+            <option value="">اختر</option>
+            {% for checklist in checklists %}
+              <option value="{{ checklist.id }}">{{ checklist.title }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <button class="btn" type="submit">حفظ قاعدة الإسناد</button>
+      </form>
+    </div>
 
-      <div class="card">
-        <h2>Course Library</h2>
-        <ul class="list">
-          {% for course in courses %}
-            <li>
-              <strong>{{ course.title }}</strong>
-              <span class="pill">{{ course.assignment_total }} assigned</span><br>
-              <span class="muted">{{ course.estimated_minutes }} min{% if course.description %} | {{ course.description }}{% endif %}</span>
-            </li>
-          {% empty %}
-            <li class="muted">No courses yet.</li>
-          {% endfor %}
-        </ul>
+    <div class="card">
+      <h2>مكتبة القوائم</h2>
+      <ul class="list">
+        {% for checklist in checklists %}
+          <li>
+            <strong>{{ checklist.title }}</strong>
+            <span class="pill">{{ checklist.completion_total_today }} مكتمل اليوم</span><br>
+            <span class="muted">{{ checklist.get_frequency_display }} | {{ checklist.items.count }} عنصر</span>
+          </li>
+        {% empty %}
+          <li class="muted">لا توجد قوائم تشغيل حتى الآن.</li>
+        {% endfor %}
+      </ul>
 
-        <h3>Course Rules</h3>
-        <ul class="list">
-          {% for rule in course_rules %}
-            <li><strong>{{ rule.job_title.name }}</strong><br><span class="muted">{{ rule.course.title }}</span></li>
-          {% empty %}
-            <li class="muted">No course assignment rules yet.</li>
-          {% endfor %}
-        </ul>
-      </div>
-    </section>
-
-    <section class="section" id="checklists">
-      <div class="card">
-        <h2>Create SOP Checklist</h2>
-        <form method="post" action="{% url 'business_owner_checklist_create' %}">
-          {% csrf_token %}
-          <div class="field">
-            <label for="checklist-title">Title</label>
-            <input id="checklist-title" type="text" name="title" required>
-          </div>
-          <div class="field">
-            <label for="checklist-description">Description</label>
-            <textarea id="checklist-description" name="description"></textarea>
-          </div>
-          <div class="field">
-            <label for="checklist-frequency">Frequency</label>
-            <select id="checklist-frequency" name="frequency">
-              <option value="DAILY">Daily</option>
-              <option value="WEEKLY">Weekly</option>
-              <option value="ON_DEMAND">On demand</option>
-            </select>
-          </div>
-          <div class="field">
-            <label for="checklist-items">Items</label>
-            <textarea id="checklist-items" name="item_lines" required placeholder="One item per line"></textarea>
-          </div>
-          <div class="field">
-            <label><input type="checkbox" name="is_active" checked> Active</label>
-          </div>
-          <button class="btn" type="submit">Create Checklist</button>
-        </form>
-
-        <h3>Assign Checklist By Job Title</h3>
-        <form method="post" action="{% url 'business_owner_checklist_rule_create' %}">
-          {% csrf_token %}
-          <div class="field">
-            <label for="checklist-rule-job-title">Job Title</label>
-            <select id="checklist-rule-job-title" name="job_title" required>
-              <option value="">Choose</option>
-              {% for job_title in job_titles %}
-                <option value="{{ job_title.id }}">{{ job_title.name }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          <div class="field">
-            <label for="checklist-rule-checklist">Checklist</label>
-            <select id="checklist-rule-checklist" name="checklist" required>
-              <option value="">Choose</option>
-              {% for checklist in checklists %}
-                <option value="{{ checklist.id }}">{{ checklist.title }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          <button class="btn" type="submit">Save SOP Rule</button>
-        </form>
-      </div>
-
-      <div class="card">
-        <h2>SOP Checklist Library</h2>
-        <ul class="list">
-          {% for checklist in checklists %}
-            <li>
-              <strong>{{ checklist.title }}</strong>
-              <span class="pill">{{ checklist.completion_total_today }} done today</span><br>
-              <span class="muted">{{ checklist.get_frequency_display }} | {{ checklist.items.count }} items</span>
-            </li>
-          {% empty %}
-            <li class="muted">No SOP checklists yet.</li>
-          {% endfor %}
-        </ul>
-
-        <h3>SOP Rules</h3>
-        <ul class="list">
-          {% for rule in checklist_rules %}
-            <li><strong>{{ rule.job_title.name }}</strong><br><span class="muted">{{ rule.checklist.title }}</span></li>
-          {% empty %}
-            <li class="muted">No SOP assignment rules yet.</li>
-          {% endfor %}
-        </ul>
-      </div>
-    </section>
-  </main>
+      <h3>قواعد إسناد القوائم</h3>
+      <ul class="list">
+        {% for rule in checklist_rules %}
+          <li><strong>{{ rule.job_title.name }}</strong><br><span class="muted">{{ rule.checklist.title }}</span></li>
+        {% empty %}
+          <li class="muted">لا توجد قواعد إسناد للقوائم حتى الآن.</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </section>
 </div>
 </body>
 </html>

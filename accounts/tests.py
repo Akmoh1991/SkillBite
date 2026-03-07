@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
-from accounts.models import BusinessTenant, EmployeeProfile, JobTitle
+from accounts.models import BusinessTenant, ContractorProfile, EmployeeProfile, JobTitle
 from training.models import (
     Course,
     CourseAssignment,
@@ -121,3 +121,16 @@ class MultiTenantFlowTests(TestCase):
             SOPChecklistItemCompletion.objects.filter(completion=completion, is_checked=True).count(),
             2,
         )
+
+    def test_legacy_contractor_is_redirected_to_business_owner_dashboard(self):
+        legacy_user = User.objects.create_user(username='legacy_owner', password='pass12345')
+        ContractorProfile.objects.create(
+            user=legacy_user,
+            company_name='Legacy Cafe',
+            phone_number='0500000000',
+        )
+
+        self.client.login(username='legacy_owner', password='pass12345')
+        response = self.client.get(reverse('home'))
+        self.assertRedirects(response, reverse('business_owner_dashboard'))
+        self.assertTrue(BusinessTenant.objects.filter(owner=legacy_user, name='Legacy Cafe').exists())
