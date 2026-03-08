@@ -182,11 +182,10 @@ nav a:not(.cta):hover::after {
 
   <!-- Desktop Nav -->
   <nav>
-    <a href="/">الرئيسية</a>
-    <a href="#">البرامج</a>
-    <a href="#">التأهيل</a>
-    <a href="#">الشهادات</a>
-    <a href="#">الدعم</a>
+    <a href="/#hero">الرئيسية</a>
+    <a href="/#courses-tasks">الدورات</a>
+    <a href="/#why-skillbite">المميزات</a>
+    <a href="/#operational-training"> التشغيل</a>
 
     {% if request.user.is_authenticated %}
       <span>مرحبًا، {{ request.user.username }}</span>
@@ -201,11 +200,11 @@ nav a:not(.cta):hover::after {
 
   <!-- Mobile Menu -->
   <div class="mobile-menu" id="mobileMenu" aria-hidden="true">
-    <a href="/">الرئيسية</a>
-    <a href="#">البرامج</a>
-    <a href="#">التأهيل</a>
-    <a href="#">الشهادات</a>
-    <a href="#">الدعم</a>
+    <a href="/#hero">الرئيسية</a>
+    <a href="/#courses-tasks">الدورات والمهام</a>
+    <a href="/#why-skillbite">لماذا سكيل بايت</a>
+    <a href="/#operational-training">التدريب التشغيلي</a>
+    <a href="/#contact">التواصل</a>
 
     {% if request.user.is_authenticated %}
       <span>مرحبًا، {{ request.user.username }}</span>

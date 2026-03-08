@@ -255,7 +255,7 @@ section {
 
 {% include "header.html" %}
 
-<section class="hero">
+<section class="hero" id="hero">
   <video autoplay muted loop playsinline preload="auto">
     <source src="{% static 'media/banner_videoHD.mp4' %}" type="video/mp4">
   </video>
@@ -269,7 +269,7 @@ section {
   </div>
 </section>
 
-<section>
+<section id="courses-tasks">
   <div class="section-title">
     <small>المميزات الأساسية</small>
     <h2>الدورات وقوائم المهام</h2>
@@ -298,7 +298,7 @@ section {
   </div>
 </section>
 
-<section>
+<section id="why-skillbite">
   <div class="section-title">
     <h2>لماذا سكيل بايت</h2>
   </div>
@@ -310,7 +310,7 @@ section {
   </div>
 </section>
 
-<section>
+<section id="operational-training">
   <div class="section-title">
     <h2>تركيز على التدريب التشغيلي</h2>
   </div>
@@ -344,7 +344,9 @@ section {
   </div>
 </section>
 
+<div id="contact">
 {% include "footer.html" %}
+</div>
 
 </body>
 </html>
