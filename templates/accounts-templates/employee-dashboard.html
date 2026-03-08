@@ -30,9 +30,15 @@
     <ul class="list">
       {% for assignment in course_assignments|slice:":4" %}
         <li>
-          <strong>{{ assignment.course.title }}</strong>
+          <strong>
+            <a href="{% url 'employee_course_view' assignment.id %}" style="color:#0f172a; text-decoration:none;">
+              {{ assignment.course.title }}
+            </a>
+          </strong>
           {% if assignment.status == 'COMPLETED' %}
             <span class="pill">مكتملة</span>
+          {% elif assignment.status == 'IN_PROGRESS' %}
+            <span class="pill">قيد التنفيذ</span>
           {% endif %}
           <div class="meta">{{ assignment.course.estimated_minutes }} دقيقة{% if assignment.course.description %} | {{ assignment.course.description }}{% endif %}</div>
         </li>

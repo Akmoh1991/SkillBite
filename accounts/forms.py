@@ -14,6 +14,7 @@ from django.forms import (
 from .models import BusinessTenant, JobTitle
 from training.models import (
     Course,
+    CourseContentItem,
     CourseAssignmentRule,
     ExamTemplate,
     ExamQuestion,
@@ -851,6 +852,66 @@ class CourseAssignmentRuleForm(forms.ModelForm):
         if business is not None:
             self.fields['job_title'].queryset = business.job_titles.order_by('name')
             self.fields['course'].queryset = business.courses.filter(is_active=True).order_by('title')
+
+
+class CourseContentItemForm(forms.ModelForm):
+    class Meta:
+        model = CourseContentItem
+        fields = ['course', 'content_type', 'title', 'body', 'video_file', 'order']
+        widgets = {
+            'course': forms.Select(attrs={'class': 'input'}),
+            'content_type': forms.Select(attrs={'class': 'input'}),
+            'title': forms.TextInput(attrs={'class': 'input', 'placeholder': 'Lesson title'}),
+            'body': forms.Textarea(attrs={'class': 'textarea', 'rows': 5, 'placeholder': 'Write the lesson text, instructions, or notes here'}),
+            'order': forms.NumberInput(attrs={'class': 'input', 'min': 1}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        business = kwargs.pop('business', None)
+        super().__init__(*args, **kwargs)
+        if business is not None:
+            self.fields['course'].queryset = business.courses.order_by('title', 'id')
+
+    def clean_title(self):
+        value = (self.cleaned_data.get('title') or '').strip()
+        if not value:
+            raise ValidationError('Content title is required')
+        return value
+
+    def clean_body(self):
+        return (self.cleaned_data.get('body') or '').strip()
+
+    def clean_video_file(self):
+        uploaded_file = self.cleaned_data.get('video_file')
+        if uploaded_file is None:
+            return uploaded_file
+        file_name = (getattr(uploaded_file, 'name', '') or '').lower()
+        content_type = (getattr(uploaded_file, 'content_type', '') or '').lower()
+        allowed_extensions = ('.mp4', '.webm', '.ogg', '.mov', '.m4v')
+        allowed_content_types = {
+            'video/mp4',
+            'video/webm',
+            'video/ogg',
+            'video/quicktime',
+            'application/octet-stream',
+        }
+        if not file_name.endswith(allowed_extensions) and content_type not in allowed_content_types:
+            raise ValidationError('Upload a video file only')
+        return uploaded_file
+
+    def clean(self):
+        cleaned_data = super().clean()
+        content_type = cleaned_data.get('content_type')
+        body = cleaned_data.get('body') or ''
+        video_file = cleaned_data.get('video_file')
+
+        if content_type in {CourseContentItem.ContentType.LESSON, CourseContentItem.ContentType.TEXT} and not body:
+            self.add_error('body', 'Add the main content text for this item')
+
+        if content_type == CourseContentItem.ContentType.MATERIAL and not video_file and not getattr(self.instance, 'video_file', None):
+            self.add_error('video_file', 'Upload a video file for material content')
+
+        return cleaned_data
 
 
 class SOPChecklistForm(forms.ModelForm):

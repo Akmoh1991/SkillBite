@@ -878,6 +878,72 @@ class Course(models.Model):
         return self.title
 
 
+class CourseContentItem(models.Model):
+    class ContentType(models.TextChoices):
+        LESSON = 'LESSON', 'Lesson'
+        TEXT = 'TEXT', 'Text'
+        MATERIAL = 'MATERIAL', 'Material'
+
+    course = models.ForeignKey(
+        Course,
+        on_delete=models.CASCADE,
+        related_name='content_items',
+        verbose_name='Course',
+    )
+    content_type = models.CharField(
+        max_length=20,
+        choices=ContentType.choices,
+        default=ContentType.LESSON,
+        verbose_name='Content type',
+    )
+    title = models.CharField(
+        max_length=255,
+        verbose_name='Title',
+    )
+    body = models.TextField(
+        blank=True,
+        default='',
+        verbose_name='Body',
+    )
+    material_url = models.URLField(
+        blank=True,
+        default='',
+        verbose_name='Material URL',
+    )
+    video_file = models.FileField(
+        upload_to='course_content_videos/',
+        blank=True,
+        default='',
+        verbose_name='Video file',
+    )
+    pdf_file = models.FileField(
+        upload_to='course_content_pdfs/',
+        blank=True,
+        default='',
+        verbose_name='PDF file',
+    )
+    order = models.PositiveIntegerField(
+        default=1,
+        verbose_name='Display order',
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Created at',
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        verbose_name='Updated at',
+    )
+
+    class Meta:
+        verbose_name = 'Course content item'
+        verbose_name_plural = 'Course content items'
+        ordering = ['order', 'id']
+
+    def __str__(self):
+        return f'{self.course.title} - {self.title}'
+
+
 class CourseAssignmentRule(models.Model):
     business = models.ForeignKey(
         'accounts.BusinessTenant',

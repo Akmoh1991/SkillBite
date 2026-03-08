@@ -1,10 +1,12 @@
 from django.contrib.auth import get_user_model
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
 
 from accounts.models import BusinessTenant, ContractorProfile, EmployeeProfile, JobTitle
 from training.models import (
     Course,
+    CourseContentItem,
     CourseAssignment,
     CourseAssignmentRule,
     SOPChecklist,
@@ -142,23 +144,56 @@ class MultiTenantFlowTests(TestCase):
             'business_owner_dashboard',
             'business_owner_employees',
             'business_owner_courses',
+            'business_owner_course_content',
             'business_owner_checklists',
         ):
             response = self.client.get(reverse(route_name))
             self.assertEqual(response.status_code, 200)
 
+    def test_owner_can_create_course_content_item(self):
+        self.client.login(username='owner', password='pass12345')
+        response = self.client.post(
+            reverse('business_owner_course_content_create'),
+            {
+                'course': self.course.id,
+                'content_type': CourseContentItem.ContentType.LESSON,
+                'title': 'Hand Washing Steps',
+                'body': 'Wash hands before touching any food or equipment.',
+                'video_file': SimpleUploadedFile('lesson.mp4', b'fake video content', content_type='video/mp4'),
+                'order': 1,
+            },
+        )
+
+        self.assertRedirects(response, f"{reverse('business_owner_course_content')}?course={self.course.id}")
+        self.assertTrue(
+            CourseContentItem.objects.filter(
+                course=self.course,
+                title='Hand Washing Steps',
+                content_type=CourseContentItem.ContentType.LESSON,
+            ).exists()
+        )
+
     def test_employee_navigation_pages_render(self):
         employee_user = User.objects.create_user(username='employee_nav', password='pass12345')
         EmployeeProfile.objects.create(user=employee_user, business=self.business, job_title=self.job_title, created_by=self.owner)
+        assignment = CourseAssignment.objects.create(
+            business=self.business,
+            course=self.course,
+            employee=employee_user,
+            assigned_by=self.owner,
+            assigned_via_job_title=self.job_title,
+        )
 
         self.client.login(username='employee_nav', password='pass12345')
 
-        for route_name in (
-            'employee_dashboard',
-            'employee_courses',
-            'employee_checklists',
-        ):
-            response = self.client.get(reverse(route_name))
+        routes = (
+            reverse('employee_dashboard'),
+            reverse('employee_courses'),
+            reverse('employee_course_view', args=[assignment.id]),
+            reverse('employee_checklists'),
+        )
+        for route in routes:
+            response = self.client.get(route)
             self.assertEqual(response.status_code, 200)
 
     def test_employee_dashboard_backfills_missing_course_assignments(self):
@@ -181,6 +216,54 @@ class MultiTenantFlowTests(TestCase):
         response = self.client.get(reverse('employee_courses'))
         self.assertEqual(response.status_code, 200)
         self.assertTrue(CourseAssignment.objects.filter(employee=employee_user, course=self.course).exists())
+
+    def test_employee_courses_page_links_to_course_view_page(self):
+        CourseContentItem.objects.create(
+            course=self.course,
+            content_type=CourseContentItem.ContentType.TEXT,
+            title='Daily safety reminder',
+            body='Keep chilled items below the required storage temperature.',
+            order=1,
+        )
+        employee_user = User.objects.create_user(username='employee_content', password='pass12345')
+        EmployeeProfile.objects.create(user=employee_user, business=self.business, job_title=self.job_title, created_by=self.owner)
+
+        self.client.login(username='employee_content', password='pass12345')
+        response = self.client.get(reverse('employee_courses'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.course.title)
+        self.assertContains(response, reverse('employee_course_view', args=[CourseAssignment.objects.get(employee=employee_user, course=self.course).id]))
+
+    def test_employee_course_view_page_displays_authored_course_content(self):
+        CourseContentItem.objects.create(
+            course=self.course,
+            content_type=CourseContentItem.ContentType.MATERIAL,
+            title='Cash register opening',
+            body='Verify float balance before serving customers.',
+            video_file=SimpleUploadedFile('opening.mp4', b'fake video content', content_type='video/mp4'),
+            order=1,
+        )
+        employee_user = User.objects.create_user(username='employee_course_view', password='pass12345')
+        EmployeeProfile.objects.create(user=employee_user, business=self.business, job_title=self.job_title, created_by=self.owner)
+        assignment = CourseAssignment.objects.create(
+            business=self.business,
+            course=self.course,
+            employee=employee_user,
+            assigned_by=self.owner,
+            assigned_via_job_title=self.job_title,
+        )
+
+        self.client.login(username='employee_course_view', password='pass12345')
+        response = self.client.get(reverse('employee_course_view', args=[assignment.id]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Cash register opening')
+        self.assertContains(response, 'Verify float balance before serving customers.')
+        self.assertContains(response, 'opening.mp4')
+
+        assignment.refresh_from_db()
+        self.assertEqual(assignment.status, CourseAssignment.Status.IN_PROGRESS)
 
     def test_single_job_title_business_implicitly_exposes_checklist_without_rule(self):
         SOPChecklistAssignmentRule.objects.all().delete()

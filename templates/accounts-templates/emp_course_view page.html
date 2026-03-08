@@ -1,0 +1,99 @@
+{% extends "accounts-templates/business-owner-base.html" %}
+
+{% block page_title %}{{ business.name }} | {{ course.title }}{% endblock %}
+{% block hero_title %}{{ course.title }}{% endblock %}
+{% block hero_text %}اعرض محتوى الدورة المسندة إليك من صاحب النشاط ثم أكملها بعد مراجعة جميع المواد المطلوبة.{% endblock %}
+
+{% block content %}
+<section class="stats">
+  <div class="stat-card">
+    <h4>حالة الدورة</h4>
+    <span style="font-size:18px;">
+      {% if assignment.status == 'COMPLETED' %}
+        مكتملة
+      {% elif assignment.status == 'IN_PROGRESS' %}
+        قيد التنفيذ
+      {% else %}
+        مسندة
+      {% endif %}
+    </span>
+  </div>
+  <div class="stat-card">
+    <h4>مدة الدورة</h4>
+    <span style="font-size:18px;">{{ course.estimated_minutes }} دقيقة</span>
+  </div>
+  <div class="stat-card">
+    <h4>عناصر المحتوى</h4>
+    <span>{{ content_items|length }}</span>
+  </div>
+</section>
+
+<section class="section">
+  <div class="card" style="grid-column:1 / -1;">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; margin-bottom:18px;">
+      <div>
+        <h2 style="margin-bottom:6px;">محتوى الدورة</h2>
+        {% if course.description %}
+          <div class="meta">{{ course.description }}</div>
+        {% endif %}
+      </div>
+      <a class="btn" href="{% url 'employee_courses' %}" style="text-decoration:none; display:inline-flex; align-items:center;">
+        العودة إلى الدورات
+      </a>
+    </div>
+
+    {% if content_items %}
+      <div class="list">
+        {% for item in content_items %}
+          <div class="checklist-form" style="margin-bottom:14px;">
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:8px;">
+              <strong>{{ forloop.counter }}. {{ item.title }}</strong>
+              <span class="pill">
+                {% if item.content_type == 'LESSON' %}
+                  درس
+                {% elif item.content_type == 'TEXT' %}
+                  نص
+                {% else %}
+                  مادة
+                {% endif %}
+              </span>
+            </div>
+            {% if item.body %}
+              <div class="meta" style="white-space:pre-line;">{{ item.body }}</div>
+            {% endif %}
+            {% if item.material_url %}
+              <div style="margin-top:10px;">
+                <a href="{{ item.material_url }}" target="_blank" rel="noopener">فتح الرابط الخارجي</a>
+              </div>
+            {% endif %}
+            {% if item.video_file %}
+              <div style="margin-top:12px;">
+                <video controls preload="metadata" style="width:100%; max-width:760px; border-radius:12px; background:#000;">
+                  <source src="{{ item.video_file.url }}">
+                  متصفحك لا يدعم تشغيل الفيديو.
+                </video>
+              </div>
+            {% endif %}
+            {% if item.pdf_file and not item.video_file %}
+              <div style="margin-top:10px;">
+                <a href="{{ item.pdf_file.url }}" target="_blank" rel="noopener">فتح ملف PDF</a>
+              </div>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="muted">لا يوجد محتوى منشور لهذه الدورة بعد.</div>
+    {% endif %}
+
+    {% if assignment.status != 'COMPLETED' %}
+      <form method="post" action="{% url 'employee_course_complete' assignment.id %}" style="margin-top:18px;">
+        {% csrf_token %}
+        <button class="btn secondary" type="submit">إكمال الدورة</button>
+      </form>
+    {% else %}
+      <div class="meta" style="margin-top:18px;">اكتملت في {{ assignment.completed_at|date:"Y-m-d H:i" }}</div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

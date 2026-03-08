@@ -11,7 +11,7 @@ from django.contrib.auth.hashers import check_password, make_password
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from django.db.models import Q, Max, Count, OuterRef, Subquery, Exists
+from django.db.models import Q, Max, Count, OuterRef, Subquery, Exists, Prefetch
 from django.db import transaction
 from django.views.decorators.http import require_POST, require_http_methods
 from django.utils import timezone
@@ -35,6 +35,7 @@ from .models import (
 )
 from .forms import (
     BusinessEmployeeCreateForm,
+    CourseContentItemForm,
     CourseAssignmentRuleForm,
     CourseForm,
     JobTitleForm,
@@ -58,6 +59,7 @@ from .forms import (
 
 from training.models import (
     Course,
+    CourseContentItem,
     CourseAssignment,
     CourseAssignmentRule,
     Program,
@@ -1242,7 +1244,7 @@ def _business_owner_dashboard_context(request):
         .select_related('user', 'job_title')
         .order_by('user__username')
     )
-    courses = business.courses.order_by('title', 'id')
+    courses = business.courses.annotate(content_item_total=Count('content_items')).order_by('title', 'id')
     checklists = business.sop_checklists.prefetch_related('items').order_by('title', 'id')
     job_titles = business.job_titles.order_by('name', 'id')
     course_rules = (
@@ -1333,6 +1335,46 @@ def business_owner_courses_view(request):
         request,
         'accounts-templates/business-owner-courses.html',
         _business_owner_dashboard_context(request),
+    )
+
+
+@login_required
+def business_owner_course_content_view(request):
+    if not _business_owner_guard(request):
+        messages.error(request, 'غير مصرح لك بالدخول')
+        return redirect('home')
+
+    business = _get_owned_business(request.user)
+    courses = list(business.courses.annotate(content_item_total=Count('content_items')).order_by('title', 'id'))
+    selected_course = None
+    selected_course_id = request.GET.get('course')
+    if selected_course_id and str(selected_course_id).isdigit():
+        selected_course = get_object_or_404(business.courses.annotate(content_item_total=Count('content_items')), id=int(selected_course_id))
+    elif courses:
+        selected_course = courses[0]
+
+    content_items = []
+    next_order = 1
+    if selected_course is not None:
+        content_items = list(selected_course.content_items.order_by('order', 'id'))
+        next_order = (content_items[-1].order + 1) if content_items else 1
+        for item in content_items:
+            item.edit_form = CourseContentItemForm(instance=item, business=business, prefix=f'item-{item.id}')
+
+    create_initial = {'order': next_order}
+    if selected_course is not None:
+        create_initial['course'] = selected_course
+
+    return render(
+        request,
+        'accounts-templates/business-owner-course-content.html',
+        {
+            'business': business,
+            'courses': courses,
+            'selected_course': selected_course,
+            'content_items': content_items,
+            'content_form': CourseContentItemForm(business=business, initial=create_initial),
+        },
     )
 
 
@@ -1456,6 +1498,70 @@ def business_owner_course_assignment_rule_create_action(request):
 
 @login_required
 @require_POST
+def business_owner_course_content_create_action(request):
+    if not _business_owner_guard(request):
+        messages.error(request, 'غير مصرح لك بالدخول')
+        return redirect('home')
+
+    business = _get_owned_business(request.user)
+    form = CourseContentItemForm(request.POST, request.FILES, business=business)
+    if form.is_valid():
+        content_item = form.save()
+        messages.success(request, 'تمت إضافة محتوى الدورة')
+        return redirect(f"{reverse('business_owner_course_content')}?course={content_item.course_id}")
+
+    messages.error(request, form.errors.as_text())
+    selected_course = request.POST.get('course')
+    redirect_url = reverse('business_owner_course_content')
+    if selected_course and str(selected_course).isdigit():
+        redirect_url = f'{redirect_url}?course={selected_course}'
+    return redirect(redirect_url)
+
+
+@login_required
+@require_POST
+def business_owner_course_content_update_action(request, item_id: int):
+    if not _business_owner_guard(request):
+        messages.error(request, 'غير مصرح لك بالدخول')
+        return redirect('home')
+
+    business = _get_owned_business(request.user)
+    content_item = get_object_or_404(
+        CourseContentItem.objects.select_related('course'),
+        id=item_id,
+        course__business=business,
+    )
+    form = CourseContentItemForm(request.POST, request.FILES, instance=content_item, business=business, prefix=f'item-{content_item.id}')
+    if form.is_valid():
+        updated_item = form.save()
+        messages.success(request, 'تم تحديث محتوى الدورة')
+        return redirect(f"{reverse('business_owner_course_content')}?course={updated_item.course_id}")
+
+    messages.error(request, form.errors.as_text())
+    return redirect(f"{reverse('business_owner_course_content')}?course={content_item.course_id}")
+
+
+@login_required
+@require_POST
+def business_owner_course_content_delete_action(request, item_id: int):
+    if not _business_owner_guard(request):
+        messages.error(request, 'غير مصرح لك بالدخول')
+        return redirect('home')
+
+    business = _get_owned_business(request.user)
+    content_item = get_object_or_404(
+        CourseContentItem.objects.select_related('course'),
+        id=item_id,
+        course__business=business,
+    )
+    course_id = content_item.course_id
+    content_item.delete()
+    messages.success(request, 'تم حذف عنصر المحتوى')
+    return redirect(f"{reverse('business_owner_course_content')}?course={course_id}")
+
+
+@login_required
+@require_POST
 def business_owner_checklist_create_action(request):
     if not _business_owner_guard(request):
         messages.error(request, 'غير مصرح لك بالدخول')
@@ -1527,6 +1633,12 @@ def _employee_dashboard_context(request):
         CourseAssignment.objects
         .filter(employee=request.user, business=business)
         .select_related('course')
+        .prefetch_related(
+            Prefetch(
+                'course__content_items',
+                queryset=CourseContentItem.objects.order_by('order', 'id'),
+            )
+        )
         .order_by('status', 'course__title', 'id')
     )
     completed_course_count = sum(
@@ -1571,6 +1683,43 @@ def employee_courses_view(request):
         request,
         'accounts-templates/employee-courses.html',
         _employee_dashboard_context(request),
+    )
+
+
+@login_required
+def employee_course_view(request, assignment_id: int):
+    if not _employee_guard(request):
+        messages.error(request, 'غير مصرح لك بالدخول')
+        return redirect('home')
+
+    employee_profile = _get_employee_profile(request.user)
+    assignment = get_object_or_404(
+        CourseAssignment.objects
+        .filter(employee=request.user, business=employee_profile.business)
+        .select_related('course')
+        .prefetch_related(
+            Prefetch(
+                'course__content_items',
+                queryset=CourseContentItem.objects.order_by('order', 'id'),
+            )
+        ),
+        id=assignment_id,
+    )
+
+    if assignment.status == CourseAssignment.Status.ASSIGNED:
+        assignment.status = CourseAssignment.Status.IN_PROGRESS
+        assignment.save(update_fields=['status'])
+
+    return render(
+        request,
+        'accounts-templates/emp_course_view page.html',
+        {
+            'employee_profile': employee_profile,
+            'business': employee_profile.business,
+            'assignment': assignment,
+            'course': assignment.course,
+            'content_items': assignment.course.content_items.all(),
+        },
     )
 
 
@@ -1646,7 +1795,7 @@ def employee_checklist_complete_action(request, checklist_id: int):
             defaults={'is_checked': True},
         )
 
-    messages.success(request, f'تم إكمال قائمة SOP: {checklist.title}')
+    messages.success(request, 'تم اكمال المهام اليومية')
     return redirect('employee_checklists')
 
 

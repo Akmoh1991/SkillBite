@@ -1,6 +1,7 @@
 from django.contrib import admin
 from .models import (
     Course,
+    CourseContentItem,
     CourseAssignment,
     CourseAssignmentRule,
     EnrollmentRequest,
@@ -13,6 +14,11 @@ from .models import (
     SOPChecklistItem,
     SOPChecklistItemCompletion,
 )
+
+
+class CourseContentItemInline(admin.TabularInline):
+    model = CourseContentItem
+    extra = 0
 
 
 @admin.register(Program)
@@ -88,6 +94,14 @@ class CourseAdmin(admin.ModelAdmin):
     list_display = ('title', 'business', 'estimated_minutes', 'is_active', 'created_by')
     search_fields = ('title', 'business__name')
     list_filter = ('business', 'is_active')
+    inlines = [CourseContentItemInline]
+
+
+@admin.register(CourseContentItem)
+class CourseContentItemAdmin(admin.ModelAdmin):
+    list_display = ('title', 'course', 'content_type', 'order', 'updated_at')
+    search_fields = ('title', 'course__title', 'course__business__name')
+    list_filter = ('content_type', 'course__business')
 
 
 @admin.register(CourseAssignmentRule)

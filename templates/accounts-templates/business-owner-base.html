@@ -278,9 +278,6 @@ body{
       {% for message in messages %}
         <div class="card message-card{% if message.tags == 'success' %} success{% endif %}">
           <div class="message-card__content">
-            {% if message.tags == 'success' %}
-              <span class="message-card__icon">🎉</span>
-            {% endif %}
             <span>{{ message }}</span>
           </div>
         </div>

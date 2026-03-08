@@ -22,17 +22,32 @@
     <ul class="list">
       {% for assignment in course_assignments %}
         <li>
-          <strong>{{ assignment.course.title }}</strong>
+          <strong>
+            <a href="{% url 'employee_course_view' assignment.id %}" style="color:#0f172a; text-decoration:none;">
+              {{ assignment.course.title }}
+            </a>
+          </strong>
           {% if assignment.status == 'COMPLETED' %}
             <span class="pill">مكتملة</span>
+          {% elif assignment.status == 'IN_PROGRESS' %}
+            <span class="pill">قيد التنفيذ</span>
           {% endif %}
           <div class="meta">{{ assignment.course.estimated_minutes }} دقيقة{% if assignment.course.description %} | {{ assignment.course.description }}{% endif %}</div>
-          {% if assignment.status != 'COMPLETED' %}
-            <form method="post" action="{% url 'employee_course_complete' assignment.id %}" style="margin-top:10px;">
-              {% csrf_token %}
-              <button class="btn secondary" type="submit">إكمال الدورة</button>
-            </form>
-          {% else %}
+          <div class="meta" style="margin-top:8px;">
+            {% with content_count=assignment.course.content_items.count %}
+              {% if content_count %}
+                {{ content_count }} عنصر محتوى متاح داخل صفحة الدورة.
+              {% else %}
+                لا يوجد محتوى منشور لهذه الدورة بعد.
+              {% endif %}
+            {% endwith %}
+          </div>
+          <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
+            <a class="btn" href="{% url 'employee_course_view' assignment.id %}" style="text-decoration:none; display:inline-flex; align-items:center;">
+              عرض الدورة
+            </a>
+          </div>
+          {% if assignment.status == 'COMPLETED' %}
             <div class="meta" style="margin-top:8px;">اكتملت في {{ assignment.completed_at|date:"Y-m-d H:i" }}</div>
           {% endif %}
         </li>

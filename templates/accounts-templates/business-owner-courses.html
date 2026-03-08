@@ -72,7 +72,11 @@
         <li>
           <strong>{{ course.title }}</strong>
           <span class="pill">{{ course.assignment_total }} مسند</span><br>
+          <span class="pill">{{ course.content_item_total|default:0 }} عنصر محتوى</span><br>
           <span class="muted">{{ course.estimated_minutes }} دقيقة{% if course.description %} | {{ course.description }}{% endif %}</span>
+          <div style="margin-top:10px;">
+            <a class="btn secondary" href="{% url 'business_owner_course_content' %}?course={{ course.id }}" style="display:inline-block; text-decoration:none;">إدارة المحتوى</a>
+          </div>
         </li>
       {% empty %}
         <li class="muted">لا توجد دورات حتى الآن.</li>
