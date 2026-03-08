@@ -1,3 +1,4 @@
+{% load static %}
 <style>
 @import url('/static/branding/branding.css');
 :root{
@@ -13,7 +14,7 @@
   right:0;
   width:var(--sidebar-w);
   height:100vh;
-  background:linear-gradient(180deg, #001F5E 0%, #0080FF 100%);
+  background:linear-gradient(180deg, #064e3b 0%, #0b6b58 52%, #00B476 100%);
   color:#fff;
   padding:25px 20px;
   z-index:1100;
@@ -21,6 +22,7 @@
 
 .sidebar .logo{
   text-align:center;
+  margin-top:10px;
   margin-bottom:28px;
 }
 
@@ -79,7 +81,7 @@
 .sidebar .logout a{
   justify-content:center;
   background:#ffffff;
-  color:#003b9a;
+  color:#0b6b58;
   font-weight:800;
   border:1px solid rgba(255,255,255,.9);
   box-shadow:0 8px 18px rgba(0, 25, 84, .28);
@@ -87,7 +89,7 @@
 
 .sidebar .logout a:hover{
   background:#eaf3ff;
-  color:#002f86;
+  color:#064e3b;
   border-color:#ffffff;
 }
 
@@ -98,7 +100,7 @@
 
 <aside class="sidebar">
   <div class="logo">
-    <img src="/static/SEC_logo.svg" alt="SEC">
+    <img src="{% static 'media/SkillBite_logo.png' %}" alt="SkillBite Logo">
   </div>
 
   <ul>
