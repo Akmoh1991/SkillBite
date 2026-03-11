@@ -24,51 +24,87 @@
   </div>
 </section>
 
-<section class="section">
-  <div class="card">
-    <h2>الدورات الحالية</h2>
-    <ul class="list">
-      {% for assignment in course_assignments|slice:":4" %}
-        <li>
-          <strong>
-            <a href="{% url 'employee_course_view' assignment.id %}" style="color:#0f172a; text-decoration:none;">
-              {{ assignment.course.title }}
-            </a>
-          </strong>
-          {% if assignment.status == 'COMPLETED' %}
-            <span class="pill">مكتملة</span>
-          {% elif assignment.status == 'IN_PROGRESS' %}
-            <span class="pill">قيد التنفيذ</span>
-          {% endif %}
-          <div class="meta">{{ assignment.course.estimated_minutes }} دقيقة{% if assignment.course.description %} | {{ assignment.course.description }}{% endif %}</div>
-        </li>
-      {% empty %}
-        <li class="muted">لا توجد دورات مسندة حالياً.</li>
-      {% endfor %}
-    </ul>
+<section class="content-layout">
+  <div class="layout-main">
+    <div class="card">
+      <div class="list-head">
+        <h2>الدورات الحالية</h2>
+        <span class="list-count">{{ course_assignments|length }}</span>
+      </div>
+      <ul class="list">
+        {% for assignment in course_assignments|slice:":4" %}
+          <li>
+            <strong>
+              <a href="{% url 'employee_course_view' assignment.id %}" style="color:#0f172a; text-decoration:none;">
+                {{ assignment.course.title }}
+              </a>
+            </strong>
+            {% if assignment.status == 'COMPLETED' %}
+              <span class="pill">مكتملة</span>
+            {% elif assignment.status == 'IN_PROGRESS' %}
+              <span class="pill">قيد التنفيذ</span>
+            {% endif %}
+            <div class="meta">{{ assignment.course.estimated_minutes }} دقيقة{% if assignment.course.description %} | {{ assignment.course.description }}{% endif %}</div>
+          </li>
+        {% empty %}
+          <li class="muted">لا توجد دورات مسندة حالياً.</li>
+        {% endfor %}
+      </ul>
+    </div>
   </div>
 
-  <div class="card">
-    <h2>قوائم التشغيل اليوم</h2>
-    <ul class="list">
-      {% for checklist in assigned_checklists|slice:":4" %}
+  <div class="layout-side">
+    <div class="card">
+      <div class="list-head">
+        <h2>قوائم التشغيل اليوم</h2>
+        <span class="list-count">{{ assigned_checklists|length }}</span>
+      </div>
+      <ul class="list">
+        {% for checklist in assigned_checklists|slice:":4" %}
+          <li>
+            <strong>{{ checklist.title }}</strong>
+            {% if checklist.id in today_completions %}
+              <span class="pill">مكتملة اليوم</span>
+            {% endif %}
+            <div class="meta">{{ checklist.get_frequency_display }} | {{ checklist.items.count }} عنصر</div>
+          </li>
+        {% empty %}
+          <li class="muted">لا توجد قوائم تشغيل مسندة حالياً.</li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-intro">
+        <div>
+          <h2>ملخص الحساب</h2>
+          <p>بيانات سريعة عن النشاط والمسمى الوظيفي الحالي.</p>
+        </div>
+      </div>
+      <ul class="list">
         <li>
-          <strong>{{ checklist.title }}</strong>
-          {% if checklist.id in today_completions %}
-            <span class="pill">مكتملة اليوم</span>
-          {% endif %}
-          <div class="meta">{{ checklist.get_frequency_display }} | {{ checklist.items.count }} عنصر</div>
+          <strong>اسم النشاط</strong><br>
+          <span class="meta">{{ business.name }}</span>
         </li>
-      {% empty %}
-        <li class="muted">لا توجد قوائم تشغيل مسندة حالياً.</li>
-      {% endfor %}
-    </ul>
+        <li>
+          <strong>اسم المستخدم</strong><br>
+          <span class="meta">{{ request.user.username }}</span>
+        </li>
+        <li>
+          <strong>المسمى الوظيفي</strong><br>
+          <span class="meta">{{ employee_profile.job_title.name|default:"غير محدد" }}</span>
+        </li>
+      </ul>
+    </div>
   </div>
 </section>
 
 <section class="section">
   <div class="card">
-    <h2>آخر سجل تشغيلي</h2>
+    <div class="list-head">
+      <h2>آخر سجل تشغيلي</h2>
+      <span class="list-count">{{ recent_checklist_completions|length }}</span>
+    </div>
     <ul class="list">
       {% for completion in recent_checklist_completions %}
         <li>
@@ -82,15 +118,20 @@
   </div>
 
   <div class="card">
-    <h2>ملخص الحساب</h2>
+    <div class="card-intro">
+      <div>
+        <h2>مؤشرات سريعة</h2>
+        <p>تقدمك الحالي بين الدورات وقوائم التشغيل.</p>
+      </div>
+    </div>
     <ul class="list">
       <li>
-        <strong>اسم النشاط</strong><br>
-        <span class="meta">{{ business.name }}</span>
+        <strong>الدورات المكتملة</strong><br>
+        <span class="meta">{{ completed_course_count }} من {{ course_assignments|length }}</span>
       </li>
       <li>
-        <strong>اسم المستخدم</strong><br>
-        <span class="meta">{{ request.user.username }}</span>
+        <strong>قوائم اليوم المكتملة</strong><br>
+        <span class="meta">{{ today_completions|length }} من {{ assigned_checklists|length }}</span>
       </li>
       <li>
         <strong>المسمى الوظيفي</strong><br>

@@ -17,8 +17,11 @@
 </section>
 
 <section class="section">
-  <div class="card" style="grid-column:1 / -1;">
-    <h2>الدورات المسندة لي</h2>
+  <div class="card section-full">
+    <div class="list-head">
+      <h2>الدورات المسندة لي</h2>
+      <span class="list-count">{{ course_assignments|length }}</span>
+    </div>
     <ul class="list">
       {% for assignment in course_assignments %}
         <li>

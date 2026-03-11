@@ -16,81 +16,98 @@
   </div>
 </section>
 
-<section class="section">
-  <div class="card">
-    <h2>إنشاء دورة تدريبية</h2>
-    <form method="post" action="{% url 'business_owner_course_create' %}">
-      {% csrf_token %}
-      <div class="field">
-        <label for="course-title">عنوان الدورة</label>
-        <input id="course-title" type="text" name="title" required>
+<section class="content-layout">
+  <div class="layout-main">
+    <div class="card">
+      <div class="card-intro">
+        <div>
+          <h2>إنشاء دورة تدريبية</h2>
+          <p>أنشئ الدورة أولاً ثم أضف قاعدة الإسناد المناسبة للمسمى الوظيفي.</p>
+        </div>
       </div>
-      <div class="field">
-        <label for="course-description">الوصف</label>
-        <textarea id="course-description" name="description"></textarea>
-      </div>
-      <div class="field">
-        <label for="course-minutes">المدة التقديرية بالدقائق</label>
-        <input id="course-minutes" type="number" name="estimated_minutes" value="15" min="1" required>
-      </div>
-      <label class="inline-check">
-        <input type="checkbox" name="is_active" checked>
-        الدورة نشطة
-      </label>
-      <button class="btn" type="submit">إنشاء الدورة</button>
-    </form>
+      <form method="post" action="{% url 'business_owner_course_create' %}">
+        {% csrf_token %}
+        <div class="field">
+          <label for="course-title">عنوان الدورة</label>
+          <input id="course-title" type="text" name="title" required>
+        </div>
+        <div class="field">
+          <label for="course-description">الوصف</label>
+          <textarea id="course-description" name="description"></textarea>
+        </div>
+        <div class="field">
+          <label for="course-minutes">المدة التقديرية بالدقائق</label>
+          <input id="course-minutes" type="number" name="estimated_minutes" value="15" min="1" required>
+        </div>
+        <label class="inline-check">
+          <input type="checkbox" name="is_active" checked>
+          الدورة نشطة
+        </label>
+        <button class="btn" type="submit">إنشاء الدورة</button>
+      </form>
 
-    <h3>إسناد دورة حسب المسمى الوظيفي</h3>
-    <form method="post" action="{% url 'business_owner_course_rule_create' %}">
-      {% csrf_token %}
-      <div class="field">
-        <label for="course-rule-job-title">المسمى الوظيفي</label>
-        <select id="course-rule-job-title" name="job_title" required>
-          <option value="">اختر</option>
-          {% for job_title in job_titles %}
-            <option value="{{ job_title.id }}">{{ job_title.name }}</option>
-          {% endfor %}
-        </select>
-      </div>
-      <div class="field">
-        <label for="course-rule-course">الدورة</label>
-        <select id="course-rule-course" name="course" required>
-          <option value="">اختر</option>
-          {% for course in courses %}
-            <option value="{{ course.id }}">{{ course.title }}</option>
-          {% endfor %}
-        </select>
-      </div>
-      <button class="btn" type="submit">حفظ قاعدة الإسناد</button>
-    </form>
+      <h3>إسناد دورة حسب المسمى الوظيفي</h3>
+      <form method="post" action="{% url 'business_owner_course_rule_create' %}">
+        {% csrf_token %}
+        <div class="field">
+          <label for="course-rule-job-title">المسمى الوظيفي</label>
+          <select id="course-rule-job-title" name="job_title" required>
+            <option value="">اختر</option>
+            {% for job_title in job_titles %}
+              <option value="{{ job_title.id }}">{{ job_title.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label for="course-rule-course">الدورة</label>
+          <select id="course-rule-course" name="course" required>
+            <option value="">اختر</option>
+            {% for course in courses %}
+              <option value="{{ course.id }}">{{ course.title }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <button class="btn" type="submit">حفظ قاعدة الإسناد</button>
+      </form>
+    </div>
   </div>
 
-  <div class="card">
-    <h2>مكتبة الدورات</h2>
-    <ul class="list">
-      {% for course in courses %}
-        <li>
-          <strong>{{ course.title }}</strong>
-          <span class="pill">{{ course.assignment_total }} مسند</span><br>
-          <span class="pill">{{ course.content_item_total|default:0 }} عنصر محتوى</span><br>
-          <span class="muted">{{ course.estimated_minutes }} دقيقة{% if course.description %} | {{ course.description }}{% endif %}</span>
-          <div style="margin-top:10px;">
-            <a class="btn secondary" href="{% url 'business_owner_course_content' %}?course={{ course.id }}" style="display:inline-block; text-decoration:none;">إدارة المحتوى</a>
-          </div>
-        </li>
-      {% empty %}
-        <li class="muted">لا توجد دورات حتى الآن.</li>
-      {% endfor %}
-    </ul>
+  <div class="layout-side">
+    <div class="card">
+      <div class="list-head">
+        <h2>مكتبة الدورات</h2>
+        <span class="list-count">{{ courses|length }}</span>
+      </div>
+      <ul class="list">
+        {% for course in courses %}
+          <li>
+            <strong>{{ course.title }}</strong>
+            <span class="pill">{{ course.assignment_total }} مسند</span><br>
+            <span class="pill">{{ course.content_item_total|default:0 }} عنصر محتوى</span><br>
+            <span class="muted">{{ course.estimated_minutes }} دقيقة{% if course.description %} | {{ course.description }}{% endif %}</span>
+            <div style="margin-top:10px;">
+              <a class="btn secondary" href="{% url 'business_owner_course_content' %}?course={{ course.id }}" style="display:inline-block; text-decoration:none;">إدارة المحتوى</a>
+            </div>
+          </li>
+        {% empty %}
+          <li class="muted">لا توجد دورات حتى الآن.</li>
+        {% endfor %}
+      </ul>
+    </div>
 
-    <h3>قواعد إسناد الدورات</h3>
-    <ul class="list">
-      {% for rule in course_rules %}
-        <li><strong>{{ rule.job_title.name }}</strong><br><span class="muted">{{ rule.course.title }}</span></li>
-      {% empty %}
-        <li class="muted">لا توجد قواعد إسناد للدورات حتى الآن.</li>
-      {% endfor %}
-    </ul>
+    <div class="card">
+      <div class="list-head">
+        <h3>قواعد إسناد الدورات</h3>
+        <span class="list-count">{{ course_rules|length }}</span>
+      </div>
+      <ul class="list">
+        {% for rule in course_rules %}
+          <li><strong>{{ rule.job_title.name }}</strong><br><span class="muted">{{ rule.course.title }}</span></li>
+        {% empty %}
+          <li class="muted">لا توجد قواعد إسناد للدورات حتى الآن.</li>
+        {% endfor %}
+      </ul>
+    </div>
   </div>
 </section>
 {% endblock %}

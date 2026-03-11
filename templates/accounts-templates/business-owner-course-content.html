@@ -6,6 +6,14 @@
 
 {% block content %}
 <style>
+.course-content-layout{
+  display:grid;
+  grid-template-columns:minmax(280px, .9fr) minmax(0, 1.7fr);
+  gap:18px;
+  align-items:start;
+  margin-bottom:18px;
+}
+
 .file-upload{
   display:flex;
   align-items:center;
@@ -42,6 +50,12 @@
   font-size:13px;
   font-weight:700;
 }
+
+@media (max-width:1100px){
+  .course-content-layout{
+    grid-template-columns:1fr;
+  }
+}
 </style>
 <section class="stats">
   <div class="stat-card">
@@ -54,72 +68,87 @@
   </div>
 </section>
 
-<section class="section">
-  <div class="card">
-    <h2>اختر دورة لإدارة محتواها</h2>
-    <ul class="list">
-      {% for course in courses %}
-        <li>
-          <strong>{{ course.title }}</strong>
-          <span class="pill">{{ course.content_item_total }} عنصر محتوى</span><br>
-          <span class="muted">{{ course.estimated_minutes }} دقيقة{% if course.description %} | {{ course.description }}{% endif %}</span>
-          <div style="margin-top:10px;">
-            <a class="btn {% if selected_course and selected_course.id == course.id %}secondary{% endif %}" href="{% url 'business_owner_course_content' %}?course={{ course.id }}" style="display:inline-block; text-decoration:none;">
-              {% if selected_course and selected_course.id == course.id %}جاري الإدارة{% else %}إدارة المحتوى{% endif %}
-            </a>
-          </div>
-        </li>
-      {% empty %}
-        <li class="muted">أنشئ دورة أولاً من صفحة الدورات التدريبية ثم عد هنا لإضافة المحتوى.</li>
-      {% endfor %}
-    </ul>
+<section class="course-content-layout">
+  <div class="layout-side">
+    <div class="card">
+      <div class="list-head">
+        <h2>اختر دورة لإدارة محتواها</h2>
+        <span class="list-count">{{ courses|length }}</span>
+      </div>
+      <ul class="list">
+        {% for course in courses %}
+          <li>
+            <strong>{{ course.title }}</strong>
+            <span class="pill">{{ course.content_item_total }} عنصر محتوى</span><br>
+            <span class="muted">{{ course.estimated_minutes }} دقيقة{% if course.description %} | {{ course.description }}{% endif %}</span>
+            <div style="margin-top:10px;">
+              <a class="btn {% if selected_course and selected_course.id == course.id %}secondary{% endif %}" href="{% url 'business_owner_course_content' %}?course={{ course.id }}" style="display:inline-block; text-decoration:none;">
+                {% if selected_course and selected_course.id == course.id %}جاري الإدارة{% else %}إدارة المحتوى{% endif %}
+              </a>
+            </div>
+          </li>
+        {% empty %}
+          <li class="muted">أنشئ دورة أولاً من صفحة الدورات التدريبية ثم عد هنا لإضافة المحتوى.</li>
+        {% endfor %}
+      </ul>
+    </div>
   </div>
 
-  <div class="card">
-    <h2>إضافة عنصر محتوى جديد</h2>
-    {% if selected_course %}
-      <form method="post" action="{% url 'business_owner_course_content_create' %}" enctype="multipart/form-data">
-        {% csrf_token %}
-        <div class="field">
-          <label for="id_course">الدورة</label>
-          {{ content_form.course }}
+  <div class="layout-main">
+    <div class="card">
+      <div class="card-intro">
+        <div>
+          <h2>إضافة عنصر محتوى جديد</h2>
+          <p>{% if selected_course %}الدورة الحالية: {{ selected_course.title }}{% else %}اختر دورة أولاً لبدء إضافة الدروس والمواد.{% endif %}</p>
         </div>
-        <div class="field">
-          <label for="id_content_type">نوع المحتوى</label>
-          {{ content_form.content_type }}
-        </div>
-        <div class="field">
-          <label for="id_title">العنوان</label>
-          {{ content_form.title }}
-        </div>
-        <div class="field">
-          <label for="id_body">النص أو الوصف</label>
-          {{ content_form.body }}
-        </div>
-        <div class="field">
-          <label for="id_video_file">ملف فيديو</label>
-          <div class="file-upload">
-            <input id="id_video_file" class="file-upload__input" type="file" name="video_file" accept="video/mp4,video/webm,video/ogg,video/quicktime,.mp4,.webm,.ogg,.mov,.m4v" data-file-upload>
-            <label for="id_video_file" class="btn file-upload__button">رفع فيديو</label>
-            <span class="file-upload__name" data-file-upload-name>لم يتم اختيار ملف بعد</span>
+      </div>
+      {% if selected_course %}
+        <form method="post" action="{% url 'business_owner_course_content_create' %}" enctype="multipart/form-data">
+          {% csrf_token %}
+          <div class="field">
+            <label for="id_course">الدورة</label>
+            {{ content_form.course }}
           </div>
-        </div>
-        <div class="field">
-          <label for="id_order">الترتيب</label>
-          {{ content_form.order }}
-        </div>
-        <button class="btn" type="submit">إضافة المحتوى</button>
-      </form>
-    {% else %}
-      <p class="muted">لا توجد دورة محددة حالياً.</p>
-    {% endif %}
+          <div class="field">
+            <label for="id_content_type">نوع المحتوى</label>
+            {{ content_form.content_type }}
+          </div>
+          <div class="field">
+            <label for="id_title">العنوان</label>
+            {{ content_form.title }}
+          </div>
+          <div class="field">
+            <label for="id_body">النص أو الوصف</label>
+            {{ content_form.body }}
+          </div>
+          <div class="field">
+            <label for="id_video_file">ملف فيديو</label>
+            <div class="file-upload">
+              <input id="id_video_file" class="file-upload__input" type="file" name="video_file" accept="video/mp4,video/webm,video/ogg,video/quicktime,.mp4,.webm,.ogg,.mov,.m4v" data-file-upload>
+              <label for="id_video_file" class="btn file-upload__button">رفع فيديو</label>
+              <span class="file-upload__name" data-file-upload-name>لم يتم اختيار ملف بعد</span>
+            </div>
+          </div>
+          <div class="field">
+            <label for="id_order">الترتيب</label>
+            {{ content_form.order }}
+          </div>
+          <button class="btn" type="submit">إضافة المحتوى</button>
+        </form>
+      {% else %}
+        <p class="muted">لا توجد دورة محددة حالياً.</p>
+      {% endif %}
+    </div>
   </div>
 </section>
 
 {% if selected_course %}
   <section class="section">
-    <div class="card" style="grid-column:1 / -1;">
-      <h2>العناصر الحالية في {{ selected_course.title }}</h2>
+    <div class="card section-full">
+      <div class="list-head">
+        <h2>العناصر الحالية في {{ selected_course.title }}</h2>
+        <span class="list-count">{{ content_items|length }}</span>
+      </div>
       <ul class="list">
         {% for item in content_items %}
           <li>
