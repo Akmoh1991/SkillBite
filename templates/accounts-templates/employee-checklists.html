@@ -5,65 +5,198 @@
 {% block hero_text %}اعرض القوائم المطلوبة منك وسجل إتمامها ضمن نفس الواجهة.{% endblock %}
 
 {% block content %}
-<section class="stats">
-  <div class="stat-card">
-    <h4>القوائم المسندة</h4>
-    <span>{{ assigned_checklists|length }}</span>
-  </div>
-  <div class="stat-card">
-    <h4>تاريخ اليوم</h4>
-    <span style="font-size:18px;">{{ today }}</span>
-  </div>
-</section>
+<style>
+  .employee-checklists-layout{
+    grid-template-columns:minmax(0, 1fr);
+  }
 
-<section class="content-layout">
+  .employee-checklist-card{
+    padding:28px;
+  }
+
+  .employee-checklist-entry{
+    padding:0;
+    border:0;
+  }
+
+  .employee-checklist-entry + .employee-checklist-entry{
+    margin-top:22px;
+    padding-top:22px;
+    border-top:1px solid #e2e8f0;
+  }
+
+  .employee-checklist-header{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:16px;
+    margin-bottom:16px;
+  }
+
+  .employee-checklist-title{
+    margin:0;
+    font-size:31px;
+    font-weight:800;
+    color:#0f172a;
+  }
+
+  .employee-checklist-meta{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-top:8px;
+  }
+
+  .employee-checklist-count{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    padding:6px 12px;
+    border-radius:999px;
+    background:#ecfdf3;
+    color:#0f766e;
+    font-size:13px;
+    font-weight:700;
+  }
+
+  .employee-checklist-form{
+    margin-top:0;
+    padding:18px;
+    border-radius:18px;
+    background:linear-gradient(180deg, #f8fbff 0%, #f3f7fb 100%);
+    border:1px solid #dbe5f0;
+  }
+
+  .employee-checklist-items{
+    display:grid;
+    gap:12px;
+    margin-bottom:16px;
+  }
+
+  .employee-checklist-item{
+    position:relative;
+    display:flex;
+    align-items:flex-start;
+    gap:14px;
+    padding:14px 16px;
+    border:1px solid #d9e2ec;
+    border-radius:16px;
+    background:#fff;
+    transition:border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+    cursor:pointer;
+  }
+
+  .employee-checklist-item:hover{
+    border-color:#98d5ad;
+    box-shadow:0 10px 24px rgba(15, 118, 110, .08);
+    transform:translateY(-1px);
+  }
+
+  .employee-checklist-item input[type="checkbox"]{
+    width:20px;
+    height:20px;
+    margin:2px 0 0;
+    accent-color:#0f766e;
+    flex:0 0 auto;
+    cursor:pointer;
+  }
+
+  .employee-checklist-item-text{
+    flex:1;
+    font-size:15px;
+    line-height:1.8;
+    color:#0f172a;
+  }
+
+  .employee-checklist-notes{
+    width:100%;
+    min-height:110px;
+    box-sizing:border-box;
+    padding:14px 16px;
+    border-radius:14px;
+    border:1px solid #cbd5e1;
+    font:inherit;
+    background:#fff;
+    resize:vertical;
+    margin:0 0 16px;
+  }
+
+  .employee-checklist-notes:focus{
+    outline:none;
+    border-color:#0f766e;
+    box-shadow:0 0 0 4px rgba(15, 118, 110, .12);
+  }
+
+  .employee-checklist-actions{
+    display:flex;
+    justify-content:flex-start;
+  }
+
+  .employee-checklist-complete{
+    margin-top:14px;
+  }
+
+  @media (max-width:768px){
+    .employee-checklist-card{
+      padding:20px;
+    }
+
+    .employee-checklist-header{
+      flex-direction:column;
+      align-items:flex-start;
+    }
+
+    .employee-checklist-title{
+      font-size:25px;
+    }
+
+    .employee-checklist-item{
+      padding:13px 14px;
+    }
+  }
+</style>
+
+<section class="content-layout employee-checklists-layout">
   <div class="layout-main">
-    <div class="card">
-      <div class="card-intro">
-        <div>
-          <h2>قوائم التشغيل المطلوبة</h2>
-          <p>أكمل القوائم غير المنجزة من نفس الصفحة ثم راجع آخر السجلات في الجانب المقابل.</p>
-        </div>
-      </div>
+    <div class="card employee-checklist-card">
       <ul class="list">
         {% for checklist in assigned_checklists %}
-          <li>
-            <strong>{{ checklist.title }}</strong>
-            <div class="meta">{{ checklist.get_frequency_display }} | {{ checklist.items.count }} عنصر</div>
+          <li class="employee-checklist-entry">
+            <div class="employee-checklist-header">
+              <div>
+                <strong class="employee-checklist-title">{{ checklist.title }}</strong>
+                <div class="employee-checklist-meta">
+                  <span class="meta">{{ checklist.get_frequency_display }}</span>
+                  <span class="employee-checklist-count">{{ checklist.items.count }} عنصر</span>
+                </div>
+              </div>
+            </div>
+
             {% if checklist.id in today_completions %}
-              <div style="margin-top:10px;"><span class="pill">مكتملة اليوم</span></div>
+              <div class="employee-checklist-complete">
+                <span class="pill">مكتملة اليوم</span>
+              </div>
             {% else %}
-              <form class="checklist-form" method="post" action="{% url 'employee_checklist_complete' checklist.id %}">
+              <form class="checklist-form employee-checklist-form" method="post" action="{% url 'employee_checklist_complete' checklist.id %}">
                 {% csrf_token %}
-                {% for item in checklist.items.all %}
-                  <label><input type="checkbox" name="item_ids" value="{{ item.id }}"> {{ item.title }}</label>
-                {% endfor %}
-                <textarea name="notes" placeholder="ملاحظات الوردية (اختياري)"></textarea>
-                <button class="btn" type="submit">إرسال القائمة</button>
+                <div class="employee-checklist-items">
+                  {% for item in checklist.items.all %}
+                    <label class="employee-checklist-item">
+                      <input type="checkbox" name="item_ids" value="{{ item.id }}">
+                      <span class="employee-checklist-item-text">{{ item.title }}</span>
+                    </label>
+                  {% endfor %}
+                </div>
+                <textarea class="employee-checklist-notes" name="notes" placeholder="ملاحظات الوردية (اختياري)"></textarea>
+                <div class="employee-checklist-actions">
+                  <button class="btn" type="submit">إرسال القائمة</button>
+                </div>
               </form>
             {% endif %}
           </li>
         {% empty %}
           <li class="muted">لا توجد قوائم تشغيل مسندة حالياً.</li>
-        {% endfor %}
-      </ul>
-    </div>
-  </div>
-
-  <div class="layout-side">
-    <div class="card">
-      <div class="list-head">
-        <h2>السجل الأخير</h2>
-        <span class="list-count">{{ recent_checklist_completions|length }}</span>
-      </div>
-      <ul class="list">
-        {% for completion in recent_checklist_completions %}
-          <li>
-            <strong>{{ completion.checklist.title }}</strong><br>
-            <span class="meta">{{ completion.completed_for }}{% if completion.notes %} | {{ completion.notes }}{% endif %}</span>
-          </li>
-        {% empty %}
-          <li class="muted">لا يوجد سجل تشغيلي حتى الآن.</li>
         {% endfor %}
       </ul>
     </div>
