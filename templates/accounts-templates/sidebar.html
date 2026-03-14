@@ -102,7 +102,7 @@
   </div>
 
   <ul>
-    {% if request.resolver_match.url_name == 'employee_dashboard' or request.resolver_match.url_name == 'employee_courses' or request.resolver_match.url_name == 'employee_course_view' or request.resolver_match.url_name == 'employee_checklists' or employee_profile %}
+    {% if request.resolver_match.url_name == 'employee_dashboard' or request.resolver_match.url_name == 'employee_courses' or request.resolver_match.url_name == 'employee_course_view' or request.resolver_match.url_name == 'employee_checklists' or request.resolver_match.url_name == 'employee_scorm_courses' or request.resolver_match.url_name == 'employee_scorm_course_view' or employee_profile %}
       <li>
         <a href="{% url 'employee_dashboard' %}"
            class="{% if request.resolver_match.url_name == 'employee_dashboard' %}active{% endif %}">
@@ -117,7 +117,11 @@
         <a href="{% url 'employee_checklists' %}"
            class="{% if request.resolver_match.url_name == 'employee_checklists' %}active{% endif %}">قوائم التشغيل اليومية</a>
       </li>
-    {% elif request.resolver_match.url_name == 'business_owner_dashboard' or request.resolver_match.url_name == 'business_owner_employees' or request.resolver_match.url_name == 'business_owner_courses' or request.resolver_match.url_name == 'business_owner_course_content' or request.resolver_match.url_name == 'business_owner_checklists' or business %}
+      <li>
+        <a href="{% url 'employee_scorm_courses' %}"
+           class="{% if request.resolver_match.url_name == 'employee_scorm_courses' or request.resolver_match.url_name == 'employee_scorm_course_view' %}active{% endif %}">دورات SCORM</a>
+      </li>
+    {% elif request.resolver_match.url_name == 'business_owner_dashboard' or request.resolver_match.url_name == 'business_owner_employees' or request.resolver_match.url_name == 'business_owner_courses' or request.resolver_match.url_name == 'business_owner_course_content' or request.resolver_match.url_name == 'business_owner_checklists' or request.resolver_match.url_name == 'business_owner_scorm' or business %}
       <li>
         <a href="{% url 'business_owner_dashboard' %}"
            class="{% if request.resolver_match.url_name == 'business_owner_dashboard' %}active{% endif %}">
@@ -140,36 +144,9 @@
         <a href="{% url 'business_owner_checklists' %}"
            class="{% if request.resolver_match.url_name == 'business_owner_checklists' %}active{% endif %}">قوائم التشغيل اليومية</a>
       </li>
-    {% else %}
       <li>
-        <a href="{% url 'contractor_dashboard' %}"
-           class="{% if request.resolver_match.url_name == 'contractor_dashboard' %}active{% endif %}">
-          الصفحة الرئيسية
-        </a>
-      </li>
-      <li>
-        <a href="{% url 'training:program_categories' %}"
-           class="{% if request.resolver_match.url_name == 'programs_list' or request.resolver_match.url_name == 'program_categories' %}active{% endif %}">
-          البرامج التدريبية
-        </a>
-      </li>
-      <li>
-        <a href="{% url 'contractor_requests' %}"
-           class="{% if request.resolver_match.url_name == 'contractor_requests' %}active{% endif %}">
-          الطلبات
-        </a>
-      </li>
-      <li>
-        <a href="{% url 'contractor_renewals' %}"
-           class="{% if request.resolver_match.url_name == 'contractor_renewals' %}active{% endif %}">
-          تجديد الشهادات
-        </a>
-      </li>
-      <li>
-        <a href="{% url 'contractor_scorm_courses' %}"
-           class="{% if request.resolver_match.url_name == 'contractor_scorm_courses' or request.resolver_match.url_name == 'contractor_scorm_course_view' %}active{% endif %}">
-          الدورات الإلكترونية
-        </a>
+        <a href="{% url 'business_owner_scorm' %}"
+           class="{% if request.resolver_match.url_name == 'business_owner_scorm' %}active{% endif %}">مكتبة SCORM</a>
       </li>
     {% endif %}
   </ul>

@@ -1,13 +1,10 @@
 from django.contrib import admin
+
 from .models import (
     Course,
-    CourseContentItem,
     CourseAssignment,
     CourseAssignmentRule,
-    EnrollmentRequest,
-    ExamAttempt,
-    ExamTemplate,
-    Program,
+    CourseContentItem,
     SOPChecklist,
     SOPChecklistAssignmentRule,
     SOPChecklistCompletion,
@@ -19,74 +16,6 @@ from .models import (
 class CourseContentItemInline(admin.TabularInline):
     model = CourseContentItem
     extra = 0
-
-
-@admin.register(Program)
-class ProgramAdmin(admin.ModelAdmin):
-    list_display = (
-        'title',
-        'program_type',
-        'program_subcategory',
-        'outcome_type',
-        'requires_approval',
-        'requires_payment',
-        'is_active',
-    )
-    list_filter = (
-        'program_type',
-        'program_subcategory',
-        'outcome_type',
-        'requires_approval',
-        'requires_payment',
-        'is_active',
-    )
-    search_fields = ('title', 'title_ar', 'title_en', 'program_subcategory')
-
-
-@admin.register(ExamTemplate)
-class ExamTemplateAdmin(admin.ModelAdmin):
-    list_display = (
-        'name',
-        'duration_minutes',
-        'total_questions',
-        'created_by',
-    )
-    search_fields = ('name', 'created_by__username')
-
-
-@admin.register(EnrollmentRequest)
-class EnrollmentRequestAdmin(admin.ModelAdmin):
-    list_display = (
-        'id',
-        'contractor',
-        'program',
-        'status',
-        'trainer',
-        'created_at',
-    )
-    list_filter = (
-        'status',
-        'program__program_type',
-    )
-    search_fields = (
-        'contractor__username',
-        'program__title',
-        'invoice_number',
-    )
-    readonly_fields = ('created_at',)
-
-
-@admin.register(ExamAttempt)
-class ExamAttemptAdmin(admin.ModelAdmin):
-    list_display = (
-        'enrollment',
-        'started_at',
-        'completed_at',
-        'score',
-        'passed',
-    )
-    list_filter = ('passed',)
-    readonly_fields = ('started_at',)
 
 
 @admin.register(Course)

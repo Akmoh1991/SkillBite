@@ -1,0 +1,70 @@
+{% extends "accounts-templates/business-owner-base.html" %}
+
+{% block page_title %}{{ business.name }} | مكتبة SCORM{% endblock %}
+{% block hero_title %}مكتبة SCORM{% endblock %}
+{% block hero_text %}ارفع حزم SCORM مرة واحدة لتكون متاحة للموظفين داخل SkillBite.{% endblock %}
+
+{% block content %}
+<section class="stats">
+  <div class="stat-card">
+    <h4>الحزم المتاحة</h4>
+    <span>{{ packages|length }}</span>
+  </div>
+</section>
+
+<section class="content-layout">
+  <div class="layout-main">
+    <div class="card">
+      <div class="card-intro">
+        <div>
+          <h2>رفع حزمة جديدة</h2>
+          <p>ارفع ملف ZIP صالحا بصيغة SCORM ليظهر مباشرة في مكتبة الموظفين.</p>
+        </div>
+      </div>
+
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="field">
+          <label for="scorm_zip">ملف SCORM</label>
+          <input id="scorm_zip" type="file" name="scorm_zip" accept=".zip" required>
+        </div>
+        <button class="btn secondary" type="submit">رفع الحزمة</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="layout-side">
+    <div class="card">
+      <div class="card-intro">
+        <div>
+          <h2>ملاحظات</h2>
+          <p>الحزم المرفوعة هنا تظهر لجميع الموظفين في المنتج الحالي.</p>
+        </div>
+      </div>
+      <ul class="list">
+        <li><strong>الامتداد المطلوب</strong><br><span class="meta">ZIP فقط</span></li>
+        <li><strong>المعاينة</strong><br><span class="meta">يمكن للموظف فتح الحزمة من صفحة دورات SCORM.</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="section section-full">
+  <div class="card">
+    <div class="list-head">
+      <h2>الحزم المتاحة</h2>
+      <span class="list-count">{{ packages|length }}</span>
+    </div>
+    <ul class="list">
+      {% for p in packages %}
+        <li>
+          <strong>{{ p.name }}</strong><br>
+          <span class="meta">الحجم: {{ p.size_kb|default:"—" }} KB{% if p.modified_at %} | آخر تعديل: {{ p.modified_at }}{% endif %}</span>
+        </li>
+      {% empty %}
+        <li class="muted">لا توجد حزم SCORM مرفوعة حالياً.</li>
+      {% endfor %}
+    </ul>
+  </div>
+</section>
+{% endblock %}

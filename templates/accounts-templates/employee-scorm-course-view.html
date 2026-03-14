@@ -1,0 +1,245 @@
+{% extends "accounts-templates/business-owner-base.html" %}
+
+{% block page_title %}{{ business.name }} | {{ selected.name }}{% endblock %}
+{% block hero_title %}{{ selected.name }}{% endblock %}
+{% block hero_text %}أكمل الدورة ثم استخدم زر التحقق لتسجيل الإنجاز وإصدار شهادة الإكمال.{% endblock %}
+
+{% block content %}
+<section class="content-layout">
+  <div class="layout-main">
+    <div class="card">
+      <div class="card-intro">
+        <div>
+          <h2>مشغل الدورة</h2>
+          <p>{% if selected.modified_at %}آخر تعديل: {{ selected.modified_at }}{% endif %}</p>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <a class="btn" href="{% url 'employee_scorm_courses' %}" style="text-decoration:none;">رجوع للقائمة</a>
+          <button class="btn secondary" type="button" id="checkCompleteBtn">التحقق من الإكمال</button>
+        </div>
+      </div>
+
+      {% if selected.player_url %}
+        <div style="border:1px solid #e5e7eb; border-radius:12px; overflow:hidden; background:#fff;">
+          <iframe
+            id="scormFrame"
+            src="{{ selected.player_url }}"
+            style="width:100%; height:650px; border:0; display:block;"
+            allowfullscreen
+          ></iframe>
+        </div>
+      {% else %}
+        <p class="meta">تعذر تحديد ملف التشغيل داخل حزمة SCORM.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="layout-side">
+    <div class="card">
+      <div class="card-intro">
+        <div>
+          <h2>إرشادات</h2>
+          <p>تأكد من إنهاء الدورة داخل المشغل قبل طلب التحقق.</p>
+        </div>
+      </div>
+      <ul class="list">
+        <li><strong>اسم الحزمة</strong><br><span class="meta">{{ selected.name }}</span></li>
+        <li><strong>الحجم</strong><br><span class="meta">{{ selected.size_kb|default:"—" }} KB</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<div id="courseCertModal" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,.45); z-index:1400; padding:20px;">
+  <div style="max-width:460px; margin:10vh auto 0; background:#fff; border-radius:18px; padding:24px; box-shadow:0 24px 48px rgba(15,23,42,.18);">
+    <h3 id="courseCertTitle" style="margin:0 0 10px;">حالة الإكمال</h3>
+    <p id="courseCertText" class="meta" style="margin:0 0 18px;"></p>
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+      <a id="courseCertDownloadBtn" class="btn secondary" href="#" target="_blank" rel="noopener" style="display:none; text-decoration:none;">تحميل الشهادة</a>
+      <button id="courseCertDashboardBtn" class="btn" type="button">لوحة الموظف</button>
+      <button id="courseCertCloseBtn" class="btn" type="button" style="background:#475569;">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var courseId = "{{ selected.name|escapejs }}";
+  var userId = "{{ request.user.username|escapejs }}";
+  var storageKey = "scorm_data__" + userId + "__" + courseId;
+  var lastError = "0";
+
+  function loadState(){
+    try{
+      var raw = localStorage.getItem(storageKey);
+      if(!raw) return {};
+      var obj = JSON.parse(raw);
+      return (obj && typeof obj === "object") ? obj : {};
+    }catch(e){
+      return {};
+    }
+  }
+
+  function saveState(state){
+    try{
+      localStorage.setItem(storageKey, JSON.stringify(state || {}));
+    }catch(e){}
+  }
+
+  var state = loadState();
+
+  function getValue(key){
+    if(!key) return "";
+    if(Object.prototype.hasOwnProperty.call(state, key)) return String(state[key] ?? "");
+    return "";
+  }
+
+  function setValue(key, value){
+    if(!key) return "false";
+    state[key] = String(value ?? "");
+    return "true";
+  }
+
+  function commit(){
+    saveState(state);
+    return "true";
+  }
+
+  window.API = {
+    LMSInitialize: function(){ lastError = "0"; return "true"; },
+    LMSFinish: function(){ lastError = "0"; commit(); return "true"; },
+    LMSGetValue: function(key){ lastError = "0"; return getValue(key); },
+    LMSSetValue: function(key, value){ lastError = "0"; return setValue(key, value); },
+    LMSCommit: function(){ lastError = "0"; return commit(); },
+    LMSGetLastError: function(){ return lastError; },
+    LMSGetErrorString: function(code){ return code === "0" ? "No error" : "Error"; },
+    LMSGetDiagnostic: function(code){ return code || lastError; }
+  };
+
+  window.API_1484_11 = {
+    Initialize: function(){ lastError = "0"; return "true"; },
+    Terminate: function(){ lastError = "0"; commit(); return "true"; },
+    GetValue: function(key){ lastError = "0"; return getValue(key); },
+    SetValue: function(key, value){ lastError = "0"; return setValue(key, value); },
+    Commit: function(){ lastError = "0"; return commit(); },
+    GetLastError: function(){ return lastError; },
+    GetErrorString: function(code){ return code === "0" ? "No error" : "Error"; },
+    GetDiagnostic: function(code){ return code || lastError; }
+  };
+
+  window.addEventListener("beforeunload", function(){
+    try{ commit(); }catch(e){}
+  });
+
+  function getCookie(name){
+    var value = "; " + document.cookie;
+    var parts = value.split("; " + name + "=");
+    if(parts.length === 2) return parts.pop().split(";").shift();
+    return null;
+  }
+
+  function isCompleted(st){
+    if(!st) return false;
+    try{
+      var ls = String(st["cmi.core.lesson_status"] || "").toLowerCase();
+      var cs = String(st["cmi.completion_status"] || "").toLowerCase();
+      var ss = String(st["cmi.success_status"] || "").toLowerCase();
+      if(ls === "completed" || ls === "passed") return true;
+      if(cs === "completed") return true;
+      if(ss === "passed") return true;
+    }catch(e){}
+    return false;
+  }
+
+  function getModalEls(){
+    var modal = document.getElementById("courseCertModal");
+    var modalTitle = document.getElementById("courseCertTitle");
+    var modalText = document.getElementById("courseCertText");
+    var downloadBtn = document.getElementById("courseCertDownloadBtn");
+    var closeBtn = document.getElementById("courseCertCloseBtn");
+    var dashboardBtn = document.getElementById("courseCertDashboardBtn");
+
+    if(!modal || !modalTitle || !modalText || !downloadBtn || !closeBtn || !dashboardBtn){
+      return null;
+    }
+
+    closeBtn.onclick = function(){ modal.style.display = "none"; };
+    dashboardBtn.onclick = function(){ window.location.href = "{% url 'employee_dashboard' %}"; };
+
+    return {
+      modal: modal,
+      modalTitle: modalTitle,
+      modalText: modalText,
+      downloadBtn: downloadBtn
+    };
+  }
+
+  function showModal(els){
+    els.modal.style.display = "block";
+  }
+
+  var btn = document.getElementById("checkCompleteBtn");
+  if(!btn) return;
+
+  btn.addEventListener("click", async function(){
+    var els = getModalEls();
+    if(!els){
+      alert("تعذر فتح نافذة الشهادة. أعد تحميل الصفحة.");
+      return;
+    }
+
+    var st = loadState();
+    if(!isCompleted(st)){
+      els.modalTitle.textContent = "لم يتم الإكمال بعد";
+      els.modalText.textContent = "لم يتم تسجيل إكمال الدورة بعد. أكمل الدورة ثم أعد المحاولة.";
+      els.downloadBtn.style.display = "none";
+      showModal(els);
+      return;
+    }
+
+    var lessonStatus = String(st["cmi.core.lesson_status"] || "");
+    var completionStatus = String(st["cmi.completion_status"] || "");
+    var successStatus = String(st["cmi.success_status"] || "");
+
+    try{
+      btn.disabled = true;
+      btn.textContent = "جار التحقق...";
+
+      var resp = await fetch("{% url 'employee_scorm_check_complete_action' selected.name %}", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+          "X-CSRFToken": getCookie("csrftoken") || ""
+        },
+        body:
+          "lesson_status=" + encodeURIComponent(lessonStatus) +
+          "&completion_status=" + encodeURIComponent(completionStatus) +
+          "&success_status=" + encodeURIComponent(successStatus)
+      });
+
+      var data = await resp.json().catch(function(){ return null; });
+      if(!data || !data.ok){
+        els.modalTitle.textContent = "تعذر التحقق";
+        els.modalText.textContent = (data && data.message) ? data.message : "حدث خطأ أثناء التحقق.";
+        els.downloadBtn.style.display = "none";
+        showModal(els);
+        return;
+      }
+
+      els.modalTitle.textContent = "تم تسجيل الإكمال";
+      els.modalText.textContent = data.certificate_error || "يمكنك تحميل شهادة الإكمال الآن.";
+      if(data.certificate_url){
+        els.downloadBtn.href = data.certificate_url;
+        els.downloadBtn.style.display = "inline-flex";
+      }else{
+        els.downloadBtn.style.display = "none";
+      }
+      showModal(els);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "التحقق من الإكمال";
+    }
+  });
+})();
+</script>
+{% endblock %}

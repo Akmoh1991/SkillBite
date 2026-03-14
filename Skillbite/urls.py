@@ -15,10 +15,6 @@ urlpatterns = [
 
     # لوحة تحكم الأدمن
     path('admin/', admin.site.urls),
-
-    # التطبيقات الأخرى
-    path('training/', include('training.urls')),
-    path('certification/', include('certification.urls')),
 ]
 
 

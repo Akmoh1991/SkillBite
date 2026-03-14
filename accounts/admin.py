@@ -1,32 +1,6 @@
 from django.contrib import admin
-from .models import (
-    BusinessTenant,
-    ContractorDocument,
-    ContractorProfile,
-    EmployeeProfile,
-    JobTitle,
-    TrainerProfile,
-)
 
-
-@admin.register(ContractorProfile)
-class ContractorProfileAdmin(admin.ModelAdmin):
-    list_display = ('user', 'company_name', 'phone_number', 'is_training_coordinator', 'registered_by')
-    search_fields = ('user__username', 'company_name', 'phone_number', 'registered_by__username')
-    list_filter = ('is_training_coordinator', 'region')
-
-
-@admin.register(TrainerProfile)
-class TrainerProfileAdmin(admin.ModelAdmin):
-    list_display = ('user', 'specialization')
-    search_fields = ('user__username', 'specialization')
-
-
-@admin.register(ContractorDocument)
-class ContractorDocumentAdmin(admin.ModelAdmin):
-    list_display = ('id', 'owner', 'title', 'pdf_file', 'uploaded_at')
-    search_fields = ('owner__username', 'title', 'pdf_file')
-    list_filter = ('uploaded_at',)
+from .models import BusinessTenant, EmployeeProfile, JobTitle
 
 
 @admin.register(BusinessTenant)

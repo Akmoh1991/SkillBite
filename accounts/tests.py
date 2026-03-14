@@ -3,7 +3,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
 
-from accounts.models import BusinessTenant, ContractorProfile, EmployeeProfile, JobTitle
+from accounts.models import BusinessTenant, EmployeeProfile, JobTitle
 from training.models import (
     Course,
     CourseContentItem,
@@ -124,19 +124,6 @@ class MultiTenantFlowTests(TestCase):
             2,
         )
 
-    def test_legacy_contractor_is_redirected_to_business_owner_dashboard(self):
-        legacy_user = User.objects.create_user(username='legacy_owner', password='pass12345')
-        ContractorProfile.objects.create(
-            user=legacy_user,
-            company_name='Legacy Cafe',
-            phone_number='0500000000',
-        )
-
-        self.client.login(username='legacy_owner', password='pass12345')
-        response = self.client.get(reverse('home'))
-        self.assertRedirects(response, reverse('business_owner_dashboard'))
-        self.assertTrue(BusinessTenant.objects.filter(owner=legacy_user, name='Legacy Cafe').exists())
-
     def test_owner_navigation_pages_render(self):
         self.client.login(username='owner', password='pass12345')
 
@@ -146,6 +133,7 @@ class MultiTenantFlowTests(TestCase):
             'business_owner_courses',
             'business_owner_course_content',
             'business_owner_checklists',
+            'business_owner_scorm',
         ):
             response = self.client.get(reverse(route_name))
             self.assertEqual(response.status_code, 200)
@@ -191,6 +179,7 @@ class MultiTenantFlowTests(TestCase):
             reverse('employee_courses'),
             reverse('employee_course_view', args=[assignment.id]),
             reverse('employee_checklists'),
+            reverse('employee_scorm_courses'),
         )
         for route in routes:
             response = self.client.get(route)
@@ -260,7 +249,7 @@ class MultiTenantFlowTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Cash register opening')
         self.assertContains(response, 'Verify float balance before serving customers.')
-        self.assertContains(response, 'opening.mp4')
+        self.assertContains(response, '/media/course_content_videos/')
 
         assignment.refresh_from_db()
         self.assertEqual(assignment.status, CourseAssignment.Status.IN_PROGRESS)
