@@ -5,59 +5,428 @@
 {% block hero_text %}اعرض الدورات المطلوبة منك وحدد ما أنجزته منها.{% endblock %}
 
 {% block content %}
-<section class="stats">
-  <div class="stat-card">
-    <h4>إجمالي الدورات</h4>
-    <span>{{ course_assignments|length }}</span>
+<style>
+  .hero-card {
+    display: none;
+  }
+
+  .employee-courses-page {
+    display: grid;
+    gap: 22px;
+  }
+
+  .employee-courses-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    flex-wrap: wrap;
+  }
+
+  .employee-courses-toolbar-title {
+    margin: 0;
+    font-size: 28px;
+    line-height: 1.2;
+    color: #1f2937;
+    font-weight: 800;
+  }
+
+  .employee-courses-toolbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+
+  .employee-courses-filter,
+  .employee-courses-search-wrap {
+    height: 42px;
+    border: 1px solid #e5e7eb;
+    border-radius: 999px;
+    background: #fff;
+  }
+
+  .employee-courses-filter {
+    min-width: 170px;
+    padding: 0 18px;
+    color: #111827;
+    font: inherit;
+  }
+
+  .employee-courses-search-wrap {
+    min-width: 260px;
+    display: flex;
+    align-items: center;
+    padding: 0 14px;
+    gap: 10px;
+  }
+
+  .employee-courses-search {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    outline: none;
+    background: transparent;
+    color: #111827;
+    font: inherit;
+  }
+
+  .employee-courses-search::placeholder {
+    color: #c0c7d1;
+  }
+
+  .employee-courses-search-icon {
+    color: #6b7280;
+    font-size: 14px;
+    line-height: 1;
+  }
+
+  .employee-courses-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px;
+  }
+
+  .employee-course-card {
+    background: #fff;
+    border: 1px solid #e6ebf2;
+    border-radius: 18px;
+    padding: 24px;
+    box-shadow: 0 1px 0 rgba(15, 23, 42, .02);
+    display: grid;
+    gap: 18px;
+  }
+
+  .employee-course-card.employee-course-hidden {
+    display: none;
+  }
+
+  .employee-course-image {
+    width: 100%;
+    height: 170px;
+    border-radius: 14px;
+    object-fit: cover;
+    display: block;
+    background: #e5e7eb;
+  }
+
+  .employee-course-content {
+    display: grid;
+    gap: 10px;
+  }
+
+  .employee-course-title {
+    margin: 0;
+    font-size: 20px;
+    line-height: 1.25;
+    color: #1f2937;
+    font-weight: 700;
+  }
+
+  .employee-course-description {
+    margin: 0;
+    color: #6b7280;
+    font-size: 15px;
+    line-height: 1.6;
+    min-height: 72px;
+  }
+
+  .employee-course-meta {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    flex-wrap: wrap;
+    color: #7b8794;
+    font-size: 14px;
+  }
+
+  .employee-course-meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .employee-course-meta-icon {
+    width: 16px;
+    text-align: center;
+    opacity: .8;
+  }
+
+  .employee-course-link {
+    min-height: 56px;
+    border-radius: 999px;
+    border: 1px solid #e5e7eb;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    color: #111827;
+    font-size: 16px;
+    font-weight: 700;
+    background: #fff;
+  }
+
+  .employee-course-empty {
+    display: none;
+    background: #fff;
+    border: 1px solid #e6ebf2;
+    border-radius: 18px;
+    padding: 24px;
+    text-align: center;
+    color: #6b7280;
+  }
+
+  .employee-course-empty.is-visible {
+    display: block;
+  }
+
+  @media (max-width: 1200px) {
+    .employee-courses-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 760px) {
+    .employee-courses-toolbar {
+      align-items: stretch;
+    }
+
+    .employee-courses-toolbar-actions {
+      width: 100%;
+    }
+
+    .employee-courses-filter,
+    .employee-courses-search-wrap {
+      width: 100%;
+      min-width: 0;
+    }
+
+    .employee-courses-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
+<section class="employee-courses-page">
+  <div class="employee-courses-toolbar">
+    <h2 class="employee-courses-toolbar-title">الدورات المتاحة</h2>
+    <div class="employee-courses-toolbar-actions">
+      <select id="employee-course-status-filter" class="employee-courses-filter">
+        <option value="ALL">تصفية الدورات</option>
+        <option value="COMPLETED">مكتملة</option>
+        <option value="IN_PROGRESS">قيد التنفيذ</option>
+        <option value="NEW">جديدة</option>
+      </select>
+      <label class="employee-courses-search-wrap" for="employee-course-search">
+        <input
+          id="employee-course-search"
+          class="employee-courses-search"
+          type="search"
+          placeholder="ابحث عن دورة"
+        >
+        <span class="employee-courses-search-icon">⌕</span>
+      </label>
+    </div>
   </div>
-  <div class="stat-card">
-    <h4>الدورات المكتملة</h4>
-    <span>{{ completed_course_count }}</span>
+
+  <div id="employee-courses-grid" class="employee-courses-grid">
+    {% for assignment in course_assignments %}
+      <article
+        class="employee-course-card"
+        data-course-status="{% if assignment.status == 'COMPLETED' %}COMPLETED{% elif assignment.status == 'IN_PROGRESS' %}IN_PROGRESS{% else %}NEW{% endif %}"
+        data-course-title="{{ assignment.course.title|lower }}"
+        data-course-description="{{ assignment.course.description|default:''|lower }}"
+      >
+        <img
+          class="employee-course-image"
+          src="{% if assignment.course.title == 'مهارات الكاشير' %}https://images.unsplash.com/photo-1556740749-887f6717d7e4?auto=format&fit=crop&w=900&q=80{% else %}https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=900&q=80{% endif %}"
+          alt="{{ assignment.course.title }}"
+        >
+        <div class="employee-course-content">
+          <h3 class="employee-course-title">{{ assignment.course.title }}</h3>
+          <p class="employee-course-description">
+            {% if assignment.course.description %}
+              {{ assignment.course.description|truncatechars:96 }}
+            {% else %}
+              دورة عملية تحتوي على محتوى تدريبي منظم وخطوات واضحة للإنجاز والمتابعة.
+            {% endif %}
+          </p>
+          <div class="employee-course-meta">
+            <span class="employee-course-meta-item">
+              <span class="employee-course-meta-icon">◌</span>
+              <span>الدورة</span>
+            </span>
+            <span class="employee-course-meta-item">
+              <span class="employee-course-meta-icon">▥</span>
+              <span>{{ assignment.course.estimated_minutes }} دقيقة</span>
+            </span>
+            <span class="employee-course-meta-item">
+              <span class="employee-course-meta-icon">▦</span>
+              {% with content_count=assignment.course.content_items.count %}
+                <span>{{ content_count }} عناصر</span>
+              {% endwith %}
+            </span>
+          </div>
+          <a class="employee-course-link" href="{% url 'employee_course_view' assignment.id %}">
+            عرض تفاصيل الدورة
+          </a>
+        </div>
+      </article>
+    {% endfor %}
+
+    <article class="employee-course-card" data-course-status="NEW" data-course-title="أساسيات خدمة العملاء" data-course-description="تعلم أسلوب الترحيب والتواصل وخدمة العميل">
+      <img class="employee-course-image" src="https://images.unsplash.com/photo-1521791136064-7986c2920216?auto=format&fit=crop&w=900&q=80" alt="أساسيات خدمة العملاء">
+      <div class="employee-course-content">
+        <h3 class="employee-course-title">أساسيات خدمة العملاء</h3>
+        <p class="employee-course-description">مقدمة عملية لأسلوب الترحيب ونبرة الحديث ومعالجة المواقف وخدمة العملاء أثناء التشغيل اليومي.</p>
+        <div class="employee-course-meta">
+          <span class="employee-course-meta-item"><span class="employee-course-meta-icon">◌</span><span>الخدمة</span></span>
+          <span class="employee-course-meta-item"><span class="employee-course-meta-icon">▥</span><span>18 دقيقة</span></span>
+          <span class="employee-course-meta-item"><span class="employee-course-meta-icon">▦</span><span>5 عناصر</span></span>
+        </div>
+        <a class="employee-course-link" href="#">عرض تفاصيل الدورة</a>
+      </div>
+    </article>
+
+    <article class="employee-course-card" data-course-status="IN_PROGRESS" data-course-title="معايير التعامل مع النقد" data-course-description="موازنة الصندوق والعد والتسليم بين الورديات">
+      <img class="employee-course-image" src="https://images.unsplash.com/photo-1556740749-887f6717d7e4?auto=format&fit=crop&w=900&q=80" alt="معايير التعامل مع النقد">
+      <div class="employee-course-content">
+        <h3 class="employee-course-title">معايير التعامل مع النقد</h3>
+        <p class="employee-course-description">يشمل موازنة الصندوق اليومية وروتين الدرج النقدي ومعالجة الفروقات وتسليم العهدة بين الورديات.</p>
+        <div class="employee-course-meta">
+          <span class="employee-course-meta-item"><span class="employee-course-meta-icon">◌</span><span>الكاشير</span></span>
+          <span class="employee-course-meta-item"><span class="employee-course-meta-icon">▥</span><span>25 دقيقة</span></span>
+          <span class="employee-course-meta-item"><span class="employee-course-meta-icon">▦</span><span>7 عناصر</span></span>
+        </div>
+        <a class="employee-course-link" href="#">عرض تفاصيل الدورة</a>
+      </div>
+    </article>
+
+    <article class="employee-course-card" data-course-status="COMPLETED" data-course-title="قائمة افتتاح المتجر" data-course-description="روتين التجهيز قبل استقبال العملاء">
+      <img class="employee-course-image" src="https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?auto=format&fit=crop&w=900&q=80" alt="قائمة افتتاح المتجر">
+      <div class="employee-course-content">
+        <h3 class="employee-course-title">قائمة افتتاح المتجر</h3>
+        <p class="employee-course-description">روتين الافتتاح قبل وصول العملاء، ويشمل فحص النظافة وتشغيل المعدات والتأكد من جاهزية المخزون.</p>
+        <div class="employee-course-meta">
+          <span class="employee-course-meta-item"><span class="employee-course-meta-icon">◌</span><span>الافتتاح</span></span>
+          <span class="employee-course-meta-item"><span class="employee-course-meta-icon">▥</span><span>12 دقيقة</span></span>
+          <span class="employee-course-meta-item"><span class="employee-course-meta-icon">▦</span><span>4 عناصر</span></span>
+        </div>
+        <a class="employee-course-link" href="#">عرض تفاصيل الدورة</a>
+      </div>
+    </article>
+
+    <article class="employee-course-card" data-course-status="NEW" data-course-title="أساسيات سلامة الغذاء" data-course-description="قواعد النظافة ودرجات الحرارة والتخزين السليم">
+      <img class="employee-course-image" src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=900&q=80" alt="أساسيات سلامة الغذاء">
+      <div class="employee-course-content">
+        <h3 class="employee-course-title">أساسيات سلامة الغذاء</h3>
+        <p class="employee-course-description">يتناول قواعد النظافة الأساسية والتخزين ومنع التلوث وقياس درجات الحرارة للعاملين في الواجهة.</p>
+        <div class="employee-course-meta">
+          <span class="employee-course-meta-item"><span class="employee-course-meta-icon">◌</span><span>السلامة</span></span>
+          <span class="employee-course-meta-item"><span class="employee-course-meta-icon">▥</span><span>22 دقيقة</span></span>
+          <span class="employee-course-meta-item"><span class="employee-course-meta-icon">▦</span><span>6 عناصر</span></span>
+        </div>
+        <a class="employee-course-link" href="#">عرض تفاصيل الدورة</a>
+      </div>
+    </article>
+
+    <article class="employee-course-card" data-course-status="IN_PROGRESS" data-course-title="روتين إغلاق الوردية" data-course-description="إقفال اليوم وتسليم المهام وتوثيق الملاحظات">
+      <img class="employee-course-image" src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=900&q=80" alt="روتين إغلاق الوردية">
+      <div class="employee-course-content">
+        <h3 class="employee-course-title">روتين إغلاق الوردية</h3>
+        <p class="employee-course-description">يشمل إقفال اليوم التشغيلي وتسليم الملاحظات وتوثيق المهام المعلقة وإجراء الفحص النهائي قبل الإغلاق.</p>
+        <div class="employee-course-meta">
+          <span class="employee-course-meta-item"><span class="employee-course-meta-icon">◌</span><span>الإغلاق</span></span>
+          <span class="employee-course-meta-item"><span class="employee-course-meta-icon">▥</span><span>16 دقيقة</span></span>
+          <span class="employee-course-meta-item"><span class="employee-course-meta-icon">▦</span><span>5 عناصر</span></span>
+        </div>
+        <a class="employee-course-link" href="#">عرض تفاصيل الدورة</a>
+      </div>
+    </article>
+
+    <article class="employee-course-card" data-course-status="COMPLETED" data-course-title="نظافة محطة العمل" data-course-description="معايير التعقيم والتنظيف والفحص الذاتي للموقع">
+      <img class="employee-course-image" src="https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=900&q=80" alt="نظافة محطة العمل">
+      <div class="employee-course-content">
+        <h3 class="employee-course-title">نظافة محطة العمل</h3>
+        <p class="employee-course-description">معايير تعقيم الأسطح واستخدام أدوات التنظيف والمتابعة الذاتية الدورية للحفاظ على بيئة عمل منظمة.</p>
+        <div class="employee-course-meta">
+          <span class="employee-course-meta-item"><span class="employee-course-meta-icon">◌</span><span>النظافة</span></span>
+          <span class="employee-course-meta-item"><span class="employee-course-meta-icon">▥</span><span>14 دقيقة</span></span>
+          <span class="employee-course-meta-item"><span class="employee-course-meta-icon">▦</span><span>3 عناصر</span></span>
+        </div>
+        <a class="employee-course-link" href="#">عرض تفاصيل الدورة</a>
+      </div>
+    </article>
+
+    <article class="employee-course-card" data-course-status="NEW" data-course-title="أساسيات العناية بالمعدات" data-course-description="تشغيل الأجهزة واستخدامها الآمن وفحصها اليومي">
+      <img class="employee-course-image" src="https://images.unsplash.com/photo-1581092921461-eab62e97a780?auto=format&fit=crop&w=900&q=80" alt="أساسيات العناية بالمعدات">
+      <div class="employee-course-content">
+        <h3 class="employee-course-title">أساسيات العناية بالمعدات</h3>
+        <p class="employee-course-description">يوضح خطوات تجهيز الأجهزة واستخدامها الآمن والإبلاغ المبكر عن الأعطال وتنفيذ فحوصات الصيانة اليومية.</p>
+        <div class="employee-course-meta">
+          <span class="employee-course-meta-item"><span class="employee-course-meta-icon">◌</span><span>المعدات</span></span>
+          <span class="employee-course-meta-item"><span class="employee-course-meta-icon">▥</span><span>19 دقيقة</span></span>
+          <span class="employee-course-meta-item"><span class="employee-course-meta-icon">▦</span><span>6 عناصر</span></span>
+        </div>
+        <a class="employee-course-link" href="#">عرض تفاصيل الدورة</a>
+      </div>
+    </article>
+
+    <article class="employee-course-card" data-course-status="IN_PROGRESS" data-course-title="آلية التواصل بين الفريق" data-course-description="تسليم المهام والتصعيد والتنسيق بين أفراد الفريق">
+      <img class="employee-course-image" src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=900&q=80" alt="آلية التواصل بين الفريق">
+      <div class="employee-course-content">
+        <h3 class="employee-course-title">آلية التواصل بين الفريق</h3>
+        <p class="employee-course-description">يتناول تحديثات تسليم المهام وأساسيات التصعيد والتنسيق أثناء الوردية ومعايير التواصل بين أعضاء الفريق.</p>
+        <div class="employee-course-meta">
+          <span class="employee-course-meta-item"><span class="employee-course-meta-icon">◌</span><span>الفريق</span></span>
+          <span class="employee-course-meta-item"><span class="employee-course-meta-icon">▥</span><span>15 دقيقة</span></span>
+          <span class="employee-course-meta-item"><span class="employee-course-meta-icon">▦</span><span>4 عناصر</span></span>
+        </div>
+        <a class="employee-course-link" href="#">عرض تفاصيل الدورة</a>
+      </div>
+    </article>
+  </div>
+
+  <div id="employee-course-empty" class="employee-course-empty">
+    لا توجد دورات مطابقة للفلاتر الحالية.
   </div>
 </section>
 
-<section class="section">
-  <div class="card section-full">
-    <div class="list-head">
-      <h2>الدورات المسندة لي</h2>
-      <span class="list-count">{{ course_assignments|length }}</span>
-    </div>
-    <ul class="list">
-      {% for assignment in course_assignments %}
-        <li>
-          <strong>
-            <a href="{% url 'employee_course_view' assignment.id %}" style="color:#0f172a; text-decoration:none;">
-              {{ assignment.course.title }}
-            </a>
-          </strong>
-          {% if assignment.status == 'COMPLETED' %}
-            <span class="pill">مكتملة</span>
-          {% elif assignment.status == 'IN_PROGRESS' %}
-            <span class="pill">قيد التنفيذ</span>
-          {% endif %}
-          <div class="meta">{{ assignment.course.estimated_minutes }} دقيقة{% if assignment.course.description %} | {{ assignment.course.description }}{% endif %}</div>
-          <div class="meta" style="margin-top:8px;">
-            {% with content_count=assignment.course.content_items.count %}
-              {% if content_count %}
-                {{ content_count }} عنصر محتوى متاح داخل صفحة الدورة.
-              {% else %}
-                لا يوجد محتوى منشور لهذه الدورة بعد.
-              {% endif %}
-            {% endwith %}
-          </div>
-          <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
-            <a class="btn" href="{% url 'employee_course_view' assignment.id %}" style="text-decoration:none; display:inline-flex; align-items:center;">
-              عرض الدورة
-            </a>
-          </div>
-          {% if assignment.status == 'COMPLETED' %}
-            <div class="meta" style="margin-top:8px;">اكتملت في {{ assignment.completed_at|date:"Y-m-d H:i" }}</div>
-          {% endif %}
-        </li>
-      {% empty %}
-        <li class="muted">لا توجد دورات مسندة حالياً.</li>
-      {% endfor %}
-    </ul>
-  </div>
-</section>
+<script>
+  (function () {
+    const statusFilter = document.getElementById('employee-course-status-filter');
+    const searchInput = document.getElementById('employee-course-search');
+    const cards = Array.from(document.querySelectorAll('#employee-courses-grid .employee-course-card'));
+    const emptyState = document.getElementById('employee-course-empty');
+
+    if (!statusFilter || !searchInput || !cards.length || !emptyState) {
+      return;
+    }
+
+    function applyFilters() {
+      const statusValue = statusFilter.value;
+      const query = searchInput.value.trim().toLowerCase();
+      let visible = 0;
+
+      cards.forEach((card) => {
+        const title = card.dataset.courseTitle || '';
+        const description = card.dataset.courseDescription || '';
+        const status = card.dataset.courseStatus || 'NEW';
+        const matchesStatus = statusValue === 'ALL' || status === statusValue;
+        const matchesQuery = !query || title.includes(query) || description.includes(query);
+        const show = matchesStatus && matchesQuery;
+
+        card.classList.toggle('employee-course-hidden', !show);
+        if (show) {
+          visible += 1;
+        }
+      });
+
+      emptyState.classList.toggle('is-visible', visible === 0);
+    }
+
+    statusFilter.addEventListener('change', applyFilters);
+    searchInput.addEventListener('input', applyFilters);
+  }());
+</script>
 {% endblock %}

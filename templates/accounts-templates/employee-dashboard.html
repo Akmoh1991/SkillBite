@@ -1,10 +1,17 @@
 {% extends "accounts-templates/business-owner-base.html" %}
 
 {% block page_title %}{{ business.name }} | لوحة الموظف{% endblock %}
-{% block hero_title %}{{ request.user.get_full_name|default:request.user.username }}{% endblock %}
+{% block hero_title %}لوحة الموظف{% endblock %}
 {% block hero_text %}اعرض الدورات المسندة إليك وقوائم التشغيل اليومية المطلوبة منك داخل SkillBite.{% endblock %}
 
 {% block content %}
+<style>
+  .employee-dashboard-content,
+  .employee-dashboard-section {
+    grid-template-columns: 1fr;
+  }
+</style>
+
 <section class="stats">
   <div class="stat-card">
     <h4>الدورات المسندة</h4>
@@ -24,7 +31,7 @@
   </div>
 </section>
 
-<section class="content-layout">
+<section class="content-layout employee-dashboard-content">
   <div class="layout-main">
     <div class="card">
       <div class="list-head">
@@ -99,7 +106,7 @@
   </div>
 </section>
 
-<section class="section">
+<section class="section employee-dashboard-section">
   <div class="card">
     <div class="list-head">
       <h2>آخر سجل تشغيلي</h2>
