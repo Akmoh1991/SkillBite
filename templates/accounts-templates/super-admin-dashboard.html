@@ -1,0 +1,102 @@
+{% extends "accounts-templates/super-admin-base.html" %}
+
+{% block page_title %}SkillBite | منصة التحكم{% endblock %}
+{% block hero_title %}منصة تحكم المشرف العام{% endblock %}
+{% block hero_text %}رؤية مركزية للشركات والمشرفين والمحتوى التدريبي والامتثال التشغيلي عبر المنصة كاملة.{% endblock %}
+
+{% block content %}
+<section class="stats">
+  <div class="stat-card"><h4>إجمالي الشركات</h4><span>{{ business_count }}</span></div>
+  <div class="stat-card"><h4>الشركات النشطة</h4><span>{{ active_business_count }}</span></div>
+  <div class="stat-card"><h4>الموظفون النشطون</h4><span>{{ employee_count }}</span></div>
+  <div class="stat-card"><h4>المشرفون العامون</h4><span>{{ super_admin_count }}</span></div>
+  <div class="stat-card"><h4>الدورات</h4><span>{{ course_count }}</span></div>
+  <div class="stat-card"><h4>قوائم التشغيل</h4><span>{{ checklist_count }}</span></div>
+  <div class="stat-card"><h4>الدورات النشطة</h4><span>{{ active_course_count }}</span></div>
+  <div class="stat-card"><h4>الدورات المكتملة</h4><span>{{ completed_assignment_count }}</span></div>
+</section>
+
+<section class="content-layout">
+  <div class="stack">
+    <div class="card">
+      <div class="card-intro">
+        <div>
+          <h2>أحدث الشركات</h2>
+          <p>أحدث الجهات التي تم تفعيلها على المنصة أو تحتاج متابعة حالة الوصول.</p>
+        </div>
+      </div>
+      <ul class="list">
+        {% for business in recent_businesses %}
+          <li>
+            <strong>{{ business.name }}</strong>
+            <span class="pill {% if not business.is_active %}muted{% endif %}">{{ business.is_active|yesno:"نشطة,موقوفة" }}</span><br>
+            <span class="muted">{{ business.owner.username }}{% if business.industry %} | {{ business.industry }}{% endif %}</span>
+          </li>
+        {% empty %}
+          <li class="muted">لا توجد شركات حالياً.</li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-intro">
+        <div>
+          <h2>آخر حركة تدريبية</h2>
+          <p>أحدث إسنادات الدورات على مستوى جميع الشركات.</p>
+        </div>
+      </div>
+      <ul class="list">
+        {% for assignment in recent_assignments %}
+          <li>
+            <strong>{{ assignment.course.title }}</strong>
+            <span class="pill {% if assignment.status != 'COMPLETED' %}muted{% endif %}">{{ assignment.get_status_display }}</span><br>
+            <span class="muted">{{ assignment.business.name }} | {{ assignment.employee.username }}</span>
+          </li>
+        {% empty %}
+          <li class="muted">لا توجد إسنادات بعد.</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+
+  <div class="stack">
+    <div class="card">
+      <div class="card-intro">
+        <div>
+          <h2>المشرفون الحاليون</h2>
+          <p>الحسابات التي تملك صلاحية إدارة المنصة بالكامل.</p>
+        </div>
+      </div>
+      <ul class="list">
+        {% for user in super_admins %}
+          <li>
+            <strong>{{ user.get_full_name|default:user.username }}</strong><br>
+            <span class="muted">{{ user.username }}{% if user.email %} | {{ user.email }}{% endif %}</span>
+          </li>
+        {% empty %}
+          <li class="muted">لا يوجد مشرفون عامون.</li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-intro">
+        <div>
+          <h2>آخر امتثال تشغيلي</h2>
+          <p>أحدث عمليات إكمال قوائم التشغيل اليومية.</p>
+        </div>
+      </div>
+      <ul class="list">
+        {% for completion in recent_completions %}
+          <li>
+            <strong>{{ completion.checklist.title }}</strong><br>
+            <span class="muted">{{ completion.business.name }} | {{ completion.employee.username }} | {{ completion.completed_for }}</span>
+          </li>
+        {% empty %}
+          <li class="muted">لا توجد عمليات إكمال بعد.</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</section>
+{% endblock %}

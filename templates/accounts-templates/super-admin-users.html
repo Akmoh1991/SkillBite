@@ -1,0 +1,96 @@
+{% extends "accounts-templates/super-admin-base.html" %}
+
+{% block page_title %}SkillBite | المستخدمون{% endblock %}
+{% block hero_title %}إدارة المستخدمين{% endblock %}
+{% block hero_text %}التحكم في صلاحيات المنصة، تفعيل الحسابات، وإنشاء مشرفين أو ملاك شركات.{% endblock %}
+
+{% block content %}
+<section class="stats">
+  <div class="stat-card"><h4>المشرفون العامون</h4><span>{{ super_admin_count }}</span></div>
+  <div class="stat-card"><h4>ملاك الشركات</h4><span>{{ business_owner_count }}</span></div>
+  <div class="stat-card"><h4>الموظفون</h4><span>{{ employee_count }}</span></div>
+</section>
+
+<section class="content-layout">
+  <div class="card">
+    <div class="card-intro">
+      <div>
+        <h2>الحسابات الحالية</h2>
+        <p>تفعيل أو تعطيل الحسابات وترقية المستخدمين إلى صلاحية المشرف العام.</p>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>المستخدم</th>
+            <th>الدور</th>
+            <th>الجهة</th>
+            <th>الحالة</th>
+            <th>التحكم</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for user in users %}
+            <tr>
+              <td><strong>{{ user.get_full_name|default:user.username }}</strong><div class="muted">{{ user.username }}{% if user.email %} | {{ user.email }}{% endif %}</div></td>
+              <td>{{ user.role_label }}</td>
+              <td>{{ user.business_name|default:"-" }}</td>
+              <td><span class="pill {% if not user.is_active %}muted{% endif %}">{{ user.is_active|yesno:"نشط,معطل" }}</span></td>
+              <td>
+                <div class="actions-inline">
+                  <form method="post" action="{% url 'super_admin_user_toggle_active' user.id %}">
+                    {% csrf_token %}
+                    <button class="btn secondary" type="submit">{{ user.is_active|yesno:"تعطيل,تفعيل" }}</button>
+                  </form>
+                  <form method="post" action="{% url 'super_admin_user_toggle_role' user.id %}">
+                    {% csrf_token %}
+                    <button class="btn" type="submit">{% if user.is_staff or user.is_superuser %}إزالة الإشراف{% else %}ترقية مشرف عام{% endif %}</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="5" class="muted">لا توجد حسابات.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="stack">
+    <div class="card">
+      <div class="card-intro">
+        <div>
+          <h2>إنشاء حساب</h2>
+          <p>إنشاء مشرف عام جديد أو مالك شركة وربطه مباشرةً بجهة قائمة.</p>
+        </div>
+      </div>
+      <form method="post" action="{% url 'super_admin_user_create' %}">
+        {% csrf_token %}
+        <div class="field"><label>اسم المستخدم</label><input type="text" name="username" required></div>
+        <div class="field"><label>البريد الإلكتروني</label><input type="email" name="email"></div>
+        <div class="field"><label>الاسم الكامل</label><input type="text" name="full_name" required></div>
+        <div class="field"><label>كلمة المرور</label><input type="password" name="password" required></div>
+        <div class="field">
+          <label>الدور</label>
+          <select name="role" required>
+            <option value="super_admin">Super Admin</option>
+            <option value="business_owner">Business Owner</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>الشركة</label>
+          <select name="business">
+            <option value="">بدون شركة</option>
+            {% for business in user_form.fields.business.queryset %}
+              <option value="{{ business.id }}">{{ business.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <button class="btn" type="submit">إنشاء الحساب</button>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}

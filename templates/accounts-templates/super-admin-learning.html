@@ -1,0 +1,102 @@
+{% extends "accounts-templates/super-admin-base.html" %}
+
+{% block page_title %}SkillBite | المحتوى والتكليفات{% endblock %}
+{% block hero_title %}المحتوى والتكليفات{% endblock %}
+{% block hero_text %}إدارة مركزية للدورات وقوائم التشغيل النشطة أو الموقوفة عبر جميع الشركات.{% endblock %}
+
+{% block content %}
+<section class="stats">
+  <div class="stat-card"><h4>الدورات</h4><span>{{ course_count }}</span></div>
+  <div class="stat-card"><h4>قوائم التشغيل</h4><span>{{ checklist_count }}</span></div>
+</section>
+
+<section class="content-layout">
+  <div class="card">
+    <div class="card-intro">
+      <div>
+        <h2>الدورات</h2>
+        <p>عرض المحتوى النشط والموقوف، وعدد عناصر المحتوى والتكليفات لكل دورة.</p>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>الدورة</th>
+            <th>الشركة</th>
+            <th>الحالة</th>
+            <th>المحتوى</th>
+            <th>التكليفات</th>
+            <th>إجراء</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for course in courses %}
+            <tr>
+              <td><strong>{{ course.title }}</strong><div class="muted">{{ course.description|default:"-" }}</div></td>
+              <td>{{ course.business.name }}</td>
+              <td><span class="pill {% if not course.is_active %}muted{% endif %}">{{ course.is_active|yesno:"نشطة,موقوفة" }}</span></td>
+              <td>{{ course.content_item_total }}</td>
+              <td>{{ course.assignment_total }}</td>
+              <td>
+                <form method="post" action="{% url 'super_admin_course_toggle' course.id %}">
+                  {% csrf_token %}
+                  <button class="btn {% if course.is_active %}warn{% else %}secondary{% endif %}" type="submit">
+                    {{ course.is_active|yesno:"إيقاف,تفعيل" }}
+                  </button>
+                </form>
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="6" class="muted">لا توجد دورات.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-intro">
+      <div>
+        <h2>قوائم التشغيل</h2>
+        <p>متابعة القوائم التشغلية وعدد عناصرها وإجمالي مرات الإكمال.</p>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>القائمة</th>
+            <th>الشركة</th>
+            <th>الحالة</th>
+            <th>العناصر</th>
+            <th>الإكمالات</th>
+            <th>إجراء</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for checklist in checklists %}
+            <tr>
+              <td><strong>{{ checklist.title }}</strong><div class="muted">{{ checklist.get_frequency_display }}</div></td>
+              <td>{{ checklist.business.name }}</td>
+              <td><span class="pill {% if not checklist.is_active %}muted{% endif %}">{{ checklist.is_active|yesno:"نشطة,موقوفة" }}</span></td>
+              <td>{{ checklist.item_total }}</td>
+              <td>{{ checklist.completion_total }}</td>
+              <td>
+                <form method="post" action="{% url 'super_admin_checklist_toggle' checklist.id %}">
+                  {% csrf_token %}
+                  <button class="btn {% if checklist.is_active %}warn{% else %}secondary{% endif %}" type="submit">
+                    {{ checklist.is_active|yesno:"إيقاف,تفعيل" }}
+                  </button>
+                </form>
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="6" class="muted">لا توجد قوائم تشغيل.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,77 @@
+{% extends "accounts-templates/super-admin-base.html" %}
+
+{% block page_title %}SkillBite | الشركات{% endblock %}
+{% block hero_title %}إدارة الشركات{% endblock %}
+{% block hero_text %}إنشاء الشركات، ربط المالكين، وتفعيل أو إيقاف الجهات من مكان واحد.{% endblock %}
+
+{% block content %}
+<section class="content-layout">
+  <div class="card">
+    <div class="card-intro">
+      <div>
+        <h2>الشركات المسجلة</h2>
+        <p>إدارة حالة كل شركة ومراقبة حجم الاستخدام والمحتوى المرتبط بها.</p>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>الشركة</th>
+            <th>المالك</th>
+            <th>الحالة</th>
+            <th>الموظفون</th>
+            <th>الدورات</th>
+            <th>القوائم</th>
+            <th>إجراء</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for business in businesses %}
+            <tr>
+              <td><strong>{{ business.name }}</strong><div class="muted">{{ business.industry }}</div></td>
+              <td>{{ business.owner.username }}</td>
+              <td><span class="pill {% if not business.is_active %}muted{% endif %}">{{ business.is_active|yesno:"نشطة,موقوفة" }}</span></td>
+              <td>{{ business.employee_total }}</td>
+              <td>{{ business.course_total }}</td>
+              <td>{{ business.checklist_total }}</td>
+              <td>
+                <form method="post" action="{% url 'super_admin_business_toggle' business.id %}">
+                  {% csrf_token %}
+                  <button class="btn {% if business.is_active %}warn{% else %}secondary{% endif %}" type="submit">
+                    {{ business.is_active|yesno:"إيقاف,تفعيل" }}
+                  </button>
+                </form>
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="7" class="muted">لا توجد شركات حتى الآن.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="stack">
+    <div class="card">
+      <div class="card-intro">
+        <div>
+          <h2>إنشاء شركة جديدة</h2>
+          <p>ينشئ الشركة وحساب مالكها في عملية واحدة.</p>
+        </div>
+      </div>
+      <form method="post" action="{% url 'super_admin_business_create' %}">
+        {% csrf_token %}
+        <div class="field"><label>اسم الشركة</label><input type="text" name="business_name" required></div>
+        <div class="field"><label>القطاع</label><input type="text" name="industry" value="Food & Beverage"></div>
+        <div class="field"><label>اسم مستخدم المالك</label><input type="text" name="owner_username" required></div>
+        <div class="field"><label>البريد الإلكتروني</label><input type="email" name="owner_email"></div>
+        <div class="field"><label>الاسم الكامل</label><input type="text" name="owner_full_name" required></div>
+        <div class="field"><label>كلمة المرور</label><input type="password" name="owner_password" required></div>
+        <label class="inline-check"><input type="checkbox" name="is_active" checked> تفعيل الشركة مباشرة</label>
+        <button class="btn" type="submit">إنشاء الشركة</button>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}

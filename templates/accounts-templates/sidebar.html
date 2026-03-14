@@ -102,7 +102,44 @@
   </div>
 
   <ul>
-    {% if request.resolver_match.url_name == 'employee_dashboard' or request.resolver_match.url_name == 'employee_courses' or request.resolver_match.url_name == 'employee_course_view' or request.resolver_match.url_name == 'employee_checklists' or request.resolver_match.url_name == 'employee_scorm_courses' or request.resolver_match.url_name == 'employee_scorm_course_view' or employee_profile %}
+    {% if request.user.is_staff or request.user.is_superuser %}
+      <li>
+        <a href="{% url 'super_admin_dashboard' %}"
+           class="{% if request.resolver_match.url_name == 'super_admin_dashboard' %}active{% endif %}">
+          منصة التحكم
+        </a>
+      </li>
+      <li>
+        <a href="{% url 'super_admin_businesses' %}"
+           class="{% if request.resolver_match.url_name == 'super_admin_businesses' %}active{% endif %}">
+          الشركات
+        </a>
+      </li>
+      <li>
+        <a href="{% url 'super_admin_users' %}"
+           class="{% if request.resolver_match.url_name == 'super_admin_users' %}active{% endif %}">
+          المستخدمون
+        </a>
+      </li>
+      <li>
+        <a href="{% url 'super_admin_learning' %}"
+           class="{% if request.resolver_match.url_name == 'super_admin_learning' %}active{% endif %}">
+          المحتوى والتكليفات
+        </a>
+      </li>
+      <li>
+        <a href="{% url 'super_admin_operations' %}"
+           class="{% if request.resolver_match.url_name == 'super_admin_operations' %}active{% endif %}">
+          المتابعة والامتثال
+        </a>
+      </li>
+      <li>
+        <a href="{% url 'super_admin_scorm' %}"
+           class="{% if request.resolver_match.url_name == 'super_admin_scorm' %}active{% endif %}">
+          مكتبة SCORM
+        </a>
+      </li>
+    {% elif request.resolver_match.url_name == 'employee_dashboard' or request.resolver_match.url_name == 'employee_courses' or request.resolver_match.url_name == 'employee_course_view' or request.resolver_match.url_name == 'employee_checklists' or request.resolver_match.url_name == 'employee_scorm_courses' or request.resolver_match.url_name == 'employee_scorm_course_view' or employee_profile %}
       <li>
         <a href="{% url 'employee_dashboard' %}"
            class="{% if request.resolver_match.url_name == 'employee_dashboard' %}active{% endif %}">

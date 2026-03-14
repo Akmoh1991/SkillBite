@@ -1,7 +1,8 @@
 from django import forms
+from django.contrib.auth import get_user_model
 from django.core.validators import RegexValidator
 
-from .models import JobTitle
+from .models import BusinessTenant, JobTitle
 from training.models import (
     Course,
     CourseAssignmentRule,
@@ -9,6 +10,9 @@ from training.models import (
     SOPChecklist,
     SOPChecklistAssignmentRule,
 )
+
+
+User = get_user_model()
 
 
 class RegisterForm(forms.Form):
@@ -141,3 +145,43 @@ class SOPChecklistAssignmentRuleForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields['job_title'].queryset = JobTitle.objects.filter(business=business).order_by('name', 'id')
         self.fields['checklist'].queryset = SOPChecklist.objects.filter(business=business, is_active=True).order_by('title', 'id')
+
+
+class SuperAdminBusinessCreateForm(forms.Form):
+    business_name = forms.CharField(max_length=255)
+    industry = forms.CharField(max_length=100, required=False, initial='Food & Beverage')
+    owner_username = forms.CharField(max_length=150)
+    owner_email = forms.EmailField(required=False)
+    owner_full_name = forms.CharField(max_length=255)
+    owner_password = forms.CharField(widget=forms.PasswordInput)
+    is_active = forms.BooleanField(required=False, initial=True)
+
+
+class SuperAdminUserCreateForm(forms.Form):
+    ROLE_CHOICES = (
+        ('super_admin', 'Super Admin'),
+        ('business_owner', 'Business Owner'),
+    )
+
+    username = forms.CharField(max_length=150)
+    email = forms.EmailField(required=False)
+    full_name = forms.CharField(max_length=255)
+    password = forms.CharField(widget=forms.PasswordInput)
+    role = forms.ChoiceField(choices=ROLE_CHOICES)
+    business = forms.ModelChoiceField(
+        queryset=BusinessTenant.objects.none(),
+        required=False,
+        empty_label='No business',
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['business'].queryset = BusinessTenant.objects.filter(is_active=True).order_by('name', 'id')
+
+    def clean(self):
+        cleaned_data = super().clean()
+        role = cleaned_data.get('role')
+        business = cleaned_data.get('business')
+        if role == 'business_owner' and not business:
+            self.add_error('business', 'Select a business for the business owner.')
+        return cleaned_data

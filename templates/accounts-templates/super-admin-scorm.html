@@ -1,0 +1,48 @@
+{% extends "accounts-templates/super-admin-base.html" %}
+
+{% block page_title %}SkillBite | مكتبة SCORM{% endblock %}
+{% block hero_title %}مكتبة SCORM المركزية{% endblock %}
+{% block hero_text %}رفع الحزم التدريبية ومراجعة المكتبة المشتركة المتاحة عبر المنصة.{% endblock %}
+
+{% block content %}
+<section class="content-layout">
+  <div class="card">
+    <div class="card-intro">
+      <div>
+        <h2>رفع حزمة جديدة</h2>
+        <p>الحزمة ستصبح متاحة من المكتبة المشتركة ويمكن للمشرف العام تنزيلها أو مراجعتها.</p>
+      </div>
+    </div>
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div class="field">
+        <label>ملف SCORM بصيغة ZIP</label>
+        <input type="file" name="scorm_zip" accept=".zip" required>
+      </div>
+      <button class="btn" type="submit">رفع الحزمة</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <div class="card-intro">
+      <div>
+        <h2>الحزم الحالية</h2>
+        <p>عرض الملفات الموجودة في المكتبة مع الوصول إلى التنزيل الآمن.</p>
+      </div>
+    </div>
+    <ul class="list">
+      {% for package in packages %}
+        <li>
+          <strong>{{ package.title }}</strong><br>
+          <span class="muted">{{ package.name }}</span>
+          <div class="actions-inline" style="margin-top:10px;">
+            <a class="btn secondary" href="{% url 'scorm_zip_download' package.name %}" style="text-decoration:none;">تنزيل</a>
+          </div>
+        </li>
+      {% empty %}
+        <li class="muted">لا توجد حزم SCORM مرفوعة حالياً.</li>
+      {% endfor %}
+    </ul>
+  </div>
+</section>
+{% endblock %}

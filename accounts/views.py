@@ -15,7 +15,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.files.base import ContentFile
 from django.core.files.storage import FileSystemStorage
 from django.db import IntegrityError, transaction
-from django.db.models import Count, Prefetch
+from django.db.models import Count, Prefetch, Q
 from django.http import FileResponse, Http404, HttpResponseForbidden, HttpResponsePermanentRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -28,7 +28,18 @@ from django.views.decorators.http import require_POST
 from certification.models import ScormCertificate
 from training.models import Course, CourseAssignment, CourseAssignmentRule, CourseContentItem, SOPChecklist, SOPChecklistAssignmentRule, SOPChecklistCompletion, SOPChecklistItem, SOPChecklistItemCompletion
 
-from .forms import BusinessEmployeeCreateForm, CourseAssignmentRuleForm, CourseContentItemForm, CourseForm, JobTitleForm, RegisterForm, SOPChecklistAssignmentRuleForm, SOPChecklistForm
+from .forms import (
+    BusinessEmployeeCreateForm,
+    CourseAssignmentRuleForm,
+    CourseContentItemForm,
+    CourseForm,
+    JobTitleForm,
+    RegisterForm,
+    SOPChecklistAssignmentRuleForm,
+    SOPChecklistForm,
+    SuperAdminBusinessCreateForm,
+    SuperAdminUserCreateForm,
+)
 from .models import BusinessTenant, EmployeeProfile, JobTitle
 
 
@@ -45,8 +56,16 @@ def _is_business_owner(user) -> bool:
     return bool(user and user.is_authenticated and BusinessTenant.objects.filter(owner=user, is_active=True).exists())
 
 
+def _is_super_admin(user) -> bool:
+    return bool(user and user.is_authenticated and (getattr(user, 'is_superuser', False) or getattr(user, 'is_staff', False)))
+
+
 def _is_employee(user) -> bool:
     return bool(user and user.is_authenticated and EmployeeProfile.objects.filter(user=user, is_active=True, business__is_active=True).exists())
+
+
+def _super_admin_guard(request) -> bool:
+    return _is_super_admin(getattr(request, 'user', None))
 
 
 def _business_owner_guard(request) -> bool:
@@ -58,6 +77,8 @@ def _employee_guard(request) -> bool:
 
 
 def _primary_dashboard_route(user):
+    if _is_super_admin(user):
+        return 'super_admin_dashboard'
     if _is_business_owner(user):
         return 'business_owner_dashboard'
     if _is_employee(user):
@@ -122,6 +143,22 @@ def _assigned_checklists_queryset(employee_profile):
 def _display_name(user) -> str:
     full_name = f'{getattr(user, "first_name", "")} {getattr(user, "last_name", "")}'.strip()
     return full_name or getattr(user, 'username', 'User')
+
+
+def _split_full_name(full_name: str) -> tuple[str, str]:
+    cleaned = (full_name or '').strip()
+    first_name, _, last_name = cleaned.partition(' ')
+    return first_name.strip(), last_name.strip()
+
+
+def _user_role_label(user) -> str:
+    if _is_super_admin(user):
+        return 'Super Admin'
+    if BusinessTenant.objects.filter(owner=user).exists():
+        return 'Business Owner'
+    if EmployeeProfile.objects.filter(user=user).exists():
+        return 'Employee'
+    return 'User'
 
 
 def _english_text_only(value: object, fallback: str = 'N/A') -> str:
@@ -388,6 +425,287 @@ def scorm_zip_download_view(request, filename: str):
     response = FileResponse(open(os.path.join(storage.location, filename), 'rb'), content_type='application/zip')
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
     return response
+
+
+def _super_admin_dashboard_context():
+    businesses = BusinessTenant.objects.select_related('owner').order_by('name', 'id')
+    assignments = CourseAssignment.objects.select_related('business', 'course', 'employee').order_by('-assigned_at', '-id')
+    completions = SOPChecklistCompletion.objects.select_related('business', 'checklist', 'employee').order_by('-completed_for', '-completed_at', '-id')
+    super_admins = User.objects.filter(is_active=True).filter(Q(is_staff=True) | Q(is_superuser=True)).order_by('username')
+    return {
+        'business_count': businesses.count(),
+        'active_business_count': businesses.filter(is_active=True).count(),
+        'employee_count': EmployeeProfile.objects.filter(is_active=True, business__is_active=True, user__is_active=True).count(),
+        'course_count': Course.objects.count(),
+        'active_course_count': Course.objects.filter(is_active=True).count(),
+        'checklist_count': SOPChecklist.objects.count(),
+        'active_checklist_count': SOPChecklist.objects.filter(is_active=True).count(),
+        'completed_assignment_count': assignments.filter(status=CourseAssignment.Status.COMPLETED).count(),
+        'super_admin_count': super_admins.count(),
+        'recent_businesses': businesses[:6],
+        'recent_assignments': assignments[:8],
+        'recent_completions': completions[:8],
+        'super_admins': super_admins[:6],
+    }
+
+
+def _super_admin_businesses_context():
+    businesses = list(
+        BusinessTenant.objects.select_related('owner')
+        .annotate(
+            employee_total=Count('employees', distinct=True),
+            course_total=Count('courses', distinct=True),
+            checklist_total=Count('sop_checklists', distinct=True),
+        )
+        .order_by('name', 'id')
+    )
+    return {'businesses': businesses, 'business_form': SuperAdminBusinessCreateForm()}
+
+
+def _super_admin_users_context():
+    users = list(
+        User.objects.all()
+        .select_related('owned_business', 'employee_profile__business', 'employee_profile__job_title')
+        .order_by('username')
+    )
+    business_owner_count = 0
+    employee_count = 0
+    super_admin_count = 0
+    for user in users:
+        user.role_label = _user_role_label(user)
+        user.business_name = ''
+        if hasattr(user, 'owned_business'):
+            user.business_name = user.owned_business.name
+            business_owner_count += 1
+        elif hasattr(user, 'employee_profile'):
+            user.business_name = user.employee_profile.business.name
+            employee_count += 1
+        if _is_super_admin(user):
+            super_admin_count += 1
+    return {
+        'users': users,
+        'user_form': SuperAdminUserCreateForm(),
+        'super_admin_count': super_admin_count,
+        'business_owner_count': business_owner_count,
+        'employee_count': employee_count,
+    }
+
+
+def _super_admin_learning_context():
+    courses = list(
+        Course.objects.select_related('business', 'created_by')
+        .annotate(content_item_total=Count('content_items'), assignment_total=Count('assignments'))
+        .order_by('business__name', 'title', 'id')
+    )
+    checklists = list(
+        SOPChecklist.objects.select_related('business', 'created_by')
+        .annotate(item_total=Count('items'), completion_total=Count('completions'))
+        .order_by('business__name', 'title', 'id')
+    )
+    return {
+        'courses': courses,
+        'checklists': checklists,
+        'course_count': len(courses),
+        'checklist_count': len(checklists),
+    }
+
+
+def _super_admin_operations_context():
+    assignments = CourseAssignment.objects.select_related(
+        'business', 'course', 'employee', 'assigned_via_job_title'
+    ).order_by('-assigned_at', '-id')[:30]
+    completions = SOPChecklistCompletion.objects.select_related(
+        'business', 'checklist', 'employee'
+    ).order_by('-completed_for', '-completed_at', '-id')[:30]
+    return {'assignments': assignments, 'completions': completions}
+
+
+@login_required
+def super_admin_dashboard_view(request):
+    if not _super_admin_guard(request):
+        return redirect('home')
+    return render(request, 'accounts-templates/super-admin-dashboard.html', _super_admin_dashboard_context())
+
+
+@login_required
+def super_admin_businesses_view(request):
+    if not _super_admin_guard(request):
+        return redirect('home')
+    return render(request, 'accounts-templates/super-admin-businesses.html', _super_admin_businesses_context())
+
+
+@login_required
+def super_admin_users_view(request):
+    if not _super_admin_guard(request):
+        return redirect('home')
+    return render(request, 'accounts-templates/super-admin-users.html', _super_admin_users_context())
+
+
+@login_required
+def super_admin_learning_view(request):
+    if not _super_admin_guard(request):
+        return redirect('home')
+    return render(request, 'accounts-templates/super-admin-learning.html', _super_admin_learning_context())
+
+
+@login_required
+def super_admin_operations_view(request):
+    if not _super_admin_guard(request):
+        return redirect('home')
+    return render(request, 'accounts-templates/super-admin-operations.html', _super_admin_operations_context())
+
+
+@login_required
+def super_admin_scorm_library_view(request):
+    if not _super_admin_guard(request):
+        return redirect('home')
+    if request.method == 'POST':
+        return _handle_scorm_upload_post(request, 'super_admin_scorm')
+    return render(request, 'accounts-templates/super-admin-scorm.html', {'packages': _list_scorm_packages(include_download_url=False)})
+
+
+@login_required
+@require_POST
+@transaction.atomic
+def super_admin_business_create_action(request):
+    if not _super_admin_guard(request):
+        return redirect('home')
+    form = SuperAdminBusinessCreateForm(request.POST)
+    if not form.is_valid():
+        messages.error(request, form.errors.as_text())
+        return redirect('super_admin_businesses')
+    username = form.cleaned_data['owner_username']
+    if User.objects.filter(username=username).exists():
+        messages.error(request, 'Username already exists.')
+        return redirect('super_admin_businesses')
+    first_name, last_name = _split_full_name(form.cleaned_data['owner_full_name'])
+    owner = User.objects.create_user(
+        username=username,
+        password=form.cleaned_data['owner_password'],
+        email=(form.cleaned_data.get('owner_email') or '').strip(),
+        first_name=first_name,
+        last_name=last_name,
+        is_active=True,
+    )
+    BusinessTenant.objects.create(
+        owner=owner,
+        name=form.cleaned_data['business_name'],
+        industry=(form.cleaned_data.get('industry') or 'Food & Beverage').strip() or 'Food & Beverage',
+        is_active=form.cleaned_data.get('is_active', False),
+    )
+    messages.success(request, 'Business and owner account created.')
+    return redirect('super_admin_businesses')
+
+
+@login_required
+@require_POST
+def super_admin_business_toggle_action(request, business_id: int):
+    if not _super_admin_guard(request):
+        return redirect('home')
+    business = get_object_or_404(BusinessTenant, id=business_id)
+    business.is_active = not business.is_active
+    business.save(update_fields=['is_active'])
+    messages.success(request, f'Business "{business.name}" is now {"active" if business.is_active else "inactive"}.')
+    return redirect('super_admin_businesses')
+
+
+@login_required
+@require_POST
+@transaction.atomic
+def super_admin_user_create_action(request):
+    if not _super_admin_guard(request):
+        return redirect('home')
+    form = SuperAdminUserCreateForm(request.POST)
+    if not form.is_valid():
+        messages.error(request, form.errors.as_text())
+        return redirect('super_admin_users')
+    username = form.cleaned_data['username']
+    if User.objects.filter(username=username).exists():
+        messages.error(request, 'Username already exists.')
+        return redirect('super_admin_users')
+    first_name, last_name = _split_full_name(form.cleaned_data['full_name'])
+    role = form.cleaned_data['role']
+    user = User.objects.create_user(
+        username=username,
+        password=form.cleaned_data['password'],
+        email=(form.cleaned_data.get('email') or '').strip(),
+        first_name=first_name,
+        last_name=last_name,
+        is_active=True,
+        is_staff=(role == 'super_admin'),
+        is_superuser=(role == 'super_admin'),
+    )
+    if role == 'business_owner':
+        business = form.cleaned_data['business']
+        business.owner = user
+        business.save(update_fields=['owner'])
+    messages.success(request, 'User account created.')
+    return redirect('super_admin_users')
+
+
+@login_required
+@require_POST
+def super_admin_user_toggle_active_action(request, user_id: int):
+    if not _super_admin_guard(request):
+        return redirect('home')
+    target = get_object_or_404(User, id=user_id)
+    if target == request.user and target.is_active:
+        messages.error(request, 'You cannot deactivate your own account.')
+        return redirect('super_admin_users')
+    target.is_active = not target.is_active
+    target.save(update_fields=['is_active'])
+    messages.success(request, f'User "{target.username}" is now {"active" if target.is_active else "inactive"}.')
+    return redirect('super_admin_users')
+
+
+@login_required
+@require_POST
+def super_admin_user_toggle_role_action(request, user_id: int):
+    if not _super_admin_guard(request):
+        return redirect('home')
+    target = get_object_or_404(User, id=user_id)
+    if target == request.user and target.is_staff:
+        messages.error(request, 'You cannot remove your own super admin access.')
+        return redirect('super_admin_users')
+    make_super = not _is_super_admin(target)
+    if make_super:
+        target.is_staff = True
+        target.is_superuser = True
+        target.save(update_fields=['is_staff', 'is_superuser'])
+        messages.success(request, f'User "{target.username}" promoted to super admin.')
+        return redirect('super_admin_users')
+    if BusinessTenant.objects.filter(owner=target).exists():
+        messages.error(request, 'Business owners must be reassigned before removing super admin access.')
+        return redirect('super_admin_users')
+    target.is_staff = False
+    target.is_superuser = False
+    target.save(update_fields=['is_staff', 'is_superuser'])
+    messages.success(request, f'User "{target.username}" removed from super admin role.')
+    return redirect('super_admin_users')
+
+
+@login_required
+@require_POST
+def super_admin_course_toggle_action(request, course_id: int):
+    if not _super_admin_guard(request):
+        return redirect('home')
+    course = get_object_or_404(Course, id=course_id)
+    course.is_active = not course.is_active
+    course.save(update_fields=['is_active'])
+    messages.success(request, f'Course "{course.title}" is now {"active" if course.is_active else "inactive"}.')
+    return redirect('super_admin_learning')
+
+
+@login_required
+@require_POST
+def super_admin_checklist_toggle_action(request, checklist_id: int):
+    if not _super_admin_guard(request):
+        return redirect('home')
+    checklist = get_object_or_404(SOPChecklist, id=checklist_id)
+    checklist.is_active = not checklist.is_active
+    checklist.save(update_fields=['is_active'])
+    messages.success(request, f'Checklist "{checklist.title}" is now {"active" if checklist.is_active else "inactive"}.')
+    return redirect('super_admin_learning')
 
 
 def home_view(request):

@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.core.management import call_command
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
@@ -263,3 +264,100 @@ class MultiTenantFlowTests(TestCase):
         response = self.client.get(reverse('employee_checklists'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, self.checklist.title)
+
+
+class SuperAdminFlowTests(TestCase):
+    def setUp(self):
+        self.super_admin = User.objects.create_user(
+            username='platform_admin',
+            password='pass12345',
+            is_staff=True,
+            is_superuser=True,
+        )
+        self.owner = User.objects.create_user(username='owner_sa', password='pass12345')
+        self.business = BusinessTenant.objects.create(owner=self.owner, name='Cafe South')
+        self.job_title = JobTitle.objects.create(business=self.business, name='Cashier')
+        self.course = Course.objects.create(
+            business=self.business,
+            title='Opening Basics',
+            estimated_minutes=15,
+            created_by=self.owner,
+        )
+        self.checklist = SOPChecklist.objects.create(
+            business=self.business,
+            title='Daily Open',
+            frequency=SOPChecklist.Frequency.DAILY,
+            created_by=self.owner,
+        )
+
+    def test_home_redirects_super_admin_to_super_admin_dashboard(self):
+        self.client.login(username='platform_admin', password='pass12345')
+        response = self.client.get(reverse('home'))
+        self.assertRedirects(response, reverse('super_admin_dashboard'))
+
+    def test_super_admin_pages_require_super_admin_role(self):
+        self.client.login(username='owner_sa', password='pass12345')
+        response = self.client.get(reverse('super_admin_dashboard'))
+        self.assertRedirects(response, reverse('home'), fetch_redirect_response=False)
+
+    def test_super_admin_can_create_business_and_owner(self):
+        self.client.login(username='platform_admin', password='pass12345')
+        response = self.client.post(
+            reverse('super_admin_business_create'),
+            {
+                'business_name': 'Cafe East',
+                'industry': 'Retail',
+                'owner_username': 'east_owner',
+                'owner_email': 'east@example.com',
+                'owner_full_name': 'East Owner',
+                'owner_password': 'pass12345',
+                'is_active': 'on',
+            },
+        )
+        self.assertRedirects(response, reverse('super_admin_businesses'))
+        owner = User.objects.get(username='east_owner')
+        business = BusinessTenant.objects.get(owner=owner)
+        self.assertEqual(business.name, 'Cafe East')
+        self.assertTrue(business.is_active)
+
+    def test_super_admin_can_toggle_course_activity(self):
+        self.client.login(username='platform_admin', password='pass12345')
+        response = self.client.post(reverse('super_admin_course_toggle', args=[self.course.id]))
+        self.assertRedirects(response, reverse('super_admin_learning'))
+        self.course.refresh_from_db()
+        self.assertFalse(self.course.is_active)
+
+
+class SeedSuperAdminCommandTests(TestCase):
+    def test_seed_super_admin_command_creates_user(self):
+        call_command(
+            'seed_super_admin',
+            username='seed_admin',
+            password='pass12345',
+            email='seed@example.com',
+            full_name='Seed Admin',
+        )
+        user = User.objects.get(username='seed_admin')
+        self.assertTrue(user.is_active)
+        self.assertTrue(user.is_staff)
+        self.assertTrue(user.is_superuser)
+        self.assertEqual(user.email, 'seed@example.com')
+        self.assertTrue(user.check_password('pass12345'))
+
+    def test_seed_super_admin_command_upgrades_existing_user(self):
+        user = User.objects.create_user(username='seed_existing', password='oldpass', is_staff=False, is_superuser=False, is_active=False)
+        call_command(
+            'seed_super_admin',
+            username='seed_existing',
+            password='newpass123',
+            email='new@example.com',
+            full_name='Existing Admin',
+        )
+        user.refresh_from_db()
+        self.assertTrue(user.is_active)
+        self.assertTrue(user.is_staff)
+        self.assertTrue(user.is_superuser)
+        self.assertEqual(user.email, 'new@example.com')
+        self.assertEqual(user.first_name, 'Existing')
+        self.assertEqual(user.last_name, 'Admin')
+        self.assertTrue(user.check_password('newpass123'))
