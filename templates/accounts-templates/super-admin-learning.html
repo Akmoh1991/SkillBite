@@ -10,6 +10,64 @@
   <div class="stat-card"><h4>قوائم التشغيل</h4><span>{{ checklist_count }}</span></div>
 </section>
 
+<section class="content-layout" style="margin-bottom: 24px;">
+  <div class="card">
+    <div class="card-intro">
+      <div>
+        <h2>نشر كتالوج الموظفين الحالي</h2>
+        <p>ينشئ نفس الدورات الظاهرة حالياً للموظف ولكن كسجلات حقيقية في قاعدة البيانات صادرة من لوحة المشرف العام.</p>
+      </div>
+    </div>
+    <form method="post" action="{% url 'super_admin_publish_employee_catalog' %}" class="inline-form">
+      {% csrf_token %}
+      {{ catalog_publish_form.as_p }}
+      <button class="btn" type="submit">نشر الكتالوج</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <div class="card-intro">
+      <div>
+        <h2>إضافة دورة جديدة</h2>
+        <p>أنشئ الدورة من حساب المشرف العام ثم ستصبح متاحة للتكليف على الموظفين.</p>
+      </div>
+    </div>
+    <form method="post" action="{% url 'super_admin_course_create' %}" class="inline-form">
+      {% csrf_token %}
+      {{ course_form.as_p }}
+      <button class="btn" type="submit">حفظ الدورة</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <div class="card-intro">
+      <div>
+        <h2>إسناد دورة لمسمى وظيفي</h2>
+        <p>أي موظف مرتبط بهذا المسمى سيرى الدورة مباشرة في صفحة الموظف.</p>
+      </div>
+    </div>
+    <form method="post" action="{% url 'super_admin_course_rule_create' %}" class="inline-form">
+      {% csrf_token %}
+      {{ course_rule_form.as_p }}
+      <button class="btn" type="submit">حفظ الإسناد</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <div class="card-intro">
+      <div>
+        <h2>رفع محتوى الدورة</h2>
+        <p>أضف صفحات الدورة أو الفيديو أو الملف من المشرف العام بدل الاعتماد على HTML ثابت.</p>
+      </div>
+    </div>
+    <form method="post" action="{% url 'super_admin_course_content_create' %}" enctype="multipart/form-data" class="inline-form">
+      {% csrf_token %}
+      {{ course_content_form.as_p }}
+      <button class="btn" type="submit">إضافة المحتوى</button>
+    </form>
+  </div>
+</section>
+
 <section class="content-layout">
   <div class="card">
     <div class="card-intro">
@@ -59,7 +117,7 @@
     <div class="card-intro">
       <div>
         <h2>قوائم التشغيل</h2>
-        <p>متابعة القوائم التشغلية وعدد عناصرها وإجمالي مرات الإكمال.</p>
+        <p>متابعة القوائم التشغيلية وعدد عناصرها وإجمالي مرات الإكمال.</p>
       </div>
     </div>
     <div class="table-wrap">

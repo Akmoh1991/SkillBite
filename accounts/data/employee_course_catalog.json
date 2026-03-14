@@ -1,0 +1,74 @@
+[
+  {
+    "title": "مهارات الكاشير",
+    "description": "دورة عن مهارات الكاشير",
+    "estimated_minutes": 10,
+    "card_image_url": "https://images.unsplash.com/photo-1556740749-887f6717d7e4?auto=format&fit=crop&w=900&q=80",
+    "card_label": "الدورة",
+    "content_count": 1
+  },
+  {
+    "title": "أساسيات خدمة العملاء",
+    "description": "مقدمة عملية لأسلوب الترحيب ونبرة الحديث ومعالجة المواقف وخدمة العملاء أثناء التشغيل اليومي.",
+    "estimated_minutes": 18,
+    "card_image_url": "https://images.unsplash.com/photo-1521791136064-7986c2920216?auto=format&fit=crop&w=900&q=80",
+    "card_label": "الخدمة",
+    "content_count": 5
+  },
+  {
+    "title": "معايير التعامل مع النقد",
+    "description": "يشمل موازنة الصندوق اليومية وروتين الدرج النقدي ومعالجة الفروقات وتسليم العهدة بين الورديات.",
+    "estimated_minutes": 25,
+    "card_image_url": "https://images.unsplash.com/photo-1556740749-887f6717d7e4?auto=format&fit=crop&w=900&q=80",
+    "card_label": "الكاشير",
+    "content_count": 7
+  },
+  {
+    "title": "قائمة افتتاح المتجر",
+    "description": "روتين الافتتاح قبل وصول العملاء، ويشمل فحص النظافة وتشغيل المعدات والتأكد من جاهزية المخزون.",
+    "estimated_minutes": 12,
+    "card_image_url": "https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?auto=format&fit=crop&w=900&q=80",
+    "card_label": "الافتتاح",
+    "content_count": 4
+  },
+  {
+    "title": "أساسيات سلامة الغذاء",
+    "description": "يتناول قواعد النظافة الأساسية والتخزين ومنع التلوث وقياس درجات الحرارة للعاملين في الواجهة.",
+    "estimated_minutes": 22,
+    "card_image_url": "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=900&q=80",
+    "card_label": "السلامة",
+    "content_count": 6
+  },
+  {
+    "title": "روتين إغلاق الوردية",
+    "description": "يشمل إقفال اليوم التشغيلي وتسليم الملاحظات وتوثيق المهام المعلقة وإجراء الفحص النهائي قبل الإغلاق.",
+    "estimated_minutes": 16,
+    "card_image_url": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=900&q=80",
+    "card_label": "الإغلاق",
+    "content_count": 5
+  },
+  {
+    "title": "نظافة محطة العمل",
+    "description": "معايير تعقيم الأسطح واستخدام أدوات التنظيف والمتابعة الذاتية الدورية للحفاظ على بيئة عمل منظمة.",
+    "estimated_minutes": 14,
+    "card_image_url": "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=900&q=80",
+    "card_label": "النظافة",
+    "content_count": 3
+  },
+  {
+    "title": "أساسيات العناية بالمعدات",
+    "description": "يوضح خطوات تجهيز الأجهزة واستخدامها الآمن والإبلاغ المبكر عن الأعطال وتنفيذ فحوصات الصيانة اليومية.",
+    "estimated_minutes": 19,
+    "card_image_url": "https://images.unsplash.com/photo-1581092921461-eab62e97a780?auto=format&fit=crop&w=900&q=80",
+    "card_label": "المعدات",
+    "content_count": 6
+  },
+  {
+    "title": "آلية التواصل بين الفريق",
+    "description": "يتناول تحديثات تسليم المهام وأساسيات التصعيد والتنسيق أثناء الوردية ومعايير التواصل بين أعضاء الفريق.",
+    "estimated_minutes": 15,
+    "card_image_url": "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=900&q=80",
+    "card_label": "الفريق",
+    "content_count": 4
+  }
+]

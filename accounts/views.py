@@ -3,6 +3,8 @@ import io
 import json
 import mimetypes
 import os
+from functools import lru_cache
+from pathlib import Path
 import urllib.parse
 import uuid
 import xml.etree.ElementTree as ET
@@ -38,6 +40,10 @@ from .forms import (
     SOPChecklistAssignmentRuleForm,
     SOPChecklistForm,
     SuperAdminBusinessCreateForm,
+    SuperAdminCourseAssignmentRuleForm,
+    SuperAdminCourseCatalogPublishForm,
+    SuperAdminCourseContentItemForm,
+    SuperAdminCourseCreateForm,
     SuperAdminUserCreateForm,
 )
 from .models import BusinessTenant, EmployeeProfile, JobTitle
@@ -92,6 +98,85 @@ def _get_owned_business(user):
 
 def _get_employee_profile(user):
     return EmployeeProfile.objects.select_related('business', 'job_title', 'user').filter(user=user, is_active=True, business__is_active=True).first()
+
+
+EMPLOYEE_COURSE_CATALOG_PATH = Path(settings.BASE_DIR) / 'accounts' / 'data' / 'employee_course_catalog.json'
+
+
+@lru_cache(maxsize=1)
+def _load_employee_course_catalog():
+    with EMPLOYEE_COURSE_CATALOG_PATH.open('r', encoding='utf-8') as catalog_file:
+        return json.load(catalog_file)
+
+
+def _course_card_defaults(course):
+    fallback = {
+        'card_image_url': 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=900&q=80',
+        'card_label': 'الدورة',
+    }
+    catalog_entry = next((item for item in _load_employee_course_catalog() if item['title'] == course.title), None)
+    if catalog_entry:
+        fallback['card_image_url'] = catalog_entry['card_image_url']
+        fallback['card_label'] = catalog_entry['card_label']
+    if not getattr(course, 'card_image_url', ''):
+        course.card_image_url = fallback['card_image_url']
+    if not getattr(course, 'card_label', ''):
+        course.card_label = fallback['card_label']
+    return course
+
+
+def _publish_legacy_employee_course_catalog(business, created_by=None):
+    catalog_entries = _load_employee_course_catalog()
+    creator = created_by or User.objects.filter(is_active=True, is_staff=True, is_superuser=True).order_by('id').first() or business.owner
+    published_courses = []
+    for entry in catalog_entries:
+        course, created = Course.objects.get_or_create(
+            business=business,
+            title=entry['title'],
+            defaults={
+                'description': entry['description'],
+                'estimated_minutes': entry['estimated_minutes'],
+                'is_active': True,
+                'created_by': creator,
+            },
+        )
+        if not created:
+            changed_fields = []
+            if not course.description:
+                course.description = entry['description']
+                changed_fields.append('description')
+            if not course.estimated_minutes:
+                course.estimated_minutes = entry['estimated_minutes']
+                changed_fields.append('estimated_minutes')
+            if changed_fields:
+                course.save(update_fields=changed_fields)
+        if not course.content_items.exists():
+            for order in range(1, entry['content_count'] + 1):
+                CourseContentItem.objects.create(
+                    course=course,
+                    content_type=CourseContentItem.ContentType.TEXT,
+                    title=f"{entry['title']} - الجزء {order}",
+                    body=entry['description'],
+                    order=order,
+                )
+        published_courses.append(course)
+
+    job_titles = list(JobTitle.objects.filter(business=business).order_by('name', 'id'))
+    if len(job_titles) > 1:
+        for job_title in job_titles:
+            for course in published_courses:
+                CourseAssignmentRule.objects.get_or_create(
+                    business=business,
+                    job_title=job_title,
+                    course=course,
+                    defaults={'assigned_by': creator},
+                )
+    return published_courses
+
+
+def _ensure_employee_courses_are_backed_by_db(business):
+    if business:
+        _publish_legacy_employee_course_catalog(business)
 
 
 def _provision_course_assignments_for_employee(employee_profile, assigned_by=None):
@@ -507,6 +592,11 @@ def _super_admin_learning_context():
         'checklists': checklists,
         'course_count': len(courses),
         'checklist_count': len(checklists),
+        'course_form': SuperAdminCourseCreateForm(),
+        'course_rule_form': SuperAdminCourseAssignmentRuleForm(),
+        'course_content_form': SuperAdminCourseContentItemForm(),
+        'catalog_publish_form': SuperAdminCourseCatalogPublishForm(),
+        'businesses': BusinessTenant.objects.filter(is_active=True).order_by('name', 'id'),
     }
 
 
@@ -546,6 +636,74 @@ def super_admin_learning_view(request):
     if not _super_admin_guard(request):
         return redirect('home')
     return render(request, 'accounts-templates/super-admin-learning.html', _super_admin_learning_context())
+
+
+@login_required
+@require_POST
+def super_admin_course_create_action(request):
+    if not _super_admin_guard(request):
+        return redirect('home')
+    form = SuperAdminCourseCreateForm(request.POST)
+    if not form.is_valid():
+        messages.error(request, form.errors.as_text())
+        return redirect('super_admin_learning')
+    course = form.save(commit=False)
+    course.created_by = request.user
+    course.save()
+    messages.success(request, f'Course "{course.title}" created for {course.business.name}.')
+    return redirect('super_admin_learning')
+
+
+@login_required
+@require_POST
+def super_admin_course_assignment_rule_create_action(request):
+    if not _super_admin_guard(request):
+        return redirect('home')
+    form = SuperAdminCourseAssignmentRuleForm(request.POST)
+    if not form.is_valid():
+        messages.error(request, form.errors.as_text())
+        return redirect('super_admin_learning')
+    business = form.cleaned_data['business']
+    rule = form.save(commit=False)
+    rule.business = business
+    rule.assigned_by = request.user
+    try:
+        rule.save()
+        _ensure_course_assignments_for_rule(rule)
+        messages.success(request, f'Assignment rule added for "{rule.course.title}".')
+    except IntegrityError:
+        messages.error(request, 'This course is already assigned to that job title.')
+    return redirect('super_admin_learning')
+
+
+@login_required
+@require_POST
+def super_admin_course_content_create_action(request):
+    if not _super_admin_guard(request):
+        return redirect('home')
+    form = SuperAdminCourseContentItemForm(request.POST, request.FILES)
+    if not form.is_valid():
+        messages.error(request, form.errors.as_text())
+        return redirect('super_admin_learning')
+    content_item = form.save(commit=False)
+    content_item.save()
+    messages.success(request, f'Content item "{content_item.title}" added to "{content_item.course.title}".')
+    return redirect('super_admin_learning')
+
+
+@login_required
+@require_POST
+def super_admin_publish_employee_catalog_action(request):
+    if not _super_admin_guard(request):
+        return redirect('home')
+    form = SuperAdminCourseCatalogPublishForm(request.POST)
+    if not form.is_valid():
+        messages.error(request, form.errors.as_text())
+        return redirect('super_admin_learning')
+    business = form.cleaned_data['business']
+    published_courses = _publish_legacy_employee_course_catalog(business, created_by=request.user)
+    messages.success(request, f'Published {len(published_courses)} employee courses to {business.name}.')
+    return redirect('super_admin_learning')
 
 
 @login_required
@@ -1020,8 +1178,11 @@ def _employee_dashboard_context(request):
     employee_profile = _get_employee_profile(request.user)
     business = employee_profile.business
     today = timezone.localdate()
+    _ensure_employee_courses_are_backed_by_db(business)
     _provision_course_assignments_for_employee(employee_profile)
     course_assignments = CourseAssignment.objects.filter(employee=request.user, business=business).select_related('course').prefetch_related(Prefetch('course__content_items', queryset=CourseContentItem.objects.order_by('order', 'id'))).order_by('status', 'course__title', 'id')
+    for assignment in course_assignments:
+        _course_card_defaults(assignment.course)
     completed_course_count = sum(1 for assignment in course_assignments if assignment.status == CourseAssignment.Status.COMPLETED)
     assigned_checklists = list(_assigned_checklists_queryset(employee_profile))
     today_completions = {completion.checklist_id: completion for completion in SOPChecklistCompletion.objects.filter(business=business, employee=request.user, completed_for=today).select_related('checklist')}

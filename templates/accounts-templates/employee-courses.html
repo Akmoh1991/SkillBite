@@ -239,7 +239,7 @@
       >
         <img
           class="employee-course-image"
-          src="{% if assignment.course.title == 'مهارات الكاشير' %}https://images.unsplash.com/photo-1556740749-887f6717d7e4?auto=format&fit=crop&w=900&q=80{% else %}https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=900&q=80{% endif %}"
+          src="{{ assignment.course.card_image_url }}"
           alt="{{ assignment.course.title }}"
         >
         <div class="employee-course-content">
@@ -254,7 +254,7 @@
           <div class="employee-course-meta">
             <span class="employee-course-meta-item">
               <span class="employee-course-meta-icon">◌</span>
-              <span>الدورة</span>
+              <span>{{ assignment.course.card_label }}</span>
             </span>
             <span class="employee-course-meta-item">
               <span class="employee-course-meta-icon">▥</span>
@@ -272,119 +272,14 @@
           </a>
         </div>
       </article>
+    {% empty %}
+      <article class="employee-course-card" style="grid-column: 1 / -1;">
+        <div class="employee-course-content">
+          <h3 class="employee-course-title">لا توجد دورات متاحة حالياً</h3>
+          <p class="employee-course-description">سيظهر هنا أي محتوى ينشره المشرف العام أو يتم إسناده لك من لوحة الإدارة.</p>
+        </div>
+      </article>
     {% endfor %}
-
-    <article class="employee-course-card" data-course-status="NEW" data-course-title="أساسيات خدمة العملاء" data-course-description="تعلم أسلوب الترحيب والتواصل وخدمة العميل">
-      <img class="employee-course-image" src="https://images.unsplash.com/photo-1521791136064-7986c2920216?auto=format&fit=crop&w=900&q=80" alt="أساسيات خدمة العملاء">
-      <div class="employee-course-content">
-        <h3 class="employee-course-title">أساسيات خدمة العملاء</h3>
-        <p class="employee-course-description">مقدمة عملية لأسلوب الترحيب ونبرة الحديث ومعالجة المواقف وخدمة العملاء أثناء التشغيل اليومي.</p>
-        <div class="employee-course-meta">
-          <span class="employee-course-meta-item"><span class="employee-course-meta-icon">◌</span><span>الخدمة</span></span>
-          <span class="employee-course-meta-item"><span class="employee-course-meta-icon">▥</span><span>18 دقيقة</span></span>
-          <span class="employee-course-meta-item"><span class="employee-course-meta-icon">▦</span><span>5 عناصر</span></span>
-        </div>
-        <a class="employee-course-link" href="#">عرض تفاصيل الدورة</a>
-      </div>
-    </article>
-
-    <article class="employee-course-card" data-course-status="IN_PROGRESS" data-course-title="معايير التعامل مع النقد" data-course-description="موازنة الصندوق والعد والتسليم بين الورديات">
-      <img class="employee-course-image" src="https://images.unsplash.com/photo-1556740749-887f6717d7e4?auto=format&fit=crop&w=900&q=80" alt="معايير التعامل مع النقد">
-      <div class="employee-course-content">
-        <h3 class="employee-course-title">معايير التعامل مع النقد</h3>
-        <p class="employee-course-description">يشمل موازنة الصندوق اليومية وروتين الدرج النقدي ومعالجة الفروقات وتسليم العهدة بين الورديات.</p>
-        <div class="employee-course-meta">
-          <span class="employee-course-meta-item"><span class="employee-course-meta-icon">◌</span><span>الكاشير</span></span>
-          <span class="employee-course-meta-item"><span class="employee-course-meta-icon">▥</span><span>25 دقيقة</span></span>
-          <span class="employee-course-meta-item"><span class="employee-course-meta-icon">▦</span><span>7 عناصر</span></span>
-        </div>
-        <a class="employee-course-link" href="#">عرض تفاصيل الدورة</a>
-      </div>
-    </article>
-
-    <article class="employee-course-card" data-course-status="COMPLETED" data-course-title="قائمة افتتاح المتجر" data-course-description="روتين التجهيز قبل استقبال العملاء">
-      <img class="employee-course-image" src="https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?auto=format&fit=crop&w=900&q=80" alt="قائمة افتتاح المتجر">
-      <div class="employee-course-content">
-        <h3 class="employee-course-title">قائمة افتتاح المتجر</h3>
-        <p class="employee-course-description">روتين الافتتاح قبل وصول العملاء، ويشمل فحص النظافة وتشغيل المعدات والتأكد من جاهزية المخزون.</p>
-        <div class="employee-course-meta">
-          <span class="employee-course-meta-item"><span class="employee-course-meta-icon">◌</span><span>الافتتاح</span></span>
-          <span class="employee-course-meta-item"><span class="employee-course-meta-icon">▥</span><span>12 دقيقة</span></span>
-          <span class="employee-course-meta-item"><span class="employee-course-meta-icon">▦</span><span>4 عناصر</span></span>
-        </div>
-        <a class="employee-course-link" href="#">عرض تفاصيل الدورة</a>
-      </div>
-    </article>
-
-    <article class="employee-course-card" data-course-status="NEW" data-course-title="أساسيات سلامة الغذاء" data-course-description="قواعد النظافة ودرجات الحرارة والتخزين السليم">
-      <img class="employee-course-image" src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=900&q=80" alt="أساسيات سلامة الغذاء">
-      <div class="employee-course-content">
-        <h3 class="employee-course-title">أساسيات سلامة الغذاء</h3>
-        <p class="employee-course-description">يتناول قواعد النظافة الأساسية والتخزين ومنع التلوث وقياس درجات الحرارة للعاملين في الواجهة.</p>
-        <div class="employee-course-meta">
-          <span class="employee-course-meta-item"><span class="employee-course-meta-icon">◌</span><span>السلامة</span></span>
-          <span class="employee-course-meta-item"><span class="employee-course-meta-icon">▥</span><span>22 دقيقة</span></span>
-          <span class="employee-course-meta-item"><span class="employee-course-meta-icon">▦</span><span>6 عناصر</span></span>
-        </div>
-        <a class="employee-course-link" href="#">عرض تفاصيل الدورة</a>
-      </div>
-    </article>
-
-    <article class="employee-course-card" data-course-status="IN_PROGRESS" data-course-title="روتين إغلاق الوردية" data-course-description="إقفال اليوم وتسليم المهام وتوثيق الملاحظات">
-      <img class="employee-course-image" src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=900&q=80" alt="روتين إغلاق الوردية">
-      <div class="employee-course-content">
-        <h3 class="employee-course-title">روتين إغلاق الوردية</h3>
-        <p class="employee-course-description">يشمل إقفال اليوم التشغيلي وتسليم الملاحظات وتوثيق المهام المعلقة وإجراء الفحص النهائي قبل الإغلاق.</p>
-        <div class="employee-course-meta">
-          <span class="employee-course-meta-item"><span class="employee-course-meta-icon">◌</span><span>الإغلاق</span></span>
-          <span class="employee-course-meta-item"><span class="employee-course-meta-icon">▥</span><span>16 دقيقة</span></span>
-          <span class="employee-course-meta-item"><span class="employee-course-meta-icon">▦</span><span>5 عناصر</span></span>
-        </div>
-        <a class="employee-course-link" href="#">عرض تفاصيل الدورة</a>
-      </div>
-    </article>
-
-    <article class="employee-course-card" data-course-status="COMPLETED" data-course-title="نظافة محطة العمل" data-course-description="معايير التعقيم والتنظيف والفحص الذاتي للموقع">
-      <img class="employee-course-image" src="https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=900&q=80" alt="نظافة محطة العمل">
-      <div class="employee-course-content">
-        <h3 class="employee-course-title">نظافة محطة العمل</h3>
-        <p class="employee-course-description">معايير تعقيم الأسطح واستخدام أدوات التنظيف والمتابعة الذاتية الدورية للحفاظ على بيئة عمل منظمة.</p>
-        <div class="employee-course-meta">
-          <span class="employee-course-meta-item"><span class="employee-course-meta-icon">◌</span><span>النظافة</span></span>
-          <span class="employee-course-meta-item"><span class="employee-course-meta-icon">▥</span><span>14 دقيقة</span></span>
-          <span class="employee-course-meta-item"><span class="employee-course-meta-icon">▦</span><span>3 عناصر</span></span>
-        </div>
-        <a class="employee-course-link" href="#">عرض تفاصيل الدورة</a>
-      </div>
-    </article>
-
-    <article class="employee-course-card" data-course-status="NEW" data-course-title="أساسيات العناية بالمعدات" data-course-description="تشغيل الأجهزة واستخدامها الآمن وفحصها اليومي">
-      <img class="employee-course-image" src="https://images.unsplash.com/photo-1581092921461-eab62e97a780?auto=format&fit=crop&w=900&q=80" alt="أساسيات العناية بالمعدات">
-      <div class="employee-course-content">
-        <h3 class="employee-course-title">أساسيات العناية بالمعدات</h3>
-        <p class="employee-course-description">يوضح خطوات تجهيز الأجهزة واستخدامها الآمن والإبلاغ المبكر عن الأعطال وتنفيذ فحوصات الصيانة اليومية.</p>
-        <div class="employee-course-meta">
-          <span class="employee-course-meta-item"><span class="employee-course-meta-icon">◌</span><span>المعدات</span></span>
-          <span class="employee-course-meta-item"><span class="employee-course-meta-icon">▥</span><span>19 دقيقة</span></span>
-          <span class="employee-course-meta-item"><span class="employee-course-meta-icon">▦</span><span>6 عناصر</span></span>
-        </div>
-        <a class="employee-course-link" href="#">عرض تفاصيل الدورة</a>
-      </div>
-    </article>
-
-    <article class="employee-course-card" data-course-status="IN_PROGRESS" data-course-title="آلية التواصل بين الفريق" data-course-description="تسليم المهام والتصعيد والتنسيق بين أفراد الفريق">
-      <img class="employee-course-image" src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=900&q=80" alt="آلية التواصل بين الفريق">
-      <div class="employee-course-content">
-        <h3 class="employee-course-title">آلية التواصل بين الفريق</h3>
-        <p class="employee-course-description">يتناول تحديثات تسليم المهام وأساسيات التصعيد والتنسيق أثناء الوردية ومعايير التواصل بين أعضاء الفريق.</p>
-        <div class="employee-course-meta">
-          <span class="employee-course-meta-item"><span class="employee-course-meta-icon">◌</span><span>الفريق</span></span>
-          <span class="employee-course-meta-item"><span class="employee-course-meta-icon">▥</span><span>15 دقيقة</span></span>
-          <span class="employee-course-meta-item"><span class="employee-course-meta-icon">▦</span><span>4 عناصر</span></span>
-        </div>
-        <a class="employee-course-link" href="#">عرض تفاصيل الدورة</a>
-      </div>
-    </article>
   </div>
 
   <div id="employee-course-empty" class="employee-course-empty">
