@@ -478,7 +478,10 @@ def _generate_certificate_pdf_bytes(owner_name: str, course_name: str, verificat
 
 
 @xframe_options_sameorigin
+@login_required
 def scorm_player_file_view(request, folder: str, filepath: str):
+    if not _super_admin_guard(request):
+        return HttpResponseForbidden('Access denied')
     folder = (folder or '').strip()
     filepath = (filepath or '').replace('\\', '/').lstrip('/')
     if not _get_scorm_entry_for_folder(folder):
@@ -494,13 +497,16 @@ def scorm_player_file_view(request, folder: str, filepath: str):
     return response
 
 
+@login_required
 def scorm_player_file_redirect_view(request, folder: str, filepath: str):
+    if not _super_admin_guard(request):
+        return HttpResponseForbidden('Access denied')
     return HttpResponsePermanentRedirect(reverse('scorm_player_file', kwargs={'folder': folder, 'filepath': filepath}))
 
 
 @login_required
 def scorm_zip_download_view(request, filename: str):
-    if not (_is_business_owner(request.user) or getattr(request.user, 'is_staff', False) or getattr(request.user, 'is_superuser', False)):
+    if not _super_admin_guard(request):
         return HttpResponseForbidden('غير مصرح لك')
     if not filename or '/' in filename or '\\' in filename or not filename.lower().endswith('.zip'):
         raise Http404('SCORM package not found')
@@ -1263,40 +1269,31 @@ def employee_checklist_complete_action(request, checklist_id: int):
 
 @login_required
 def business_owner_scorm_library_view(request):
-    if not _business_owner_guard(request):
-        return redirect('home')
-    business = _get_owned_business(request.user)
-    if request.method == 'POST':
-        return _handle_scorm_upload_post(request, 'business_owner_scorm')
-    return render(request, 'accounts-templates/business-owner-scorm.html', {'business': business, 'packages': _list_scorm_packages(include_download_url=False)})
+    return redirect('home')
 
 
 @login_required
 def employee_scorm_courses_view(request):
-    if not _employee_guard(request):
-        return redirect('home')
-    employee_profile = _get_employee_profile(request.user)
-    return render(request, 'accounts-templates/employee-scorm-courses.html', {'employee_profile': employee_profile, 'business': employee_profile.business, 'packages': _list_scorm_packages(include_download_url=False)})
+    return redirect('home')
 
 
 @login_required
 def employee_scorm_course_view(request, filename: str):
-    if not _employee_guard(request):
-        return redirect('home')
-    employee_profile = _get_employee_profile(request.user)
-    selected = _get_scorm_package_or_404(filename, include_download_url=False)
-    metadata = _load_scorm_metadata().get(filename)
-    if isinstance(metadata, dict) and metadata.get('folder') and metadata.get('launch'):
-        selected['player_url'] = reverse('scorm_player_file', kwargs={'folder': str(metadata["folder"]).strip(), 'filepath': str(metadata["launch"]).replace('\\', '/').lstrip('/')})
-    else:
-        selected['player_url'] = None
-    return render(request, 'accounts-templates/employee-scorm-course-view.html', {'employee_profile': employee_profile, 'business': employee_profile.business, 'packages': _list_scorm_packages(include_download_url=False), 'selected': selected})
+    return redirect('home')
 
 
 @login_required
 @require_POST
 @transaction.atomic
 def employee_scorm_check_complete_action(request, filename: str):
+    return JsonResponse(
+        {
+            'ok': False,
+            'completed': False,
+            'message': 'SCORM completion tracking is disabled until a server-verified flow is implemented.',
+        },
+        status=403,
+    )
     if not _employee_guard(request):
         return JsonResponse({'ok': False, 'message': 'غير مصرح'}, status=403)
     selected = _get_scorm_package_or_404(filename)

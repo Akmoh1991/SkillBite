@@ -1,3 +1,7 @@
+import json
+import os
+
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.management import call_command
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -134,10 +138,14 @@ class MultiTenantFlowTests(TestCase):
             'business_owner_courses',
             'business_owner_course_content',
             'business_owner_checklists',
-            'business_owner_scorm',
         ):
             response = self.client.get(reverse(route_name))
             self.assertEqual(response.status_code, 200)
+
+    def test_owner_scorm_library_redirects_home(self):
+        self.client.login(username='owner', password='pass12345')
+        response = self.client.get(reverse('business_owner_scorm'))
+        self.assertRedirects(response, reverse('home'), fetch_redirect_response=False)
 
     def test_owner_can_create_course_content_item(self):
         self.client.login(username='owner', password='pass12345')
@@ -180,11 +188,37 @@ class MultiTenantFlowTests(TestCase):
             reverse('employee_courses'),
             reverse('employee_course_view', args=[assignment.id]),
             reverse('employee_checklists'),
-            reverse('employee_scorm_courses'),
         )
         for route in routes:
             response = self.client.get(route)
             self.assertEqual(response.status_code, 200)
+
+    def test_employee_scorm_pages_redirect_home(self):
+        employee_user = User.objects.create_user(username='employee_scorm_blocked', password='pass12345')
+        EmployeeProfile.objects.create(user=employee_user, business=self.business, job_title=self.job_title, created_by=self.owner)
+        self.client.login(username='employee_scorm_blocked', password='pass12345')
+
+        courses_response = self.client.get(reverse('employee_scorm_courses'))
+        self.assertRedirects(courses_response, reverse('home'), fetch_redirect_response=False)
+
+        detail_response = self.client.get(reverse('employee_scorm_course_view', args=['demo.zip']))
+        self.assertRedirects(detail_response, reverse('home'), fetch_redirect_response=False)
+
+    def test_employee_scorm_completion_post_is_rejected(self):
+        employee_user = User.objects.create_user(username='employee_scorm_post', password='pass12345')
+        EmployeeProfile.objects.create(user=employee_user, business=self.business, job_title=self.job_title, created_by=self.owner)
+        self.client.login(username='employee_scorm_post', password='pass12345')
+
+        response = self.client.post(
+            reverse('employee_scorm_check_complete_action', args=['demo.zip']),
+            {'lesson_status': 'completed'},
+        )
+
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(
+            response.json()['message'],
+            'SCORM completion tracking is disabled until a server-verified flow is implemented.',
+        )
 
     def test_employee_dashboard_backfills_missing_course_assignments(self):
         employee_user = User.objects.create_user(username='employee_backfill', password='pass12345')
@@ -327,6 +361,8 @@ class SuperAdminFlowTests(TestCase):
             frequency=SOPChecklist.Frequency.DAILY,
             created_by=self.owner,
         )
+        self.scorm_dir = os.path.join(settings.MEDIA_ROOT, 'scorm')
+        self.scorm_extracted_dir = os.path.join(settings.MEDIA_ROOT, 'scorm_extracted')
 
     def test_home_redirects_super_admin_to_super_admin_dashboard(self):
         self.client.login(username='platform_admin', password='pass12345')
@@ -377,6 +413,42 @@ class SuperAdminFlowTests(TestCase):
         self.assertRedirects(response, reverse('super_admin_learning'))
         self.assertEqual(Course.objects.filter(business=self.business).count(), 9)
         self.assertTrue(CourseContentItem.objects.filter(course__business=self.business).exists())
+
+    def test_super_admin_scorm_download_requires_super_admin_role(self):
+        os.makedirs(self.scorm_dir, exist_ok=True)
+        package_path = os.path.join(self.scorm_dir, 'demo.zip')
+        with open(package_path, 'wb') as handle:
+            handle.write(b'fake zip')
+
+        self.client.login(username='owner_sa', password='pass12345')
+        response = self.client.get(reverse('scorm_zip_download', args=['demo.zip']))
+        self.assertEqual(response.status_code, 403)
+
+        self.client.login(username='platform_admin', password='pass12345')
+        response = self.client.get(reverse('scorm_zip_download', args=['demo.zip']))
+        self.assertEqual(response.status_code, 200)
+
+    def test_super_admin_scorm_player_requires_super_admin_role(self):
+        os.makedirs(self.scorm_dir, exist_ok=True)
+        os.makedirs(self.scorm_extracted_dir, exist_ok=True)
+        metadata_path = os.path.join(self.scorm_dir, 'metadata.json')
+        with open(metadata_path, 'w', encoding='utf-8') as handle:
+            json.dump({'demo.zip': {'folder': 'demo_folder', 'launch': 'index.html'}}, handle)
+
+        package_dir = os.path.join(self.scorm_extracted_dir, 'demo_folder')
+        os.makedirs(package_dir, exist_ok=True)
+        with open(os.path.join(package_dir, 'index.html'), 'w', encoding='utf-8') as handle:
+            handle.write('<html><body>demo</body></html>')
+
+        player_url = reverse('scorm_player_file', args=['demo_folder', 'index.html'])
+
+        self.client.login(username='owner_sa', password='pass12345')
+        response = self.client.get(player_url)
+        self.assertEqual(response.status_code, 403)
+
+        self.client.login(username='platform_admin', password='pass12345')
+        response = self.client.get(player_url)
+        self.assertEqual(response.status_code, 200)
 
 
 class SeedSuperAdminCommandTests(TestCase):

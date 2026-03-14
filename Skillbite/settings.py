@@ -44,12 +44,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # ==================================================
 # الإعدادات الأساسية
 # ==================================================
-SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "django-insecure-change-me")
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "").strip()
 
 DEBUG = env_bool("DJANGO_DEBUG", False)
 
 # بيئة التشغيل: development / production
 DJANGO_ENV = os.getenv("DJANGO_ENV", "development").strip().lower()
+
+if DJANGO_ENV == "development" and not SECRET_KEY:
+    SECRET_KEY = "django-insecure-development-only"
+elif not SECRET_KEY:
+    raise RuntimeError("DJANGO_SECRET_KEY must be set outside development.")
 
 ALLOWED_HOSTS = env_csv("DJANGO_ALLOWED_HOSTS", "")
 
