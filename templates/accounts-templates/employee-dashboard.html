@@ -2,149 +2,412 @@
 
 {% block page_title %}{{ business.name }} | لوحة الموظف{% endblock %}
 {% block hero_title %}لوحة الموظف{% endblock %}
-{% block hero_text %}اعرض الدورات المسندة إليك وقوائم التشغيل اليومية المطلوبة منك داخل SkillBite.{% endblock %}
+{% block hero_text %}اعرض الدورات المسندة لك والمهام اليومية المطلوب إنهاؤها اليوم فقط.{% endblock %}
 
 {% block content %}
 <style>
-  .employee-dashboard-content,
-  .employee-dashboard-section {
-    grid-template-columns: 1fr;
+  .employee-dashboard{
+    display:grid;
+    gap:20px;
+  }
+
+  .employee-dashboard-grid{
+    display:grid;
+    grid-template-columns:minmax(0, 1fr);
+    gap:20px;
+  }
+
+  .employee-dashboard .card{
+    padding:24px;
+    border:1px solid #e6edf5;
+    box-shadow:0 12px 28px rgba(15, 23, 42, .06);
+  }
+
+  .employee-dashboard .section-head{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:16px;
+    margin-bottom:18px;
+    padding-bottom:14px;
+    border-bottom:1px solid #edf2f7;
+  }
+
+  .employee-dashboard .section-head h2{
+    margin:0;
+    font-size:24px;
+    line-height:1.25;
+    color:#0f172a;
+  }
+
+  .employee-dashboard .section-head p{
+    margin:6px 0 0;
+    font-size:14px;
+    line-height:1.8;
+    color:#64748b;
+  }
+
+  .employee-dashboard .count-badge{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-width:42px;
+    height:42px;
+    padding:0 14px;
+    border-radius:999px;
+    background:#ecfdf3;
+    color:#047857;
+    font-size:14px;
+    font-weight:700;
+  }
+
+  .employee-dashboard .list{
+    margin:0;
+    display:grid;
+    gap:14px;
+  }
+
+  .employee-dashboard .list li{
+    padding:18px;
+    border:1px solid #e9eff5;
+    border-radius:16px;
+    background:#fbfdff;
+  }
+
+  .employee-dashboard .row-head{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:8px;
+  }
+
+  .employee-dashboard .row-head strong{
+    display:block;
+    font-size:18px;
+    color:#0f172a;
+  }
+
+  .employee-dashboard .meta{
+    font-size:14px;
+    line-height:1.9;
+    color:#64748b;
+  }
+
+  .employee-dashboard .course-link{
+    color:#0f172a;
+    text-decoration:none;
+  }
+
+  .employee-dashboard .course-link:hover{
+    color:#009624;
+  }
+
+  .employee-dashboard .pill{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    padding:6px 12px;
+    border-radius:999px;
+    background:#ecfdf3;
+    color:#047857 !important;
+    font-size:13px;
+    font-weight:700;
+    white-space:nowrap;
+  }
+
+  .employee-dashboard .pill.is-muted{
+    background:#f1f5f9;
+    color:#475569 !important;
+  }
+
+  .employee-dashboard .muted{
+    padding:14px 0 0;
+    font-size:14px;
+    color:#64748b;
+  }
+
+  .employee-dashboard .employee-courses-grid{
+    display:grid;
+    grid-template-columns:repeat(3, minmax(0, 1fr));
+    gap:24px;
+  }
+
+  .employee-dashboard .employee-course-card{
+    background:#fff;
+    border:1px solid #e6ebf2;
+    border-radius:18px;
+    padding:24px;
+    box-shadow:0 1px 0 rgba(15, 23, 42, .02);
+    display:grid;
+    gap:18px;
+  }
+
+  .employee-dashboard .employee-course-image{
+    width:100%;
+    height:170px;
+    border-radius:14px;
+    object-fit:cover;
+    display:block;
+    background:#e5e7eb;
+  }
+
+  .employee-dashboard .employee-course-content{
+    display:grid;
+    gap:10px;
+  }
+
+  .employee-dashboard .employee-course-title{
+    margin:0;
+    font-size:20px;
+    line-height:1.25;
+    color:#1f2937;
+    font-weight:700;
+  }
+
+  .employee-dashboard .employee-course-description{
+    margin:0;
+    color:#6b7280;
+    font-size:15px;
+    line-height:1.6;
+    min-height:72px;
+  }
+
+  .employee-dashboard .employee-course-meta{
+    display:flex;
+    align-items:center;
+    gap:18px;
+    flex-wrap:wrap;
+    color:#7b8794;
+    font-size:14px;
+  }
+
+  .employee-dashboard .employee-course-meta-item{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+  }
+
+  .employee-dashboard .employee-course-meta-icon{
+    width:16px;
+    text-align:center;
+    opacity:.8;
+  }
+
+  .employee-dashboard .employee-course-link{
+    min-height:56px;
+    border-radius:999px;
+    border:1px solid #e5e7eb;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    text-decoration:none;
+    color:#111827;
+    font-size:16px;
+    font-weight:700;
+    background:#fff;
+  }
+
+  .employee-task{
+    display:grid;
+    gap:14px;
+  }
+
+  .employee-task-items{
+    display:grid;
+    gap:12px;
+  }
+
+  .employee-task-item{
+    display:flex;
+    align-items:flex-start;
+    gap:12px;
+    padding:14px 16px;
+    border:1px solid #d9e2ec;
+    border-radius:14px;
+    background:#fff;
+    cursor:pointer;
+  }
+
+  .employee-task-item input[type="checkbox"]{
+    width:20px;
+    height:20px;
+    margin:2px 0 0;
+    accent-color:#0f766e;
+    flex:0 0 auto;
+  }
+
+  .employee-task-item span{
+    font-size:15px;
+    line-height:1.8;
+    color:#0f172a;
+  }
+
+  .employee-task-notes{
+    width:100%;
+    min-height:100px;
+    box-sizing:border-box;
+    padding:14px 16px;
+    border:1px solid #cbd5e1;
+    border-radius:14px;
+    background:#fff;
+    font:inherit;
+    resize:vertical;
+  }
+
+  .employee-task-notes:focus{
+    outline:none;
+    border-color:#0f766e;
+    box-shadow:0 0 0 4px rgba(15, 118, 110, .12);
+  }
+
+  .employee-task-action{
+    display:flex;
+    justify-content:flex-start;
+  }
+
+  @media (max-width:1100px){
+    .employee-dashboard .employee-courses-grid{
+      grid-template-columns:repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width:700px){
+    .employee-dashboard .card{
+      padding:18px;
+    }
+
+    .employee-dashboard .section-head,
+    .employee-dashboard .row-head{
+      flex-direction:column;
+      align-items:flex-start;
+    }
+
+    .employee-dashboard .section-head h2{
+      font-size:22px;
+    }
+
+    .employee-dashboard .employee-courses-grid{
+      grid-template-columns:1fr;
+    }
   }
 </style>
 
-<section class="stats">
-  <div class="stat-card">
-    <h4>الدورات المسندة</h4>
-    <span>{{ course_assignments|length }}</span>
-  </div>
-  <div class="stat-card">
-    <h4>الدورات المكتملة</h4>
-    <span>{{ completed_course_count }}</span>
-  </div>
-  <div class="stat-card">
-    <h4>القوائم المسندة</h4>
-    <span>{{ assigned_checklists|length }}</span>
-  </div>
-  <div class="stat-card">
-    <h4>المسمى الوظيفي</h4>
-    <span style="font-size:18px;">{{ employee_profile.job_title.name|default:"غير محدد" }}</span>
-  </div>
-</section>
-
-<section class="content-layout employee-dashboard-content">
-  <div class="layout-main">
+<div class="employee-dashboard">
+  <section class="employee-dashboard-grid">
     <div class="card">
-      <div class="list-head">
-        <h2>الدورات الحالية</h2>
-        <span class="list-count">{{ course_assignments|length }}</span>
-      </div>
-      <ul class="list">
-        {% for assignment in course_assignments|slice:":4" %}
-          <li>
-            <strong>
-              <a href="{% url 'employee_course_view' assignment.id %}" style="color:#0f172a; text-decoration:none;">
-                {{ assignment.course.title }}
-              </a>
-            </strong>
-            {% if assignment.status == 'COMPLETED' %}
-              <span class="pill">مكتملة</span>
-            {% elif assignment.status == 'IN_PROGRESS' %}
-              <span class="pill">قيد التنفيذ</span>
-            {% endif %}
-            <div class="meta">{{ assignment.course.estimated_minutes }} دقيقة{% if assignment.course.description %} | {{ assignment.course.description }}{% endif %}</div>
-          </li>
-        {% empty %}
-          <li class="muted">لا توجد دورات مسندة حالياً.</li>
-        {% endfor %}
-      </ul>
-    </div>
-  </div>
-
-  <div class="layout-side">
-    <div class="card">
-      <div class="list-head">
-        <h2>قوائم التشغيل اليوم</h2>
-        <span class="list-count">{{ assigned_checklists|length }}</span>
-      </div>
-      <ul class="list">
-        {% for checklist in assigned_checklists|slice:":4" %}
-          <li>
-            <strong>{{ checklist.title }}</strong>
-            {% if checklist.id in today_completions %}
-              <span class="pill">مكتملة اليوم</span>
-            {% endif %}
-            <div class="meta">{{ checklist.get_frequency_display }} | {{ checklist.items.count }} عنصر</div>
-          </li>
-        {% empty %}
-          <li class="muted">لا توجد قوائم تشغيل مسندة حالياً.</li>
-        {% endfor %}
-      </ul>
-    </div>
-
-    <div class="card">
-      <div class="card-intro">
+      <div class="section-head">
         <div>
-          <h2>ملخص الحساب</h2>
-          <p>بيانات سريعة عن النشاط والمسمى الوظيفي الحالي.</p>
+          <h2>الدورات المسندة لك</h2>
+          <p>هذه هي الدورات التي تم تعيينها لك من مالك النشاط أو المشرف العام.</p>
         </div>
+        <span class="count-badge">{{ course_assignments|length }}</span>
       </div>
+
+      <div class="employee-courses-grid">
+        {% for assignment in course_assignments|slice:":3" %}
+          <article class="employee-course-card">
+            <img
+              class="employee-course-image"
+              src="{{ assignment.course.card_image_url }}"
+              alt="{{ assignment.course.title }}"
+            >
+            <div class="employee-course-content">
+              <h3 class="employee-course-title">{{ assignment.course.title }}</h3>
+              <p class="employee-course-description">
+                {% if assignment.course.description %}
+                  {{ assignment.course.description|truncatechars:96 }}
+                {% else %}
+                  دورة عملية تحتوي على محتوى تدريبي منظم وخطوات واضحة للإنجاز والمتابعة.
+                {% endif %}
+              </p>
+              <div class="employee-course-meta">
+                <span class="employee-course-meta-item">
+                  <span class="employee-course-meta-icon">◌</span>
+                  {% if assignment.status == 'COMPLETED' %}
+                    <span>مكتملة</span>
+                  {% elif assignment.status == 'IN_PROGRESS' %}
+                    <span>قيد التنفيذ</span>
+                  {% else %}
+                    <span>جديدة</span>
+                  {% endif %}
+                </span>
+                <span class="employee-course-meta-item">
+                  <span class="employee-course-meta-icon">▥</span>
+                  <span>{{ assignment.course.estimated_minutes }} دقيقة</span>
+                </span>
+                <span class="employee-course-meta-item">
+                  <span class="employee-course-meta-icon">♦</span>
+                  <span>
+                    {% if assignment.assigned_by %}
+                      {{ assignment.assigned_by.get_full_name|default:assignment.assigned_by.username }}
+                    {% else %}
+                      الإدارة
+                    {% endif %}
+                  </span>
+                </span>
+              </div>
+              <a class="employee-course-link" href="{% url 'employee_course_view' assignment.id %}">
+                عرض تفاصيل الدورة
+              </a>
+            </div>
+          </article>
+        {% empty %}
+          <div class="muted">لا توجد دورات مسندة لك حالياً.</div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-head">
+        <div>
+          <h2>مهام اليوم</h2>
+          <p>أكمل القوائم المطلوبة اليوم وسجّل التنفيذ من نفس الصفحة.</p>
+        </div>
+        <span class="count-badge">{{ assigned_checklists|length }}</span>
+      </div>
+
       <ul class="list">
-        <li>
-          <strong>اسم النشاط</strong><br>
-          <span class="meta">{{ business.name }}</span>
-        </li>
-        <li>
-          <strong>اسم المستخدم</strong><br>
-          <span class="meta">{{ request.user.username }}</span>
-        </li>
-        <li>
-          <strong>المسمى الوظيفي</strong><br>
-          <span class="meta">{{ employee_profile.job_title.name|default:"غير محدد" }}</span>
-        </li>
+        {% for checklist in assigned_checklists %}
+          <li>
+            <div class="row-head">
+              <div>
+                <strong>{{ checklist.title }}</strong>
+              </div>
+              <div>
+                {% if checklist.id in today_completions %}
+                  <span class="pill">مكتملة اليوم</span>
+                {% else %}
+                  <span class="pill is-muted">مطلوبة اليوم</span>
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="meta">{{ checklist.get_frequency_display }} | {{ checklist.items.count }} مهمة</div>
+
+            {% if checklist.id not in today_completions %}
+              <form class="employee-task" method="post" action="{% url 'employee_checklist_complete' checklist.id %}">
+                {% csrf_token %}
+                <div class="employee-task-items">
+                  {% for item in checklist.items.all %}
+                    <label class="employee-task-item">
+                      <input type="checkbox" name="item_ids" value="{{ item.id }}">
+                      <span>{{ item.title }}</span>
+                    </label>
+                  {% endfor %}
+                </div>
+                <textarea class="employee-task-notes" name="notes" placeholder="ملاحظات الوردية (اختياري)"></textarea>
+                <div class="employee-task-action">
+                  <button class="btn" type="submit">إكمال مهام اليوم</button>
+                </div>
+              </form>
+            {% endif %}
+          </li>
+        {% empty %}
+          <li class="muted">لا توجد مهام يومية مسندة لك حالياً.</li>
+        {% endfor %}
       </ul>
     </div>
-  </div>
-</section>
-
-<section class="section employee-dashboard-section">
-  <div class="card">
-    <div class="list-head">
-      <h2>آخر سجل تشغيلي</h2>
-      <span class="list-count">{{ recent_checklist_completions|length }}</span>
-    </div>
-    <ul class="list">
-      {% for completion in recent_checklist_completions %}
-        <li>
-          <strong>{{ completion.checklist.title }}</strong><br>
-          <span class="meta">{{ completion.completed_for }}{% if completion.notes %} | {{ completion.notes }}{% endif %}</span>
-        </li>
-      {% empty %}
-        <li class="muted">لا يوجد سجل تشغيلي حتى الآن.</li>
-      {% endfor %}
-    </ul>
-  </div>
-
-  <div class="card">
-    <div class="card-intro">
-      <div>
-        <h2>مؤشرات سريعة</h2>
-        <p>تقدمك الحالي بين الدورات وقوائم التشغيل.</p>
-      </div>
-    </div>
-    <ul class="list">
-      <li>
-        <strong>الدورات المكتملة</strong><br>
-        <span class="meta">{{ completed_course_count }} من {{ course_assignments|length }}</span>
-      </li>
-      <li>
-        <strong>قوائم اليوم المكتملة</strong><br>
-        <span class="meta">{{ today_completions|length }} من {{ assigned_checklists|length }}</span>
-      </li>
-      <li>
-        <strong>المسمى الوظيفي</strong><br>
-        <span class="meta">{{ employee_profile.job_title.name|default:"غير محدد" }}</span>
-      </li>
-    </ul>
-  </div>
-</section>
+  </section>
+</div>
 {% endblock %}
