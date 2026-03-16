@@ -66,6 +66,134 @@
 .data-table td strong{
   font-size:15px;
 }
+
+.dashboard-actions{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:nowrap;
+}
+
+.action-btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:98px;
+  padding:10px 16px;
+  border:0;
+  border-radius:999px;
+  font-size:14px;
+  font-weight:800;
+  text-decoration:none;
+  cursor:pointer;
+  white-space:nowrap;
+}
+
+.action-btn--assign{
+  background:#0f766e;
+  color:#fff;
+}
+
+.action-btn--delete{
+  background:#fee2e2;
+  color:#b91c1c;
+}
+
+.action-form{
+  margin:0;
+}
+
+.modal-backdrop{
+  position:fixed;
+  inset:0;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+  background:rgba(15, 23, 42, 0.52);
+  backdrop-filter:blur(6px);
+  z-index:2000;
+}
+
+.modal-backdrop.is-open{
+  display:flex;
+}
+
+.assign-modal{
+  width:min(100%, 720px);
+  overflow:hidden;
+  border-radius:28px;
+  background:#fff;
+  box-shadow:0 40px 80px rgba(15, 23, 42, 0.16);
+}
+
+.assign-modal__header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  flex-direction:row-reverse;
+  gap:16px;
+  padding:20px 22px;
+  border-bottom:1px solid #e2e8f0;
+}
+
+.assign-modal__title{
+  margin:0;
+  font-size:20px;
+  color:#0f766e;
+}
+
+.assign-modal__close{
+  width:48px;
+  height:48px;
+  border:0;
+  border-radius:16px;
+  background:#ecfdf3;
+  color:#0f766e;
+  font-size:28px;
+  line-height:1;
+  cursor:pointer;
+}
+
+.assign-modal__body{
+  padding:18px 22px 26px;
+}
+
+.assign-modal__body p{
+  margin:0 0 18px;
+  color:#64748b;
+  font-size:15px;
+}
+
+.assign-modal__footer{
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  gap:12px;
+  margin-top:22px;
+}
+
+.assign-modal__cancel{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:90px;
+  padding:12px 18px;
+  border:0;
+  border-radius:16px;
+  background:#ecfdf3;
+  color:#0f766e;
+  font-size:15px;
+  font-weight:800;
+  cursor:pointer;
+}
+
+@media (max-width: 900px){
+  .data-table th,
+  .data-table td{
+    white-space:nowrap;
+  }
+}
 </style>
 
 <section class="stats">
@@ -98,6 +226,7 @@
               <th>اسم المستخدم</th>
               <th>البريد الإلكتروني</th>
               <th>المسمى الوظيفي</th>
+              <th>إجراء</th>
             </tr>
           </thead>
           <tbody>
@@ -107,6 +236,23 @@
                 <td>{{ employee.user.username }}</td>
                 <td>{% if employee.user.email %}{{ employee.user.email }}{% else %}<span class="muted">غير مضاف</span>{% endif %}</td>
                 <td>{% if employee.job_title %}{{ employee.job_title.name }}{% else %}<span class="muted">بدون مسمى</span>{% endif %}</td>
+                <td>
+                  <div class="dashboard-actions">
+                    <button
+                      class="action-btn action-btn--assign"
+                      type="button"
+                      data-open-assign-modal
+                      data-employee-id="{{ employee.id }}"
+                      data-employee-name="{% if employee.user.first_name or employee.user.last_name %}{{ employee.user.first_name }} {{ employee.user.last_name|default:'' }}{% else %}{{ employee.user.username }}{% endif %}"
+                    >
+                      إدراج دورة
+                    </button>
+                    <form class="action-form" method="post" action="{% url 'business_owner_dashboard_delete_employee' employee.id %}" onsubmit="return confirm('هل تريد حذف هذا الموظف؟');">
+                      {% csrf_token %}
+                      <button class="action-btn action-btn--delete" type="submit">حذف</button>
+                    </form>
+                  </div>
+                </td>
               </tr>
             {% endfor %}
           </tbody>
@@ -117,4 +263,76 @@
     {% endif %}
   </div>
 </section>
+
+<div class="modal-backdrop" id="assign-course-modal" aria-hidden="true">
+  <div class="assign-modal" role="dialog" aria-modal="true" aria-labelledby="assign-course-modal-title">
+    <div class="assign-modal__header">
+      <button class="assign-modal__close" type="button" data-close-assign-modal aria-label="إغلاق">×</button>
+      <h3 class="assign-modal__title" id="assign-course-modal-title">إدراج دورة لموظف</h3>
+    </div>
+    <form method="post" id="assign-course-modal-form">
+      {% csrf_token %}
+      <div class="assign-modal__body">
+        <p>اختر الدورة التي تريد إدراجها إلى <strong id="assign-course-employee-name">الموظف</strong>.</p>
+        <div class="field">
+          <label for="assign-course-id">الدورة التدريبية</label>
+          <select id="assign-course-id" name="course_id" required>
+            <option value="">اختر الدورة التدريبية</option>
+            {% for course in courses %}
+              <option value="{{ course.id }}">{{ course.title }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="assign-modal__footer">
+          <button class="btn" type="submit">إدراج</button>
+          <button class="assign-modal__cancel" type="button" data-close-assign-modal>إلغاء</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+<script>
+(function () {
+  var modal = document.getElementById('assign-course-modal');
+  var form = document.getElementById('assign-course-modal-form');
+  var employeeName = document.getElementById('assign-course-employee-name');
+  var courseSelect = document.getElementById('assign-course-id');
+  if (!modal || !form || !employeeName || !courseSelect) return;
+
+  function closeModal() {
+    modal.classList.remove('is-open');
+    modal.setAttribute('aria-hidden', 'true');
+    form.removeAttribute('action');
+    courseSelect.value = '';
+  }
+
+  document.querySelectorAll('[data-open-assign-modal]').forEach(function (button) {
+    button.addEventListener('click', function () {
+      var employeeId = button.getAttribute('data-employee-id');
+      var name = button.getAttribute('data-employee-name') || 'الموظف';
+      form.setAttribute('action', '/business-owner/dashboard/employees/' + employeeId + '/assign-course/');
+      employeeName.textContent = name.trim();
+      modal.classList.add('is-open');
+      modal.setAttribute('aria-hidden', 'false');
+      courseSelect.focus();
+    });
+  });
+
+  document.querySelectorAll('[data-close-assign-modal]').forEach(function (button) {
+    button.addEventListener('click', closeModal);
+  });
+
+  modal.addEventListener('click', function (event) {
+    if (event.target === modal) {
+      closeModal();
+    }
+  });
+
+  document.addEventListener('keydown', function (event) {
+    if (event.key === 'Escape' && modal.classList.contains('is-open')) {
+      closeModal();
+    }
+  });
+})();
+</script>
 {% endblock %}

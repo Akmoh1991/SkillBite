@@ -301,11 +301,11 @@
           <h2>الدورات المسندة لك</h2>
           <p>هذه هي الدورات التي تم تعيينها لك من مالك النشاط أو المشرف العام.</p>
         </div>
-        <span class="count-badge">{{ course_assignments|length }}</span>
+        <span class="count-badge">{{ active_course_assignments|length }}</span>
       </div>
 
       <div class="employee-courses-grid">
-        {% for assignment in course_assignments|slice:":3" %}
+        {% for assignment in active_course_assignments|slice:":3" %}
           <article class="employee-course-card">
             <img
               class="employee-course-image"

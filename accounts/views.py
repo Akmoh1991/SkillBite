@@ -216,18 +216,7 @@ def _ensure_employee_courses_are_backed_by_db(business):
 def _provision_course_assignments_for_employee(employee_profile, assigned_by=None):
     if not employee_profile or not employee_profile.job_title_id:
         return
-    single_job_title_mode = JobTitle.objects.filter(business=employee_profile.business).count() == 1
     rules = CourseAssignmentRule.objects.filter(business=employee_profile.business, job_title=employee_profile.job_title, course__is_active=True).select_related('course', 'job_title')
-    if single_job_title_mode:
-        assigned_course_ids = set(rules.values_list('course_id', flat=True))
-        implicit_courses = Course.objects.filter(business=employee_profile.business, is_active=True).exclude(id__in=assigned_course_ids)
-        for course in implicit_courses:
-            CourseAssignment.objects.get_or_create(
-                business=employee_profile.business,
-                course=course,
-                employee=employee_profile.user,
-                defaults={'assigned_by': assigned_by, 'assigned_via_job_title': employee_profile.job_title},
-            )
     for rule in rules:
         CourseAssignment.objects.get_or_create(
             business=employee_profile.business,
@@ -1254,6 +1243,81 @@ def business_owner_dashboard_view(request):
 
 
 @login_required
+@require_POST
+@transaction.atomic
+def business_owner_dashboard_delete_employee_action(request, employee_id: int):
+    if not _business_owner_guard(request):
+        return redirect('home')
+    business = _get_owned_business(request.user)
+    employee = get_object_or_404(
+        EmployeeProfile.objects.select_related('user').filter(business=business, is_active=True),
+        id=employee_id,
+    )
+    employee.is_active = False
+    employee.save(update_fields=['is_active'])
+    employee.user.is_active = False
+    employee.user.save(update_fields=['is_active'])
+    messages.success(request, 'تم حذف الموظف.')
+    return redirect('business_owner_dashboard')
+
+
+@login_required
+@require_POST
+@transaction.atomic
+def business_owner_dashboard_assign_course_action(request, employee_id: int):
+    if not _business_owner_guard(request):
+        return redirect('home')
+    business = _get_owned_business(request.user)
+    employee = get_object_or_404(
+        EmployeeProfile.objects.select_related('user').filter(business=business, is_active=True, user__is_active=True),
+        id=employee_id,
+    )
+    course_id = (request.POST.get('course_id') or '').strip()
+    if not course_id:
+        messages.error(request, 'الدورة التدريبية: هذا الحقل مطلوب.')
+        return redirect('business_owner_dashboard')
+    course = Course.objects.filter(business=business, is_active=True, id=course_id).first()
+    if course is None:
+        messages.error(request, 'الدورة التدريبية المحددة غير صالحة.')
+        return redirect('business_owner_dashboard')
+    assignment, created = CourseAssignment.objects.get_or_create(
+        business=business,
+        course=course,
+        employee=employee.user,
+        defaults={'assigned_by': request.user},
+    )
+    if not created:
+        if assignment.assigned_via_job_title_id:
+            messages.error(request, f'هذه الدورة مسندة بالفعل لهذا الموظف من خلال المسمى الوظيفي "{assignment.assigned_via_job_title.name}".')
+        else:
+            messages.error(request, 'هذه الدورة مدرجة بالفعل لهذا الموظف.')
+        return redirect('business_owner_dashboard')
+    messages.success(request, f'تم إدراج الدورة "{course.title}" إلى {employee.user.username}')
+    return redirect('business_owner_dashboard')
+    try:
+        CourseAssignment.objects.create(
+            business=business,
+            course=course,
+            employee=employee.user,
+            assigned_by=request.user,
+        )
+    except IntegrityError:
+        existing_assignment = CourseAssignment.objects.filter(
+            business=business,
+            course=course,
+            employee=employee.user,
+        ).select_related('assigned_via_job_title').first()
+        if existing_assignment and existing_assignment.assigned_via_job_title_id:
+            messages.error(request, f'هذه الدورة مسندة بالفعل لهذا الموظف من خلال المسمى الوظيفي "{existing_assignment.assigned_via_job_title.name}".')
+        else:
+            messages.error(request, 'هذه الدورة مدرجة بالفعل لهذا الموظف.')
+        transaction.set_rollback(True)
+        return redirect('business_owner_dashboard')
+    messages.success(request, f'تم إسناد الدورة "{course.title}" إلى {employee.user.username}.')
+    return redirect('business_owner_dashboard')
+
+
+@login_required
 def business_owner_employees_view(request):
     if not _business_owner_guard(request):
         return redirect('home')
@@ -1389,31 +1453,18 @@ def business_owner_course_create_action(request):
     if not _business_owner_guard(request):
         return redirect('home')
     business = _get_owned_business(request.user)
-    selected_job_title_id = (request.POST.get('job_title') or '').strip()
-    if not selected_job_title_id:
-        messages.error(request, 'المسمى الوظيفي: هذا الحقل مطلوب.')
-        return redirect('business_owner_courses')
     if not request.FILES.get('content_video_file'):
-        messages.error(request, 'ملف الفيديو: هذا الحقل مطلوب.')
+        messages.error(request, '??? ???????: ??? ????? ?????.')
         return redirect('business_owner_courses')
     form = CourseForm(request.POST)
     if not form.is_valid():
         _flash_form_errors(request, form, {
-            'title': 'عنوان الدورة',
-            'description': 'الوصف',
-            'estimated_minutes': 'المدة التقديرية بالدقائق',
-            'is_active': 'حالة الدورة',
+            'title': '????? ??????',
+            'description': '?????',
+            'estimated_minutes': '????? ????????? ????????',
+            'is_active': '???? ??????',
         })
         return redirect('business_owner_courses')
-
-    selected_job_title = None
-    selected_job_title_id = (request.POST.get('job_title') or '').strip()
-    if selected_job_title_id:
-        selected_job_title = JobTitle.objects.filter(business=business, id=selected_job_title_id).first()
-        if selected_job_title is None:
-            messages.error(request, 'المسمى الوظيفي المحدد غير صالح.')
-            transaction.set_rollback(True)
-            return redirect('business_owner_courses')
 
     content_title = (request.POST.get('content_title') or '').strip()
     content_body = (request.POST.get('content_body') or '').strip()
@@ -1435,21 +1486,6 @@ def business_owner_course_create_action(request):
     course.business = business
     course.created_by = request.user
     course.save()
-
-    if selected_job_title is not None:
-        rule = CourseAssignmentRule(
-            business=business,
-            job_title=selected_job_title,
-            course=course,
-            assigned_by=request.user,
-        )
-        try:
-            rule.save()
-            _ensure_course_assignments_for_rule(rule)
-        except IntegrityError:
-            messages.error(request, 'هذه الدورة مسندة بالفعل لهذا المسمى الوظيفي.')
-            transaction.set_rollback(True)
-            return redirect('business_owner_courses')
 
     if has_initial_content:
         content_data = request.POST.copy()
@@ -1479,7 +1515,7 @@ def business_owner_course_create_action(request):
             transaction.set_rollback(True)
             return redirect('business_owner_courses')
 
-    messages.success(request, 'تم إنشاء الدورة بنجاح.')
+    messages.success(request, 'تم إنشاء الدورة بنجاح')
     return redirect('business_owner_courses')
 
 
@@ -1613,7 +1649,7 @@ def _employee_dashboard_context(request):
     today = timezone.localdate()
     _ensure_employee_courses_are_backed_by_db(business)
     _provision_course_assignments_for_employee(employee_profile)
-    course_assignments = CourseAssignment.objects.filter(employee=request.user, business=business).select_related('course').prefetch_related(Prefetch('course__content_items', queryset=CourseContentItem.objects.order_by('order', 'id'))).order_by('status', 'course__title', 'id')
+    course_assignments = CourseAssignment.objects.filter(employee=request.user, business=business).select_related('course').prefetch_related(Prefetch('course__content_items', queryset=CourseContentItem.objects.order_by('order', 'id'))).order_by('status', '-assigned_at', '-id')
     certificate_map = {}
     for cert in ScormCertificate.objects.filter(owner=request.user, scorm_filename__startswith='course_exam_'):
         suffix = (cert.scorm_filename or '').replace('course_exam_', '', 1)
@@ -1627,10 +1663,11 @@ def _employee_dashboard_context(request):
                 certificate_map[assignment.course_id] = certificate_url
         assignment.course_certificate_url = certificate_map.get(assignment.course_id)
     completed_course_count = sum(1 for assignment in course_assignments if assignment.status == CourseAssignment.Status.COMPLETED)
+    active_course_assignments = [assignment for assignment in course_assignments if assignment.status != CourseAssignment.Status.COMPLETED]
     assigned_checklists = list(_assigned_checklists_queryset(employee_profile))
     today_completions = {completion.checklist_id: completion for completion in SOPChecklistCompletion.objects.filter(business=business, employee=request.user, completed_for=today).select_related('checklist')}
     recent_checklist_completions = SOPChecklistCompletion.objects.filter(business=business, employee=request.user).select_related('checklist').order_by('-completed_for', '-completed_at')[:10]
-    return {'employee_profile': employee_profile, 'business': business, 'course_assignments': course_assignments, 'completed_course_count': completed_course_count, 'assigned_checklists': assigned_checklists, 'today_completions': today_completions, 'recent_checklist_completions': recent_checklist_completions, 'today': today}
+    return {'employee_profile': employee_profile, 'business': business, 'course_assignments': course_assignments, 'active_course_assignments': active_course_assignments, 'completed_course_count': completed_course_count, 'assigned_checklists': assigned_checklists, 'today_completions': today_completions, 'recent_checklist_completions': recent_checklist_completions, 'today': today}
 
 
 @login_required

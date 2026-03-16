@@ -141,19 +141,6 @@ body{
       </div>
 
       <div class="form-section">
-        <h3>إسناد الدورة لمسمى وظيفي</h3>
-
-        <div class="field">
-          <select id="course-job-title" name="job_title" required>
-            <option value="">اختر المسمى الوظيفي</option>
-            {% for job_title in job_titles %}
-              <option value="{{ job_title.id }}">{{ job_title.name }}</option>
-            {% endfor %}
-          </select>
-        </div>
-      </div>
-
-      <div class="form-section">
         <h3> إضافة المحتوى</h3>
         <div class="field">
           <div class="file-upload">
