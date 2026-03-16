@@ -51,7 +51,7 @@
       </div>
       <div class="field">
         <label for="employee-job-title">المسمى الوظيفي</label>
-        <select id="employee-job-title" name="job_title">
+        <select id="employee-job-title" name="job_title" required>
           <option value="">بدون مسمى حالياً</option>
           {% for job_title in job_titles %}
             <option value="{{ job_title.id }}">{{ job_title.name }}</option>

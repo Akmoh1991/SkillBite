@@ -1363,6 +1363,9 @@ def business_owner_employee_create_action(request):
     if not _business_owner_guard(request):
         return redirect('home')
     business = _get_owned_business(request.user)
+    if not (request.POST.get('job_title') or '').strip():
+        messages.error(request, 'المسمى الوظيفي: هذا الحقل مطلوب.')
+        return redirect('business_owner_employees')
     form = BusinessEmployeeCreateForm(request.POST, business=business)
     if not form.is_valid():
         messages.error(request, form.errors.as_text())
@@ -1386,6 +1389,13 @@ def business_owner_course_create_action(request):
     if not _business_owner_guard(request):
         return redirect('home')
     business = _get_owned_business(request.user)
+    selected_job_title_id = (request.POST.get('job_title') or '').strip()
+    if not selected_job_title_id:
+        messages.error(request, 'المسمى الوظيفي: هذا الحقل مطلوب.')
+        return redirect('business_owner_courses')
+    if not request.FILES.get('content_video_file'):
+        messages.error(request, 'ملف الفيديو: هذا الحقل مطلوب.')
+        return redirect('business_owner_courses')
     form = CourseForm(request.POST)
     if not form.is_valid():
         _flash_form_errors(request, form, {
