@@ -5,6 +5,69 @@
 {% block hero_text %}نظرة سريعة على فريقك، الدورات المسندة، وقوائم التشغيل اليومية داخل SkillBite.{% endblock %}
 
 {% block content %}
+<style>
+.main{
+  padding-top:calc(var(--topbar-h) + 22px);
+}
+
+.hero-card{
+  display:none;
+}
+
+.hero-card h1{
+  color:#0f766e;
+  margin:0;
+  font-size:28px;
+}
+
+.stats{
+  gap:14px;
+  margin-bottom:16px;
+}
+
+.stat-card{
+  padding:14px 16px;
+}
+
+.stat-card h4{
+  margin-bottom:6px;
+  font-size:12px;
+}
+
+.stat-card span{
+  font-size:20px;
+}
+
+.dashboard-table-card{
+  padding:0;
+  background:transparent;
+  box-shadow:none;
+}
+
+.section{
+  gap:0;
+  margin-bottom:0;
+}
+
+.table-wrap{
+  border-radius:16px;
+}
+
+.data-table th,
+.data-table td{
+  padding:14px 16px;
+}
+
+.data-table th{
+  font-size:14px;
+}
+
+.data-table td,
+.data-table td strong{
+  font-size:15px;
+}
+</style>
+
 <section class="stats">
   <div class="stat-card">
     <h4>عدد الموظفين</h4>
@@ -24,58 +87,34 @@
   </div>
 </section>
 
-<section class="content-layout">
-  <div class="layout-main">
-    <div class="card">
-      <div class="list-head">
-        <h2>ملخص الفريق</h2>
-        <span class="list-count">{{ employees|length }}</span>
+<section class="section">
+  <div class="card section-full dashboard-table-card">
+    {% if employees %}
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>الاسم</th>
+              <th>اسم المستخدم</th>
+              <th>البريد الإلكتروني</th>
+              <th>المسمى الوظيفي</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for employee in employees %}
+              <tr>
+                <td><strong>{{ employee.user.get_full_name|default:employee.user.username }}</strong></td>
+                <td>{{ employee.user.username }}</td>
+                <td>{% if employee.user.email %}{{ employee.user.email }}{% else %}<span class="muted">غير مضاف</span>{% endif %}</td>
+                <td>{% if employee.job_title %}{{ employee.job_title.name }}{% else %}<span class="muted">بدون مسمى</span>{% endif %}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
       </div>
-      <ul class="list">
-        {% for employee in employees|slice:":6" %}
-          <li>
-            <strong>{{ employee.user.get_full_name|default:employee.user.username }}</strong><br>
-            <span class="muted">{{ employee.user.username }}{% if employee.job_title %} | {{ employee.job_title.name }}{% endif %}</span>
-          </li>
-        {% empty %}
-          <li class="muted">لا يوجد موظفون حتى الآن.</li>
-        {% endfor %}
-      </ul>
-    </div>
-  </div>
-
-  <div class="layout-side">
-    <div class="card">
-      <div class="card-intro">
-        <div>
-          <h2>آخر محتوى تدريبي وتشغيلي</h2>
-          <p>نظرة سريعة على أكثر المواد التي تحتاج متابعة.</p>
-        </div>
-      </div>
-      <h3>الدورات</h3>
-      <ul class="list">
-        {% for course in courses|slice:":3" %}
-          <li>
-            <strong>{{ course.title }}</strong>
-            <span class="pill">{{ course.assignment_total }} مسند</span>
-          </li>
-        {% empty %}
-          <li class="muted">لا توجد دورات حتى الآن.</li>
-        {% endfor %}
-      </ul>
-
-      <h3>قوائم التشغيل</h3>
-      <ul class="list">
-        {% for checklist in checklists|slice:":3" %}
-          <li>
-            <strong>{{ checklist.title }}</strong>
-            <span class="pill">{{ checklist.completion_total_today }} مكتمل اليوم</span>
-          </li>
-        {% empty %}
-          <li class="muted">لا توجد قوائم تشغيل حتى الآن.</li>
-        {% endfor %}
-      </ul>
-    </div>
+    {% else %}
+      <p class="muted">لا يوجد موظفون حتى الآن.</p>
+    {% endif %}
   </div>
 </section>
 {% endblock %}
