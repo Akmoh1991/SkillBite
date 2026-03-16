@@ -1278,7 +1278,7 @@ def business_owner_job_title_create_action(request):
         return redirect('home')
     business = _get_owned_business(request.user)
     form = JobTitleForm(request.POST)
-    if form.is_valid():
+    if not form.is_valid():
         job_title = form.save(commit=False)
         job_title.business = business
         try:
@@ -1316,19 +1316,80 @@ def business_owner_employee_create_action(request):
 
 @login_required
 @require_POST
+@transaction.atomic
 def business_owner_course_create_action(request):
     if not _business_owner_guard(request):
         return redirect('home')
     business = _get_owned_business(request.user)
     form = CourseForm(request.POST)
-    if form.is_valid():
-        course = form.save(commit=False)
-        course.business = business
-        course.created_by = request.user
-        course.save()
-        messages.success(request, 'تم إنشاء الدورة')
-    else:
+    if not form.is_valid():
         messages.error(request, form.errors.as_text())
+        return redirect('business_owner_courses')
+
+    selected_job_title = None
+    selected_job_title_id = (request.POST.get('job_title') or '').strip()
+    if selected_job_title_id:
+        selected_job_title = JobTitle.objects.filter(business=business, id=selected_job_title_id).first()
+        if selected_job_title is None:
+            messages.error(request, 'Invalid job title selection')
+            transaction.set_rollback(True)
+            return redirect('business_owner_courses')
+
+    content_title = (request.POST.get('content_title') or '').strip()
+    content_body = (request.POST.get('content_body') or '').strip()
+    content_material_url = (request.POST.get('content_material_url') or '').strip()
+    content_order = (request.POST.get('content_order') or '').strip() or '1'
+    content_type = (request.POST.get('content_type') or CourseContentItem.ContentType.LESSON).strip()
+    has_initial_content = any([
+        content_title,
+        content_body,
+        content_material_url,
+        request.FILES.get('content_video_file'),
+        request.FILES.get('content_pdf_file'),
+    ])
+
+    course = form.save(commit=False)
+    course.business = business
+    course.created_by = request.user
+    course.save()
+
+    if selected_job_title is not None:
+        rule = CourseAssignmentRule(
+            business=business,
+            job_title=selected_job_title,
+            course=course,
+            assigned_by=request.user,
+        )
+        try:
+            rule.save()
+            _ensure_course_assignments_for_rule(rule)
+        except IntegrityError:
+            messages.error(request, 'This course is already assigned to that job title')
+            transaction.set_rollback(True)
+            return redirect('business_owner_courses')
+
+    if has_initial_content:
+        content_data = request.POST.copy()
+        content_data['course'] = str(course.id)
+        content_data['title'] = content_title
+        content_data['body'] = content_body
+        content_data['material_url'] = content_material_url
+        content_data['content_type'] = content_type
+        content_data['order'] = content_order
+        content_files = request.FILES.copy()
+        if request.FILES.get('content_video_file'):
+            content_files['video_file'] = request.FILES['content_video_file']
+        if request.FILES.get('content_pdf_file'):
+            content_files['pdf_file'] = request.FILES['content_pdf_file']
+        content_form = CourseContentItemForm(content_data, content_files, business=business)
+        if content_form.is_valid():
+            content_form.save()
+        else:
+            messages.error(request, content_form.errors.as_text())
+            transaction.set_rollback(True)
+            return redirect('business_owner_courses')
+
+    messages.success(request, 'Course created successfully')
     return redirect('business_owner_courses')
 
 
