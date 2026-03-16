@@ -1,0 +1,51 @@
+{% extends "accounts-templates/super-admin-base.html" %}
+
+{% block page_title %}SkillBite | تعديل السؤال{% endblock %}
+{% block hero_title %}تعديل السؤال{% endblock %}
+{% block hero_text %}محرر السؤال مستوحى من `trainer-question-editor.html` ومربوط بقالب الاختبار الحالي.{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="card" style="grid-column:1 / -1;">
+    <div class="card-intro">
+      <div>
+        <h2>{{ template_obj.name }}</h2>
+        <p>أضف السؤال وخياراته من نفس الشاشة.</p>
+      </div>
+      <a class="btn secondary" href="{% url 'super_admin_exam_template_editor' template_obj.id %}" style="text-decoration:none;">العودة للمحرر</a>
+    </div>
+
+    <form method="post">
+      {% csrf_token %}
+      <div class="inline-form">
+        {{ q_form.as_p }}
+      </div>
+
+      <div class="card" style="margin-top:18px; box-shadow:none; border:1px solid #eef1f5;">
+        <div class="card-intro">
+          <div>
+            <h3>خيارات السؤال</h3>
+            <p>للأسئلة المقالية أو القصيرة يمكن ترك الخيارات فارغة.</p>
+          </div>
+        </div>
+        <div class="card" style="padding:0; box-shadow:none;">
+          <div style="padding:18px;">
+            {{ opt_formset.management_form }}
+            {% for form in opt_formset.forms %}
+              <div class="checklist-form" style="margin-bottom:12px;">
+                {{ form.id }}
+                {{ form.as_p }}
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:18px; display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="submit">حفظ السؤال</button>
+        <a class="btn secondary" href="{% url 'super_admin_exam_template_editor' template_obj.id %}" style="text-decoration:none;">إلغاء</a>
+      </div>
+    </form>
+  </div>
+</section>
+{% endblock %}

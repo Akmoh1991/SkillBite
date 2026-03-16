@@ -1,0 +1,99 @@
+{% extends "accounts-templates/super-admin-base.html" %}
+
+{% block page_title %}SkillBite | محرر قالب الاختبار{% endblock %}
+{% block hero_title %}{% if template_obj %}{{ template_obj.name }}{% else %}قالب اختبار جديد{% endif %}{% endblock %}
+{% block hero_text %}شاشة إنشاء وتعديل القالب مبنية على `trainer-exam-template-editor.html` ومربوطة بالدورات الحالية.{% endblock %}
+
+{% block content %}
+<section class="content-layout">
+  <div class="layout-main">
+    <div class="card">
+      <div class="card-intro">
+        <div>
+          <h2>بيانات القالب</h2>
+          <p>احفظ القالب أولًا ثم أضف الأسئلة من القسم التالي.</p>
+        </div>
+        <a class="btn secondary" href="{% url 'super_admin_exam_templates' %}" style="text-decoration:none;">العودة للقوالب</a>
+      </div>
+
+      <form method="post" class="inline-form">
+        {% csrf_token %}
+        {{ template_form.as_p }}
+        <button class="btn" type="submit">حفظ القالب</button>
+      </form>
+    </div>
+
+    {% if template_obj %}
+      <div class="card">
+        <div class="card-intro">
+          <div>
+            <h2>الأسئلة</h2>
+            <p>مستوحاة من محرر الأسئلة الذي أرسلته، مع ربط مباشر بقالب الاختبار.</p>
+          </div>
+          <a class="btn" href="{% url 'super_admin_exam_question_create' template_obj.id %}" style="text-decoration:none;">+ إضافة سؤال</a>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>الترتيب</th>
+                <th>السؤال</th>
+                <th>النوع</th>
+                <th>الدرجة</th>
+                <th>الخيارات</th>
+                <th>إجراء</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for question in questions %}
+                <tr>
+                  <td>{{ question.order }}</td>
+                  <td><strong>{{ question.question_text|truncatechars:110 }}</strong></td>
+                  <td>{{ question.get_question_type_display }}</td>
+                  <td>{{ question.points }}</td>
+                  <td>{{ question.options.count }}</td>
+                  <td>
+                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                      <a class="btn secondary" href="{% url 'super_admin_exam_question_editor' template_obj.id question.id %}" style="text-decoration:none;">تعديل</a>
+                      <form method="post" action="{% url 'super_admin_exam_question_delete' template_obj.id question.id %}">
+                        {% csrf_token %}
+                        <button class="btn warn" type="submit">حذف</button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              {% empty %}
+                <tr><td colspan="6" class="muted">لا توجد أسئلة مضافة لهذا القالب بعد.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="layout-side">
+    <div class="card">
+      <div class="card-intro">
+        <div>
+          <h3>ملخص سريع</h3>
+          <p>مبني على أسلوب بطاقات `trainer-exam-template-editor.html`.</p>
+        </div>
+      </div>
+      <div class="checklist-form">
+        <div class="meta">عدد الأسئلة</div>
+        <strong style="display:block; font-size:24px; margin-top:6px;">{{ template_obj.total_questions|default:0 }}</strong>
+      </div>
+      <div class="checklist-form" style="margin-top:12px;">
+        <div class="meta">الدورات المرتبطة</div>
+        {% for course in assigned_courses %}
+          <div style="margin-top:8px;"><strong>{{ course.title }}</strong><div class="meta">{{ course.business.name }}</div></div>
+        {% empty %}
+          <div class="meta" style="margin-top:8px;">لا توجد دورة مرتبطة مباشرة بهذا القالب.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

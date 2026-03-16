@@ -14,6 +14,8 @@ from training.models import (
     CourseContentItem,
     CourseAssignment,
     CourseAssignmentRule,
+    CourseExamSession,
+    ExamTemplate,
     SOPChecklist,
     SOPChecklistAssignmentRule,
     SOPChecklistCompletion,
@@ -327,6 +329,39 @@ class MultiTenantFlowTests(TestCase):
         assignment.refresh_from_db()
         self.assertEqual(assignment.status, CourseAssignment.Status.IN_PROGRESS)
 
+    def test_employee_course_view_includes_exam_button_and_exam_pages_render(self):
+        CourseContentItem.objects.create(
+            course=self.course,
+            content_type=CourseContentItem.ContentType.TEXT,
+            title='Hand washing steps',
+            body='Wash, rinse, sanitize, and dry thoroughly.',
+            order=1,
+        )
+        employee_user = User.objects.create_user(username='employee_exam_view', password='pass12345')
+        EmployeeProfile.objects.create(user=employee_user, business=self.business, job_title=self.job_title, created_by=self.owner)
+        assignment = CourseAssignment.objects.create(
+            business=self.business,
+            course=self.course,
+            employee=employee_user,
+            assigned_by=self.owner,
+            assigned_via_job_title=self.job_title,
+        )
+
+        self.client.login(username='employee_exam_view', password='pass12345')
+        course_response = self.client.get(reverse('employee_course_view', args=[assignment.id]))
+        exam_url = reverse('employee_course_exam', args=[assignment.id])
+
+        self.assertEqual(course_response.status_code, 200)
+        self.assertContains(course_response, exam_url)
+
+        exam_response = self.client.get(exam_url)
+        self.assertEqual(exam_response.status_code, 200)
+        self.assertContains(exam_response, self.course.title)
+
+        take_response = self.client.get(reverse('employee_course_exam_take', args=[assignment.id]))
+        self.assertEqual(take_response.status_code, 200)
+        self.assertContains(take_response, 'Hand washing steps')
+
     def test_single_job_title_business_implicitly_exposes_checklist_without_rule(self):
         SOPChecklistAssignmentRule.objects.all().delete()
         employee_user = User.objects.create_user(username='employee_implicit_checklist', password='pass12345')
@@ -413,6 +448,49 @@ class SuperAdminFlowTests(TestCase):
         self.assertRedirects(response, reverse('super_admin_learning'))
         self.assertEqual(Course.objects.filter(business=self.business).count(), 9)
         self.assertTrue(CourseContentItem.objects.filter(course__business=self.business).exists())
+
+    def test_super_admin_can_create_exam_template_and_session_for_course(self):
+        self.client.login(username='platform_admin', password='pass12345')
+        create_response = self.client.post(
+            reverse('super_admin_exam_template_create'),
+            {
+                'business': self.business.id,
+                'course': self.course.id,
+                'name': 'Food Safety Final',
+                'duration_minutes': 25,
+                'passing_score_percent': 80,
+                'instructions': 'Answer all questions.',
+                'show_result_after_submit': 'on',
+                'shuffle_questions': 'on',
+            },
+        )
+        template = ExamTemplate.objects.get(name='Food Safety Final')
+        self.assertRedirects(create_response, reverse('super_admin_exam_template_editor', args=[template.id]))
+
+        self.course.refresh_from_db()
+        self.assertEqual(self.course.exam_template_id, template.id)
+
+        session_response = self.client.post(
+            reverse('super_admin_exam_sessions'),
+            {
+                'business': self.business.id,
+                'course': self.course.id,
+                'exam_template': template.id,
+                'exam_date': '2026-04-01T09:30',
+                'access_code': 'SAFE101',
+                'is_active': 'on',
+            },
+        )
+        self.assertRedirects(session_response, reverse('super_admin_exam_sessions'))
+        self.assertTrue(CourseExamSession.objects.filter(course=self.course, exam_template=template, access_code='SAFE101').exists())
+
+        templates_page = self.client.get(reverse('super_admin_exam_templates'))
+        self.assertEqual(templates_page.status_code, 200)
+        self.assertContains(templates_page, 'Food Safety Final')
+
+        grading_page = self.client.get(reverse('super_admin_exam_grading'))
+        self.assertEqual(grading_page.status_code, 200)
+        self.assertContains(grading_page, self.course.title)
 
     def test_super_admin_scorm_download_requires_super_admin_role(self):
         os.makedirs(self.scorm_dir, exist_ok=True)

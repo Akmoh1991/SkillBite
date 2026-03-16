@@ -1,0 +1,50 @@
+{% extends "accounts-templates/super-admin-base.html" %}
+
+{% block page_title %}SkillBite | تصحيح الاختبارات{% endblock %}
+{% block hero_title %}تصحيح الاختبارات{% endblock %}
+{% block hero_text %}لوحة متابعة جاهزة مبنية على `trainer-exam-grading.html` لعرض الجلسات والمرشحين المرتبطين بها.{% endblock %}
+
+{% block content %}
+<section class="stats">
+  <div class="stat-card"><h4>جلسات الاختبار</h4><span>{{ session_count }}</span></div>
+</section>
+
+<section class="section">
+  <div class="card" style="grid-column:1 / -1;">
+    <div class="card-intro">
+      <div>
+        <h2>متابعة الجلسات</h2>
+        <p>الواجهة جاهزة للتصحيح الفعلي عند ربط تسليمات الموظفين بنتائج الاختبار.</p>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>الدورة</th>
+            <th>الشركة</th>
+            <th>القالب</th>
+            <th>الموعد</th>
+            <th>الموظفون المرتبطون</th>
+            <th>الحالة</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for session in sessions %}
+            <tr>
+              <td><strong>{{ session.course.title }}</strong></td>
+              <td>{{ session.course.business.name }}</td>
+              <td>{{ session.exam_template.name|default:"-" }}</td>
+              <td>{{ session.exam_date|date:"Y-m-d H:i" }}</td>
+              <td>{{ session.assigned_employee_total }}</td>
+              <td><span class="pill {% if not session.is_active %}muted{% endif %}">{{ session.is_active|yesno:"نشطة,موقوفة" }}</span></td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="6" class="muted">لا توجد جلسات متاحة للتصحيح بعد.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+{% endblock %}

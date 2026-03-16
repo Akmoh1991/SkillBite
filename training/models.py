@@ -42,6 +42,14 @@ class Course(models.Model):
         auto_now_add=True,
         verbose_name='Created at',
     )
+    exam_template = models.ForeignKey(
+        'ExamTemplate',
+        on_delete=models.SET_NULL,
+        related_name='courses',
+        null=True,
+        blank=True,
+        verbose_name='Exam template',
+    )
 
     class Meta:
         verbose_name = 'Course'
@@ -228,6 +236,208 @@ class CourseAssignment(models.Model):
 
     def __str__(self):
         return f'{self.employee} - {self.course}'
+
+
+class ExamTemplate(models.Model):
+    business = models.ForeignKey(
+        'accounts.BusinessTenant',
+        on_delete=models.CASCADE,
+        related_name='exam_templates',
+        null=True,
+        blank=True,
+        verbose_name='Business',
+    )
+    name = models.CharField(
+        max_length=255,
+        verbose_name='Exam template name',
+    )
+    duration_minutes = models.PositiveIntegerField(
+        verbose_name='Exam duration (minutes)',
+    )
+    total_questions = models.PositiveIntegerField(
+        default=0,
+        verbose_name='Total questions',
+    )
+    instructions = models.TextField(
+        blank=True,
+        default='',
+        verbose_name='Instructions',
+    )
+    passing_score_percent = models.PositiveSmallIntegerField(
+        default=60,
+        verbose_name='Passing score %',
+    )
+    show_result_after_submit = models.BooleanField(
+        default=True,
+        verbose_name='Show result after submit',
+    )
+    shuffle_questions = models.BooleanField(
+        default=True,
+        verbose_name='Shuffle questions',
+    )
+    created_by = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='exam_templates',
+        verbose_name='Created by',
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Created at',
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        verbose_name='Updated at',
+    )
+
+    class Meta:
+        verbose_name = 'Exam template'
+        verbose_name_plural = 'Exam templates'
+        ordering = ['-created_at', '-id']
+
+    def __str__(self):
+        return self.name
+
+
+class ExamQuestion(models.Model):
+    class QuestionType(models.TextChoices):
+        MCQ_SINGLE = 'MCQ_SINGLE', 'Single choice'
+        MCQ_MULTI = 'MCQ_MULTI', 'Multiple choice'
+        TRUE_FALSE = 'TRUE_FALSE', 'True / False'
+        SHORT_ANSWER = 'SHORT_ANSWER', 'Short answer'
+        ESSAY = 'ESSAY', 'Essay'
+
+    template = models.ForeignKey(
+        ExamTemplate,
+        on_delete=models.CASCADE,
+        related_name='questions',
+        verbose_name='Exam template',
+    )
+    order = models.PositiveIntegerField(
+        default=1,
+        verbose_name='Order',
+    )
+    question_text = models.TextField(
+        verbose_name='Question text',
+    )
+    question_type = models.CharField(
+        max_length=20,
+        choices=QuestionType.choices,
+        default=QuestionType.MCQ_SINGLE,
+        verbose_name='Question type',
+    )
+    points = models.PositiveSmallIntegerField(
+        default=1,
+        verbose_name='Points',
+    )
+    is_required = models.BooleanField(
+        default=True,
+        verbose_name='Required',
+    )
+    shuffle_options = models.BooleanField(
+        default=True,
+        verbose_name='Shuffle options',
+    )
+    explanation = models.TextField(
+        blank=True,
+        default='',
+        verbose_name='Explanation',
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Created at',
+    )
+
+    class Meta:
+        verbose_name = 'Exam question'
+        verbose_name_plural = 'Exam questions'
+        ordering = ['order', 'id']
+        constraints = [
+            models.UniqueConstraint(fields=['template', 'order'], name='unique_question_order_per_template'),
+        ]
+
+    def __str__(self):
+        return f'{self.template} - Q{self.order}'
+
+
+class ExamOption(models.Model):
+    question = models.ForeignKey(
+        ExamQuestion,
+        on_delete=models.CASCADE,
+        related_name='options',
+        verbose_name='Question',
+    )
+    order = models.PositiveIntegerField(
+        default=1,
+        verbose_name='Order',
+    )
+    option_text = models.CharField(
+        max_length=500,
+        verbose_name='Option text',
+    )
+    is_correct = models.BooleanField(
+        default=False,
+        verbose_name='Correct answer',
+    )
+
+    class Meta:
+        verbose_name = 'Exam option'
+        verbose_name_plural = 'Exam options'
+        ordering = ['order', 'id']
+        constraints = [
+            models.UniqueConstraint(fields=['question', 'order'], name='unique_option_order_per_question'),
+        ]
+
+    def __str__(self):
+        return f'{self.question} - {self.order}'
+
+
+class CourseExamSession(models.Model):
+    course = models.ForeignKey(
+        Course,
+        on_delete=models.CASCADE,
+        related_name='exam_sessions',
+        verbose_name='Course',
+    )
+    exam_template = models.ForeignKey(
+        ExamTemplate,
+        on_delete=models.SET_NULL,
+        related_name='course_sessions',
+        null=True,
+        blank=True,
+        verbose_name='Exam template',
+    )
+    exam_date = models.DateTimeField(
+        verbose_name='Exam date',
+    )
+    access_code = models.CharField(
+        max_length=32,
+        blank=True,
+        default='',
+        verbose_name='Access code',
+    )
+    is_active = models.BooleanField(
+        default=True,
+        verbose_name='Active',
+    )
+    created_by = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='created_course_exam_sessions',
+        verbose_name='Created by',
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Created at',
+    )
+
+    class Meta:
+        verbose_name = 'Course exam session'
+        verbose_name_plural = 'Course exam sessions'
+        ordering = ['-exam_date', '-id']
+
+    def __str__(self):
+        return f'{self.course} - {self.exam_date:%Y-%m-%d %H:%M}'
 
 
 class SOPChecklist(models.Model):

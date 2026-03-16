@@ -2,69 +2,110 @@
 
 {% block page_title %}SkillBite | المحتوى والتكليفات{% endblock %}
 {% block hero_title %}المحتوى والتكليفات{% endblock %}
-{% block hero_text %}إدارة مركزية للدورات وقوائم التشغيل النشطة أو الموقوفة عبر جميع الشركات.{% endblock %}
+{% block hero_text %}إدارة مركزية للدورات وقوائم التشغيل والاختبارات عبر جميع الشركات.{% endblock %}
 
 {% block content %}
 <section class="stats">
   <div class="stat-card"><h4>الدورات</h4><span>{{ course_count }}</span></div>
   <div class="stat-card"><h4>قوائم التشغيل</h4><span>{{ checklist_count }}</span></div>
+  <div class="stat-card"><h4>قوالب الاختبارات</h4><span>{{ exam_template_count }}</span></div>
+  <div class="stat-card"><h4>جلسات الاختبار</h4><span>{{ exam_session_count }}</span></div>
 </section>
 
-<section class="content-layout" style="margin-bottom: 24px;">
-  <div class="card">
-    <div class="card-intro">
-      <div>
-        <h2>نشر كتالوج الموظفين الحالي</h2>
-        <p>ينشئ نفس الدورات الظاهرة حالياً للموظف ولكن كسجلات حقيقية في قاعدة البيانات صادرة من لوحة المشرف العام.</p>
+<section class="content-layout" style="margin-bottom:24px;">
+  <div class="layout-main">
+    <div class="card">
+      <div class="card-intro">
+        <div>
+          <h2>الاختبارات</h2>
+          <p>إدارة القوالب والأسئلة والجلسات من لوحة المشرف العام.</p>
+        </div>
+      </div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <a class="btn" href="{% url 'super_admin_exam_templates' %}" style="text-decoration:none;">قوالب الاختبارات</a>
+        <a class="btn secondary" href="{% url 'super_admin_exam_sessions' %}" style="text-decoration:none;">مواعيد الاختبارات</a>
+        <a class="btn warn" href="{% url 'super_admin_exam_grading' %}" style="text-decoration:none;">التصحيح والمتابعة</a>
       </div>
     </div>
-    <form method="post" action="{% url 'super_admin_publish_employee_catalog' %}" class="inline-form">
-      {% csrf_token %}
-      {{ catalog_publish_form.as_p }}
-      <button class="btn" type="submit">نشر الكتالوج</button>
-    </form>
+
+    <div class="card">
+      <div class="card-intro">
+        <div>
+          <h2>نشر كتالوج الموظفين الحالي</h2>
+          <p>ينشئ نفس الدورات الظاهرة حاليًا للموظف ولكن كسجلات حقيقية في قاعدة البيانات.</p>
+        </div>
+      </div>
+      <form method="post" action="{% url 'super_admin_publish_employee_catalog' %}" class="inline-form">
+        {% csrf_token %}
+        {{ catalog_publish_form.as_p }}
+        <button class="btn" type="submit">نشر الكتالوج</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <div class="card-intro">
+        <div>
+          <h2>إضافة دورة جديدة</h2>
+          <p>أنشئ الدورة من حساب المشرف العام ثم ستصبح متاحة للتكليف على الموظفين.</p>
+        </div>
+      </div>
+      <form method="post" action="{% url 'super_admin_course_create' %}" class="inline-form">
+        {% csrf_token %}
+        {{ course_form.as_p }}
+        <button class="btn" type="submit">حفظ الدورة</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <div class="card-intro">
+        <div>
+          <h2>إسناد دورة لمسمى وظيفي</h2>
+          <p>أي موظف مرتبط بهذا المسمى سيرى الدورة مباشرة في صفحة الموظف.</p>
+        </div>
+      </div>
+      <form method="post" action="{% url 'super_admin_course_rule_create' %}" class="inline-form">
+        {% csrf_token %}
+        {{ course_rule_form.as_p }}
+        <button class="btn" type="submit">حفظ الإسناد</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <div class="card-intro">
+        <div>
+          <h2>رفع محتوى الدورة</h2>
+          <p>أضف صفحات الدورة أو الفيديو أو الملف من لوحة المشرف العام.</p>
+        </div>
+      </div>
+      <form method="post" action="{% url 'super_admin_course_content_create' %}" enctype="multipart/form-data" class="inline-form">
+        {% csrf_token %}
+        {{ course_content_form.as_p }}
+        <button class="btn" type="submit">إضافة المحتوى</button>
+      </form>
+    </div>
   </div>
 
-  <div class="card">
-    <div class="card-intro">
-      <div>
-        <h2>إضافة دورة جديدة</h2>
-        <p>أنشئ الدورة من حساب المشرف العام ثم ستصبح متاحة للتكليف على الموظفين.</p>
+  <div class="layout-side">
+    <div class="card">
+      <div class="card-intro">
+        <div>
+          <h3>اختصارات الاختبارات</h3>
+          <p>المسار الكامل لإضافة الاختبار للدورة.</p>
+        </div>
+      </div>
+      <div class="checklist-form">
+        <strong>1. أنشئ قالب اختبار</strong>
+        <div class="meta">أضف اسم القالب، المدة، وتعليمات التقديم.</div>
+      </div>
+      <div class="checklist-form" style="margin-top:12px;">
+        <strong>2. أضف الأسئلة والخيارات</strong>
+        <div class="meta">ادعم الاختيار المتعدد، صح/خطأ، والأسئلة المقالية.</div>
+      </div>
+      <div class="checklist-form" style="margin-top:12px;">
+        <strong>3. اربط القالب وحدد الموعد</strong>
+        <div class="meta">اربطه بالدورة وأنشئ جلسة اختبار متاحة للموظفين.</div>
       </div>
     </div>
-    <form method="post" action="{% url 'super_admin_course_create' %}" class="inline-form">
-      {% csrf_token %}
-      {{ course_form.as_p }}
-      <button class="btn" type="submit">حفظ الدورة</button>
-    </form>
-  </div>
-
-  <div class="card">
-    <div class="card-intro">
-      <div>
-        <h2>إسناد دورة لمسمى وظيفي</h2>
-        <p>أي موظف مرتبط بهذا المسمى سيرى الدورة مباشرة في صفحة الموظف.</p>
-      </div>
-    </div>
-    <form method="post" action="{% url 'super_admin_course_rule_create' %}" class="inline-form">
-      {% csrf_token %}
-      {{ course_rule_form.as_p }}
-      <button class="btn" type="submit">حفظ الإسناد</button>
-    </form>
-  </div>
-
-  <div class="card">
-    <div class="card-intro">
-      <div>
-        <h2>رفع محتوى الدورة</h2>
-        <p>أضف صفحات الدورة أو الفيديو أو الملف من المشرف العام بدل الاعتماد على HTML ثابت.</p>
-      </div>
-    </div>
-    <form method="post" action="{% url 'super_admin_course_content_create' %}" enctype="multipart/form-data" class="inline-form">
-      {% csrf_token %}
-      {{ course_content_form.as_p }}
-      <button class="btn" type="submit">إضافة المحتوى</button>
-    </form>
   </div>
 </section>
 
@@ -85,6 +126,7 @@
             <th>الحالة</th>
             <th>المحتوى</th>
             <th>التكليفات</th>
+            <th>القالب</th>
             <th>إجراء</th>
           </tr>
         </thead>
@@ -96,6 +138,7 @@
               <td><span class="pill {% if not course.is_active %}muted{% endif %}">{{ course.is_active|yesno:"نشطة,موقوفة" }}</span></td>
               <td>{{ course.content_item_total }}</td>
               <td>{{ course.assignment_total }}</td>
+              <td>{{ course.exam_template.name|default:"-" }}</td>
               <td>
                 <form method="post" action="{% url 'super_admin_course_toggle' course.id %}">
                   {% csrf_token %}
@@ -106,7 +149,7 @@
               </td>
             </tr>
           {% empty %}
-            <tr><td colspan="6" class="muted">لا توجد دورات.</td></tr>
+            <tr><td colspan="7" class="muted">لا توجد دورات.</td></tr>
           {% endfor %}
         </tbody>
       </table>

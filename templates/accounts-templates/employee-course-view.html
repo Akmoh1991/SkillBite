@@ -11,20 +11,35 @@
       <div>
         <h2 style="margin-bottom:6px;">محتوى الدورة</h2>
       </div>
-      <a class="btn" href="{% url 'employee_courses' %}" style="text-decoration:none; display:inline-flex; align-items:center;">
-        العودة إلى الدورات
-      </a>
+      <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+        <a class="btn secondary" href="{% url 'employee_course_exam' assignment.id %}" style="text-decoration:none; display:inline-flex; align-items:center;">
+          الاختبار
+        </a>
+        <a class="btn" href="{% url 'employee_courses' %}" style="text-decoration:none; display:inline-flex; align-items:center;">
+          العودة إلى الدورات
+        </a>
+      </div>
     </div>
 
     {% if content_items %}
       <div class="list">
         {% for item in content_items %}
           <div class="checklist-form" style="margin-bottom:14px;">
+            <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:8px; flex-wrap:wrap;">
+              <div>
+                <strong style="display:block; margin-bottom:4px;">{{ item.title }}</strong>
+                {% if item.body %}
+                  <div class="meta">{{ item.body }}</div>
+                {% endif %}
+              </div>
+            </div>
+
             {% if item.material_url %}
               <div style="margin-top:10px;">
                 <a href="{{ item.material_url }}" target="_blank" rel="noopener">فتح الرابط الخارجي</a>
               </div>
             {% endif %}
+
             {% if item.video_file %}
               <div style="margin-top:12px;">
                 <video controls preload="metadata" style="display:block; width:100%; border-radius:12px; background:#000;">
@@ -33,6 +48,7 @@
                 </video>
               </div>
             {% endif %}
+
             {% if item.pdf_file and not item.video_file %}
               <div style="margin-top:10px;">
                 <a href="{{ item.pdf_file.url }}" target="_blank" rel="noopener">فتح ملف PDF</a>

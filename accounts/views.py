@@ -18,6 +18,7 @@ from django.core.files.base import ContentFile
 from django.core.files.storage import FileSystemStorage
 from django.db import IntegrityError, transaction
 from django.db.models import Count, Prefetch, Q
+from django.forms import inlineformset_factory
 from django.http import FileResponse, Http404, HttpResponseForbidden, HttpResponsePermanentRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -29,6 +30,7 @@ from django.views.decorators.http import require_POST
 
 from certification.models import ScormCertificate
 from training.models import Course, CourseAssignment, CourseAssignmentRule, CourseContentItem, SOPChecklist, SOPChecklistAssignmentRule, SOPChecklistCompletion, SOPChecklistItem, SOPChecklistItemCompletion
+from training.models import CourseExamSession, ExamOption, ExamQuestion, ExamTemplate
 
 from .forms import (
     BusinessEmployeeCreateForm,
@@ -44,6 +46,10 @@ from .forms import (
     SuperAdminCourseCatalogPublishForm,
     SuperAdminCourseContentItemForm,
     SuperAdminCourseCreateForm,
+    SuperAdminExamOptionForm,
+    SuperAdminExamQuestionForm,
+    SuperAdminExamSessionForm,
+    SuperAdminExamTemplateForm,
     SuperAdminUserCreateForm,
 )
 from .models import BusinessTenant, EmployeeProfile, JobTitle
@@ -593,16 +599,70 @@ def _super_admin_learning_context():
         .annotate(item_total=Count('items'), completion_total=Count('completions'))
         .order_by('business__name', 'title', 'id')
     )
+    exam_templates = list(
+        ExamTemplate.objects.select_related('business', 'created_by')
+        .annotate(question_total=Count('questions'))
+        .order_by('business__name', 'name', 'id')
+    )
+    exam_sessions = list(
+        CourseExamSession.objects.select_related('course', 'course__business', 'exam_template')
+        .order_by('-exam_date', '-id')[:10]
+    )
     return {
         'courses': courses,
         'checklists': checklists,
         'course_count': len(courses),
         'checklist_count': len(checklists),
+        'exam_template_count': len(exam_templates),
+        'exam_session_count': len(exam_sessions),
         'course_form': SuperAdminCourseCreateForm(),
         'course_rule_form': SuperAdminCourseAssignmentRuleForm(),
         'course_content_form': SuperAdminCourseContentItemForm(),
         'catalog_publish_form': SuperAdminCourseCatalogPublishForm(),
         'businesses': BusinessTenant.objects.filter(is_active=True).order_by('name', 'id'),
+    }
+
+
+def _sync_exam_template_total_questions(template: ExamTemplate) -> None:
+    total_questions = template.questions.count()
+    if template.total_questions != total_questions:
+        template.total_questions = total_questions
+        template.save(update_fields=['total_questions', 'updated_at'])
+
+
+def _super_admin_exam_templates_context():
+    templates = list(
+        ExamTemplate.objects.select_related('business', 'created_by')
+        .annotate(question_total=Count('questions'), course_total=Count('courses'))
+        .order_by('-created_at', '-id')
+    )
+    return {
+        'templates': templates,
+        'template_count': len(templates),
+    }
+
+
+def _super_admin_exam_sessions_context():
+    sessions = list(
+        CourseExamSession.objects.select_related('course', 'course__business', 'exam_template', 'created_by')
+        .order_by('-exam_date', '-id')
+    )
+    return {
+        'sessions': sessions,
+        'session_count': len(sessions),
+        'session_form': SuperAdminExamSessionForm(),
+    }
+
+
+def _super_admin_exam_grading_context():
+    sessions = list(
+        CourseExamSession.objects.select_related('course', 'course__business', 'exam_template')
+        .annotate(assigned_employee_total=Count('course__assignments', distinct=True))
+        .order_by('-exam_date', '-id')
+    )
+    return {
+        'sessions': sessions,
+        'session_count': len(sessions),
     }
 
 
@@ -642,6 +702,135 @@ def super_admin_learning_view(request):
     if not _super_admin_guard(request):
         return redirect('home')
     return render(request, 'accounts-templates/super-admin-learning.html', _super_admin_learning_context())
+
+
+@login_required
+def super_admin_exam_templates_view(request):
+    if not _super_admin_guard(request):
+        return redirect('home')
+    return render(request, 'accounts-templates/super-admin-exam-templates.html', _super_admin_exam_templates_context())
+
+
+@login_required
+def super_admin_exam_template_editor_view(request, template_id: int | None = None):
+    if not _super_admin_guard(request):
+        return redirect('home')
+    template_obj = get_object_or_404(
+        ExamTemplate.objects.select_related('business', 'created_by').prefetch_related('questions__options', 'courses'),
+        id=template_id,
+    ) if template_id is not None else None
+    initial = {}
+    if template_obj and template_obj.business_id:
+        initial['business'] = template_obj.business
+    form = SuperAdminExamTemplateForm(request.POST or None, instance=template_obj, initial=initial)
+    if request.method == 'POST':
+        if form.is_valid():
+            saved_template = form.save(commit=False)
+            saved_template.created_by = template_obj.created_by if template_obj else request.user
+            saved_template.save()
+            selected_course = form.cleaned_data.get('course')
+            if selected_course:
+                selected_course.exam_template = saved_template
+                selected_course.save(update_fields=['exam_template'])
+            _sync_exam_template_total_questions(saved_template)
+            messages.success(request, f'Exam template "{saved_template.name}" saved.')
+            return redirect('super_admin_exam_template_editor', template_id=saved_template.id)
+        messages.error(request, form.errors.as_text())
+    return render(
+        request,
+        'accounts-templates/super-admin-exam-template-editor.html',
+        {
+            'template_obj': template_obj,
+            'template_form': form,
+            'questions': template_obj.questions.all() if template_obj else [],
+            'assigned_courses': template_obj.courses.select_related('business').order_by('business__name', 'title', 'id') if template_obj else [],
+        },
+    )
+
+
+@login_required
+def super_admin_exam_question_editor_view(request, template_id: int, question_id: int | None = None):
+    if not _super_admin_guard(request):
+        return redirect('home')
+    template_obj = get_object_or_404(ExamTemplate.objects.select_related('business', 'created_by'), id=template_id)
+    question = get_object_or_404(ExamQuestion.objects.select_related('template'), id=question_id, template=template_obj) if question_id is not None else None
+    option_formset_factory = inlineformset_factory(
+        ExamQuestion,
+        ExamOption,
+        form=SuperAdminExamOptionForm,
+        extra=4,
+        can_delete=True,
+    )
+    question_form = SuperAdminExamQuestionForm(request.POST or None, instance=question)
+    option_formset = option_formset_factory(request.POST or None, instance=question, prefix='options')
+    if request.method == 'POST':
+        if question_form.is_valid() and option_formset.is_valid():
+            saved_question = question_form.save(commit=False)
+            saved_question.template = template_obj
+            if not saved_question.pk:
+                saved_question.order = template_obj.questions.count() + 1
+            saved_question.save()
+            option_formset.instance = saved_question
+            option_formset.save()
+            _sync_exam_template_total_questions(template_obj)
+            messages.success(request, 'Question saved.')
+            return redirect('super_admin_exam_template_editor', template_id=template_obj.id)
+        messages.error(request, question_form.errors.as_text() or 'Please review the question fields and options.')
+    return render(
+        request,
+        'accounts-templates/super-admin-question-editor.html',
+        {
+            'template_obj': template_obj,
+            'question_obj': question,
+            'q_form': question_form,
+            'opt_formset': option_formset,
+        },
+    )
+
+
+@login_required
+@require_POST
+def super_admin_exam_question_delete_action(request, template_id: int, question_id: int):
+    if not _super_admin_guard(request):
+        return redirect('home')
+    template_obj = get_object_or_404(ExamTemplate, id=template_id)
+    question = get_object_or_404(ExamQuestion, id=question_id, template=template_obj)
+    question.delete()
+    for index, item in enumerate(template_obj.questions.order_by('order', 'id'), start=1):
+        if item.order != index:
+            item.order = index
+            item.save(update_fields=['order'])
+    _sync_exam_template_total_questions(template_obj)
+    messages.success(request, 'Question deleted.')
+    return redirect('super_admin_exam_template_editor', template_id=template_obj.id)
+
+
+@login_required
+def super_admin_exam_sessions_view(request):
+    if not _super_admin_guard(request):
+        return redirect('home')
+    if request.method == 'POST':
+        form = SuperAdminExamSessionForm(request.POST)
+        if form.is_valid():
+            session = form.save(commit=False)
+            session.created_by = request.user
+            if not session.exam_template_id:
+                session.exam_template = session.course.exam_template
+            session.save()
+            messages.success(request, 'Exam session created.')
+            return redirect('super_admin_exam_sessions')
+        messages.error(request, form.errors.as_text())
+        context = _super_admin_exam_sessions_context()
+        context['session_form'] = form
+        return render(request, 'accounts-templates/super-admin-exam-sessions.html', context)
+    return render(request, 'accounts-templates/super-admin-exam-sessions.html', _super_admin_exam_sessions_context())
+
+
+@login_required
+def super_admin_exam_grading_view(request):
+    if not _super_admin_guard(request):
+        return redirect('home')
+    return render(request, 'accounts-templates/super-admin-exam-grading.html', _super_admin_exam_grading_context())
 
 
 @login_required
@@ -1220,6 +1409,90 @@ def employee_course_view(request, assignment_id: int):
         assignment.status = CourseAssignment.Status.IN_PROGRESS
         assignment.save(update_fields=['status'])
     return render(request, 'accounts-templates/employee-course-view.html', {'employee_profile': employee_profile, 'business': employee_profile.business, 'assignment': assignment, 'course': assignment.course, 'content_items': assignment.course.content_items.all()})
+
+
+@login_required
+def employee_course_exam_view(request, assignment_id: int):
+    if not _employee_guard(request):
+        return redirect('home')
+    employee_profile = _get_employee_profile(request.user)
+    assignment = get_object_or_404(
+        CourseAssignment.objects.filter(employee=request.user, business=employee_profile.business)
+        .select_related('course')
+        .prefetch_related(Prefetch('course__content_items', queryset=CourseContentItem.objects.order_by('order', 'id'))),
+        id=assignment_id,
+    )
+    content_items = list(assignment.course.content_items.all())
+    available_sessions = list(
+        assignment.course.exam_sessions.filter(is_active=True).select_related('exam_template').order_by('exam_date', 'id')
+    )
+    estimated_exam_minutes = max(10, min(45, max(assignment.course.estimated_minutes, 1) // 2))
+    return render(
+        request,
+        'accounts-templates/employee-course-exam.html',
+        {
+            'employee_profile': employee_profile,
+            'business': employee_profile.business,
+            'assignment': assignment,
+            'course': assignment.course,
+            'content_items': content_items,
+            'content_items_count': len(content_items),
+            'estimated_exam_minutes': estimated_exam_minutes,
+            'available_sessions': available_sessions,
+        },
+    )
+
+
+@login_required
+def employee_course_exam_take_view(request, assignment_id: int):
+    if not _employee_guard(request):
+        return redirect('home')
+    employee_profile = _get_employee_profile(request.user)
+    assignment = get_object_or_404(
+        CourseAssignment.objects.filter(employee=request.user, business=employee_profile.business)
+        .select_related('course')
+        .prefetch_related(Prefetch('course__content_items', queryset=CourseContentItem.objects.order_by('order', 'id'))),
+        id=assignment_id,
+    )
+    content_items = list(assignment.course.content_items.all())
+    session = None
+    session_id = request.GET.get('session')
+    if str(session_id).isdigit():
+        session = assignment.course.exam_sessions.filter(is_active=True).select_related('exam_template').filter(id=int(session_id)).first()
+    if session is None:
+        session = assignment.course.exam_sessions.filter(is_active=True).select_related('exam_template').order_by('exam_date', 'id').first()
+
+    exam_template = (session.exam_template if session and session.exam_template_id else assignment.course.exam_template)
+    exam_questions = list(exam_template.questions.prefetch_related('options').order_by('order', 'id')) if exam_template else []
+    total_questions = max(len(exam_questions) or len(content_items), 1)
+    requested_index = request.GET.get('q', '1')
+    current_index = int(requested_index) if str(requested_index).isdigit() else 1
+    current_index = max(1, min(current_index, total_questions))
+    current_question = exam_questions[current_index - 1] if exam_questions else None
+    current_question_options = list(current_question.options.all()) if current_question else []
+    current_item = content_items[current_index - 1] if content_items and not current_question else None
+    estimated_exam_minutes = exam_template.duration_minutes if exam_template else max(10, min(45, max(assignment.course.estimated_minutes, 1) // 2))
+    return render(
+        request,
+        'accounts-templates/employee-course-exam-take.html',
+        {
+            'employee_profile': employee_profile,
+            'business': employee_profile.business,
+            'assignment': assignment,
+            'course': assignment.course,
+            'content_items': content_items,
+            'session': session,
+            'exam_template': exam_template,
+            'current_question': current_question,
+            'current_question_options': current_question_options,
+            'current_item': current_item,
+            'current_index': current_index,
+            'total_questions': total_questions,
+            'is_template_question': bool(current_question),
+            'remaining_seconds': estimated_exam_minutes * 60,
+            'estimated_exam_minutes': estimated_exam_minutes,
+        },
+    )
 
 
 @login_required

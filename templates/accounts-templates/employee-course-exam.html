@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مواعيد الاختبار المتاحة</title>
+<style>
+@import url('/static/branding/branding.css');
+:root{--sidebar-w:260px;--topbar-h:70px}
+body{margin:0;background:#f5f7fb;font-family:"SE","Segoe UI",Tahoma,Arial,sans-serif;color:#0f172a}
+.main{margin-right:var(--sidebar-w);padding:calc(var(--topbar-h) + 24px) 26px 28px}
+.card{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:18px;margin-bottom:16px;box-shadow:0 12px 28px rgba(15,23,42,.06)}
+.msg{padding:10px 12px;border-radius:10px;margin:0 0 12px 0}
+.msg.success{background:#dcfce7;color:#166534}
+.msg.error{background:#fee2e2;color:#991b1b}
+.table-wrap{overflow:auto}
+table{width:100%;border-collapse:collapse;min-width:620px}
+th,td{border-bottom:1px solid #e5e7eb;padding:10px 8px;text-align:right;font-size:14px}
+th{color:#475569;font-weight:700}
+.btn{display:inline-block;border:none;border-radius:10px;padding:8px 12px;font-weight:700;text-decoration:none;cursor:pointer}
+.btn-primary{background:#0b62d6;color:#fff}
+.btn-soft{background:#eef2ff;color:#1e3a8a}
+.date-cell{direction:ltr;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.meta-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:0 0 16px}
+.meta-tile{padding:14px;border-radius:12px;background:#f8fafc;border:1px solid #e2e8f0}
+.meta-tile strong{display:block;font-size:24px;color:#0f766e;margin-top:6px}
+td[colspan="3"]{color:#64748b;text-align:center;padding:20px 10px}
+@media (max-width:900px){.main{margin-right:0;padding:calc(var(--topbar-h) + 16px) 14px 18px}.card{padding:14px}}
+</style>
+</head>
+<body>
+{% include "accounts-templates/sidebar.html" %}
+{% include "accounts-templates/topbar.html" %}
+
+<div class="main">
+  <div style="text-align:left; margin-bottom:8px;">
+    <a class="btn btn-soft" href="{% url 'employee_course_view' assignment.id %}">العودة إلى محتوى الدورة</a>
+  </div>
+
+  <div class="card">
+    <h2 style="margin:0 0 8px 0;">مواعيد الاختبار المتاحة</h2>
+    <p style="margin:0 0 12px 0;color:#475569;">{{ course.title }}</p>
+
+    {% if messages %}
+      {% for message in messages %}
+        <div class="msg {% if message.tags %}{{ message.tags }}{% endif %}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+
+    <div class="meta-grid">
+      <div class="meta-tile">
+        مدة الاختبار
+        <strong>{{ estimated_exam_minutes }} دقيقة</strong>
+      </div>
+      <div class="meta-tile">
+        درجة الاجتياز
+        <strong>80%</strong>
+      </div>
+      <div class="meta-tile">
+        محاور المراجعة
+        <strong>{{ content_items_count }}</strong>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>الموعد</th>
+            <th>القالب</th>
+            <th>إجراء</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for session in available_sessions %}
+            <tr>
+              <td class="date-cell">{{ session.exam_date|date:"Y-m-d H:i" }}</td>
+              <td>{{ session.exam_template.name|default:course.exam_template.name|default:"الاختبار النهائي" }}</td>
+              <td>
+                <a class="btn btn-primary" href="{% url 'employee_course_exam_take' assignment.id %}?session={{ session.id }}">بدء الاختبار</a>
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="3">لا توجد جلسات متاحة حاليًا.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+</body>
+</html>
