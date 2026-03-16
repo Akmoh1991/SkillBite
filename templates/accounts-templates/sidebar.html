@@ -164,7 +164,7 @@
           قوائم التشغيل اليومية
         </a>
       </li>
-    {% elif request.resolver_match.url_name == 'business_owner_dashboard' or request.resolver_match.url_name == 'business_owner_employees' or request.resolver_match.url_name == 'business_owner_courses' or request.resolver_match.url_name == 'business_owner_course_list' or request.resolver_match.url_name == 'business_owner_course_view' or request.resolver_match.url_name == 'business_owner_checklists' or business %}
+    {% elif request.resolver_match.url_name == 'business_owner_dashboard' or request.resolver_match.url_name == 'business_owner_employees' or request.resolver_match.url_name == 'business_owner_job_titles' or request.resolver_match.url_name == 'business_owner_courses' or request.resolver_match.url_name == 'business_owner_course_list' or request.resolver_match.url_name == 'business_owner_course_view' or request.resolver_match.url_name == 'business_owner_checklists' or business %}
       <li>
         <a href="{% url 'business_owner_dashboard' %}"
            class="{% if request.resolver_match.url_name == 'business_owner_dashboard' %}active{% endif %}">
@@ -175,6 +175,12 @@
         <a href="{% url 'business_owner_employees' %}"
            class="{% if request.resolver_match.url_name == 'business_owner_employees' %}active{% endif %}">
           الموظفون
+        </a>
+      </li>
+      <li>
+        <a href="{% url 'business_owner_job_titles' %}"
+           class="{% if request.resolver_match.url_name == 'business_owner_job_titles' %}active{% endif %}">
+          المسميات الوظيفية
         </a>
       </li>
       <li>

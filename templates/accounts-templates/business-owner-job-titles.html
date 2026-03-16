@@ -1,0 +1,102 @@
+{% extends "accounts-templates/business-owner-base.html" %}
+
+{% block page_title %}{{ business.name }} | المسميات الوظيفية{% endblock %}
+{% block hero_title %}المسميات الوظيفية{% endblock %}
+{% block hero_text %}أنشئ المسميات الوظيفية التي تستخدمها عند إضافة الموظفين وربط الدورات وقوائم التشغيل.{% endblock %}
+
+{% block content %}
+<style>
+.hero-card{
+  display:none;
+}
+
+.main{
+  padding-top:calc(var(--topbar-h) + 22px);
+}
+
+.job-title-create-card .card-intro{
+  margin-bottom:18px;
+}
+
+.job-title-create-card .card-intro h2{
+  font-size:32px;
+  color:#0f766e;
+}
+
+.job-title-create-card .card-intro p{
+  font-size:15px;
+}
+
+.job-title-table-card{
+  padding:0;
+  background:transparent;
+  box-shadow:none;
+}
+
+.section{
+  gap:16px;
+  margin-bottom:0;
+}
+
+.table-wrap{
+  border-radius:16px;
+}
+
+.data-table th,
+.data-table td{
+  padding:14px 16px;
+}
+
+.data-table th{
+  font-size:14px;
+}
+
+.data-table td,
+.data-table td strong{
+  font-size:15px;
+}
+
+</style>
+
+<section class="section">
+  <div class="card section-full job-title-create-card">
+    <div class="card-intro">
+      <div>
+        <h2>إضافة مسمى وظيفي</h2>
+      </div>
+    </div>
+
+    <form method="post" action="{% url 'business_owner_job_title_create' %}">
+      {% csrf_token %}
+      <div class="field">
+        <label for="job-title-name">اسم المسمى الوظيفي</label>
+        <input id="job-title-name" type="text" name="name" required>
+      </div>
+      <button class="btn" type="submit">إضافة المسمى الوظيفي</button>
+    </form>
+  </div>
+
+  <div class="card section-full job-title-table-card">
+    {% if job_titles %}
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>المسميات الوظيفية الحالية</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for job_title in job_titles %}
+              <tr>
+                <td><strong>{{ job_title.name }}</strong></td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="muted">لا توجد مسميات وظيفية حتى الآن.</p>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

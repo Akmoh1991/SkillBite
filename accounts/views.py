@@ -1261,6 +1261,13 @@ def business_owner_employees_view(request):
 
 
 @login_required
+def business_owner_job_titles_view(request):
+    if not _business_owner_guard(request):
+        return redirect('home')
+    return render(request, 'accounts-templates/business-owner-job-titles.html', _business_owner_dashboard_context(request))
+
+
+@login_required
 def business_owner_courses_view(request):
     if not _business_owner_guard(request):
         return redirect('home')
@@ -1336,7 +1343,7 @@ def business_owner_job_title_create_action(request):
         return redirect('home')
     business = _get_owned_business(request.user)
     form = JobTitleForm(request.POST)
-    if not form.is_valid():
+    if form.is_valid():
         job_title = form.save(commit=False)
         job_title.business = business
         try:
@@ -1550,6 +1557,19 @@ def business_owner_checklist_create_action(request):
         checklist.save()
         for index, item_title in enumerate(form.cleaned_data['item_lines'], start=1):
             SOPChecklistItem.objects.create(checklist=checklist, title=item_title, order=index)
+        job_title_id = (request.POST.get('job_title') or '').strip()
+        if job_title_id:
+            job_title = JobTitle.objects.filter(id=job_title_id, business=business).first()
+            if job_title:
+                try:
+                    SOPChecklistAssignmentRule.objects.create(
+                        business=business,
+                        job_title=job_title,
+                        checklist=checklist,
+                        assigned_by=request.user,
+                    )
+                except IntegrityError:
+                    messages.warning(request, 'تم إنشاء القائمة، ولكنها مسندة بالفعل لهذا المسمى الوظيفي.')
         messages.success(request, 'تم إنشاء قائمة تشغيلية')
     else:
         messages.error(request, form.errors.as_text())

@@ -5,113 +5,117 @@
 {% block hero_text %}أنشئ قوائم SOP اليومية أو الأسبوعية واربطها بالمسميات الوظيفية لمتابعة التنفيذ اليومي.{% endblock %}
 
 {% block content %}
-<section class="stats">
-  <div class="stat-card">
-    <h4>عدد القوائم</h4>
-    <span>{{ checklists|length }}</span>
-  </div>
-  <div class="stat-card">
-    <h4>قواعد الإسناد</h4>
-    <span>{{ checklist_rules|length }}</span>
-  </div>
-</section>
+<style>
+html,
+body{
+  overflow-x:hidden;
+}
 
-<section class="content-layout">
-  <div class="layout-main">
-    <div class="card">
-      <div class="card-intro">
-        <div>
-          <h2>إنشاء قائمة تشغيل يومية</h2>
-          <p>أنشئ القائمة وحدد عناصرها ثم اربطها بالمسمى الوظيفي المناسب.</p>
-        </div>
+.hero-card{
+  display:none;
+}
+
+.main{
+  padding-top:calc(var(--topbar-h) + 18px);
+}
+
+.checklist-create-card{
+  padding:18px;
+  overflow:hidden;
+}
+
+.checklist-create-card .card-intro{
+  margin-bottom:14px;
+}
+
+.checklist-create-card .card-intro h2{
+  font-size:32px;
+  color:#0f766e;
+}
+
+.checklist-create-card .card-intro p{
+  font-size:15px;
+}
+
+.form-section{
+  margin-top:16px;
+  padding-top:14px;
+  border-top:1px solid #e2e8f0;
+}
+
+.form-section h3{
+  margin:0 0 8px;
+  font-size:15px;
+  color:#334155;
+}
+
+.form-section p{
+  margin:0 0 14px;
+  color:var(--muted);
+  font-size:14px;
+}
+
+.checklist-create-card .field{
+  margin-bottom:10px;
+}
+
+#checklist-description,
+#checklist-items{
+  min-height:120px;
+}
+</style>
+
+<section class="section">
+  <div class="card section-full checklist-create-card">
+    <div class="card-intro">
+      <div>
+        <h2>إنشاء قائمة تشغيل يومية</h2>
+        <p>أنشئ القائمة وحدد عناصرها، ثم اربطها بالمسمى الوظيفي المناسب.</p>
       </div>
-      <form method="post" action="{% url 'business_owner_checklist_create' %}">
-        {% csrf_token %}
-        <div class="field">
-          <label for="checklist-title">عنوان القائمة</label>
-          <input id="checklist-title" type="text" name="title" required>
-        </div>
-        <div class="field">
-          <label for="checklist-description">الوصف</label>
-          <textarea id="checklist-description" name="description"></textarea>
-        </div>
-        <div class="field">
-          <label for="checklist-frequency">التكرار</label>
-          <select id="checklist-frequency" name="frequency">
-            <option value="DAILY">يومي</option>
-            <option value="WEEKLY">أسبوعي</option>
-            <option value="ON_DEMAND">عند الحاجة</option>
-          </select>
-        </div>
-        <div class="field">
-          <label for="checklist-items">العناصر</label>
-          <textarea id="checklist-items" name="item_lines" required placeholder="كل عنصر في سطر مستقل"></textarea>
-        </div>
-        <label class="inline-check">
-          <input type="checkbox" name="is_active" checked>
-          القائمة نشطة
-        </label>
-        <button class="btn" type="submit">إنشاء القائمة</button>
-      </form>
+    </div>
 
-      <h3>إسناد قائمة حسب المسمى الوظيفي</h3>
-      <form method="post" action="{% url 'business_owner_checklist_rule_create' %}">
-        {% csrf_token %}
+    <form method="post" action="{% url 'business_owner_checklist_create' %}">
+      {% csrf_token %}
+      <div class="field">
+        <label for="checklist-title">عنوان القائمة</label>
+        <input id="checklist-title" type="text" name="title" required>
+      </div>
+      <div class="field">
+        <label for="checklist-description">الوصف</label>
+        <textarea id="checklist-description" name="description"></textarea>
+      </div>
+      <div class="field">
+        <label for="checklist-frequency">التكرار</label>
+        <select id="checklist-frequency" name="frequency">
+          <option value="DAILY">يومي</option>
+          <option value="WEEKLY">أسبوعي</option>
+          <option value="ON_DEMAND">عند الحاجة</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="checklist-items">العناصر</label>
+        <textarea id="checklist-items" name="item_lines" required placeholder="كل عنصر في سطر مستقل"></textarea>
+      </div>
+
+      <div class="form-section">
+        <h3>إسناد القائمة لمسمى وظيفي</h3>
+        <p>اختر المسمى الوظيفي إذا أردت تطبيق القائمة تلقائياً على الموظفين المناسبين.</p>
         <div class="field">
-          <label for="checklist-rule-job-title">المسمى الوظيفي</label>
-          <select id="checklist-rule-job-title" name="job_title" required>
-            <option value="">اختر</option>
+          <select id="checklist-job-title" name="job_title">
+            <option value="">بدون إسناد الآن</option>
             {% for job_title in job_titles %}
               <option value="{{ job_title.id }}">{{ job_title.name }}</option>
             {% endfor %}
           </select>
         </div>
-        <div class="field">
-          <label for="checklist-rule-checklist">القائمة</label>
-          <select id="checklist-rule-checklist" name="checklist" required>
-            <option value="">اختر</option>
-            {% for checklist in checklists %}
-              <option value="{{ checklist.id }}">{{ checklist.title }}</option>
-            {% endfor %}
-          </select>
-        </div>
-        <button class="btn" type="submit">حفظ قاعدة الإسناد</button>
-      </form>
-    </div>
-  </div>
-
-  <div class="layout-side">
-    <div class="card">
-      <div class="list-head">
-        <h2>مكتبة القوائم</h2>
-        <span class="list-count">{{ checklists|length }}</span>
       </div>
-      <ul class="list">
-        {% for checklist in checklists %}
-          <li>
-            <strong>{{ checklist.title }}</strong>
-            <span class="pill">{{ checklist.completion_total_today }} مكتمل اليوم</span><br>
-            <span class="muted">{{ checklist.get_frequency_display }} | {{ checklist.items.count }} عنصر</span>
-          </li>
-        {% empty %}
-          <li class="muted">لا توجد قوائم تشغيل حتى الآن.</li>
-        {% endfor %}
-      </ul>
-    </div>
 
-    <div class="card">
-      <div class="list-head">
-        <h3>قواعد إسناد القوائم</h3>
-        <span class="list-count">{{ checklist_rules|length }}</span>
-      </div>
-      <ul class="list">
-        {% for rule in checklist_rules %}
-          <li><strong>{{ rule.job_title.name }}</strong><br><span class="muted">{{ rule.checklist.title }}</span></li>
-        {% empty %}
-          <li class="muted">لا توجد قواعد إسناد للقوائم حتى الآن.</li>
-        {% endfor %}
-      </ul>
-    </div>
+      <label class="inline-check">
+        <input type="checkbox" name="is_active" checked>
+        القائمة نشطة
+      </label>
+      <button class="btn" type="submit">إنشاء القائمة</button>
+    </form>
   </div>
 </section>
 {% endblock %}
