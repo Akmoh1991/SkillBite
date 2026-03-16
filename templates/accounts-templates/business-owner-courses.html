@@ -6,16 +6,26 @@
 
 {% block content %}
 <style>
+html,
+body{
+  overflow-x:hidden;
+}
+
 .hero-card{
   display:none;
 }
 
 .main{
-  padding-top:calc(var(--topbar-h) + 22px);
+  padding-top:calc(var(--topbar-h) + 18px);
+}
+
+.course-create-card{
+  padding:18px;
+  overflow:hidden;
 }
 
 .course-create-card .card-intro{
-  margin-bottom:18px;
+  margin-bottom:14px;
 }
 
 .course-create-card .card-intro h2{
@@ -28,8 +38,8 @@
 }
 
 .form-section{
-  margin-top:24px;
-  padding-top:20px;
+  margin-top:16px;
+  padding-top:14px;
   border-top:1px solid #e2e8f0;
 }
 
@@ -50,7 +60,7 @@
   align-items:center;
   gap:14px;
   width:100%;
-  padding:12px;
+  padding:10px;
   border:1px solid #cbd5e1;
   border-radius:18px;
   background:#fff;
@@ -72,20 +82,20 @@
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  min-width:210px;
-  padding:14px 22px;
+  min-width:180px;
+  padding:12px 18px;
   border:1px solid #86efac;
   border-radius:16px;
   background:#ecfdf3;
   color:#0f766e;
-  font-size:16px;
+  font-size:15px;
   font-weight:800;
   cursor:pointer;
 }
 
 .file-upload__name{
   flex:1;
-  min-height:56px;
+  min-height:48px;
   display:flex;
   align-items:center;
   justify-content:flex-start;
@@ -97,6 +107,14 @@
   font-size:15px;
   font-weight:700;
   background:#fff;
+}
+
+.course-create-card .field{
+  margin-bottom:10px;
+}
+
+#course-description{
+  min-height:120px;
 }
 </style>
 

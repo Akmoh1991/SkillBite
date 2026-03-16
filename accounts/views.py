@@ -145,6 +145,20 @@ def _course_card_defaults(course):
     return course
 
 
+def _visible_course_content_items(items):
+    visible_items = []
+    for item in items:
+        if any(
+            (
+                (item.material_url or '').strip(),
+                bool(item.video_file),
+                bool(item.pdf_file),
+            )
+        ):
+            visible_items.append(item)
+    return visible_items
+
+
 def _publish_legacy_employee_course_catalog(business, created_by=None):
     catalog_entries = _load_employee_course_catalog()
     creator = created_by or User.objects.filter(is_active=True, is_staff=True, is_superuser=True).order_by('id').first() or business.owner
@@ -1254,28 +1268,58 @@ def business_owner_courses_view(request):
 
 
 @login_required
-def business_owner_course_content_view(request):
+def business_owner_course_list_view(request):
     if not _business_owner_guard(request):
         return redirect('home')
     business = _get_owned_business(request.user)
-    courses = list(business.courses.annotate(content_item_total=Count('content_items')).order_by('title', 'id'))
-    selected_course = None
-    selected_course_id = request.GET.get('course')
-    if selected_course_id and str(selected_course_id).isdigit():
-        selected_course = get_object_or_404(business.courses.annotate(content_item_total=Count('content_items')), id=int(selected_course_id))
-    elif courses:
-        selected_course = courses[0]
-    content_items = []
-    next_order = 1
-    if selected_course is not None:
-        content_items = list(selected_course.content_items.order_by('order', 'id'))
-        next_order = (content_items[-1].order + 1) if content_items else 1
-        for item in content_items:
-            item.edit_form = CourseContentItemForm(instance=item, business=business, prefix=f'item-{item.id}')
-    initial = {'order': next_order}
-    if selected_course is not None:
-        initial['course'] = selected_course
-    return render(request, 'accounts-templates/business-owner-course-content.html', {'business': business, 'courses': courses, 'selected_course': selected_course, 'content_items': content_items, 'content_form': CourseContentItemForm(business=business, initial=initial)})
+    _ensure_employee_courses_are_backed_by_db(business)
+    courses = list(
+        business.courses
+        .filter(is_active=True)
+        .prefetch_related(Prefetch('content_items', queryset=CourseContentItem.objects.order_by('order', 'id')))
+        .order_by('title', 'id')
+    )
+    for course in courses:
+        _course_card_defaults(course)
+    return render(
+        request,
+        'accounts-templates/business-owner-course-list.html',
+        {
+            'business': business,
+            'courses': courses,
+        },
+    )
+
+
+@login_required
+def business_owner_course_view(request, course_id: int):
+    if not _business_owner_guard(request):
+        return redirect('home')
+    business = _get_owned_business(request.user)
+    course = get_object_or_404(
+        business.courses.prefetch_related(
+            Prefetch('content_items', queryset=CourseContentItem.objects.order_by('order', 'id'))
+        ),
+        id=course_id,
+    )
+    _course_card_defaults(course)
+    content_items = _visible_course_content_items(course.content_items.all())
+    return render(
+        request,
+        'accounts-templates/business-owner-course-view.html',
+        {
+            'business': business,
+            'course': course,
+            'content_items': content_items,
+        },
+    )
+
+
+@login_required
+def business_owner_course_content_view(request):
+    if not _business_owner_guard(request):
+        return redirect('home')
+    return redirect('business_owner_course_list')
 
 
 @login_required
@@ -1597,7 +1641,8 @@ def employee_course_view(request, assignment_id: int):
     if assignment.status == CourseAssignment.Status.ASSIGNED:
         assignment.status = CourseAssignment.Status.IN_PROGRESS
         assignment.save(update_fields=['status'])
-    return render(request, 'accounts-templates/employee-course-view.html', {'employee_profile': employee_profile, 'business': employee_profile.business, 'assignment': assignment, 'course': assignment.course, 'content_items': assignment.course.content_items.all()})
+    content_items = _visible_course_content_items(assignment.course.content_items.all())
+    return render(request, 'accounts-templates/employee-course-view.html', {'employee_profile': employee_profile, 'business': employee_profile.business, 'assignment': assignment, 'course': assignment.course, 'content_items': content_items})
 
 
 @login_required
