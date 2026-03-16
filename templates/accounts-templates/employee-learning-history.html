@@ -1,0 +1,145 @@
+{% extends "accounts-templates/business-owner-base.html" %}
+
+{% block page_title %}{{ business.name }} | سجل التعلم{% endblock %}
+{% block hero_title %}سجل التعلم{% endblock %}
+{% block hero_text %}استعرض الدورات التي أكملتها وحمّل شهاداتك بصيغة PDF من مكان واحد.{% endblock %}
+
+{% block content %}
+<style>
+  .hero-card { display: none; }
+  .employee-history-page { display: grid; gap: 22px; }
+  .employee-history-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap; }
+  .employee-history-title { margin: 0; font-size: 28px; line-height: 1.2; color: #1f2937; font-weight: 800; }
+  .employee-history-subtitle { margin: 6px 0 0; color: #64748b; font-size: 15px; }
+  .employee-history-search-wrap { min-width: 280px; height: 44px; border: 1px solid #e5e7eb; border-radius: 999px; background: #fff; display: flex; align-items: center; padding: 0 14px; gap: 10px; }
+  .employee-history-search { flex: 1; min-width: 0; border: 0; outline: none; background: transparent; color: #111827; font: inherit; }
+  .employee-history-search::placeholder { color: #94a3b8; }
+  .employee-history-search-icon { color: #64748b; font-size: 14px; line-height: 1; }
+  .employee-history-card { background: #fff; border: 1px solid #e6ebf2; border-radius: 22px; box-shadow: 0 10px 30px rgba(15, 23, 42, .05); overflow: hidden; }
+  .employee-history-table-wrap { width: 100%; overflow-x: auto; }
+  .employee-history-table { width: 100%; border-collapse: collapse; min-width: 960px; }
+  .employee-history-table thead th { background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%); color: #334155; font-size: 13px; font-weight: 800; padding: 18px 20px; text-align: right; border-bottom: 1px solid #e2e8f0; white-space: nowrap; }
+  .employee-history-table tbody td { padding: 18px 20px; border-bottom: 1px solid #eef2f7; vertical-align: middle; color: #0f172a; font-size: 14px; }
+  .employee-history-table tbody tr:last-child td { border-bottom: 0; }
+  .employee-history-row.employee-history-hidden { display: none; }
+  .employee-history-course { display: grid; gap: 6px; min-width: 220px; }
+  .employee-history-course-title { font-size: 16px; font-weight: 800; color: #0f172a; }
+  .employee-history-course-desc { color: #64748b; line-height: 1.6; font-size: 13px; }
+  .employee-history-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 96px; padding: 8px 14px; border-radius: 999px; font-size: 12px; font-weight: 800; }
+  .employee-history-badge.completed { color: #166534; background: #ecfdf5; border: 1px solid #86efac; }
+  .employee-history-certificate { display: inline-flex; align-items: center; justify-content: center; min-height: 42px; padding: 0 18px; border-radius: 999px; background: linear-gradient(135deg, #0f766e, #10b981); color: #fff; text-decoration: none; font-size: 14px; font-weight: 800; white-space: nowrap; }
+  .employee-history-certificate.muted { background: #f8fafc; color: #94a3b8; border: 1px solid #e2e8f0; pointer-events: none; }
+  .employee-history-empty { display: none; background: #fff; border: 1px solid #e6ebf2; border-radius: 18px; padding: 28px; text-align: center; color: #64748b; }
+  .employee-history-empty.is-visible { display: block; }
+  .employee-history-empty-card { padding: 36px 28px; text-align: center; }
+  .employee-history-empty-card h3 { margin: 0 0 10px; font-size: 22px; color: #0f172a; }
+  .employee-history-empty-card p { margin: 0; color: #64748b; line-height: 1.8; }
+
+  @media (max-width: 760px) {
+    .employee-history-toolbar { align-items: stretch; }
+    .employee-history-search-wrap { width: 100%; min-width: 0; }
+  }
+</style>
+
+<section class="employee-history-page">
+  <div class="employee-history-toolbar">
+    <div>
+      <h2 class="employee-history-title">سجل الدورات المكتملة</h2>
+      <p class="employee-history-subtitle">كل دورة أنهيتها ستظهر هنا مع تاريخ الإنجاز ورابط تحميل الشهادة.</p>
+    </div>
+    <label class="employee-history-search-wrap" for="employee-history-search">
+      <input id="employee-history-search" class="employee-history-search" type="search" placeholder="ابحث في سجل التعلم">
+      <span class="employee-history-search-icon">⌕</span>
+    </label>
+  </div>
+
+  {% if learning_history %}
+    <div class="employee-history-card">
+      <div class="employee-history-table-wrap">
+        <table class="employee-history-table">
+          <thead>
+            <tr>
+              <th>الدورة</th>
+              <th>التصنيف</th>
+              <th>تاريخ الإسناد</th>
+              <th>تاريخ الإكمال</th>
+              <th>الحالة</th>
+              <th>الشهادة</th>
+            </tr>
+          </thead>
+          <tbody id="employee-history-table-body">
+            {% for assignment in learning_history %}
+              <tr class="employee-history-row" data-history-title="{{ assignment.course.title|lower }}" data-history-description="{{ assignment.course.description|default:''|lower }}" data-history-label="{{ assignment.course.card_label|lower }}">
+                <td>
+                  <div class="employee-history-course">
+                    <span class="employee-history-course-title">{{ assignment.course.title }}</span>
+                    <span class="employee-history-course-desc">
+                      {% if assignment.course.description %}
+                        {{ assignment.course.description|truncatechars:120 }}
+                      {% else %}
+                        دورة مكتملة ضمن مسارك التدريبي داخل SkillBite.
+                      {% endif %}
+                    </span>
+                  </div>
+                </td>
+                <td>{{ assignment.course.card_label }}</td>
+                <td>{{ assignment.assigned_at|date:"Y-m-d" }}</td>
+                <td>{{ assignment.completed_at|date:"Y-m-d" }}</td>
+                <td><span class="employee-history-badge completed">مكتملة</span></td>
+                <td>
+                  {% if assignment.course_certificate_url %}
+                    <a class="employee-history-certificate" href="{{ assignment.course_certificate_url }}" target="_blank" rel="noopener">تنزيل PDF</a>
+                  {% else %}
+                    <span class="employee-history-certificate muted">غير متاح</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="employee-history-empty" class="employee-history-empty">
+      لا توجد نتائج مطابقة لبحثك الحالي.
+    </div>
+  {% else %}
+    <div class="employee-history-card employee-history-empty-card">
+      <h3>لا يوجد سجل تعلم بعد</h3>
+      <p>ستظهر هنا الدورات التي أكملتها بعد إنهاء التدريب أو اجتياز الاختبارات المرتبطة بها.</p>
+    </div>
+  {% endif %}
+</section>
+
+<script>
+  (function () {
+    const searchInput = document.getElementById('employee-history-search');
+    const rows = Array.from(document.querySelectorAll('#employee-history-table-body .employee-history-row'));
+    const emptyState = document.getElementById('employee-history-empty');
+
+    if (!searchInput || !rows.length || !emptyState) {
+      return;
+    }
+
+    function applySearch() {
+      const query = searchInput.value.trim().toLowerCase();
+      let visibleCount = 0;
+
+      rows.forEach((row) => {
+        const title = row.dataset.historyTitle || '';
+        const description = row.dataset.historyDescription || '';
+        const label = row.dataset.historyLabel || '';
+        const matches = !query || title.includes(query) || description.includes(query) || label.includes(query);
+        row.classList.toggle('employee-history-hidden', !matches);
+        if (matches) {
+          visibleCount += 1;
+        }
+      });
+
+      emptyState.classList.toggle('is-visible', visibleCount === 0);
+    }
+
+    searchInput.addEventListener('input', applySearch);
+  }());
+</script>
+{% endblock %}

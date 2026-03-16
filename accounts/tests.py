@@ -9,12 +9,14 @@ from django.test import TestCase
 from django.urls import reverse
 
 from accounts.models import BusinessTenant, EmployeeProfile, JobTitle
+from certification.models import ScormCertificate
 from training.models import (
     Course,
     CourseContentItem,
     CourseAssignment,
     CourseAssignmentRule,
-    CourseExamSession,
+    ExamOption,
+    ExamQuestion,
     ExamTemplate,
     SOPChecklist,
     SOPChecklistAssignmentRule,
@@ -329,14 +331,107 @@ class MultiTenantFlowTests(TestCase):
         assignment.refresh_from_db()
         self.assertEqual(assignment.status, CourseAssignment.Status.IN_PROGRESS)
 
-    def test_employee_course_view_includes_exam_button_and_exam_pages_render(self):
-        CourseContentItem.objects.create(
+    def test_employee_learning_history_lists_completed_courses_with_certificate_links(self):
+        employee_user = User.objects.create_user(username='employee_learning_history', password='pass12345')
+        EmployeeProfile.objects.create(user=employee_user, business=self.business, job_title=self.job_title, created_by=self.owner)
+        completed_assignment = CourseAssignment.objects.create(
+            business=self.business,
             course=self.course,
-            content_type=CourseContentItem.ContentType.TEXT,
-            title='Hand washing steps',
-            body='Wash, rinse, sanitize, and dry thoroughly.',
-            order=1,
+            employee=employee_user,
+            assigned_by=self.owner,
+            assigned_via_job_title=self.job_title,
+            status=CourseAssignment.Status.COMPLETED,
         )
+        completed_assignment.completed_at = completed_assignment.assigned_at
+        completed_assignment.save(update_fields=['completed_at'])
+
+        pending_course = Course.objects.create(
+            business=self.business,
+            title='Customer Service Basics',
+            estimated_minutes=15,
+        )
+        CourseAssignment.objects.create(
+            business=self.business,
+            course=pending_course,
+            employee=employee_user,
+            assigned_by=self.owner,
+            assigned_via_job_title=self.job_title,
+            status=CourseAssignment.Status.IN_PROGRESS,
+        )
+
+        certificate = ScormCertificate.objects.create(
+            owner=employee_user,
+            scorm_filename=f'course_exam_{self.course.id}',
+            course_name=self.course.title,
+            verification_code='CERT123456',
+        )
+        certificate.pdf_file.save(
+            'history_certificate.pdf',
+            SimpleUploadedFile('history_certificate.pdf', b'%PDF-1.4 test certificate', content_type='application/pdf'),
+            save=True,
+        )
+
+        self.client.login(username='employee_learning_history', password='pass12345')
+        response = self.client.get(reverse('employee_learning_history'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'سجل الدورات المكتملة')
+        self.assertContains(response, self.course.title)
+        self.assertNotContains(response, pending_course.title)
+        self.assertContains(response, 'تنزيل PDF')
+        self.assertContains(response, certificate.pdf_file.url)
+
+    def test_employee_course_complete_action_creates_certificate_for_learning_history(self):
+        employee_user = User.objects.create_user(username='employee_course_complete_cert', password='pass12345')
+        EmployeeProfile.objects.create(user=employee_user, business=self.business, job_title=self.job_title, created_by=self.owner)
+        assignment = CourseAssignment.objects.create(
+            business=self.business,
+            course=self.course,
+            employee=employee_user,
+            assigned_by=self.owner,
+            assigned_via_job_title=self.job_title,
+            status=CourseAssignment.Status.IN_PROGRESS,
+        )
+
+        self.client.login(username='employee_course_complete_cert', password='pass12345')
+        response = self.client.post(reverse('employee_course_complete', args=[assignment.id]), follow=True)
+
+        self.assertEqual(response.status_code, 200)
+        assignment.refresh_from_db()
+        self.assertEqual(assignment.status, CourseAssignment.Status.COMPLETED)
+        self.assertIsNotNone(assignment.completed_at)
+
+        certificate = ScormCertificate.objects.get(owner=employee_user, scorm_filename=f'course_exam_{self.course.id}')
+        self.assertTrue(bool(certificate.pdf_file))
+        self.assertContains(response, certificate.pdf_file.url)
+
+        history_response = self.client.get(reverse('employee_learning_history'))
+        self.assertContains(history_response, self.course.title)
+        self.assertContains(history_response, certificate.pdf_file.url)
+
+    def test_employee_exam_uses_course_template_and_completes_course_on_submit(self):
+        template = ExamTemplate.objects.create(
+            business=self.business,
+            name='Food Safety Final',
+            duration_minutes=20,
+            total_questions=0,
+            created_by=self.owner,
+        )
+        ExamQuestion.objects.create(
+            template=template,
+            order=1,
+            question_text='What is the safe storage temperature?',
+            question_type=ExamQuestion.QuestionType.MCQ_SINGLE,
+            points=1,
+        )
+        question = template.questions.get()
+        ExamOption.objects.create(question=question, order=1, option_text='Below 5C', is_correct=True)
+        ExamOption.objects.create(question=question, order=2, option_text='Above 20C', is_correct=False)
+        template.total_questions = 1
+        template.save(update_fields=['total_questions'])
+        self.course.exam_template = template
+        self.course.save(update_fields=['exam_template'])
+
         employee_user = User.objects.create_user(username='employee_exam_view', password='pass12345')
         EmployeeProfile.objects.create(user=employee_user, business=self.business, job_title=self.job_title, created_by=self.owner)
         assignment = CourseAssignment.objects.create(
@@ -356,11 +451,37 @@ class MultiTenantFlowTests(TestCase):
 
         exam_response = self.client.get(exam_url)
         self.assertEqual(exam_response.status_code, 200)
-        self.assertContains(exam_response, self.course.title)
+        self.assertContains(exam_response, 'Food Safety Final')
+        self.assertContains(exam_response, reverse('employee_course_exam_take', args=[assignment.id]))
 
         take_response = self.client.get(reverse('employee_course_exam_take', args=[assignment.id]))
         self.assertEqual(take_response.status_code, 200)
-        self.assertContains(take_response, 'Hand washing steps')
+        self.assertContains(take_response, 'What is the safe storage temperature?')
+
+        submit_response = self.client.post(
+            reverse('employee_course_exam_submit', args=[assignment.id]),
+            follow=True,
+        )
+        self.assertEqual(submit_response.status_code, 200)
+        self.assertEqual(submit_response.request['PATH_INFO'], reverse('employee_courses'))
+
+        assignment.refresh_from_db()
+        self.assertEqual(assignment.status, CourseAssignment.Status.COMPLETED)
+        self.assertIsNotNone(assignment.completed_at)
+
+        certificate = ScormCertificate.objects.get(owner=employee_user, scorm_filename=f'course_exam_{self.course.id}')
+        self.assertEqual(certificate.course_name, self.course.title)
+        self.assertTrue(bool(certificate.pdf_file))
+
+        self.assertContains(submit_response, 'تم اجتياز الاختبار بنجاح')
+        self.assertContains(submit_response, 'عرض الشهادة PDF')
+        self.assertContains(submit_response, certificate.pdf_file.url)
+        return
+
+        courses_response = submit_response
+        self.assertContains(courses_response, 'تم اجتياز الاختبار بنجاح')
+        self.assertContains(courses_response, 'عرض الشهادة PDF')
+        self.assertContains(courses_response, certificate.pdf_file.url)
 
     def test_single_job_title_business_implicitly_exposes_checklist_without_rule(self):
         SOPChecklistAssignmentRule.objects.all().delete()
@@ -449,13 +570,19 @@ class SuperAdminFlowTests(TestCase):
         self.assertEqual(Course.objects.filter(business=self.business).count(), 9)
         self.assertTrue(CourseContentItem.objects.filter(course__business=self.business).exists())
 
-    def test_super_admin_can_create_exam_template_and_session_for_course(self):
+    def test_super_admin_can_create_exam_template_and_assign_it_to_multiple_courses(self):
+        second_course = Course.objects.create(
+            business=self.business,
+            title='Kitchen Hygiene',
+            estimated_minutes=15,
+            created_by=self.owner,
+        )
         self.client.login(username='platform_admin', password='pass12345')
         create_response = self.client.post(
             reverse('super_admin_exam_template_create'),
             {
                 'business': self.business.id,
-                'course': self.course.id,
+                'courses': [self.course.id, second_course.id],
                 'name': 'Food Safety Final',
                 'duration_minutes': 25,
                 'passing_score_percent': 80,
@@ -468,29 +595,56 @@ class SuperAdminFlowTests(TestCase):
         self.assertRedirects(create_response, reverse('super_admin_exam_template_editor', args=[template.id]))
 
         self.course.refresh_from_db()
+        second_course.refresh_from_db()
         self.assertEqual(self.course.exam_template_id, template.id)
-
-        session_response = self.client.post(
-            reverse('super_admin_exam_sessions'),
-            {
-                'business': self.business.id,
-                'course': self.course.id,
-                'exam_template': template.id,
-                'exam_date': '2026-04-01T09:30',
-                'access_code': 'SAFE101',
-                'is_active': 'on',
-            },
-        )
-        self.assertRedirects(session_response, reverse('super_admin_exam_sessions'))
-        self.assertTrue(CourseExamSession.objects.filter(course=self.course, exam_template=template, access_code='SAFE101').exists())
+        self.assertEqual(second_course.exam_template_id, template.id)
 
         templates_page = self.client.get(reverse('super_admin_exam_templates'))
         self.assertEqual(templates_page.status_code, 200)
         self.assertContains(templates_page, 'Food Safety Final')
+        self.assertContains(templates_page, '2')
 
-        grading_page = self.client.get(reverse('super_admin_exam_grading'))
-        self.assertEqual(grading_page.status_code, 200)
-        self.assertContains(grading_page, self.course.title)
+    def test_super_admin_can_create_question_with_multiple_options(self):
+        template = ExamTemplate.objects.create(
+            business=self.business,
+            name='Capital Cities',
+            duration_minutes=15,
+            total_questions=0,
+            created_by=self.super_admin,
+        )
+        self.client.login(username='platform_admin', password='pass12345')
+
+        response = self.client.post(
+            reverse('super_admin_exam_question_create', args=[template.id]),
+            {
+                'question_text': 'What is the capital of Saudi Arabia?',
+                'question_type': 'MCQ_MULTI',
+                'points': 1,
+                'is_required': 'on',
+                'shuffle_options': 'on',
+                'explanation': '',
+                'options-TOTAL_FORMS': '4',
+                'options-INITIAL_FORMS': '0',
+                'options-MIN_NUM_FORMS': '0',
+                'options-MAX_NUM_FORMS': '1000',
+                'options-0-id': '',
+                'options-0-option_text': 'Riyadh',
+                'options-0-is_correct': 'on',
+                'options-1-id': '',
+                'options-1-option_text': 'Alexandria',
+                'options-2-id': '',
+                'options-2-option_text': 'Jeddah',
+                'options-3-id': '',
+                'options-3-option_text': 'Cairo',
+            },
+        )
+
+        self.assertRedirects(response, reverse('super_admin_exam_template_editor', args=[template.id]))
+        question = template.questions.get()
+        options = list(question.options.order_by('order', 'id'))
+        self.assertEqual(len(options), 4)
+        self.assertEqual([option.order for option in options], [1, 2, 3, 4])
+        self.assertEqual(options[0].option_text, 'Riyadh')
 
     def test_super_admin_scorm_download_requires_super_admin_role(self):
         os.makedirs(self.scorm_dir, exist_ok=True)

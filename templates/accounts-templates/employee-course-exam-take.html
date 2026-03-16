@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>اختبار الدورة</title>
-
 <style>
 @import url('/static/branding/branding.css');
 :root{--card:#ffffff}
@@ -15,7 +14,7 @@ body{margin:0;font-family:"SE","Segoe UI",Tahoma,Arial,sans-serif;background:var
 .msg-error,.msg.error{background:#fff1f2;border:1px solid #fecdd3;color:#9f1239}
 .msg-success,.msg.success{background:#ecfdf5;border:1px solid #bbf7d0;color:#166534}
 .msg-info,.msg.info{background:#eff6ff;border:1px solid #bfdbfe;color:#1e3a8a}
-.exam-shell{display:grid;grid-template-columns:minmax(260px,.4fr) minmax(0,1fr);gap:18px}
+.exam-shell{display:block}
 .card{background:var(--card);border-radius:16px;box-shadow:0 14px 34px rgba(15,45,90,.12);overflow:hidden}
 .card-head{padding:16px 18px;border-bottom:1px solid #eef1f5;display:flex;align-items:center;justify-content:space-between;gap:12px}
 .card-body{padding:18px}
@@ -27,27 +26,15 @@ body{margin:0;font-family:"SE","Segoe UI",Tahoma,Arial,sans-serif;background:var
 .btn-secondary{background:#e9eef6;color:var(--blue-main)}
 .btn-primary{background:var(--blue-main);color:#fff}
 .btn-danger{background:#dc2626;color:#fff}
-.qnav{padding:16px 18px}
-.qgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:12px}
-.qnum{display:flex;align-items:center;justify-content:center;height:42px;border-radius:12px;border:1px solid #e5e7eb;background:#fff;color:#111827;font-weight:900;text-decoration:none;transition:.15s ease}
-.qnum:hover{transform:translateY(-1px)}
-.qnum.is-current{border-color:rgba(15,60,104,.35);box-shadow:0 0 0 3px rgba(147,197,253,.35)}
-.qnum.is-answered{background:#ecfdf5;border-color:#bbf7d0;color:#166534}
 .qmeta{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
-.qmeta strong{color:#111827}
 .qtext{background:#f5f8fd;border:1px solid #eef1f5;border-radius:14px;padding:14px;line-height:1.9;font-weight:800;margin-bottom:14px}
 .option{border:1px solid #eef1f5;background:#fff;border-radius:14px;padding:12px 12px;display:flex;align-items:flex-start;gap:10px;margin-bottom:10px}
 .note-box{width:100%;min-height:160px;border-radius:12px;border:1px solid #d1d5db;padding:10px;font-size:13px;outline:none;resize:vertical;background:#fff}
-.note-box:focus{border-color:#93c5fd;box-shadow:0 0 0 3px rgba(147,197,253,.35)}
 .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;justify-content:space-between}
 .left-actions,.right-actions{display:flex;gap:10px;flex-wrap:wrap}
-.review-list{display:grid;gap:10px}
-.review-item{padding:12px;border:1px solid #eef1f5;border-radius:12px;background:#fff}
-@media (max-width:1100px){.exam-shell{grid-template-columns:1fr}}
 @media (max-width:900px){.sidebar{display:none}.topbar{right:0}.main{margin-right:0}}
 </style>
 </head>
-
 <body>
 {% include "accounts-templates/sidebar.html" %}
 {% include "accounts-templates/topbar.html" %}
@@ -62,117 +49,80 @@ body{margin:0;font-family:"SE","Segoe UI",Tahoma,Arial,sans-serif;background:var
   <div class="exam-shell">
     <div class="card">
       <div class="card-head">
-        <div>
-          <div class="hint">التنقل بين الأسئلة</div>
-          <div class="title" style="margin-top:4px;">{{ course.title }}</div>
-        </div>
-      </div>
-      <div class="qnav">
-        <div class="hint">تمت محاكاة هذا التنسيق من ملف `contractor-exam.html` مع تكييفه للدورات.</div>
-        <div class="qgrid">
-          {% for item in content_items %}
-            <a class="qnum{% if forloop.counter == current_index %} is-current{% endif %}" href="{% url 'employee_course_exam_take' assignment.id %}?q={{ forloop.counter }}">{{ forloop.counter }}</a>
-          {% empty %}
-            <span class="qnum is-current">1</span>
-          {% endfor %}
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-head">
         <div class="qmeta" style="width:100%;">
           <div>
-            <div class="hint">Question {{ current_index }} of {{ total_questions }}</div>
-            <div class="title" style="margin-top:4px;">اختبار الدورة</div>
+            <div class="hint">السؤال {{ current_index }} من {{ total_questions }}</div>
+            <div class="title" style="margin-top:4px;">{{ exam_template.name|default:"اختبار الدورة" }}</div>
           </div>
           <div class="timer">
             <div class="timer-box" id="timerBox">--:--</div>
-            <a class="btn btn-danger" href="{% url 'employee_course_exam' assignment.id %}">إنهاء الاختبار</a>
+            <a class="btn btn-danger" href="{% url 'employee_course_exam' assignment.id %}">إلغاء</a>
           </div>
         </div>
       </div>
 
       <div class="card-body">
-        <div class="qtext">
-          {% if is_template_question %}
-            {{ current_question.question_text }}
-            {% if current_question.explanation %}
-              <div class="hint" style="margin-top:8px; font-size:13px; line-height:1.8;">{{ current_question.explanation }}</div>
-            {% endif %}
-          {% elif current_item %}
-            {{ current_item.title }}
-            {% if current_item.body %}
-              <div class="hint" style="margin-top:8px; font-size:13px; line-height:1.8;">{{ current_item.body }}</div>
-            {% endif %}
-          {% else %}
-            لا توجد أسئلة مضافة للدورة بعد. تم استخدام واجهة الاختبار التي أرسلتها وتجهيزها للربط لاحقًا.
-          {% endif %}
-        </div>
+        <form method="post" action="{% url 'employee_course_exam_submit' assignment.id %}" id="examSubmitForm">
+          {% csrf_token %}
 
-        {% if is_template_question and current_question.question_type == 'MCQ_SINGLE' or is_template_question and current_question.question_type == 'TRUE_FALSE' %}
-          {% for option in current_question_options %}
-            <label class="option">
-              <input type="radio" name="answer_preview" disabled>
-              <div>{{ option.option_text }}</div>
-            </label>
-          {% empty %}
-            <div class="option"><div class="hint">لا توجد خيارات مضافة لهذا السؤال بعد.</div></div>
-          {% endfor %}
-        {% elif is_template_question and current_question.question_type == 'MCQ_MULTI' %}
-          {% for option in current_question_options %}
-            <label class="option">
-              <input type="checkbox" name="answer_preview_multi" disabled>
-              <div>{{ option.option_text }}</div>
-            </label>
-          {% empty %}
-            <div class="option"><div class="hint">لا توجد خيارات مضافة لهذا السؤال بعد.</div></div>
-          {% endfor %}
-        {% else %}
-          <div class="option">
-            <div>
-              <strong style="display:block; margin-bottom:6px;">ملاحظة مهمة</strong>
-              <div class="hint" style="font-size:13px; line-height:1.8;">
-                هذه الصفحة مبنية على تصميم الاختبار الذي زودتني به. بما أن النظام الحالي لا يحتوي على تسليمات امتحان مكتملة بعد، فالواجهة تعرض الأسئلة الفعلية أو محاور الدورة بشكل جاهز للربط.
-              </div>
+          <div class="qtext">
+            {% if is_template_question %}
+              {{ current_question.question_text }}
+              {% if current_question.explanation %}
+                <div class="hint" style="margin-top:8px; font-size:13px; line-height:1.8;">{{ current_question.explanation }}</div>
+              {% endif %}
+            {% elif current_item %}
+              {{ current_item.title }}
+              {% if current_item.body %}
+                <div class="hint" style="margin-top:8px; font-size:13px; line-height:1.8;">{{ current_item.body }}</div>
+              {% endif %}
+            {% else %}
+              لا توجد أسئلة مضافة لهذا الاختبار بعد.
+            {% endif %}
+          </div>
+
+          {% if is_template_question and current_question.question_type == 'MCQ_SINGLE' or is_template_question and current_question.question_type == 'TRUE_FALSE' %}
+            {% for option in current_question_options %}
+              <label class="option">
+                <input type="radio" name="answer_preview_{{ current_question.id }}">
+                <div>{{ option.option_text }}</div>
+              </label>
+            {% empty %}
+              <div class="option"><div class="hint">لا توجد خيارات مضافة لهذا السؤال بعد.</div></div>
+            {% endfor %}
+          {% elif is_template_question and current_question.question_type == 'MCQ_MULTI' %}
+            {% for option in current_question_options %}
+              <label class="option">
+                <input type="checkbox" name="answer_preview_multi_{{ current_question.id }}">
+                <div>{{ option.option_text }}</div>
+              </label>
+            {% empty %}
+              <div class="option"><div class="hint">لا توجد خيارات مضافة لهذا السؤال بعد.</div></div>
+            {% endfor %}
+          {% else %}
+            <textarea class="note-box" placeholder="اكتب إجابتك هنا..."></textarea>
+          {% endif %}
+
+          <div class="actions">
+            <div class="left-actions">
+              {% if current_index > 1 %}
+                <a class="btn btn-secondary" href="{% url 'employee_course_exam_take' assignment.id %}?q={{ current_index|add:'-1' }}">السابق</a>
+              {% else %}
+                <span class="btn btn-secondary" style="opacity:.6;cursor:not-allowed;">السابق</span>
+              {% endif %}
+
+              {% if current_index < total_questions %}
+                <a class="btn btn-primary" href="{% url 'employee_course_exam_take' assignment.id %}?q={{ current_index|add:'1' }}">التالي</a>
+              {% else %}
+                <button class="btn btn-primary" type="submit">إنهاء الاختبار</button>
+              {% endif %}
+            </div>
+
+            <div class="right-actions">
+              <button class="btn btn-secondary" type="submit">إنهاء الاختبار</button>
             </div>
           </div>
-        {% endif %}
-
-        <textarea class="note-box" placeholder="مساحة مهيأة لإجابة السؤال أو ربط نموذج الإجابات لاحقًا..."></textarea>
-
-        <div class="actions">
-          <div class="left-actions">
-            {% if current_index > 1 %}
-              <a class="btn btn-secondary" href="{% url 'employee_course_exam_take' assignment.id %}?q={{ current_index|add:'-1' }}">السابق</a>
-            {% else %}
-              <span class="btn btn-secondary" style="opacity:.6;cursor:not-allowed;">السابق</span>
-            {% endif %}
-
-            {% if current_index < total_questions %}
-              <a class="btn btn-primary" href="{% url 'employee_course_exam_take' assignment.id %}?q={{ current_index|add:'1' }}">التالي</a>
-            {% else %}
-              <span class="btn btn-primary" style="opacity:.6;cursor:not-allowed;">التالي</span>
-            {% endif %}
-          </div>
-
-          <div class="right-actions">
-            <a class="btn btn-secondary" href="{% url 'employee_course_view' assignment.id %}">العودة للدورة</a>
-          </div>
-        </div>
-
-        {% if content_items %}
-          <div class="review-list" style="margin-top:18px;">
-            {% for item in content_items %}
-              <div class="review-item">
-                <strong>{{ item.title }}</strong>
-                {% if item.body %}
-                  <div class="hint" style="margin-top:6px; font-size:13px; line-height:1.8;">{{ item.body|truncatechars:140 }}</div>
-                {% endif %}
-              </div>
-            {% endfor %}
-          </div>
-        {% endif %}
+        </form>
       </div>
     </div>
   </div>
@@ -183,6 +133,7 @@ window.addEventListener('DOMContentLoaded', function () {
   var remaining = parseInt("{{ remaining_seconds|default:0 }}", 10);
   if (isNaN(remaining) || remaining < 0) remaining = 0;
   var el = document.getElementById('timerBox');
+  var submitForm = document.getElementById('examSubmitForm');
 
   function pad(n) { return (n < 10 ? '0' : '') + n; }
 
@@ -190,7 +141,10 @@ window.addEventListener('DOMContentLoaded', function () {
     var minutes = Math.floor(remaining / 60);
     var seconds = remaining % 60;
     if (el) el.textContent = pad(minutes) + ':' + pad(seconds);
-    if (remaining <= 0) return;
+    if (remaining <= 0) {
+      if (submitForm) submitForm.submit();
+      return;
+    }
     remaining -= 1;
     setTimeout(tick, 1000);
   }

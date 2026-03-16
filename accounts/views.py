@@ -459,28 +459,82 @@ def _handle_scorm_upload_post(request, success_redirect_name: str):
 
 def _generate_certificate_pdf_bytes(owner_name: str, course_name: str, verification_code: str, issued_at: datetime | None = None) -> bytes:
     from reportlab.lib.pagesizes import A4
+    from reportlab.lib import colors
     from reportlab.pdfgen import canvas
     issued_at = issued_at or timezone.now()
     buffer = io.BytesIO()
     pdf = canvas.Canvas(buffer, pagesize=A4)
     width, height = A4
-    pdf.setTitle('SkillBite SCORM Certificate')
+    dark_green = colors.HexColor('#0b6b57')
+    brand_green = colors.HexColor('#11b67a')
+    pale_green = colors.HexColor('#eaf8f1')
+    slate = colors.HexColor('#24364b')
+    pdf.setTitle('SkillBite Certificate')
+    pdf.setFillColor(pale_green)
+    pdf.rect(30, 30, width - 60, height - 60, fill=1, stroke=0)
+    pdf.setStrokeColor(dark_green)
+    pdf.setLineWidth(4)
+    pdf.roundRect(45, 45, width - 90, height - 90, 18, stroke=1, fill=0)
+    pdf.setLineWidth(1.5)
+    pdf.setStrokeColor(brand_green)
+    pdf.roundRect(60, 60, width - 120, height - 120, 14, stroke=1, fill=0)
+    pdf.setFillColor(dark_green)
+    pdf.setFont('Helvetica-Bold', 28)
+    pdf.drawCentredString(width / 2, height - 120, 'SkillBite')
+    pdf.setFillColor(brand_green)
     pdf.setFont('Helvetica-Bold', 24)
-    pdf.drawCentredString(width / 2, height - 120, 'SkillBite Certificate')
-    pdf.setFont('Helvetica', 14)
-    pdf.drawCentredString(width / 2, height - 170, 'Certificate of SCORM completion')
-    pdf.setFont('Helvetica-Bold', 18)
-    pdf.drawCentredString(width / 2, height - 250, _english_text_only(owner_name, fallback='Learner'))
-    pdf.setFont('Helvetica', 14)
-    pdf.drawCentredString(width / 2, height - 290, 'has successfully completed')
-    pdf.setFont('Helvetica-Bold', 16)
-    pdf.drawCentredString(width / 2, height - 330, _english_text_only(course_name, fallback='SCORM Course'))
-    pdf.setFont('Helvetica', 12)
-    pdf.drawCentredString(width / 2, height - 390, f'Issued at: {issued_at:%Y-%m-%d}')
-    pdf.drawCentredString(width / 2, height - 415, f'Verification code: {verification_code}')
+    pdf.drawCentredString(width / 2, height - 155, 'Certificate of Completion')
+    pdf.setFillColor(slate)
+    pdf.setFont('Helvetica', 13)
+    pdf.drawCentredString(width / 2, height - 215, 'This certifies that')
+    pdf.setFont('Helvetica-Bold', 24)
+    pdf.drawCentredString(width / 2, height - 265, _english_text_only(owner_name, fallback='Learner'))
+    pdf.setFont('Helvetica', 13)
+    pdf.drawCentredString(width / 2, height - 310, 'has successfully completed the course')
+    pdf.setFont('Helvetica-Bold', 20)
+    pdf.drawCentredString(width / 2, height - 350, _english_text_only(course_name, fallback='SkillBite Course'))
+    pdf.setFillColor(dark_green)
+    pdf.setFont('Helvetica-Bold', 12)
+    pdf.drawCentredString(width / 2, height - 420, f'Issued on {issued_at:%Y-%m-%d}')
+    pdf.drawCentredString(width / 2, height - 442, f'Verification code: {verification_code}')
+    pdf.setStrokeColor(brand_green)
+    pdf.line(width / 2 - 100, 135, width / 2 + 100, 135)
+    pdf.drawCentredString(width / 2, 118, 'SkillBite Certification')
     pdf.showPage()
     pdf.save()
     return buffer.getvalue()
+
+
+def _issue_course_exam_certificate(user, course) -> tuple[str | None, str | None]:
+    certificate_key = f'course_exam_{course.id}'
+    cert, _created = ScormCertificate.objects.get_or_create(
+        owner=user,
+        scorm_filename=certificate_key,
+        defaults={
+            'course_name': course.title,
+            'verification_code': uuid.uuid4().hex[:12].upper(),
+        },
+    )
+    if cert.course_name != course.title:
+        cert.course_name = course.title
+        cert.save(update_fields=['course_name'])
+    if not cert.pdf_file:
+        try:
+            pdf_bytes = _generate_certificate_pdf_bytes(
+                owner_name=_display_name(user),
+                course_name=course.title,
+                verification_code=cert.verification_code,
+                issued_at=getattr(cert, 'issued_at', None) or timezone.now(),
+            )
+            cert.pdf_file.save(
+                f'course_certificate_{user.id}_{course.id}_{cert.verification_code}.pdf',
+                ContentFile(pdf_bytes),
+                save=False,
+            )
+            cert.save()
+        except Exception:
+            return None, 'تم إنهاء الاختبار، لكن تعذر إنشاء ملف الشهادة الآن.'
+    return cert.pdf_file.url if cert.pdf_file else None, None
 
 
 @xframe_options_sameorigin
@@ -728,12 +782,14 @@ def super_admin_exam_template_editor_view(request, template_id: int | None = Non
             saved_template = form.save(commit=False)
             saved_template.created_by = template_obj.created_by if template_obj else request.user
             saved_template.save()
-            selected_course = form.cleaned_data.get('course')
-            if selected_course:
-                selected_course.exam_template = saved_template
-                selected_course.save(update_fields=['exam_template'])
+            selected_courses = list(form.cleaned_data.get('courses') or [])
+            Course.objects.filter(exam_template=saved_template).exclude(id__in=[course.id for course in selected_courses]).update(exam_template=None)
+            for selected_course in selected_courses:
+                if selected_course.exam_template_id != saved_template.id:
+                    selected_course.exam_template = saved_template
+                    selected_course.save(update_fields=['exam_template'])
             _sync_exam_template_total_questions(saved_template)
-            messages.success(request, f'Exam template "{saved_template.name}" saved.')
+            messages.success(request, f'تم حفظ قالب الاختبار "{saved_template.name}".')
             return redirect('super_admin_exam_template_editor', template_id=saved_template.id)
         messages.error(request, form.errors.as_text())
     return render(
@@ -749,6 +805,7 @@ def super_admin_exam_template_editor_view(request, template_id: int | None = Non
 
 
 @login_required
+@transaction.atomic
 def super_admin_exam_question_editor_view(request, template_id: int, question_id: int | None = None):
     if not _super_admin_guard(request):
         return redirect('home')
@@ -771,11 +828,28 @@ def super_admin_exam_question_editor_view(request, template_id: int, question_id
                 saved_question.order = template_obj.questions.count() + 1
             saved_question.save()
             option_formset.instance = saved_question
-            option_formset.save()
+            for deleted_form in option_formset.deleted_forms:
+                if deleted_form.instance.pk:
+                    deleted_form.instance.delete()
+
+            next_option_order = 1
+            for option_form in option_formset.forms:
+                cleaned_data = getattr(option_form, 'cleaned_data', None) or {}
+                if cleaned_data.get('DELETE'):
+                    continue
+                option_text = (cleaned_data.get('option_text') or '').strip()
+                if not option_text:
+                    continue
+                option = option_form.save(commit=False)
+                option.question = saved_question
+                option.option_text = option_text
+                option.order = next_option_order
+                option.save()
+                next_option_order += 1
             _sync_exam_template_total_questions(template_obj)
-            messages.success(request, 'Question saved.')
+            messages.success(request, 'تم حفظ السؤال بنجاح.')
             return redirect('super_admin_exam_template_editor', template_id=template_obj.id)
-        messages.error(request, question_form.errors.as_text() or 'Please review the question fields and options.')
+        messages.error(request, question_form.errors.as_text() or 'يرجى مراجعة بيانات السؤال والخيارات.')
     return render(
         request,
         'accounts-templates/super-admin-question-editor.html',
@@ -801,7 +875,7 @@ def super_admin_exam_question_delete_action(request, template_id: int, question_
             item.order = index
             item.save(update_fields=['order'])
     _sync_exam_template_total_questions(template_obj)
-    messages.success(request, 'Question deleted.')
+    messages.success(request, 'تم حذف السؤال بنجاح.')
     return redirect('super_admin_exam_template_editor', template_id=template_obj.id)
 
 
@@ -817,7 +891,7 @@ def super_admin_exam_sessions_view(request):
             if not session.exam_template_id:
                 session.exam_template = session.course.exam_template
             session.save()
-            messages.success(request, 'Exam session created.')
+            messages.success(request, 'تم إنشاء جلسة الاختبار بنجاح.')
             return redirect('super_admin_exam_sessions')
         messages.error(request, form.errors.as_text())
         context = _super_admin_exam_sessions_context()
@@ -1376,8 +1450,18 @@ def _employee_dashboard_context(request):
     _ensure_employee_courses_are_backed_by_db(business)
     _provision_course_assignments_for_employee(employee_profile)
     course_assignments = CourseAssignment.objects.filter(employee=request.user, business=business).select_related('course').prefetch_related(Prefetch('course__content_items', queryset=CourseContentItem.objects.order_by('order', 'id'))).order_by('status', 'course__title', 'id')
+    certificate_map = {}
+    for cert in ScormCertificate.objects.filter(owner=request.user, scorm_filename__startswith='course_exam_'):
+        suffix = (cert.scorm_filename or '').replace('course_exam_', '', 1)
+        if suffix.isdigit() and cert.pdf_file:
+            certificate_map[int(suffix)] = cert.pdf_file.url
     for assignment in course_assignments:
         _course_card_defaults(assignment.course)
+        if assignment.status == CourseAssignment.Status.COMPLETED and assignment.course_id not in certificate_map:
+            certificate_url, _certificate_error = _issue_course_exam_certificate(request.user, assignment.course)
+            if certificate_url:
+                certificate_map[assignment.course_id] = certificate_url
+        assignment.course_certificate_url = certificate_map.get(assignment.course_id)
     completed_course_count = sum(1 for assignment in course_assignments if assignment.status == CourseAssignment.Status.COMPLETED)
     assigned_checklists = list(_assigned_checklists_queryset(employee_profile))
     today_completions = {completion.checklist_id: completion for completion in SOPChecklistCompletion.objects.filter(business=business, employee=request.user, completed_for=today).select_related('checklist')}
@@ -1396,7 +1480,22 @@ def employee_dashboard_view(request):
 def employee_courses_view(request):
     if not _employee_guard(request):
         return redirect('home')
-    return render(request, 'accounts-templates/employee-courses.html', _employee_dashboard_context(request))
+    context = _employee_dashboard_context(request)
+    context['course_completion_popup'] = request.session.pop('course_completion_popup', None)
+    return render(request, 'accounts-templates/employee-courses.html', context)
+
+
+@login_required
+def employee_learning_history_view(request):
+    if not _employee_guard(request):
+        return redirect('home')
+    context = _employee_dashboard_context(request)
+    context['learning_history'] = [
+        assignment
+        for assignment in context['course_assignments']
+        if assignment.status == CourseAssignment.Status.COMPLETED
+    ]
+    return render(request, 'accounts-templates/employee-learning-history.html', context)
 
 
 @login_required
@@ -1423,10 +1522,8 @@ def employee_course_exam_view(request, assignment_id: int):
         id=assignment_id,
     )
     content_items = list(assignment.course.content_items.all())
-    available_sessions = list(
-        assignment.course.exam_sessions.filter(is_active=True).select_related('exam_template').order_by('exam_date', 'id')
-    )
-    estimated_exam_minutes = max(10, min(45, max(assignment.course.estimated_minutes, 1) // 2))
+    exam_template = assignment.course.exam_template
+    estimated_exam_minutes = exam_template.duration_minutes if exam_template else max(10, min(45, max(assignment.course.estimated_minutes, 1) // 2))
     return render(
         request,
         'accounts-templates/employee-course-exam.html',
@@ -1435,10 +1532,10 @@ def employee_course_exam_view(request, assignment_id: int):
             'business': employee_profile.business,
             'assignment': assignment,
             'course': assignment.course,
+            'exam_template': exam_template,
             'content_items': content_items,
             'content_items_count': len(content_items),
             'estimated_exam_minutes': estimated_exam_minutes,
-            'available_sessions': available_sessions,
         },
     )
 
@@ -1455,14 +1552,7 @@ def employee_course_exam_take_view(request, assignment_id: int):
         id=assignment_id,
     )
     content_items = list(assignment.course.content_items.all())
-    session = None
-    session_id = request.GET.get('session')
-    if str(session_id).isdigit():
-        session = assignment.course.exam_sessions.filter(is_active=True).select_related('exam_template').filter(id=int(session_id)).first()
-    if session is None:
-        session = assignment.course.exam_sessions.filter(is_active=True).select_related('exam_template').order_by('exam_date', 'id').first()
-
-    exam_template = (session.exam_template if session and session.exam_template_id else assignment.course.exam_template)
+    exam_template = assignment.course.exam_template
     exam_questions = list(exam_template.questions.prefetch_related('options').order_by('order', 'id')) if exam_template else []
     total_questions = max(len(exam_questions) or len(content_items), 1)
     requested_index = request.GET.get('q', '1')
@@ -1481,7 +1571,6 @@ def employee_course_exam_take_view(request, assignment_id: int):
             'assignment': assignment,
             'course': assignment.course,
             'content_items': content_items,
-            'session': session,
             'exam_template': exam_template,
             'current_question': current_question,
             'current_question_options': current_question_options,
@@ -1493,6 +1582,44 @@ def employee_course_exam_take_view(request, assignment_id: int):
             'estimated_exam_minutes': estimated_exam_minutes,
         },
     )
+
+
+@login_required
+@require_POST
+def employee_course_exam_submit_action(request, assignment_id: int):
+    if not _employee_guard(request):
+        return redirect('home')
+    employee_profile = _get_employee_profile(request.user)
+    assignment = get_object_or_404(
+        CourseAssignment.objects.select_related('course'),
+        id=assignment_id,
+        employee=request.user,
+        business=employee_profile.business,
+    )
+    if not assignment.course.exam_template_id:
+        messages.error(request, 'لا يوجد اختبار مرتبط بهذه الدورة.')
+        return redirect('employee_course_view', assignment_id=assignment.id)
+    assignment.status = CourseAssignment.Status.COMPLETED
+    assignment.completed_at = timezone.now()
+    assignment.save(update_fields=['status', 'completed_at'])
+    certificate_url, certificate_error = _issue_course_exam_certificate(request.user, assignment.course)
+    request.session['course_completion_popup'] = {
+        'course_title': assignment.course.title,
+        'employee_name': _display_name(request.user),
+        'completed_at': timezone.localtime(assignment.completed_at).strftime('%Y-%m-%d'),
+        'certificate_url': certificate_url,
+        'certificate_error': certificate_error,
+    }
+    certificate_url, certificate_error = _issue_course_exam_certificate(request.user, assignment.course)
+    request.session['course_completion_popup'] = {
+        'course_title': assignment.course.title,
+        'employee_name': _display_name(request.user),
+        'completed_at': timezone.localtime(assignment.completed_at).strftime('%Y-%m-%d'),
+        'certificate_url': certificate_url,
+        'certificate_error': certificate_error,
+    }
+    messages.success(request, f'تم إنهاء الاختبار وإكمال الدورة: {assignment.course.title}')
+    return redirect('employee_courses')
 
 
 @login_required

@@ -9,7 +9,6 @@
   <div class="stat-card"><h4>الدورات</h4><span>{{ course_count }}</span></div>
   <div class="stat-card"><h4>قوائم التشغيل</h4><span>{{ checklist_count }}</span></div>
   <div class="stat-card"><h4>قوالب الاختبارات</h4><span>{{ exam_template_count }}</span></div>
-  <div class="stat-card"><h4>جلسات الاختبار</h4><span>{{ exam_session_count }}</span></div>
 </section>
 
 <section class="content-layout" style="margin-bottom:24px;">
@@ -18,13 +17,11 @@
       <div class="card-intro">
         <div>
           <h2>الاختبارات</h2>
-          <p>إدارة القوالب والأسئلة والجلسات من لوحة المشرف العام.</p>
+          <p>إدارة القوالب والأسئلة وربطها مباشرة بالدورات من لوحة المشرف العام.</p>
         </div>
       </div>
       <div style="display:flex; gap:10px; flex-wrap:wrap;">
         <a class="btn" href="{% url 'super_admin_exam_templates' %}" style="text-decoration:none;">قوالب الاختبارات</a>
-        <a class="btn secondary" href="{% url 'super_admin_exam_sessions' %}" style="text-decoration:none;">مواعيد الاختبارات</a>
-        <a class="btn warn" href="{% url 'super_admin_exam_grading' %}" style="text-decoration:none;">التصحيح والمتابعة</a>
       </div>
     </div>
 

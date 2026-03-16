@@ -286,8 +286,8 @@ class SuperAdminCourseContentItemForm(forms.ModelForm):
 class SuperAdminCourseCatalogPublishForm(forms.Form):
     business = forms.ModelChoiceField(
         queryset=BusinessTenant.objects.none(),
-        empty_label='Select business',
-        label='Business',
+        empty_label='اختر الشركة',
+        label='الشركة',
     )
 
     def __init__(self, *args, **kwargs):
@@ -298,19 +298,21 @@ class SuperAdminCourseCatalogPublishForm(forms.Form):
 class SuperAdminExamTemplateForm(forms.ModelForm):
     business = forms.ModelChoiceField(
         queryset=BusinessTenant.objects.none(),
-        empty_label='Select business',
+        empty_label='اختر الشركة',
+        label='الشركة',
     )
-    course = forms.ModelChoiceField(
+    courses = forms.ModelMultipleChoiceField(
         queryset=Course.objects.none(),
         required=False,
-        empty_label='Assign later',
+        label='الدورات المرتبطة',
+        widget=forms.SelectMultiple,
     )
 
     class Meta:
         model = ExamTemplate
         fields = [
             'business',
-            'course',
+            'courses',
             'name',
             'duration_minutes',
             'passing_score_percent',
@@ -323,7 +325,13 @@ class SuperAdminExamTemplateForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         business_queryset = BusinessTenant.objects.filter(is_active=True).order_by('name', 'id')
         self.fields['business'].queryset = business_queryset
-        self.fields['course'].queryset = Course.objects.none()
+        self.fields['courses'].queryset = Course.objects.none()
+        self.fields['name'].label = 'اسم قالب الاختبار'
+        self.fields['duration_minutes'].label = 'مدة الاختبار بالدقائق'
+        self.fields['passing_score_percent'].label = 'نسبة النجاح %'
+        self.fields['instructions'].label = 'التعليمات'
+        self.fields['show_result_after_submit'].label = 'إظهار النتيجة بعد التسليم'
+        self.fields['shuffle_questions'].label = 'خلط الأسئلة'
 
         business = None
         if self.is_bound:
@@ -334,26 +342,29 @@ class SuperAdminExamTemplateForm(forms.ModelForm):
             business = self.initial.get('business') or getattr(self.instance, 'business', None)
 
         if business:
-            self.fields['course'].queryset = Course.objects.filter(business=business).order_by('title', 'id')
+            self.fields['courses'].queryset = Course.objects.filter(business=business).order_by('title', 'id')
 
         if self.instance.pk:
-            assigned_course = self.instance.courses.order_by('id').first()
-            if assigned_course and not self.is_bound:
-                self.fields['course'].initial = assigned_course
+            assigned_courses = self.instance.courses.order_by('id')
+            if assigned_courses and not self.is_bound:
+                self.fields['courses'].initial = assigned_courses
 
     def clean(self):
         cleaned_data = super().clean()
         business = cleaned_data.get('business')
-        course = cleaned_data.get('course')
-        if business and course and course.business_id != business.id:
-            self.add_error('course', 'Select a course from the same business.')
+        courses = cleaned_data.get('courses') or []
+        for course in courses:
+            if business and course.business_id != business.id:
+                self.add_error('courses', 'اختر دورات من نفس الشركة.')
+                break
         return cleaned_data
 
 
 class SuperAdminExamSessionForm(forms.ModelForm):
     business = forms.ModelChoiceField(
         queryset=BusinessTenant.objects.none(),
-        empty_label='Select business',
+        empty_label='اختر الشركة',
+        label='الشركة',
     )
 
     class Meta:
@@ -369,6 +380,11 @@ class SuperAdminExamSessionForm(forms.ModelForm):
         self.fields['business'].queryset = business_queryset
         self.fields['course'].queryset = Course.objects.none()
         self.fields['exam_template'].queryset = ExamTemplate.objects.none()
+        self.fields['course'].label = 'الدورة'
+        self.fields['exam_template'].label = 'قالب الاختبار'
+        self.fields['exam_date'].label = 'موعد الاختبار'
+        self.fields['access_code'].label = 'كود الدخول'
+        self.fields['is_active'].label = 'نشط'
 
         business = None
         if self.is_bound:
@@ -390,9 +406,9 @@ class SuperAdminExamSessionForm(forms.ModelForm):
         course = cleaned_data.get('course')
         exam_template = cleaned_data.get('exam_template')
         if business and course and course.business_id != business.id:
-            self.add_error('course', 'Select a course from the same business.')
+            self.add_error('course', 'اختر دورة من نفس الشركة.')
         if business and exam_template and exam_template.business_id not in (None, business.id):
-            self.add_error('exam_template', 'Select a template from the same business.')
+            self.add_error('exam_template', 'اختر قالبًا من نفس الشركة.')
         return cleaned_data
 
 
@@ -412,8 +428,22 @@ class SuperAdminExamQuestionForm(forms.ModelForm):
             'explanation': forms.Textarea(attrs={'rows': 3}),
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['question_text'].label = 'نص السؤال'
+        self.fields['question_type'].label = 'نوع السؤال'
+        self.fields['points'].label = 'درجة السؤال'
+        self.fields['is_required'].label = 'سؤال إلزامي'
+        self.fields['shuffle_options'].label = 'خلط الخيارات'
+        self.fields['explanation'].label = 'شرح الإجابة'
+
 
 class SuperAdminExamOptionForm(forms.ModelForm):
     class Meta:
         model = ExamOption
         fields = ['option_text', 'is_correct']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['option_text'].label = 'الخيار'
+        self.fields['is_correct'].label = 'إجابة صحيحة'

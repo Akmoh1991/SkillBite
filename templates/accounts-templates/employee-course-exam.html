@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>مواعيد الاختبار المتاحة</title>
+<title>بدء الاختبار</title>
 <style>
 @import url('/static/branding/branding.css');
 :root{--sidebar-w:260px;--topbar-h:70px}
@@ -13,18 +13,14 @@ body{margin:0;background:#f5f7fb;font-family:"SE","Segoe UI",Tahoma,Arial,sans-s
 .msg{padding:10px 12px;border-radius:10px;margin:0 0 12px 0}
 .msg.success{background:#dcfce7;color:#166534}
 .msg.error{background:#fee2e2;color:#991b1b}
-.table-wrap{overflow:auto}
-table{width:100%;border-collapse:collapse;min-width:620px}
-th,td{border-bottom:1px solid #e5e7eb;padding:10px 8px;text-align:right;font-size:14px}
-th{color:#475569;font-weight:700}
-.btn{display:inline-block;border:none;border-radius:10px;padding:8px 12px;font-weight:700;text-decoration:none;cursor:pointer}
+.btn{display:inline-block;border:none;border-radius:10px;padding:10px 14px;font-weight:700;text-decoration:none;cursor:pointer}
 .btn-primary{background:#0b62d6;color:#fff}
 .btn-soft{background:#eef2ff;color:#1e3a8a}
-.date-cell{direction:ltr;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
 .meta-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:0 0 16px}
 .meta-tile{padding:14px;border-radius:12px;background:#f8fafc;border:1px solid #e2e8f0}
 .meta-tile strong{display:block;font-size:24px;color:#0f766e;margin-top:6px}
-td[colspan="3"]{color:#64748b;text-align:center;padding:20px 10px}
+.list{display:grid;gap:10px}
+.item{padding:12px;border-radius:12px;background:#fff;border:1px solid #e5e7eb}
 @media (max-width:900px){.main{margin-right:0;padding:calc(var(--topbar-h) + 16px) 14px 18px}.card{padding:14px}}
 </style>
 </head>
@@ -38,7 +34,7 @@ td[colspan="3"]{color:#64748b;text-align:center;padding:20px 10px}
   </div>
 
   <div class="card">
-    <h2 style="margin:0 0 8px 0;">مواعيد الاختبار المتاحة</h2>
+    <h2 style="margin:0 0 8px 0;">بدء الاختبار</h2>
     <p style="margin:0 0 12px 0;color:#475569;">{{ course.title }}</p>
 
     {% if messages %}
@@ -47,45 +43,43 @@ td[colspan="3"]{color:#64748b;text-align:center;padding:20px 10px}
       {% endfor %}
     {% endif %}
 
-    <div class="meta-grid">
-      <div class="meta-tile">
-        مدة الاختبار
-        <strong>{{ estimated_exam_minutes }} دقيقة</strong>
+    {% if exam_template %}
+      <div class="meta-grid">
+        <div class="meta-tile">القالب<strong>{{ exam_template.name }}</strong></div>
+        <div class="meta-tile">مدة الاختبار<strong>{{ estimated_exam_minutes }} دقيقة</strong></div>
+        <div class="meta-tile">درجة الاجتياز<strong>{{ exam_template.passing_score_percent }}%</strong></div>
+        <div class="meta-tile">عدد الأسئلة<strong>{{ exam_template.total_questions }}</strong></div>
       </div>
-      <div class="meta-tile">
-        درجة الاجتياز
-        <strong>80%</strong>
-      </div>
-      <div class="meta-tile">
-        محاور المراجعة
-        <strong>{{ content_items_count }}</strong>
-      </div>
-    </div>
 
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>الموعد</th>
-            <th>القالب</th>
-            <th>إجراء</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for session in available_sessions %}
-            <tr>
-              <td class="date-cell">{{ session.exam_date|date:"Y-m-d H:i" }}</td>
-              <td>{{ session.exam_template.name|default:course.exam_template.name|default:"الاختبار النهائي" }}</td>
-              <td>
-                <a class="btn btn-primary" href="{% url 'employee_course_exam_take' assignment.id %}?session={{ session.id }}">بدء الاختبار</a>
-              </td>
-            </tr>
-          {% empty %}
-            <tr><td colspan="3">لا توجد جلسات متاحة حاليًا.</td></tr>
+      {% if exam_template.instructions %}
+        <div class="card" style="box-shadow:none; margin-bottom:16px;">
+          <h3 style="margin-top:0;">تعليمات الاختبار</h3>
+          <div style="color:#475569; line-height:1.9;">{{ exam_template.instructions|linebreaksbr }}</div>
+        </div>
+      {% endif %}
+
+      <div style="display:flex; justify-content:flex-start; gap:10px; flex-wrap:wrap;">
+        <a class="btn btn-primary" href="{% url 'employee_course_exam_take' assignment.id %}">بدء الاختبار</a>
+      </div>
+    {% else %}
+      <div class="msg error">لا يوجد قالب اختبار مرتبط بهذه الدورة حتى الآن.</div>
+    {% endif %}
+
+    {% if content_items %}
+      <div class="card" style="box-shadow:none; margin-top:16px;">
+        <h3 style="margin-top:0;">محاور الدورة</h3>
+        <div class="list">
+          {% for item in content_items %}
+            <div class="item">
+              <strong>{{ item.title }}</strong>
+              {% if item.body %}
+                <div style="margin-top:6px; color:#64748b;">{{ item.body|truncatechars:120 }}</div>
+              {% endif %}
+            </div>
           {% endfor %}
-        </tbody>
-      </table>
-    </div>
+        </div>
+      </div>
+    {% endif %}
   </div>
 </div>
 </body>

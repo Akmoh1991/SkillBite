@@ -139,7 +139,7 @@
           مكتبة SCORM
         </a>
       </li>
-    {% elif request.resolver_match.url_name == 'employee_dashboard' or request.resolver_match.url_name == 'employee_courses' or request.resolver_match.url_name == 'employee_course_view' or request.resolver_match.url_name == 'employee_checklists' or employee_profile %}
+    {% elif request.resolver_match.url_name == 'employee_dashboard' or request.resolver_match.url_name == 'employee_courses' or request.resolver_match.url_name == 'employee_course_view' or request.resolver_match.url_name == 'employee_learning_history' or request.resolver_match.url_name == 'employee_checklists' or employee_profile %}
       <li>
         <a href="{% url 'employee_dashboard' %}"
            class="{% if request.resolver_match.url_name == 'employee_dashboard' %}active{% endif %}">
@@ -148,11 +148,21 @@
       </li>
       <li>
         <a href="{% url 'employee_courses' %}"
-           class="{% if request.resolver_match.url_name == 'employee_courses' or request.resolver_match.url_name == 'employee_course_view' %}active{% endif %}">الدورات التدريبية</a>
+           class="{% if request.resolver_match.url_name == 'employee_courses' or request.resolver_match.url_name == 'employee_course_view' %}active{% endif %}">
+          الدورات التدريبية
+        </a>
+      </li>
+      <li>
+        <a href="{% url 'employee_learning_history' %}"
+           class="{% if request.resolver_match.url_name == 'employee_learning_history' %}active{% endif %}">
+          سجل التعلم
+        </a>
       </li>
       <li>
         <a href="{% url 'employee_checklists' %}"
-           class="{% if request.resolver_match.url_name == 'employee_checklists' %}active{% endif %}">قوائم التشغيل اليومية</a>
+           class="{% if request.resolver_match.url_name == 'employee_checklists' %}active{% endif %}">
+          قوائم التشغيل اليومية
+        </a>
       </li>
     {% elif request.resolver_match.url_name == 'business_owner_dashboard' or request.resolver_match.url_name == 'business_owner_employees' or request.resolver_match.url_name == 'business_owner_courses' or request.resolver_match.url_name == 'business_owner_course_content' or request.resolver_match.url_name == 'business_owner_checklists' or business %}
       <li>
@@ -163,19 +173,27 @@
       </li>
       <li>
         <a href="{% url 'business_owner_employees' %}"
-           class="{% if request.resolver_match.url_name == 'business_owner_employees' %}active{% endif %}">الموظفون</a>
+           class="{% if request.resolver_match.url_name == 'business_owner_employees' %}active{% endif %}">
+          الموظفون
+        </a>
       </li>
       <li>
         <a href="{% url 'business_owner_courses' %}"
-           class="{% if request.resolver_match.url_name == 'business_owner_courses' %}active{% endif %}">الدورات التدريبية</a>
+           class="{% if request.resolver_match.url_name == 'business_owner_courses' %}active{% endif %}">
+          الدورات التدريبية
+        </a>
       </li>
       <li>
         <a href="{% url 'business_owner_course_content' %}"
-           class="{% if request.resolver_match.url_name == 'business_owner_course_content' %}active{% endif %}">محتوى الدورات</a>
+           class="{% if request.resolver_match.url_name == 'business_owner_course_content' %}active{% endif %}">
+          محتوى الدورات
+        </a>
       </li>
       <li>
         <a href="{% url 'business_owner_checklists' %}"
-           class="{% if request.resolver_match.url_name == 'business_owner_checklists' %}active{% endif %}">قوائم التشغيل اليومية</a>
+           class="{% if request.resolver_match.url_name == 'business_owner_checklists' %}active{% endif %}">
+          قوائم التشغيل اليومية
+        </a>
       </li>
     {% endif %}
   </ul>
