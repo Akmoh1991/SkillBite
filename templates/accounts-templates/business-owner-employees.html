@@ -5,111 +5,65 @@
 {% block hero_text %}إدارة الفريق، المسميات الوظيفية، وإنشاء حسابات الموظفين من نفس الواجهة.{% endblock %}
 
 {% block content %}
-<section class="stats">
-  <div class="stat-card">
-    <h4>عدد الموظفين</h4>
-    <span>{{ employees|length }}</span>
-  </div>
-  <div class="stat-card">
-    <h4>المسميات الوظيفية</h4>
-    <span>{{ job_titles|length }}</span>
-  </div>
-</section>
+<style>
+.hero-card{
+  display:none;
+}
 
-<section class="content-layout">
-  <div class="layout-main">
-    <div class="card">
-      <div class="card-intro">
-        <div>
-          <h2>إضافة موظف</h2>
-          <p>أنشئ حساب الموظف وحدد المسمى الوظيفي من نفس النموذج.</p>
-        </div>
-      </div>
-      <form method="post" action="{% url 'business_owner_employee_create' %}">
-        {% csrf_token %}
-        <div class="field">
-          <label for="employee-username">اسم المستخدم</label>
-          <input id="employee-username" type="text" name="username" required>
-        </div>
-        <div class="field">
-          <label for="employee-email">البريد الإلكتروني</label>
-          <input id="employee-email" type="email" name="email">
-        </div>
-        <div class="field">
-          <label for="employee-name">الاسم الكامل</label>
-          <input id="employee-name" type="text" name="full_name" required>
-        </div>
-        <div class="field">
-          <label for="employee-password">كلمة المرور</label>
-          <input id="employee-password" type="password" name="password" required>
-        </div>
-        <div class="field">
-          <label for="employee-job-title">المسمى الوظيفي</label>
-          <select id="employee-job-title" name="job_title">
-            <option value="">بدون مسمى حالياً</option>
-            {% for job_title in job_titles %}
-              <option value="{{ job_title.id }}">{{ job_title.name }}</option>
-            {% endfor %}
-          </select>
-        </div>
-        <button class="btn" type="submit">إنشاء الموظف</button>
-      </form>
-    </div>
-  </div>
+.main{
+  padding-top:calc(var(--topbar-h) + 22px);
+}
 
-  <div class="layout-side">
-    <div class="card">
-      <div class="card-intro">
-        <div>
-          <h2>إضافة مسمى وظيفي</h2>
-          <p>أضف مسمى جديداً ليظهر مباشرة في قائمة الموظفين.</p>
-        </div>
-      </div>
-      <form method="post" action="{% url 'business_owner_job_title_create' %}">
-        {% csrf_token %}
-        <div class="field">
-          <label for="job-title-name">المسمى الوظيفي</label>
-          <input id="job-title-name" type="text" name="name" required>
-        </div>
-        <button class="btn" type="submit">حفظ المسمى</button>
-      </form>
-    </div>
+.employee-create-card .card-intro{
+  margin-bottom:18px;
+}
 
-    <div class="card">
-      <div class="list-head">
-        <h2>المسميات الوظيفية</h2>
-        <span class="list-count">{{ job_titles|length }}</span>
-      </div>
-      <ul class="list">
-        {% for job_title in job_titles %}
-          <li>
-            <strong>{{ job_title.name }}</strong><br>
-            <span class="muted">{{ job_title.employees.count }} موظف</span>
-          </li>
-        {% empty %}
-          <li class="muted">لا توجد مسميات وظيفية حتى الآن.</li>
-        {% endfor %}
-      </ul>
-    </div>
-  </div>
-</section>
+.employee-create-card .card-intro h2{
+  font-size:32px;
+  color:#0f766e;
+}
+
+.employee-create-card .card-intro p{
+  font-size:15px;
+}
+</style>
 
 <section class="section">
-  <div class="card section-full">
-    <div class="list-head">
-      <h2>الفريق الحالي</h2>
-      <span class="list-count">{{ employees|length }}</span>
+  <div class="card section-full employee-create-card">
+    <div class="card-intro">
+      <div>
+        <h2>إضافة موظف</h2>
+      </div>
     </div>
-    <ul class="list">
-      {% for employee in employees %}
-        <li>
-          <strong>{{ employee.user.get_full_name|default:employee.user.username }}</strong><br>
-          <span class="muted">{{ employee.user.username }}{% if employee.job_title %} | {{ employee.job_title.name }}{% endif %}</span>
-        </li>
-      {% empty %}
-        <li class="muted">لا يوجد موظفون حتى الآن.</li>
-      {% endfor %}
-    </ul>
+    <form method="post" action="{% url 'business_owner_employee_create' %}">
+      {% csrf_token %}
+      <div class="field">
+        <label for="employee-username">اسم المستخدم</label>
+        <input id="employee-username" type="text" name="username" required>
+      </div>
+      <div class="field">
+        <label for="employee-email">البريد الإلكتروني</label>
+        <input id="employee-email" type="email" name="email">
+      </div>
+      <div class="field">
+        <label for="employee-name">الاسم الكامل</label>
+        <input id="employee-name" type="text" name="full_name" required>
+      </div>
+      <div class="field">
+        <label for="employee-password">كلمة المرور</label>
+        <input id="employee-password" type="password" name="password" required>
+      </div>
+      <div class="field">
+        <label for="employee-job-title">المسمى الوظيفي</label>
+        <select id="employee-job-title" name="job_title">
+          <option value="">بدون مسمى حالياً</option>
+          {% for job_title in job_titles %}
+            <option value="{{ job_title.id }}">{{ job_title.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button class="btn" type="submit">إنشاء الموظف</button>
+    </form>
   </div>
 </section>
 {% endblock %}
