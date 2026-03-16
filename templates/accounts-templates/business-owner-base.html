@@ -75,6 +75,12 @@ body{
   color:#166534;
 }
 
+.message-card.error{
+  background:#fef2f2;
+  border-color:#fca5a5;
+  color:#991b1b;
+}
+
 .message-card__content{
   display:flex;
   align-items:center;
@@ -388,7 +394,7 @@ body{
   {% if messages %}
     <div class="messages">
       {% for message in messages %}
-        <div class="card message-card{% if message.tags == 'success' %} success{% endif %}">
+        <div class="card message-card{% if 'success' in message.tags %} success{% elif 'error' in message.tags %} error{% endif %}">
           <div class="message-card__content">
             <span>{{ message }}</span>
           </div>

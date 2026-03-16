@@ -88,6 +88,20 @@ def _employee_guard(request) -> bool:
     return _is_employee(getattr(request, 'user', None))
 
 
+def _flash_form_errors(request, form, label_map: dict[str, str] | None = None) -> None:
+    label_map = label_map or {}
+    for field_name, errors in form.errors.items():
+        label = label_map.get(field_name)
+        if label is None and field_name != '__all__' and field_name in form.fields:
+            label = form.fields[field_name].label or field_name
+        label = label or 'النموذج'
+        for error in errors:
+            text = str(error)
+            if text == 'This field is required.':
+                text = 'هذا الحقل مطلوب.'
+            messages.error(request, f'{label}: {text}')
+
+
 def _primary_dashboard_route(user):
     if _is_super_admin(user):
         return 'super_admin_dashboard'
@@ -1323,7 +1337,12 @@ def business_owner_course_create_action(request):
     business = _get_owned_business(request.user)
     form = CourseForm(request.POST)
     if not form.is_valid():
-        messages.error(request, form.errors.as_text())
+        _flash_form_errors(request, form, {
+            'title': 'عنوان الدورة',
+            'description': 'الوصف',
+            'estimated_minutes': 'المدة التقديرية بالدقائق',
+            'is_active': 'حالة الدورة',
+        })
         return redirect('business_owner_courses')
 
     selected_job_title = None
@@ -1331,7 +1350,7 @@ def business_owner_course_create_action(request):
     if selected_job_title_id:
         selected_job_title = JobTitle.objects.filter(business=business, id=selected_job_title_id).first()
         if selected_job_title is None:
-            messages.error(request, 'Invalid job title selection')
+            messages.error(request, 'المسمى الوظيفي المحدد غير صالح.')
             transaction.set_rollback(True)
             return redirect('business_owner_courses')
 
@@ -1347,6 +1366,9 @@ def business_owner_course_create_action(request):
         request.FILES.get('content_video_file'),
         request.FILES.get('content_pdf_file'),
     ])
+
+    if request.FILES.get('content_video_file') and not content_title:
+        content_title = (request.POST.get('title') or '').strip()
 
     course = form.save(commit=False)
     course.business = business
@@ -1364,7 +1386,7 @@ def business_owner_course_create_action(request):
             rule.save()
             _ensure_course_assignments_for_rule(rule)
         except IntegrityError:
-            messages.error(request, 'This course is already assigned to that job title')
+            messages.error(request, 'هذه الدورة مسندة بالفعل لهذا المسمى الوظيفي.')
             transaction.set_rollback(True)
             return redirect('business_owner_courses')
 
@@ -1385,11 +1407,18 @@ def business_owner_course_create_action(request):
         if content_form.is_valid():
             content_form.save()
         else:
-            messages.error(request, content_form.errors.as_text())
+            _flash_form_errors(request, content_form, {
+                'title': 'عنوان المحتوى',
+                'body': 'الوصف',
+                'material_url': 'رابط المادة',
+                'video_file': 'ملف الفيديو',
+                'pdf_file': 'ملف PDF',
+                'order': 'الترتيب',
+            })
             transaction.set_rollback(True)
             return redirect('business_owner_courses')
 
-    messages.success(request, 'Course created successfully')
+    messages.success(request, 'تم إنشاء الدورة بنجاح.')
     return redirect('business_owner_courses')
 
 
