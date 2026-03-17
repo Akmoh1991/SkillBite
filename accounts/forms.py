@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from django import forms
 from django.contrib.auth import get_user_model
 from django.core.validators import RegexValidator
@@ -16,6 +18,22 @@ from training.models import (
 
 
 User = get_user_model()
+
+SAFE_VIDEO_EXTENSIONS = {'.mp4', '.webm'}
+SAFE_VIDEO_MIME_TYPES = {'video/mp4', 'video/webm'}
+SAFE_VIDEO_ACCEPT_ATTR = 'video/mp4,video/webm,.mp4,.webm'
+
+
+def validate_browser_safe_video(upload):
+    if not upload:
+        return upload
+    suffix = Path((upload.name or '').strip()).suffix.lower()
+    if suffix not in SAFE_VIDEO_EXTENSIONS:
+        raise forms.ValidationError('صيغة الفيديو غير مدعومة. استخدم MP4 أو WebM فقط.')
+    content_type = (getattr(upload, 'content_type', '') or '').lower()
+    if content_type and content_type not in SAFE_VIDEO_MIME_TYPES:
+        raise forms.ValidationError('نوع ملف الفيديو غير مدعوم. استخدم MP4 أو WebM فقط.')
+    return upload
 
 
 class RegisterForm(forms.Form):
@@ -106,6 +124,10 @@ class CourseContentItemForm(forms.ModelForm):
         business = kwargs.pop('business')
         super().__init__(*args, **kwargs)
         self.fields['course'].queryset = Course.objects.filter(business=business).order_by('title', 'id')
+        self.fields['video_file'].widget.attrs['accept'] = SAFE_VIDEO_ACCEPT_ATTR
+
+    def clean_video_file(self):
+        return validate_browser_safe_video(self.cleaned_data.get('video_file'))
 
 
 class SOPChecklistForm(forms.ModelForm):
@@ -208,6 +230,7 @@ class SuperAdminCourseContentItemForm(forms.ModelForm):
         business_queryset = BusinessTenant.objects.filter(is_active=True).order_by('name', 'id')
         self.fields['business'].queryset = business_queryset
         self.fields['course'].queryset = Course.objects.none()
+        self.fields['video_file'].widget.attrs['accept'] = SAFE_VIDEO_ACCEPT_ATTR
 
         business = None
         if self.is_bound:
@@ -227,6 +250,9 @@ class SuperAdminCourseContentItemForm(forms.ModelForm):
         if business and course and course.business_id != business.id:
             self.add_error('course', 'Select a course from the same business.')
         return cleaned_data
+
+    def clean_video_file(self):
+        return validate_browser_safe_video(self.cleaned_data.get('video_file'))
 
 
 class SuperAdminCourseCatalogPublishForm(forms.Form):

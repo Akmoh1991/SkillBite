@@ -1,5 +1,6 @@
 import json
 import os
+from unittest.mock import PropertyMock, patch
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -101,6 +102,23 @@ class MultiTenantFlowTests(TestCase):
         self.assertEqual(assignment.status, CourseAssignment.Status.COMPLETED)
         self.assertIsNotNone(assignment.completed_at)
 
+    def test_cloudinary_video_playback_url_does_not_duplicate_mp4_extension(self):
+        item = CourseContentItem.objects.create(
+            course=self.course,
+            content_type=CourseContentItem.ContentType.LESSON,
+            title='Video lesson',
+            video_file='course_content_videos/sample-video.mp4',
+            order=1,
+        )
+
+        with patch('django.db.models.fields.files.FieldFile.url', new_callable=PropertyMock) as mocked_url:
+            mocked_url.return_value = 'https://res.cloudinary.com/dtmyrie3t/video/upload/v1/media/course_content_videos/sample-video.mp4'
+            self.assertEqual(
+                item.video_playback_url,
+                'https://res.cloudinary.com/dtmyrie3t/video/upload/v1/course_content_videos/sample-video.mp4',
+            )
+            self.assertEqual(item.video_mime_type, 'video/mp4')
+
     def test_employee_can_complete_daily_sop_checklist(self):
         employee_user = User.objects.create_user(username='employee3', password='pass12345')
         EmployeeProfile.objects.create(user=employee_user, business=self.business, job_title=self.job_title, created_by=self.owner)
@@ -166,6 +184,50 @@ class MultiTenantFlowTests(TestCase):
                 content_type=CourseContentItem.ContentType.LESSON,
             ).exists()
         )
+
+    def test_owner_rejects_unsupported_video_format_when_creating_course_content_item(self):
+        self.client.login(username='owner', password='pass12345')
+        response = self.client.post(
+            reverse('business_owner_course_content_create'),
+            {
+                'course': self.course.id,
+                'content_type': CourseContentItem.ContentType.LESSON,
+                'title': 'Unsupported lesson',
+                'body': 'This should be rejected.',
+                'video_file': SimpleUploadedFile('lesson.mov', b'fake video content', content_type='video/quicktime'),
+                'order': 1,
+            },
+        )
+
+        self.assertRedirects(
+            response,
+            f"{reverse('business_owner_course_content')}?course={self.course.id}",
+            fetch_redirect_response=False,
+        )
+        self.assertFalse(
+            CourseContentItem.objects.filter(
+                course=self.course,
+                title='Unsupported lesson',
+            ).exists()
+        )
+
+    def test_owner_rejects_unsupported_video_format_when_creating_course_with_initial_content(self):
+        self.client.login(username='owner', password='pass12345')
+        response = self.client.post(
+            reverse('business_owner_course_create'),
+            {
+                'title': 'Unsupported Video Course',
+                'description': 'Course should not be created with unsupported video.',
+                'estimated_minutes': 15,
+                'content_title': 'Initial lesson',
+                'content_type': CourseContentItem.ContentType.LESSON,
+                'content_order': 1,
+                'content_video_file': SimpleUploadedFile('intro.mov', b'fake video content', content_type='video/quicktime'),
+            },
+        )
+
+        self.assertRedirects(response, reverse('business_owner_courses'), fetch_redirect_response=False)
+        self.assertFalse(Course.objects.filter(business=self.business, title='Unsupported Video Course').exists())
 
     def test_owner_course_view_shows_assign_course_button(self):
         self.client.login(username='owner', password='pass12345')
@@ -413,7 +475,7 @@ class MultiTenantFlowTests(TestCase):
         self.assertContains(response, 'active_employee')
         self.assertNotContains(response, 'deleted_employee')
 
-    def test_owner_bulk_assign_shows_success_when_course_already_visible_to_selected_employees(self):
+    def test_owner_bulk_assign_shows_error_when_course_already_visible_to_selected_employees(self):
         self.client.login(username='owner', password='pass12345')
         employee_user = User.objects.create_user(username='duplicate_emp', password='pass12345')
         employee_profile = EmployeeProfile.objects.create(user=employee_user, business=self.business, created_by=self.owner)
@@ -430,6 +492,7 @@ class MultiTenantFlowTests(TestCase):
             follow=True,
         )
         self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'message-card error')
         self.assertContains(response, 'هذه الدورة مدرجة بالفعل للموظفين المحددين وتظهر لهم في لوحة الموظف.')
 
     def test_manual_assignment_remains_manual_for_employee(self):

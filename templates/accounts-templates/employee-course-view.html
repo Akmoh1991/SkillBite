@@ -49,7 +49,7 @@
             {% if item.video_file %}
               <div style="margin-top:12px;">
                 <video controls preload="metadata" style="display:block; width:100%; border-radius:12px; background:#000;">
-                  <source src="{{ item.video_playback_url }}" type="video/mp4">
+                  <source src="{{ item.video_playback_url }}" type="{{ item.video_mime_type }}">
                   متصفحك لا يدعم تشغيل الفيديو.
                 </video>
               </div>

@@ -1,3 +1,6 @@
+import mimetypes
+from pathlib import Path
+
 from cloudinary.utils import cloudinary_url
 from django.conf import settings
 from django.db import models
@@ -136,12 +139,22 @@ class CourseContentItem(models.Model):
         public_id = (self.video_file.name or '').strip()
         if not public_id:
             return url
+        suffix = Path(public_id).suffix.lower()
+        if suffix:
+            public_id = public_id[: -len(suffix)]
         return cloudinary_url(
             public_id,
             resource_type='video',
             format='mp4',
             secure=True,
         )[0]
+
+    @property
+    def video_mime_type(self):
+        if not self.video_file:
+            return ''
+        mime_type, _encoding = mimetypes.guess_type(self.video_playback_url or self.video_file.name)
+        return mime_type or 'video/mp4'
 
 
 class CourseAssignment(models.Model):

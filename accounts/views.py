@@ -1430,11 +1430,11 @@ def business_owner_course_assign_employees_action(request, course_id: int):
             duplicate_count += 1
 
     if created_count and duplicate_count:
-        messages.success(request, f'تم إدراج الدورة "{course.title}" إلى {created_count} موظف/موظفين. وتم ترك {duplicate_count} كما هي لأنها مدرجة بالفعل وتظهر في لوحة الموظف.')
+        messages.success(request, f'تم إدراج الدورة "{course.title}" إلى {created_count} موظف/موظفين. وتم ترك {duplicate_count} كما هي لأنها مدرجة بالفعل وتظهر في لوحة الموظف')
     elif created_count:
-        messages.success(request, f'تم إدراج الدورة "{course.title}" إلى {created_count} موظف/موظفين.')
+        messages.success(request, f'تم إدراج الدورة "{course.title}" إلى {created_count} موظف')
     else:
-        messages.success(request, 'هذه الدورة مدرجة بالفعل للموظفين المحددين وتظهر لهم في لوحة الموظف.')
+        messages.error(request, 'هذه الدورة مدرجة بالفعل للموظفين المحددين وتظهر لهم في لوحة الموظف')
 
     return redirect('business_owner_course_view', course_id=course.id)
 
