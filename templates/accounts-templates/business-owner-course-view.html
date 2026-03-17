@@ -9,12 +9,156 @@
   .hero-card h1 {
     color: #0f766e;
   }
+  .course-view-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
   .course-empty-state {
     font-size: 18px;
     font-weight: 700;
     color: #475569;
     text-align: center;
     padding: 24px 16px;
+  }
+  .course-assign-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(15, 23, 42, 0.52);
+    backdrop-filter: blur(6px);
+    z-index: 2000;
+  }
+  .course-assign-modal-backdrop.is-open {
+    display: flex;
+  }
+  .course-assign-modal {
+    width: min(100%, 680px);
+    max-height: min(90vh, 760px);
+    overflow: hidden;
+    border-radius: 28px;
+    background: #fff;
+    box-shadow: 0 40px 80px rgba(15, 23, 42, 0.16);
+    display: flex;
+    flex-direction: column;
+  }
+  .course-assign-modal__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 20px 22px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  .course-assign-modal__title {
+    margin: 0;
+    color: #0f766e;
+    font-size: 22px;
+  }
+  .course-assign-modal__close {
+    width: 48px;
+    height: 48px;
+    border: 0;
+    border-radius: 16px;
+    background: #ecfdf3;
+    color: #0f766e;
+    font-size: 28px;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .course-assign-modal__body {
+    padding: 20px 22px 24px;
+    overflow: auto;
+  }
+  .course-assign-modal__body p {
+    margin: 0 0 16px;
+    color: #64748b;
+    line-height: 1.8;
+  }
+  .course-assign-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+    padding: 14px 16px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 18px;
+  }
+  .course-assign-summary strong {
+    color: #0f172a;
+    font-size: 15px;
+  }
+  .course-assign-all {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #0f172a;
+    font-weight: 700;
+  }
+  .course-assign-all input,
+  .course-assign-employee input {
+    width: 18px;
+    height: 18px;
+    accent-color: #0f766e;
+  }
+  .course-assign-list {
+    display: grid;
+    gap: 10px;
+  }
+  .course-assign-employee {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 18px;
+    background: #fff;
+  }
+  .course-assign-employee strong {
+    display: block;
+    color: #0f172a;
+    font-size: 15px;
+  }
+  .course-assign-employee span {
+    display: block;
+    margin-top: 4px;
+    color: #64748b;
+    font-size: 13px;
+  }
+  .course-assign-empty {
+    padding: 18px;
+    border: 1px dashed #cbd5e1;
+    border-radius: 18px;
+    text-align: center;
+    color: #64748b;
+    background: #f8fafc;
+  }
+  .course-assign-modal__footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 12px;
+    margin-top: 20px;
+  }
+  .course-assign-cancel {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 90px;
+    padding: 10px 16px;
+    border: 0;
+    border-radius: 16px;
+    background: #ecfdf3;
+    color: #0f766e;
+    font-size: 15px;
+    font-weight: 800;
+    cursor: pointer;
   }
 </style>
 <section class="section">
@@ -23,7 +167,8 @@
       <div>
         <h2 style="margin-bottom:6px; color:#0f766e;">محتوى الدورة</h2>
       </div>
-      <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+      <div class="course-view-actions">
+        <button class="btn" type="button" id="open-course-assign-modal">إدراج الدورة</button>
         <a class="btn" href="{% url 'business_owner_course_list' %}" style="text-decoration:none; display:inline-flex; align-items:center;">
           العودة إلى الدورات
         </a>
@@ -62,4 +207,104 @@
     {% endif %}
   </div>
 </section>
+
+<div class="course-assign-modal-backdrop" id="course-assign-modal" aria-hidden="true">
+  <div class="course-assign-modal" role="dialog" aria-modal="true" aria-labelledby="course-assign-modal-title">
+    <div class="course-assign-modal__header">
+      <h3 class="course-assign-modal__title" id="course-assign-modal-title">إدراج الدورة</h3>
+      <button class="course-assign-modal__close" type="button" data-close-course-assign-modal aria-label="إغلاق">×</button>
+    </div>
+    <form method="post" action="{% url 'business_owner_course_assign_employees' course.id %}">
+      {% csrf_token %}
+      <div class="course-assign-modal__body">
+        <p>اختر جميع الموظفين أو حدّد الموظفين الذين تريد إدراج هذه الدورة لهم.</p>
+        {% if employees %}
+          <div class="course-assign-summary">
+            <strong>عدد الموظفين المتاحين: {{ employees|length }}</strong>
+            <label class="course-assign-all">
+              <input type="checkbox" id="assign-all-employees" name="assign_scope" value="all">
+              <span>جميع الموظفين</span>
+            </label>
+          </div>
+          <div class="course-assign-list">
+            {% for employee in employees %}
+              <label class="course-assign-employee">
+                <input type="checkbox" name="employee_ids" value="{{ employee.id }}" data-employee-checkbox>
+                <span>
+                  <strong>
+                    {% if employee.user.first_name or employee.user.last_name %}
+                      {{ employee.user.first_name }} {{ employee.user.last_name|default:'' }}
+                    {% else %}
+                      {{ employee.user.username }}
+                    {% endif %}
+                  </strong>
+                  <span>
+                    {{ employee.user.username }}
+                    {% if employee.job_title %}
+                      | {{ employee.job_title.name }}
+                    {% endif %}
+                  </span>
+                </span>
+              </label>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="course-assign-empty">لا يوجد موظفون مسجلون حالياً.</div>
+        {% endif %}
+        <div class="course-assign-modal__footer">
+          <button class="btn" type="submit"{% if not employees %} disabled{% endif %}>إدراج الدورة</button>
+          <button class="course-assign-cancel" type="button" data-close-course-assign-modal>إلغاء</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  (function () {
+    var modal = document.getElementById('course-assign-modal');
+    var openButton = document.getElementById('open-course-assign-modal');
+    var assignAllCheckbox = document.getElementById('assign-all-employees');
+    var employeeCheckboxes = Array.from(document.querySelectorAll('[data-employee-checkbox]'));
+
+    if (!modal || !openButton) return;
+
+    function setEmployeeCheckboxesDisabled(disabled) {
+      employeeCheckboxes.forEach(function (checkbox) {
+        checkbox.disabled = disabled;
+        if (disabled) checkbox.checked = false;
+      });
+    }
+
+    function openModal() {
+      modal.classList.add('is-open');
+      modal.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeModal() {
+      modal.classList.remove('is-open');
+      modal.setAttribute('aria-hidden', 'true');
+    }
+
+    openButton.addEventListener('click', openModal);
+
+    document.querySelectorAll('[data-close-course-assign-modal]').forEach(function (button) {
+      button.addEventListener('click', closeModal);
+    });
+
+    modal.addEventListener('click', function (event) {
+      if (event.target === modal) closeModal();
+    });
+
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape' && modal.classList.contains('is-open')) closeModal();
+    });
+
+    if (assignAllCheckbox) {
+      assignAllCheckbox.addEventListener('change', function () {
+        setEmployeeCheckboxesDisabled(assignAllCheckbox.checked);
+      });
+    }
+  })();
+</script>
 {% endblock %}

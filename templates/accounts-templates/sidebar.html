@@ -174,15 +174,15 @@
       <li>
         <a href="{% url 'business_owner_employees' %}"
            class="{% if request.resolver_match.url_name == 'business_owner_employees' %}active{% endif %}">
-          الموظفون
+          إضافة موظف
         </a>
       </li>
-      <li>
+      <!--<li>
         <a href="{% url 'business_owner_job_titles' %}"
            class="{% if request.resolver_match.url_name == 'business_owner_job_titles' %}active{% endif %}">
           المسميات الوظيفية
         </a>
-      </li>
+      </li>-->
       <li>
         <a href="{% url 'business_owner_course_list' %}"
            class="{% if request.resolver_match.url_name == 'business_owner_course_list' or request.resolver_match.url_name == 'business_owner_course_view' %}active{% endif %}">

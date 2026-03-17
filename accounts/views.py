@@ -120,6 +120,20 @@ def _get_employee_profile(user):
     return EmployeeProfile.objects.select_related('business', 'job_title', 'user').filter(user=user, is_active=True, business__is_active=True).first()
 
 
+def _assign_course_to_employee(*, business, course, employee_profile, assigned_by):
+    assignment, created = CourseAssignment.objects.get_or_create(
+        business=business,
+        course=course,
+        employee=employee_profile.user,
+        defaults={'assigned_by': assigned_by},
+    )
+    if created:
+        return True, None
+    if assignment.assigned_via_job_title_id:
+        return False, f'هذه الدورة مدرجة بالفعل لهذا الموظف من خلال المسمى الوظيفي "{assignment.assigned_via_job_title.name}".'
+    return False, 'هذه الدورة مدرجة بالفعل لهذا الموظف.'
+
+
 EMPLOYEE_COURSE_CATALOG_PATH = Path(settings.BASE_DIR) / 'accounts' / 'data' / 'employee_course_catalog.json'
 
 
@@ -1288,9 +1302,9 @@ def business_owner_dashboard_assign_course_action(request, employee_id: int):
     )
     if not created:
         if assignment.assigned_via_job_title_id:
-            messages.error(request, f'هذه الدورة مسندة بالفعل لهذا الموظف من خلال المسمى الوظيفي "{assignment.assigned_via_job_title.name}".')
+            messages.error(request, f'هذه الدورة مدرجة من قبل لهذا الموظف من خلال المسمى الوظيفي "{assignment.assigned_via_job_title.name}".')
         else:
-            messages.error(request, 'هذه الدورة مدرجة بالفعل لهذا الموظف.')
+            messages.error(request, 'هذه الدورة مدرجة من قبل لهذا الموظف')
         return redirect('business_owner_dashboard')
     messages.success(request, f'تم إدراج الدورة "{course.title}" إلى {employee.user.username}')
     return redirect('business_owner_dashboard')
@@ -1308,12 +1322,12 @@ def business_owner_dashboard_assign_course_action(request, employee_id: int):
             employee=employee.user,
         ).select_related('assigned_via_job_title').first()
         if existing_assignment and existing_assignment.assigned_via_job_title_id:
-            messages.error(request, f'هذه الدورة مسندة بالفعل لهذا الموظف من خلال المسمى الوظيفي "{existing_assignment.assigned_via_job_title.name}".')
+            messages.error(request, f'هذه الدورة مدرجة من قبل لهذا الموظف من خلال المسمى الوظيفي "{existing_assignment.assigned_via_job_title.name}".')
         else:
-            messages.error(request, 'هذه الدورة مدرجة بالفعل لهذا الموظف.')
+            messages.error(request, 'هذه الدورة مدرجة من قبل لهذا الموظف')
         transaction.set_rollback(True)
         return redirect('business_owner_dashboard')
-    messages.success(request, f'تم إسناد الدورة "{course.title}" إلى {employee.user.username}.')
+    messages.success(request, f'تم إدراج الدورة "{course.title}" إلى {employee.user.username}.')
     return redirect('business_owner_dashboard')
 
 
@@ -1382,8 +1396,70 @@ def business_owner_course_view(request, course_id: int):
             'business': business,
             'course': course,
             'content_items': content_items,
+            'employees': EmployeeProfile.objects.select_related('user', 'job_title').filter(
+                business=business,
+                is_active=True,
+                user__is_active=True,
+            ).order_by('user__first_name', 'user__last_name', 'user__username', 'id'),
         },
     )
+
+
+@login_required
+@require_POST
+@transaction.atomic
+def business_owner_course_assign_employees_action(request, course_id: int):
+    if not _business_owner_guard(request):
+        return redirect('home')
+    business = _get_owned_business(request.user)
+    course = get_object_or_404(business.courses.filter(is_active=True), id=course_id)
+    employees = list(
+        EmployeeProfile.objects.select_related('user', 'job_title').filter(
+            business=business,
+            is_active=True,
+            user__is_active=True,
+        )
+    )
+    if not employees:
+        messages.error(request, 'لا يوجد موظفون متاحون لإدراج هذه الدورة')
+        return redirect('business_owner_course_view', course_id=course.id)
+
+    assign_scope = (request.POST.get('assign_scope') or '').strip()
+    if assign_scope == 'all':
+        selected_profiles = employees
+    else:
+        selected_ids = {value.strip() for value in request.POST.getlist('employee_ids') if value.strip()}
+        if not selected_ids:
+            messages.error(request, 'اختر موظفاً واحداً على الأقل أو اختر جميع الموظفين')
+            return redirect('business_owner_course_view', course_id=course.id)
+        selected_profiles = [employee for employee in employees if str(employee.id) in selected_ids]
+
+    if not selected_profiles:
+        messages.error(request, 'تعذر العثور على الموظفين المحددين')
+        return redirect('business_owner_course_view', course_id=course.id)
+
+    created_count = 0
+    duplicate_count = 0
+    for employee in selected_profiles:
+        created, _ = _assign_course_to_employee(
+            business=business,
+            course=course,
+            employee_profile=employee,
+            assigned_by=request.user,
+        )
+        if created:
+            created_count += 1
+        else:
+            duplicate_count += 1
+
+    if created_count and duplicate_count:
+        messages.success(request, f'تم إدراج الدورة "{course.title}" إلى {created_count} موظف/موظفين. تم تخطي {duplicate_count} لأن الدورة مضافة مسبقاً.')
+    elif created_count:
+        messages.success(request, f'تم إدراج الدورة "{course.title}" إلى {created_count} موظف/موظفين.')
+    else:
+        messages.error(request, 'هذه الدورة مضافة من قبل إلى الموظفين المحددين')
+
+    return redirect('business_owner_course_view', course_id=course.id)
 
 
 @login_required
@@ -1533,9 +1609,9 @@ def business_owner_course_assignment_rule_create_action(request):
         try:
             rule.save()
             _ensure_course_assignments_for_rule(rule)
-            messages.success(request, 'تم حفظ قاعدة إسناد الدورة')
+            messages.success(request, 'تم حفظ قاعدة إدراج الدورة')
         except IntegrityError:
-            messages.error(request, 'هذه الدورة مسندة بالفعل لهذا المسمى الوظيفي')
+            messages.error(request, 'هذه الدورة مدرجة بالفعل لهذا المسمى الوظيفي')
     else:
         messages.error(request, form.errors.as_text())
     return redirect('business_owner_courses')
