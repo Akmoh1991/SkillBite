@@ -221,6 +221,181 @@ class MultiTenantFlowTests(TestCase):
         self.assertRedirects(response, reverse('business_owner_course_view', args=[manual_course.id]))
         self.assertEqual(CourseAssignment.objects.filter(course=manual_course).count(), 2)
 
+    def test_owner_dashboard_assign_modal_marks_already_assigned_courses_for_employee(self):
+        self.client.login(username='owner', password='pass12345')
+        employee_user = User.objects.create_user(username='dashboard_emp', password='pass12345')
+        EmployeeProfile.objects.create(user=employee_user, business=self.business, job_title=self.job_title, created_by=self.owner)
+        response = self.client.get(reverse('business_owner_dashboard'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'data-assigned-course-ids="')
+        self.assertContains(response, str(self.course.id))
+
+    def test_owner_dashboard_assign_modal_includes_active_courses_from_other_businesses(self):
+        other_owner = User.objects.create_user(username='owner_other', password='pass12345')
+        other_business = BusinessTenant.objects.create(owner=other_owner, name='Cafe South')
+        external_course = Course.objects.create(
+            business=other_business,
+            title='Latte Art Mastery',
+            estimated_minutes=35,
+            created_by=other_owner,
+        )
+
+        self.client.login(username='owner', password='pass12345')
+        response = self.client.get(reverse('business_owner_dashboard'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, f'{external_course.title} - {other_business.name}')
+
+    def test_owner_can_assign_active_course_from_other_business_on_dashboard(self):
+        employee_user = User.objects.create_user(username='cross_business_emp', password='pass12345')
+        employee_profile = EmployeeProfile.objects.create(
+            user=employee_user,
+            business=self.business,
+            job_title=self.job_title,
+            created_by=self.owner,
+        )
+        other_owner = User.objects.create_user(username='owner_remote', password='pass12345')
+        other_business = BusinessTenant.objects.create(owner=other_owner, name='Cafe East')
+        external_course = Course.objects.create(
+            business=other_business,
+            title='Coffee Roasting 101',
+            estimated_minutes=40,
+            created_by=other_owner,
+        )
+
+        self.client.login(username='owner', password='pass12345')
+        response = self.client.post(
+            reverse('business_owner_dashboard_assign_course', args=[employee_profile.id]),
+            {'course_id': external_course.id},
+            follow=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(
+            CourseAssignment.objects.filter(
+                business=self.business,
+                course=external_course,
+                employee=employee_user,
+            ).exists()
+        )
+
+    def test_owner_dashboard_delete_employee_deactivates_profile_and_user(self):
+        self.client.login(username='owner', password='pass12345')
+        employee_user = User.objects.create_user(username='delete_employee', password='pass12345')
+        employee_profile = EmployeeProfile.objects.create(
+            user=employee_user,
+            business=self.business,
+            job_title=self.job_title,
+            created_by=self.owner,
+        )
+
+        response = self.client.post(
+            reverse('business_owner_dashboard_delete_employee', args=[employee_profile.id]),
+            follow=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        employee_profile.refresh_from_db()
+        employee_user.refresh_from_db()
+        self.assertFalse(employee_profile.is_active)
+        self.assertFalse(employee_user.is_active)
+
+    def test_owner_dashboard_delete_employee_missing_profile_redirects_without_404(self):
+        self.client.login(username='owner', password='pass12345')
+        employee_user = User.objects.create_user(username='inactive_delete', password='pass12345')
+        employee_profile = EmployeeProfile.objects.create(
+            user=employee_user,
+            business=self.business,
+            job_title=self.job_title,
+            created_by=self.owner,
+            is_active=False,
+        )
+        employee_user.is_active = False
+        employee_user.save(update_fields=['is_active'])
+
+        response = self.client.post(
+            reverse('business_owner_dashboard_delete_employee', args=[employee_profile.id]),
+            follow=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertRedirects(response, reverse('business_owner_dashboard'))
+
+    def test_owner_dashboard_hides_deleted_employee_from_list_after_delete(self):
+        self.client.login(username='owner', password='pass12345')
+        deleted_user = User.objects.create_user(username='deleted_employee', password='pass12345')
+        active_user = User.objects.create_user(username='active_employee', password='pass12345')
+        deleted_profile = EmployeeProfile.objects.create(
+            user=deleted_user,
+            business=self.business,
+            job_title=self.job_title,
+            created_by=self.owner,
+        )
+        EmployeeProfile.objects.create(
+            user=active_user,
+            business=self.business,
+            job_title=self.job_title,
+            created_by=self.owner,
+        )
+
+        response = self.client.post(
+            reverse('business_owner_dashboard_delete_employee', args=[deleted_profile.id]),
+            follow=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'active_employee')
+        self.assertNotContains(response, 'deleted_employee')
+
+    def test_owner_bulk_assign_shows_success_when_course_already_visible_to_selected_employees(self):
+        self.client.login(username='owner', password='pass12345')
+        employee_user = User.objects.create_user(username='duplicate_emp', password='pass12345')
+        employee_profile = EmployeeProfile.objects.create(user=employee_user, business=self.business, created_by=self.owner)
+        CourseAssignment.objects.create(
+            business=self.business,
+            course=self.course,
+            employee=employee_user,
+            assigned_by=self.owner,
+        )
+
+        response = self.client.post(
+            reverse('business_owner_course_assign_employees', args=[self.course.id]),
+            {'employee_ids': [employee_profile.id]},
+            follow=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'هذه الدورة مدرجة بالفعل للموظفين المحددين وتظهر لهم في لوحة الموظف.')
+
+    def test_owner_rule_creation_upgrades_existing_manual_assignment_to_job_title_assignment(self):
+        CourseAssignmentRule.objects.filter(business=self.business, job_title=self.job_title, course=self.course).delete()
+        employee_user = User.objects.create_user(username='manual_then_rule_emp', password='pass12345')
+        employee_profile = EmployeeProfile.objects.create(
+            user=employee_user,
+            business=self.business,
+            job_title=self.job_title,
+            created_by=self.owner,
+        )
+        assignment = CourseAssignment.objects.create(
+            business=self.business,
+            course=self.course,
+            employee=employee_user,
+            assigned_by=self.owner,
+        )
+
+        self.client.login(username='owner', password='pass12345')
+        response = self.client.post(
+            reverse('business_owner_course_rule_create'),
+            {
+                'job_title': self.job_title.id,
+                'course': self.course.id,
+            },
+        )
+
+        self.assertRedirects(response, reverse('business_owner_courses'))
+        assignment.refresh_from_db()
+        self.assertEqual(assignment.employee, employee_profile.user)
+        self.assertEqual(assignment.assigned_via_job_title, self.job_title)
+
     def test_employee_navigation_pages_render(self):
         employee_user = User.objects.create_user(username='employee_nav', password='pass12345')
         EmployeeProfile.objects.create(user=employee_user, business=self.business, job_title=self.job_title, created_by=self.owner)
@@ -243,6 +418,53 @@ class MultiTenantFlowTests(TestCase):
         for route in routes:
             response = self.client.get(route)
             self.assertEqual(response.status_code, 200)
+
+    def test_employee_dashboard_shows_only_latest_three_active_assigned_courses(self):
+        employee_user = User.objects.create_user(username='employee_many_courses', password='pass12345')
+        EmployeeProfile.objects.create(user=employee_user, business=self.business, created_by=self.owner)
+        extra_courses = [
+            Course.objects.create(business=self.business, title=f'Extra Course {index}', estimated_minutes=10 + index, created_by=self.owner)
+            for index in range(4)
+        ]
+        for course in extra_courses:
+            CourseAssignment.objects.create(
+                business=self.business,
+                course=course,
+                employee=employee_user,
+                assigned_by=self.owner,
+            )
+
+        self.client.login(username='employee_many_courses', password='pass12345')
+        response = self.client.get(reverse('employee_dashboard'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Extra Course 3')
+        self.assertContains(response, 'Extra Course 2')
+        self.assertContains(response, 'Extra Course 1')
+        self.assertNotContains(response, 'Extra Course 0')
+
+    def test_employee_courses_page_shows_direct_and_job_title_assignments(self):
+        employee_user = User.objects.create_user(username='employee_visible_courses', password='pass12345')
+        employee_profile = EmployeeProfile.objects.create(user=employee_user, business=self.business, job_title=self.job_title, created_by=self.owner)
+        owner_assigned_course = Course.objects.create(
+            business=self.business,
+            title='Owner Assigned Course',
+            estimated_minutes=20,
+            created_by=self.owner,
+        )
+        CourseAssignment.objects.create(
+            business=self.business,
+            course=owner_assigned_course,
+            employee=employee_user,
+            assigned_by=self.owner,
+        )
+
+        self.client.login(username='employee_visible_courses', password='pass12345')
+        response = self.client.get(reverse('employee_courses'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Owner Assigned Course')
+        self.assertContains(response, self.course.title)
 
     def test_employee_scorm_pages_redirect_home(self):
         employee_user = User.objects.create_user(username='employee_scorm_blocked', password='pass12345')
@@ -290,7 +512,8 @@ class MultiTenantFlowTests(TestCase):
         self.client.login(username='employee_implicit_course', password='pass12345')
         response = self.client.get(reverse('employee_courses'))
         self.assertEqual(response.status_code, 200)
-        self.assertTrue(CourseAssignment.objects.filter(employee=employee_user, course=self.course).exists())
+        assignment = CourseAssignment.objects.get(employee=employee_user, course=self.course)
+        self.assertEqual(assignment.assigned_via_job_title, self.job_title)
 
     def test_employee_courses_page_backfills_nine_catalog_courses_from_database(self):
         CourseAssignment.objects.all().delete()
@@ -616,6 +839,37 @@ class SuperAdminFlowTests(TestCase):
         self.assertRedirects(response, reverse('super_admin_learning'))
         self.assertEqual(Course.objects.filter(business=self.business).count(), 9)
         self.assertTrue(CourseContentItem.objects.filter(course__business=self.business).exists())
+
+    def test_super_admin_rule_assignments_are_visible_to_employee(self):
+        employee_user = User.objects.create_user(username='employee_super_admin_rule', password='pass12345')
+        EmployeeProfile.objects.create(
+            user=employee_user,
+            business=self.business,
+            job_title=self.job_title,
+            created_by=self.super_admin,
+        )
+
+        self.client.login(username='platform_admin', password='pass12345')
+        response = self.client.post(
+            reverse('super_admin_course_rule_create'),
+            {
+                'business': self.business.id,
+                'job_title': self.job_title.id,
+                'course': self.course.id,
+            },
+        )
+
+        self.assertRedirects(response, reverse('super_admin_learning'))
+        assignment = CourseAssignment.objects.get(employee=employee_user, course=self.course)
+        self.assertEqual(assignment.assigned_via_job_title, self.job_title)
+        self.assertEqual(assignment.assigned_by, self.super_admin)
+
+        self.client.logout()
+        self.client.login(username='employee_super_admin_rule', password='pass12345')
+        employee_response = self.client.get(reverse('employee_courses'))
+
+        self.assertEqual(employee_response.status_code, 200)
+        self.assertContains(employee_response, self.course.title)
 
     def test_super_admin_can_create_exam_template_and_assign_it_to_multiple_courses(self):
         second_course = Course.objects.create(

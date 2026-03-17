@@ -184,6 +184,21 @@
   margin-top:22px;
 }
 
+.assign-modal__empty{
+  display:none;
+  margin-top:12px;
+  padding:14px 16px;
+  border-radius:16px;
+  background:#f8fafc;
+  border:1px dashed #cbd5e1;
+  color:#64748b;
+  font-size:14px;
+}
+
+.assign-modal__empty.is-visible{
+  display:block;
+}
+
 .assign-modal__cancel{
   display:inline-flex;
   align-items:center;
@@ -257,6 +272,7 @@
                       data-open-assign-modal
                       data-employee-id="{{ employee.id }}"
                       data-employee-name="{% if employee.user.first_name or employee.user.last_name %}{{ employee.user.first_name }} {{ employee.user.last_name|default:'' }}{% else %}{{ employee.user.username }}{% endif %}"
+                      data-assigned-course-ids="{{ employee.assigned_course_ids_csv }}"
                     >
                       إدراج دورة
                     </button>
@@ -291,13 +307,14 @@
           <label for="assign-course-id">الدورة التدريبية</label>
           <select id="assign-course-id" name="course_id" required>
             <option value="">اختر الدورة التدريبية</option>
-            {% for course in courses %}
-              <option value="{{ course.id }}">{{ course.title }}</option>
+            {% for course in assignable_courses %}
+              <option value="{{ course.id }}">{{ course.title }}{% if course.business_id != business.id %} - {{ course.business.name }}{% endif %}</option>
             {% endfor %}
           </select>
         </div>
+        <div class="assign-modal__empty" id="assign-course-empty-state">كل الدورات مدرجة بالفعل لهذا الموظف.</div>
         <div class="assign-modal__footer">
-          <button class="btn" type="submit">إدراج</button>
+          <button class="btn" type="submit" id="assign-course-submit">إدراج</button>
           <button class="assign-modal__cancel" type="button" data-close-assign-modal>إلغاء</button>
         </div>
       </div>
@@ -310,24 +327,56 @@
   var form = document.getElementById('assign-course-modal-form');
   var employeeName = document.getElementById('assign-course-employee-name');
   var courseSelect = document.getElementById('assign-course-id');
-  if (!modal || !form || !employeeName || !courseSelect) return;
+  var submitButton = document.getElementById('assign-course-submit');
+  var emptyState = document.getElementById('assign-course-empty-state');
+  if (!modal || !form || !employeeName || !courseSelect || !submitButton || !emptyState) return;
+  var allCourseOptions = Array.from(courseSelect.querySelectorAll('option')).map(function (option) {
+    return { value: option.value, text: option.textContent };
+  });
+
+  function rebuildCourseOptions(assignedCourseIds) {
+    courseSelect.innerHTML = '';
+    allCourseOptions.forEach(function (option) {
+      if (!option.value || assignedCourseIds.indexOf(option.value) === -1) {
+        var node = document.createElement('option');
+        node.value = option.value;
+        node.textContent = option.text;
+        courseSelect.appendChild(node);
+      }
+    });
+    var hasAvailableCourses = courseSelect.options.length > 1;
+    courseSelect.disabled = !hasAvailableCourses;
+    courseSelect.required = hasAvailableCourses;
+    submitButton.disabled = !hasAvailableCourses;
+    emptyState.classList.toggle('is-visible', !hasAvailableCourses);
+  }
 
   function closeModal() {
     modal.classList.remove('is-open');
     modal.setAttribute('aria-hidden', 'true');
     form.removeAttribute('action');
     courseSelect.value = '';
+    courseSelect.disabled = false;
+    submitButton.disabled = false;
+    emptyState.classList.remove('is-visible');
   }
 
   document.querySelectorAll('[data-open-assign-modal]').forEach(function (button) {
     button.addEventListener('click', function () {
       var employeeId = button.getAttribute('data-employee-id');
       var name = button.getAttribute('data-employee-name') || 'الموظف';
+      var assignedCourseIds = (button.getAttribute('data-assigned-course-ids') || '')
+        .split(',')
+        .map(function (value) { return value.trim(); })
+        .filter(Boolean);
       form.setAttribute('action', '/business-owner/dashboard/employees/' + employeeId + '/assign-course/');
       employeeName.textContent = name.trim();
+      rebuildCourseOptions(assignedCourseIds);
       modal.classList.add('is-open');
       modal.setAttribute('aria-hidden', 'false');
-      courseSelect.focus();
+      if (!submitButton.disabled) {
+        courseSelect.focus();
+      }
     });
   });
 
