@@ -1454,6 +1454,94 @@ def business_owner_checklists_view(request):
 
 
 @login_required
+def business_owner_reports_view(request):
+    if not _business_owner_guard(request):
+        return redirect('home')
+    business = _get_owned_business(request.user)
+    employees = list(
+        EmployeeProfile.objects.filter(
+            business=business,
+            is_active=True,
+            user__is_active=True,
+        )
+        .select_related('user', 'job_title')
+        .order_by('user__first_name', 'user__last_name', 'user__username', 'id')
+    )
+    assignments = list(
+        CourseAssignment.objects.filter(
+            business=business,
+            employee__employee_profile__business=business,
+            employee__employee_profile__is_active=True,
+            employee__is_active=True,
+        )
+        .select_related('course', 'employee__employee_profile__job_title')
+        .order_by('employee__username', 'course__title', 'id')
+    )
+
+    employee_rows = []
+    employee_assignment_map = {employee.user_id: [] for employee in employees}
+    for assignment in assignments:
+        employee_assignment_map.setdefault(assignment.employee_id, []).append(assignment)
+
+    for employee in employees:
+        employee_assignments = employee_assignment_map.get(employee.user_id, [])
+        completed_total = sum(1 for assignment in employee_assignments if assignment.status == CourseAssignment.Status.COMPLETED)
+        in_progress_total = sum(1 for assignment in employee_assignments if assignment.status == CourseAssignment.Status.IN_PROGRESS)
+        assigned_total = len(employee_assignments)
+        display_name = (
+            f'{employee.user.first_name} {employee.user.last_name}'.strip()
+            or employee.user.username
+        )
+
+        course_rows = []
+        for assignment in employee_assignments:
+            is_completed = assignment.status == CourseAssignment.Status.COMPLETED
+            is_in_progress = assignment.status == CourseAssignment.Status.IN_PROGRESS
+            course_rows.append(
+                {
+                    'title': assignment.course.title,
+                    'status_label': assignment.get_status_display(),
+                    'status_class': 'completed' if is_completed else 'in-progress' if is_in_progress else 'assigned',
+                    'assigned_at': timezone.localtime(assignment.assigned_at),
+                    'completed_at': timezone.localtime(assignment.completed_at) if assignment.completed_at else None,
+                }
+            )
+
+        employee_rows.append(
+            {
+                'display_name': display_name,
+                'username': employee.user.username,
+                'job_title_name': employee.job_title.name if employee.job_title else '',
+                'assigned_total': assigned_total,
+                'completed_total': completed_total,
+                'in_progress_total': in_progress_total,
+                'completion_rate': round((completed_total / assigned_total) * 100) if assigned_total else 0,
+                'course_rows': course_rows,
+            }
+        )
+
+    total_assigned = len(assignments)
+    total_completed = sum(1 for assignment in assignments if assignment.status == CourseAssignment.Status.COMPLETED)
+    total_in_progress = sum(1 for assignment in assignments if assignment.status == CourseAssignment.Status.IN_PROGRESS)
+    employees_with_completed_courses = sum(1 for row in employee_rows if row['completed_total'] > 0)
+
+    return render(
+        request,
+        'accounts-templates/business-owner-reports.html',
+        {
+            'business': business,
+            'employee_rows': employee_rows,
+            'tracked_employee_total': len(employee_rows),
+            'total_assigned': total_assigned,
+            'total_completed': total_completed,
+            'total_in_progress': total_in_progress,
+            'employees_with_completed_courses': employees_with_completed_courses,
+            'overall_completion_rate': round((total_completed / total_assigned) * 100) if total_assigned else 0,
+        },
+    )
+
+
+@login_required
 @require_POST
 def business_owner_job_title_create_action(request):
     if not _business_owner_guard(request):
