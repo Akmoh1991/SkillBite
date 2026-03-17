@@ -1,6 +1,7 @@
 from pathlib import Path
 import os
 import mimetypes
+import sys
 from dotenv import load_dotenv
 
 # تحميل متغيرات البيئة من ملف .env (إن وجد)
@@ -66,6 +67,8 @@ if DJANGO_ENV == "production" and not ALLOWED_HOSTS:
 # التطبيقات
 # ==================================================
 INSTALLED_APPS = [
+    "cloudinary_storage",
+    "cloudinary",
     # تطبيقات المشروع
     "accounts.apps.AccountsConfig",
     "training.apps.TrainingConfig",
@@ -195,14 +198,29 @@ STATICFILES_DIRS = [STATIC_DIR] if STATIC_DIR.exists() else []
 # ✅ مهم جدًا مع WhiteNoise + Admin CSS/JS
 # في الإنتاج: ملفات مضغوطة + أسماء hashed (أفضل للكاش والاستقرار)
 # في التطوير: تخزين عادي لتفادي أخطاء manifest أثناء التطوير
+CLOUDINARY_STORAGE = {
+    "CLOUD_NAME": os.getenv("CLOUDINARY_CLOUD_NAME", "").strip(),
+    "API_KEY": os.getenv("CLOUDINARY_API_KEY", "").strip(),
+    "API_SECRET": os.getenv("CLOUDINARY_API_SECRET", "").strip(),
+    "SECURE": True,
+}
+
+USE_CLOUDINARY = env_bool("USE_CLOUDINARY", False)
+IS_TESTING = "test" in sys.argv
+DEFAULT_MEDIA_STORAGE = (
+    "Skillbite.storage.ResourceAwareCloudinaryStorage"
+    if USE_CLOUDINARY and not IS_TESTING
+    else "django.core.files.storage.FileSystemStorage"
+)
+
 if DJANGO_ENV == "production" and not DEBUG:
     STORAGES = {
-        "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+        "default": {"BACKEND": DEFAULT_MEDIA_STORAGE},
         "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
     }
 else:
     STORAGES = {
-        "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+        "default": {"BACKEND": DEFAULT_MEDIA_STORAGE},
         "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
     }
 
