@@ -6,6 +6,11 @@
 
 {% block content %}
 <style>
+  :root{
+    --employee-dashboard-brand-green:#0b8a72;
+    --employee-dashboard-brand-green-dark:#0a6f5d;
+  }
+
   .employee-dashboard{
     display:grid;
     gap:20px;
@@ -19,8 +24,8 @@
 
   .employee-dashboard .card{
     padding:24px;
-    border:1px solid #e6edf5;
-    box-shadow:0 12px 28px rgba(15, 23, 42, .06);
+    border:1px solid #e6ebf2;
+    box-shadow:0 1px 0 rgba(15, 23, 42, .02);
   }
 
   .employee-dashboard .section-head{
@@ -35,16 +40,17 @@
 
   .employee-dashboard .section-head h2{
     margin:0;
-    font-size:24px;
-    line-height:1.25;
-    color:#0f172a;
+    font-size:28px;
+    line-height:1.2;
+    color:var(--employee-dashboard-brand-green);
+    font-weight:800;
   }
 
   .employee-dashboard .section-head p{
     margin:6px 0 0;
-    font-size:14px;
-    line-height:1.8;
-    color:#64748b;
+    font-size:15px;
+    line-height:1.7;
+    color:#6b7280;
   }
 
   .employee-dashboard .count-badge{
@@ -56,9 +62,9 @@
     padding:0 14px;
     border-radius:999px;
     background:#ecfdf3;
-    color:#047857;
+    color:var(--employee-dashboard-brand-green);
     font-size:14px;
-    font-weight:700;
+    font-weight:800;
   }
 
   .employee-dashboard .list{
@@ -84,23 +90,24 @@
 
   .employee-dashboard .row-head strong{
     display:block;
-    font-size:18px;
-    color:#0f172a;
+    font-size:20px;
+    color:var(--employee-dashboard-brand-green-dark);
+    font-weight:800;
   }
 
   .employee-dashboard .meta{
     font-size:14px;
-    line-height:1.9;
-    color:#64748b;
+    line-height:1.8;
+    color:#7b8794;
   }
 
   .employee-dashboard .course-link{
-    color:#0f172a;
+    color:var(--employee-dashboard-brand-green-dark);
     text-decoration:none;
   }
 
   .employee-dashboard .course-link:hover{
-    color:#009624;
+    color:var(--employee-dashboard-brand-green);
   }
 
   .employee-dashboard .pill{
@@ -110,9 +117,9 @@
     padding:6px 12px;
     border-radius:999px;
     background:#ecfdf3;
-    color:#047857 !important;
+    color:var(--employee-dashboard-brand-green) !important;
     font-size:13px;
-    font-weight:700;
+    font-weight:800;
     white-space:nowrap;
   }
 
@@ -123,8 +130,8 @@
 
   .employee-dashboard .muted{
     padding:14px 0 0;
-    font-size:14px;
-    color:#64748b;
+    font-size:15px;
+    color:#6b7280;
   }
 
   .employee-dashboard .employee-courses-grid{
@@ -161,8 +168,8 @@
     margin:0;
     font-size:20px;
     line-height:1.25;
-    color:#1f2937;
-    font-weight:700;
+    color:var(--employee-dashboard-brand-green-dark);
+    font-weight:800;
   }
 
   .employee-dashboard .employee-course-description{
@@ -197,15 +204,15 @@
   .employee-dashboard .employee-course-link{
     min-height:56px;
     border-radius:999px;
-    border:1px solid #e5e7eb;
+    border:1px solid #99f6c8;
     display:inline-flex;
     align-items:center;
     justify-content:center;
     text-decoration:none;
-    color:#111827;
+    color:var(--employee-dashboard-brand-green-dark);
     font-size:16px;
-    font-weight:700;
-    background:#fff;
+    font-weight:800;
+    background:#ecfdf5;
   }
 
   .employee-task{
@@ -240,7 +247,7 @@
   .employee-task-item span{
     font-size:15px;
     line-height:1.8;
-    color:#0f172a;
+    color:var(--employee-dashboard-brand-green-dark);
   }
 
   .employee-task-notes{
@@ -284,7 +291,7 @@
     }
 
     .employee-dashboard .section-head h2{
-      font-size:22px;
+      font-size:24px;
     }
 
     .employee-dashboard .employee-courses-grid{

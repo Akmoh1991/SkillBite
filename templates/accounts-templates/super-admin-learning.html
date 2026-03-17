@@ -56,20 +56,6 @@
     <div class="card">
       <div class="card-intro">
         <div>
-          <h2>إسناد دورة لمسمى وظيفي</h2>
-          <p>أي موظف مرتبط بهذا المسمى سيرى الدورة مباشرة في صفحة الموظف.</p>
-        </div>
-      </div>
-      <form method="post" action="{% url 'super_admin_course_rule_create' %}" class="inline-form">
-        {% csrf_token %}
-        {{ course_rule_form.as_p }}
-        <button class="btn" type="submit">حفظ الإسناد</button>
-      </form>
-    </div>
-
-    <div class="card">
-      <div class="card-intro">
-        <div>
           <h2>رفع محتوى الدورة</h2>
           <p>أضف صفحات الدورة أو الفيديو أو الملف من لوحة المشرف العام.</p>
         </div>

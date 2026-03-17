@@ -5,7 +5,6 @@ from django.core.validators import RegexValidator
 from .models import BusinessTenant, JobTitle
 from training.models import (
     Course,
-    CourseAssignmentRule,
     CourseContentItem,
     CourseExamSession,
     ExamOption,
@@ -96,18 +95,6 @@ class CourseForm(forms.ModelForm):
     class Meta:
         model = Course
         fields = ['title', 'description', 'estimated_minutes', 'is_active']
-
-
-class CourseAssignmentRuleForm(forms.ModelForm):
-    class Meta:
-        model = CourseAssignmentRule
-        fields = ['job_title', 'course']
-
-    def __init__(self, *args, **kwargs):
-        business = kwargs.pop('business')
-        super().__init__(*args, **kwargs)
-        self.fields['job_title'].queryset = JobTitle.objects.filter(business=business).order_by('name', 'id')
-        self.fields['course'].queryset = Course.objects.filter(business=business, is_active=True).order_by('title', 'id')
 
 
 class CourseContentItemForm(forms.ModelForm):
@@ -204,47 +191,6 @@ class SuperAdminCourseCreateForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['business'].queryset = BusinessTenant.objects.filter(is_active=True).order_by('name', 'id')
-
-
-class SuperAdminCourseAssignmentRuleForm(forms.ModelForm):
-    business = forms.ModelChoiceField(
-        queryset=BusinessTenant.objects.none(),
-        empty_label='Select business',
-    )
-
-    class Meta:
-        model = CourseAssignmentRule
-        fields = ['business', 'job_title', 'course']
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        business_queryset = BusinessTenant.objects.filter(is_active=True).order_by('name', 'id')
-        self.fields['business'].queryset = business_queryset
-        self.fields['job_title'].queryset = JobTitle.objects.none()
-        self.fields['course'].queryset = Course.objects.none()
-
-        business = None
-        if self.is_bound:
-            business_id = self.data.get(self.add_prefix('business'))
-            if business_id:
-                business = business_queryset.filter(id=business_id).first()
-        else:
-            business = self.initial.get('business')
-
-        if business:
-            self.fields['job_title'].queryset = JobTitle.objects.filter(business=business).order_by('name', 'id')
-            self.fields['course'].queryset = Course.objects.filter(business=business, is_active=True).order_by('title', 'id')
-
-    def clean(self):
-        cleaned_data = super().clean()
-        business = cleaned_data.get('business')
-        job_title = cleaned_data.get('job_title')
-        course = cleaned_data.get('course')
-        if business and job_title and job_title.business_id != business.id:
-            self.add_error('job_title', 'Select a job title from the same business.')
-        if business and course and course.business_id != business.id:
-            self.add_error('course', 'Select a course from the same business.')
-        return cleaned_data
 
 
 class SuperAdminCourseContentItemForm(forms.ModelForm):
