@@ -141,14 +141,6 @@ def _assign_course_to_employee(*, business, course, employee_profile, assigned_b
             assigned_by=assigned_by,
         )
         return True, None
-    if assignment.assigned_via_job_title_id:
-        update_fields = ['assigned_via_job_title']
-        assignment.assigned_via_job_title = None
-        if assigned_by and assignment.assigned_by_id != assigned_by.id:
-            assignment.assigned_by = assigned_by
-            update_fields.append('assigned_by')
-        assignment.save(update_fields=update_fields)
-        return True, None
     return False, 'هذه الدورة مدرجة بالفعل لهذا الموظف.'
 
 
@@ -240,7 +232,6 @@ def _visible_employee_course_assignments_queryset(user, business):
         CourseAssignment.objects.filter(
             employee=user,
             business=business,
-            assigned_via_job_title__isnull=True,
         )
         .select_related('course', 'assigned_by')
         .prefetch_related(
@@ -1232,7 +1223,6 @@ def _business_owner_dashboard_context(request):
         CourseAssignment.objects.filter(
             business=business,
             employee__employee_profile__business=business,
-            assigned_via_job_title__isnull=True,
         )
         .values('employee_id', 'course_id')
     ):

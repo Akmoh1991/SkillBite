@@ -14,7 +14,6 @@ from training.models import (
     Course,
     CourseContentItem,
     CourseAssignment,
-    CourseAssignmentRule,
     ExamOption,
     ExamQuestion,
     ExamTemplate,
@@ -39,12 +38,6 @@ class MultiTenantFlowTests(TestCase):
             title='Food Safety Basics',
             estimated_minutes=20,
             created_by=self.owner,
-        )
-        CourseAssignmentRule.objects.create(
-            business=self.business,
-            job_title=self.job_title,
-            course=self.course,
-            assigned_by=self.owner,
         )
         self.checklist = SOPChecklist.objects.create(
             business=self.business,
@@ -464,22 +457,18 @@ class MultiTenantFlowTests(TestCase):
         self.assertEqual(response.status_code, 200)
         assignment.refresh_from_db()
         self.assertEqual(assignment.employee, employee_profile.user)
-        self.assertIsNone(assignment.assigned_via_job_title)
+        self.assertEqual(
+            CourseAssignment.objects.filter(employee=employee_profile.user, course=self.course).count(),
+            1,
+        )
 
-    def test_dashboard_manual_assignment_upgrades_existing_job_title_assignment(self):
-        employee_user = User.objects.create_user(username='job_title_upgrade_emp', password='pass12345')
+    def test_dashboard_manual_assignment_makes_course_visible_to_employee(self):
+        employee_user = User.objects.create_user(username='manual_visible_emp', password='pass12345')
         employee_profile = EmployeeProfile.objects.create(
             user=employee_user,
             business=self.business,
             job_title=self.job_title,
             created_by=self.owner,
-        )
-        assignment = CourseAssignment.objects.create(
-            business=self.business,
-            course=self.course,
-            employee=employee_user,
-            assigned_by=self.owner,
-            assigned_via_job_title=self.job_title,
         )
 
         self.client.login(username='owner', password='pass12345')
@@ -490,12 +479,11 @@ class MultiTenantFlowTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        assignment.refresh_from_db()
-        self.assertIsNone(assignment.assigned_via_job_title)
+        assignment = CourseAssignment.objects.get(employee=employee_user, course=self.course)
         self.assertEqual(assignment.assigned_by, self.owner)
 
         self.client.logout()
-        self.client.login(username='job_title_upgrade_emp', password='pass12345')
+        self.client.login(username='manual_visible_emp', password='pass12345')
         employee_courses_response = self.client.get(reverse('employee_courses'))
         self.assertEqual(employee_courses_response.status_code, 200)
         self.assertContains(employee_courses_response, self.course.title)
@@ -546,7 +534,7 @@ class MultiTenantFlowTests(TestCase):
         self.assertContains(response, 'Extra Course 1')
         self.assertNotContains(response, 'Extra Course 0')
 
-    def test_employee_courses_page_shows_only_manual_assignments(self):
+    def test_employee_courses_page_shows_manual_assignments(self):
         employee_user = User.objects.create_user(username='employee_visible_courses', password='pass12345')
         EmployeeProfile.objects.create(user=employee_user, business=self.business, job_title=self.job_title, created_by=self.owner)
         owner_assigned_course = Course.objects.create(
@@ -560,13 +548,6 @@ class MultiTenantFlowTests(TestCase):
             course=owner_assigned_course,
             employee=employee_user,
             assigned_by=self.owner,
-        )
-        CourseAssignment.objects.create(
-            business=self.business,
-            course=self.course,
-            employee=employee_user,
-            assigned_by=self.owner,
-            assigned_via_job_title=self.job_title,
         )
         manual_second_course = Course.objects.create(
             business=self.business,
@@ -587,7 +568,6 @@ class MultiTenantFlowTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Owner Assigned Course')
         self.assertContains(response, manual_second_course.title)
-        self.assertNotContains(response, self.course.title)
 
     def test_employee_scorm_pages_redirect_home(self):
         employee_user = User.objects.create_user(username='employee_scorm_blocked', password='pass12345')
@@ -627,8 +607,7 @@ class MultiTenantFlowTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertFalse(CourseAssignment.objects.filter(employee=employee_user, course=self.course).exists())
 
-    def test_single_job_title_business_does_not_implicitly_assign_course(self):
-        CourseAssignmentRule.objects.all().delete()
+    def test_job_titles_do_not_implicitly_assign_course(self):
         employee_user = User.objects.create_user(username='employee_implicit_course', password='pass12345')
         EmployeeProfile.objects.create(user=employee_user, business=self.business, job_title=self.job_title, created_by=self.owner)
 
@@ -640,7 +619,6 @@ class MultiTenantFlowTests(TestCase):
 
     def test_employee_courses_page_backfills_nine_catalog_courses_from_database(self):
         CourseAssignment.objects.all().delete()
-        CourseAssignmentRule.objects.all().delete()
         CourseContentItem.objects.all().delete()
         Course.objects.all().delete()
         employee_user = User.objects.create_user(username='employee_seeded_catalog', password='pass12345')
@@ -660,7 +638,6 @@ class MultiTenantFlowTests(TestCase):
 
     def test_employee_courses_page_completes_catalog_when_one_matching_course_already_exists(self):
         Course.objects.all().delete()
-        CourseAssignmentRule.objects.all().delete()
         CourseContentItem.objects.all().delete()
         Course.objects.create(
             business=self.business,

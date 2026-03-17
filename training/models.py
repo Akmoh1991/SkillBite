@@ -126,50 +126,6 @@ class CourseContentItem(models.Model):
         return f'{self.course.title} - {self.title}'
 
 
-class CourseAssignmentRule(models.Model):
-    business = models.ForeignKey(
-        'accounts.BusinessTenant',
-        on_delete=models.CASCADE,
-        related_name='course_assignment_rules',
-        verbose_name='Business',
-    )
-    job_title = models.ForeignKey(
-        'accounts.JobTitle',
-        on_delete=models.CASCADE,
-        related_name='course_assignment_rules',
-        verbose_name='Job title',
-    )
-    course = models.ForeignKey(
-        Course,
-        on_delete=models.CASCADE,
-        related_name='assignment_rules',
-        verbose_name='Course',
-    )
-    assigned_by = models.ForeignKey(
-        User,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='created_course_assignment_rules',
-        verbose_name='Assigned by',
-    )
-    created_at = models.DateTimeField(
-        auto_now_add=True,
-        verbose_name='Created at',
-    )
-
-    class Meta:
-        verbose_name = 'Course assignment rule'
-        verbose_name_plural = 'Course assignment rules'
-        ordering = ['job_title__name', 'course__title', 'id']
-        constraints = [
-            models.UniqueConstraint(fields=['job_title', 'course'], name='unique_course_rule_per_job_title'),
-        ]
-
-    def __str__(self):
-        return f'{self.job_title} -> {self.course}'
-
-
 class CourseAssignment(models.Model):
     class Status(models.TextChoices):
         ASSIGNED = 'ASSIGNED', 'Assigned'
@@ -201,14 +157,6 @@ class CourseAssignment(models.Model):
         blank=True,
         related_name='assigned_courses',
         verbose_name='Assigned by',
-    )
-    assigned_via_job_title = models.ForeignKey(
-        'accounts.JobTitle',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='course_assignments',
-        verbose_name='Assigned via job title',
     )
     status = models.CharField(
         max_length=20,

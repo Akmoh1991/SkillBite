@@ -3,7 +3,6 @@ from django.contrib import admin
 from .models import (
     Course,
     CourseAssignment,
-    CourseAssignmentRule,
     CourseContentItem,
     SOPChecklist,
     SOPChecklistAssignmentRule,
@@ -33,18 +32,11 @@ class CourseContentItemAdmin(admin.ModelAdmin):
     list_filter = ('content_type', 'course__business')
 
 
-@admin.register(CourseAssignmentRule)
-class CourseAssignmentRuleAdmin(admin.ModelAdmin):
-    list_display = ('business', 'job_title', 'course', 'assigned_by', 'created_at')
-    search_fields = ('business__name', 'job_title__name', 'course__title')
-    list_filter = ('business', 'job_title')
-
-
 @admin.register(CourseAssignment)
 class CourseAssignmentAdmin(admin.ModelAdmin):
-    list_display = ('employee', 'business', 'course', 'status', 'assigned_via_job_title', 'assigned_at', 'completed_at')
+    list_display = ('employee', 'business', 'course', 'status', 'assigned_at', 'completed_at')
     search_fields = ('employee__username', 'business__name', 'course__title')
-    list_filter = ('business', 'status', 'assigned_via_job_title')
+    list_filter = ('business', 'status')
 
 
 class SOPChecklistItemInline(admin.TabularInline):
