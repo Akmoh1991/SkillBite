@@ -1,6 +1,7 @@
 {% extends "accounts-templates/business-owner-base.html" %}
 
 {% block page_title %}{{ business.name }} | لوحة الموظف{% endblock %}
+{% block hero_section %}{% endblock %}
 {% block hero_title %}لوحة الموظف{% endblock %}
 {% block hero_text %}اعرض الدورات المسندة لك والمهام اليومية المطلوب إنهاؤها اليوم فقط.{% endblock %}
 
@@ -65,49 +66,6 @@
     color:var(--employee-dashboard-brand-green);
     font-size:14px;
     font-weight:800;
-  }
-
-  .employee-dashboard .list{
-    margin:0;
-    display:grid;
-    gap:14px;
-  }
-
-  .employee-dashboard .list li{
-    padding:18px;
-    border:1px solid #e9eff5;
-    border-radius:16px;
-    background:#fbfdff;
-  }
-
-  .employee-dashboard .row-head{
-    display:flex;
-    align-items:flex-start;
-    justify-content:space-between;
-    gap:12px;
-    margin-bottom:8px;
-  }
-
-  .employee-dashboard .row-head strong{
-    display:block;
-    font-size:20px;
-    color:var(--employee-dashboard-brand-green-dark);
-    font-weight:800;
-  }
-
-  .employee-dashboard .meta{
-    font-size:14px;
-    line-height:1.8;
-    color:#7b8794;
-  }
-
-  .employee-dashboard .course-link{
-    color:var(--employee-dashboard-brand-green-dark);
-    text-decoration:none;
-  }
-
-  .employee-dashboard .course-link:hover{
-    color:var(--employee-dashboard-brand-green);
   }
 
   .employee-dashboard .pill{
@@ -215,62 +173,81 @@
     background:#ecfdf5;
   }
 
-  .employee-task{
-    display:grid;
-    gap:14px;
-  }
-
-  .employee-task-items{
-    display:grid;
-    gap:12px;
-  }
-
-  .employee-task-item{
-    display:flex;
-    align-items:flex-start;
-    gap:12px;
-    padding:14px 16px;
-    border:1px solid #d9e2ec;
-    border-radius:14px;
+  .employee-dashboard .checklist-table-wrap{
+    overflow-x:auto;
+    border:1px solid #e6ebf2;
+    border-radius:20px;
     background:#fff;
-    cursor:pointer;
   }
 
-  .employee-task-item input[type="checkbox"]{
-    width:20px;
-    height:20px;
-    margin:2px 0 0;
-    accent-color:#0f766e;
-    flex:0 0 auto;
-  }
-
-  .employee-task-item span{
-    font-size:15px;
-    line-height:1.8;
-    color:var(--employee-dashboard-brand-green-dark);
-  }
-
-  .employee-task-notes{
+  .employee-dashboard .checklist-table{
     width:100%;
-    min-height:100px;
-    box-sizing:border-box;
-    padding:14px 16px;
-    border:1px solid #cbd5e1;
-    border-radius:14px;
-    background:#fff;
-    font:inherit;
-    resize:vertical;
+    border-collapse:separate;
+    border-spacing:0;
+    min-width:760px;
   }
 
-  .employee-task-notes:focus{
-    outline:none;
-    border-color:#0f766e;
-    box-shadow:0 0 0 4px rgba(15, 118, 110, .12);
+  .employee-dashboard .checklist-table thead th{
+    padding:20px 18px;
+    font-size:15px;
+    font-weight:800;
+    color:var(--employee-dashboard-brand-green-dark);
+    background:#f8fbff;
+    border-bottom:1px solid #e6ebf2;
+    text-align:right;
+    white-space:nowrap;
   }
 
-  .employee-task-action{
-    display:flex;
-    justify-content:flex-start;
+  .employee-dashboard .checklist-table tbody td{
+    padding:20px 18px;
+    border-bottom:1px solid #edf2f7;
+    vertical-align:middle;
+    color:#334155;
+    font-size:15px;
+  }
+
+  .employee-dashboard .checklist-table tbody tr:last-child td{
+    border-bottom:0;
+  }
+
+  .employee-dashboard .checklist-table-row{
+    cursor:pointer;
+    transition:background-color .2s ease;
+  }
+
+  .employee-dashboard .checklist-table-row:hover{
+    background:#f8fffc;
+  }
+
+  .employee-dashboard .checklist-table-row:focus{
+    outline:3px solid rgba(11, 138, 114, .18);
+    outline-offset:-3px;
+  }
+
+  .employee-dashboard .checklist-title-link{
+    color:var(--employee-dashboard-brand-green-dark);
+    font-size:18px;
+    font-weight:800;
+    text-decoration:none;
+  }
+
+  .employee-dashboard .checklist-title-link:hover{
+    color:var(--employee-dashboard-brand-green);
+  }
+
+  .employee-dashboard .checklist-action-link{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:46px;
+    padding:0 20px;
+    border-radius:999px;
+    border:1px solid #99f6c8;
+    background:#ecfdf5;
+    color:var(--employee-dashboard-brand-green-dark);
+    text-decoration:none;
+    font-weight:800;
+    white-space:nowrap;
   }
 
   @media (max-width:1100px){
@@ -284,8 +261,7 @@
       padding:18px;
     }
 
-    .employee-dashboard .section-head,
-    .employee-dashboard .row-head{
+    .employee-dashboard .section-head{
       flex-direction:column;
       align-items:flex-start;
     }
@@ -297,6 +273,10 @@
     .employee-dashboard .employee-courses-grid{
       grid-template-columns:1fr;
     }
+
+    .employee-dashboard .checklist-table{
+      min-width:640px;
+    }
   }
 </style>
 
@@ -305,8 +285,7 @@
     <div class="card">
       <div class="section-head">
         <div>
-          <h2>الدورات المسندة لك</h2>
-          <p>هذه هي الدورات التي تم تعيينها لك من مالك النشاط أو المشرف العام.</p>
+          <h2>الدورات الإلزامية</h2>
         </div>
         <span class="count-badge">{{ active_course_assignments|length }}</span>
       </div>
@@ -369,52 +348,65 @@
       <div class="section-head">
         <div>
           <h2>مهام اليوم</h2>
-          <p>أكمل القوائم المطلوبة اليوم وسجّل التنفيذ من نفس الصفحة.</p>
         </div>
         <span class="count-badge">{{ assigned_checklists|length }}</span>
       </div>
 
-      <ul class="list">
-        {% for checklist in assigned_checklists %}
-          <li>
-            <div class="row-head">
-              <div>
-                <strong>{{ checklist.title }}</strong>
-              </div>
-              <div>
-                {% if checklist.id in today_completions %}
-                  <span class="pill">مكتملة اليوم</span>
-                {% else %}
-                  <span class="pill is-muted">مطلوبة اليوم</span>
-                {% endif %}
-              </div>
-            </div>
-
-            <div class="meta">{{ checklist.get_frequency_display }} | {{ checklist.items.count }} مهمة</div>
-
-            {% if checklist.id not in today_completions %}
-              <form class="employee-task" method="post" action="{% url 'employee_checklist_complete' checklist.id %}">
-                {% csrf_token %}
-                <div class="employee-task-items">
-                  {% for item in checklist.items.all %}
-                    <label class="employee-task-item">
-                      <input type="checkbox" name="item_ids" value="{{ item.id }}">
-                      <span>{{ item.title }}</span>
-                    </label>
-                  {% endfor %}
-                </div>
-                <textarea class="employee-task-notes" name="notes" placeholder="ملاحظات الوردية (اختياري)"></textarea>
-                <div class="employee-task-action">
-                  <button class="btn" type="submit">إكمال مهام اليوم</button>
-                </div>
-              </form>
-            {% endif %}
-          </li>
-        {% empty %}
-          <li class="muted">لا توجد مهام يومية مسندة لك حالياً.</li>
-        {% endfor %}
-      </ul>
+      <div class="checklist-table-wrap">
+        <table class="checklist-table">
+          <thead>
+            <tr>
+              <th>القائمة</th>
+              <th>التكرار</th>
+              <th>عدد المهام</th>
+              <th>الحالة</th>
+              <th>إجراء</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for checklist in assigned_checklists %}
+              <tr class="checklist-table-row" data-href="{% url 'employee_checklist_detail' checklist.id %}" tabindex="0" role="link" aria-label="{{ checklist.title }}">
+                <td>
+                  <a class="checklist-title-link" href="{% url 'employee_checklist_detail' checklist.id %}">{{ checklist.title }}</a>
+                </td>
+                <td>{{ checklist.get_frequency_display }}</td>
+                <td>{{ checklist.items.count }}</td>
+                <td>
+                  {% if checklist.id in today_completions %}
+                    <span class="pill">مكتملة اليوم</span>
+                  {% else %}
+                    <span class="pill is-muted">مطلوبة اليوم</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <a class="checklist-action-link" href="{% url 'employee_checklist_detail' checklist.id %}">عرض القائمة</a>
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td class="muted" colspan="5">لا توجد مهام يومية مسندة لك حالياً.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
     </div>
   </section>
 </div>
+<script>
+  document.querySelectorAll('.checklist-table-row[data-href]').forEach(function(row) {
+    row.addEventListener('click', function(event) {
+      if (event.target.closest('a, button, input, textarea, select, label')) {
+        return;
+      }
+      window.location.href = row.dataset.href;
+    });
+    row.addEventListener('keydown', function(event) {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        window.location.href = row.dataset.href;
+      }
+    });
+  });
+</script>
 {% endblock %}

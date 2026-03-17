@@ -1932,6 +1932,17 @@ def employee_checklists_view(request):
 
 
 @login_required
+def employee_checklist_detail_view(request, checklist_id: int):
+    if not _employee_guard(request):
+        return redirect('home')
+    context = _employee_dashboard_context(request)
+    checklist = get_object_or_404(_assigned_checklists_queryset(context['employee_profile']), id=checklist_id)
+    context['checklist'] = checklist
+    context['checklist_completion'] = context['today_completions'].get(checklist.id)
+    return render(request, 'accounts-templates/employee-checklist-detail.html', context)
+
+
+@login_required
 @require_POST
 def employee_course_complete_action(request, assignment_id: int):
     if not _employee_guard(request):
@@ -1957,12 +1968,19 @@ def employee_checklist_complete_action(request, checklist_id: int):
         return redirect('home')
     employee_profile = _get_employee_profile(request.user)
     checklist = get_object_or_404(_assigned_checklists_queryset(employee_profile), id=checklist_id)
+    redirect_target = request.POST.get('next') or reverse('employee_checklists')
+    if not url_has_allowed_host_and_scheme(
+        url=redirect_target,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
+        redirect_target = reverse('employee_checklists')
     items = list(checklist.items.all())
     selected_item_ids = {int(value) for value in request.POST.getlist('item_ids') if str(value).isdigit()}
     expected_item_ids = {item.id for item in items}
     if expected_item_ids and selected_item_ids != expected_item_ids:
         messages.error(request, 'يجب تحديد جميع عناصر قائمة SOP قبل الإكمال')
-        return redirect('employee_checklists')
+        return redirect(redirect_target)
     completion, created = SOPChecklistCompletion.objects.get_or_create(business=employee_profile.business, checklist=checklist, employee=request.user, completed_for=timezone.localdate(), defaults={'notes': (request.POST.get('notes') or '').strip()})
     if not created:
         completion.notes = (request.POST.get('notes') or '').strip()
@@ -1970,7 +1988,7 @@ def employee_checklist_complete_action(request, checklist_id: int):
     for item in items:
         SOPChecklistItemCompletion.objects.update_or_create(completion=completion, item=item, defaults={'is_checked': True})
     messages.success(request, 'تم اكمال المهام اليومية')
-    return redirect('employee_checklists')
+    return redirect(redirect_target)
 
 
 @login_required

@@ -386,10 +386,12 @@ body{
 {% include "accounts-templates/topbar.html" %}
 
 <div class="main">
+  {% block hero_section %}
   <section class="hero-card">
     <h1>{% block hero_title %}{{ business.name }}{% endblock %}</h1>
     <p>{% block hero_text %}إدارة بسيطة للتدريب والتشغيل اليومي داخل SkillBite.{% endblock %}</p>
   </section>
+  {% endblock %}
 
   {% if messages %}
     <div class="messages">
