@@ -188,8 +188,8 @@
   }
 
   .employee-dashboard .checklist-table thead th{
-    padding:20px 18px;
-    font-size:15px;
+    padding:14px 16px;
+    font-size:14px;
     font-weight:800;
     color:var(--employee-dashboard-brand-green-dark);
     background:#f8fbff;
@@ -199,7 +199,7 @@
   }
 
   .employee-dashboard .checklist-table tbody td{
-    padding:20px 18px;
+    padding:14px 16px;
     border-bottom:1px solid #edf2f7;
     vertical-align:middle;
     color:#334155;
@@ -226,7 +226,7 @@
 
   .employee-dashboard .checklist-title-link{
     color:var(--employee-dashboard-brand-green-dark);
-    font-size:18px;
+    font-size:15px;
     font-weight:800;
     text-decoration:none;
   }
@@ -239,14 +239,16 @@
     display:inline-flex;
     align-items:center;
     justify-content:center;
-    min-height:46px;
-    padding:0 20px;
+    min-height:44px;
+    min-width:98px;
+    padding:10px 16px;
     border-radius:999px;
     border:1px solid #99f6c8;
     background:#ecfdf5;
     color:var(--employee-dashboard-brand-green-dark);
     text-decoration:none;
     font-weight:800;
+    font-size:14px;
     white-space:nowrap;
   }
 
@@ -369,7 +371,17 @@
                 <td>
                   <a class="checklist-title-link" href="{% url 'employee_checklist_detail' checklist.id %}">{{ checklist.title }}</a>
                 </td>
-                <td>{{ checklist.get_frequency_display }}</td>
+                <td>
+                  {% if checklist.frequency == 'DAILY' %}
+                    يومي
+                  {% elif checklist.frequency == 'WEEKLY' %}
+                    أسبوعي
+                  {% elif checklist.frequency == 'ON_DEMAND' %}
+                    عند الطلب
+                  {% else %}
+                    {{ checklist.get_frequency_display }}
+                  {% endif %}
+                </td>
                 <td>{{ checklist.items.count }}</td>
                 <td>
                   {% if checklist.id in today_completions %}
