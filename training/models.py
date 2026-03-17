@@ -1,3 +1,4 @@
+from cloudinary.utils import cloudinary_url
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
@@ -124,6 +125,23 @@ class CourseContentItem(models.Model):
 
     def __str__(self):
         return f'{self.course.title} - {self.title}'
+
+    @property
+    def video_playback_url(self):
+        if not self.video_file:
+            return ''
+        url = self.video_file.url
+        if 'res.cloudinary.com' not in url:
+            return url
+        public_id = (self.video_file.name or '').strip()
+        if not public_id:
+            return url
+        return cloudinary_url(
+            public_id,
+            resource_type='video',
+            format='mp4',
+            secure=True,
+        )[0]
 
 
 class CourseAssignment(models.Model):
