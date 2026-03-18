@@ -1,0 +1,185 @@
+{% extends "accounts-templates/super-admin-base.html" %}
+
+{% block page_title %}SkillBite | إنشاء حساب{% endblock %}
+{% block hero_title %}إنشاء حساب جديد{% endblock %}
+{% block hero_text %}إنشاء مشرف عام أو مالك شركة في صفحة مستقلة وواضحة.{% endblock %}
+
+{% block content %}
+<style>
+.main{
+  padding-top:calc(var(--topbar-h) + 22px);
+}
+
+.hero-card{
+  display:none;
+}
+
+.page-toolbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  margin-bottom:16px;
+}
+
+.section-title{
+  margin:0;
+  color:#0f766e;
+  font-size:22px;
+  font-weight:800;
+}
+
+.page-toolbar p{
+  margin:6px 0 0;
+  color:var(--muted);
+  font-size:13px;
+}
+
+.page-toolbar__back{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:12px 18px;
+  border-radius:999px;
+  background:#ecfdf3;
+  color:#0f766e;
+  text-decoration:none;
+  font-size:14px;
+  font-weight:800;
+  white-space:nowrap;
+}
+
+.form-card{
+  max-width:880px;
+}
+
+.form-grid{
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0, 1fr));
+  gap:14px 16px;
+}
+
+.field{
+  margin-bottom:0;
+}
+
+.field.field-full{
+  grid-column:1 / -1;
+}
+
+.field label{
+  display:block;
+  margin-bottom:6px;
+  font-size:13px;
+  font-weight:700;
+}
+
+.field input,
+.field select{
+  width:100%;
+  border:1px solid #cbd5e1;
+  border-radius:12px;
+  padding:12px 14px;
+  font:inherit;
+  background:#fff;
+}
+
+.form-actions{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin-top:18px;
+}
+
+.btn{
+  border-radius:999px;
+  padding:12px 22px;
+  font-weight:800;
+}
+
+.btn.secondary{
+  text-decoration:none;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+}
+
+@media (max-width: 900px){
+  .page-toolbar{
+    flex-direction:column;
+    align-items:stretch;
+  }
+
+  .page-toolbar__back{
+    width:100%;
+  }
+
+  .form-grid{
+    grid-template-columns:1fr;
+  }
+
+  .field.field-full{
+    grid-column:auto;
+  }
+
+  .form-actions{
+    flex-direction:column;
+    align-items:stretch;
+  }
+}
+</style>
+
+<section class="page-toolbar">
+  <div>
+    <h2 class="section-title">إضافة حساب جديد</h2>
+    <p>أنشئ مستخدماً جديداً وحدد دوره بدون مزاحمة قائمة المستخدمين.</p>
+  </div>
+  <a class="page-toolbar__back" href="{% url 'super_admin_users' %}">العودة إلى المستخدمين</a>
+</section>
+
+<section>
+  <div class="card form-card">
+    <form method="post" action="{% url 'super_admin_user_create' %}">
+      {% csrf_token %}
+      <div class="form-grid">
+        <div class="field">
+          <label for="id_username">اسم المستخدم</label>
+          <input id="id_username" type="text" name="username" value="{{ user_form.username.value|default_if_none:'' }}" required>
+        </div>
+        <div class="field">
+          <label for="id_email">البريد الإلكتروني</label>
+          <input id="id_email" type="email" name="email" value="{{ user_form.email.value|default_if_none:'' }}">
+        </div>
+        <div class="field field-full">
+          <label for="id_full_name">الاسم الكامل</label>
+          <input id="id_full_name" type="text" name="full_name" value="{{ user_form.full_name.value|default_if_none:'' }}" required>
+        </div>
+        <div class="field">
+          <label for="id_password">كلمة المرور</label>
+          <input id="id_password" type="password" name="password" required>
+        </div>
+        <div class="field">
+          <label for="id_role">الدور</label>
+          <select id="id_role" name="role" required>
+            <option value="super_admin" {% if user_form.role.value == 'super_admin' or user_form.role.value == None %}selected{% endif %}>Super Admin</option>
+            <option value="business_owner" {% if user_form.role.value == 'business_owner' %}selected{% endif %}>Business Owner</option>
+          </select>
+        </div>
+        <div class="field field-full">
+          <label for="id_business">الشركة</label>
+          <select id="id_business" name="business">
+            <option value="">بدون شركة</option>
+            {% for business in user_form.fields.business.queryset %}
+              <option value="{{ business.id }}" {% if user_form.business.value|stringformat:'s' == business.id|stringformat:'s' %}selected{% endif %}>{{ business.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn" type="submit">إنشاء الحساب</button>
+        <a class="btn secondary" href="{% url 'super_admin_users' %}">إلغاء</a>
+      </div>
+    </form>
+  </div>
+</section>
+{% endblock %}

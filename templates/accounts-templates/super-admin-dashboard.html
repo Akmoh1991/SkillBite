@@ -5,6 +5,168 @@
 {% block hero_text %}رؤية مركزية للشركات والمشرفين والمحتوى التدريبي والامتثال التشغيلي عبر المنصة كاملة.{% endblock %}
 
 {% block content %}
+<style>
+.main{
+  padding-top:calc(var(--topbar-h) + 22px);
+}
+
+.hero-card{
+  display:none;
+}
+
+.stats{
+  gap:14px;
+  margin-bottom:16px;
+}
+
+.section-title{
+  margin:0 0 12px;
+  color:#0f766e;
+  font-size:22px;
+  font-weight:800;
+}
+
+.stat-card{
+  padding:14px 16px;
+}
+
+.stat-card h4{
+  margin-bottom:6px;
+  font-size:12px;
+}
+
+.stat-card span{
+  font-size:20px;
+}
+
+.section{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:18px;
+  margin-bottom:18px;
+}
+
+.dashboard-table-card{
+  padding:0;
+  background:transparent;
+  box-shadow:none;
+}
+
+.table-wrap{
+  border:1px solid #e2e8f0;
+  border-radius:18px;
+  background:#ffffff;
+  overflow-x:auto;
+}
+
+.data-table{
+  width:100%;
+  border-collapse:collapse;
+  table-layout:fixed;
+}
+
+.data-table thead{
+  background:#f8fafc;
+}
+
+.data-table th,
+.data-table td{
+  padding:18px 20px;
+  text-align:right;
+  border-bottom:1px solid #edf2f7;
+  vertical-align:top;
+}
+
+.data-table th{
+  font-size:15px;
+  font-weight:700;
+  color:#334155;
+  white-space:nowrap;
+}
+
+.data-table td{
+  font-size:16px;
+  color:#0f172a;
+}
+
+.data-table td strong{
+  color:#0f766e;
+  font-size:16px;
+  font-weight:800;
+}
+
+.data-table tbody tr:last-child td{
+  border-bottom:0;
+}
+
+.list-card{
+  padding:20px;
+}
+
+.list-card .card-intro{
+  margin-bottom:8px;
+}
+
+.list-card .card-intro h2{
+  margin:0;
+  font-size:17px;
+}
+
+.list-card .card-intro p{
+  margin:6px 0 0;
+  color:var(--muted);
+  font-size:13px;
+}
+
+.list{
+  margin:0;
+  padding:0;
+  list-style:none;
+}
+
+.list li{
+  padding:14px 0;
+  border-bottom:1px solid #edf2f7;
+}
+
+.list li:last-child{
+  border-bottom:0;
+}
+
+.meta{
+  color:var(--muted);
+  font-size:13px;
+}
+
+.pill{
+  display:inline-block;
+  margin-left:8px;
+  background:#ecfdf3;
+  color:var(--accent);
+  border-radius:999px;
+  padding:4px 10px;
+  font-size:12px;
+  font-weight:700;
+}
+
+.pill.muted{
+  background:#eef2f7;
+  color:#475569;
+}
+
+@media (max-width: 900px){
+  .data-table{
+    table-layout:auto;
+  }
+
+  .data-table th,
+  .data-table td{
+    white-space:nowrap;
+  }
+}
+</style>
+
+<h2 class="section-title">إحصائيات</h2>
 <section class="stats">
   <div class="stat-card"><h4>إجمالي الشركات</h4><span>{{ business_count }}</span></div>
   <div class="stat-card"><h4>الشركات النشطة</h4><span>{{ active_business_count }}</span></div>
@@ -16,87 +178,59 @@
   <div class="stat-card"><h4>الدورات المكتملة</h4><span>{{ completed_assignment_count }}</span></div>
 </section>
 
-<section class="content-layout">
-  <div class="stack">
-    <div class="card">
-      <div class="card-intro">
-        <div>
-          <h2>أحدث الشركات</h2>
-          <p>أحدث الجهات التي تم تفعيلها على المنصة أو تحتاج متابعة حالة الوصول.</p>
-        </div>
+<h2 class="section-title">الشركات</h2>
+<section class="section">
+  <div class="card dashboard-table-card">
+    {% if recent_businesses %}
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>الشركة</th>
+              <th>المالك</th>
+              <th>القطاع</th>
+              <th>الحالة</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for business in recent_businesses %}
+              <tr>
+                <td><strong>{{ business.name }}</strong></td>
+                <td>{{ business.owner.username }}</td>
+                <td>{% if business.industry %}{{ business.industry }}{% else %}<span class="muted">غير محدد</span>{% endif %}</td>
+                <td><span class="pill {% if not business.is_active %}muted{% endif %}">{{ business.is_active|yesno:"نشطة,موقوفة" }}</span></td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
       </div>
-      <ul class="list">
-        {% for business in recent_businesses %}
-          <li>
-            <strong>{{ business.name }}</strong>
-            <span class="pill {% if not business.is_active %}muted{% endif %}">{{ business.is_active|yesno:"نشطة,موقوفة" }}</span><br>
-            <span class="muted">{{ business.owner.username }}{% if business.industry %} | {{ business.industry }}{% endif %}</span>
-          </li>
-        {% empty %}
-          <li class="muted">لا توجد شركات حالياً.</li>
-        {% endfor %}
-      </ul>
-    </div>
-
-    <div class="card">
-      <div class="card-intro">
-        <div>
-          <h2>آخر حركة تدريبية</h2>
-          <p>أحدث إسنادات الدورات على مستوى جميع الشركات.</p>
-        </div>
+    {% else %}
+      <div class="card list-card">
+        <p class="muted">لا توجد شركات حالياً.</p>
       </div>
-      <ul class="list">
-        {% for assignment in recent_assignments %}
-          <li>
-            <strong>{{ assignment.course.title }}</strong>
-            <span class="pill {% if assignment.status != 'COMPLETED' %}muted{% endif %}">{{ assignment.get_status_display }}</span><br>
-            <span class="muted">{{ assignment.business.name }} | {{ assignment.employee.username }}</span>
-          </li>
-        {% empty %}
-          <li class="muted">لا توجد إسنادات بعد.</li>
-        {% endfor %}
-      </ul>
-    </div>
+    {% endif %}
   </div>
+</section>
 
-  <div class="stack">
-    <div class="card">
-      <div class="card-intro">
-        <div>
-          <h2>المشرفون الحاليون</h2>
-          <p>الحسابات التي تملك صلاحية إدارة المنصة بالكامل.</p>
-        </div>
+<h2 class="section-title">المشرفون العامون</h2>
+<section class="section">
+  <div class="card list-card">
+    <div class="card-intro">
+      <div>
+        <h2>قائمة المشرفين</h2>
+        <p>الحسابات التي تملك صلاحية إدارة المنصة بالكامل.</p>
       </div>
-      <ul class="list">
-        {% for user in super_admins %}
-          <li>
-            <strong>{{ user.get_full_name|default:user.username }}</strong><br>
-            <span class="muted">{{ user.username }}{% if user.email %} | {{ user.email }}{% endif %}</span>
-          </li>
-        {% empty %}
-          <li class="muted">لا يوجد مشرفون عامون.</li>
-        {% endfor %}
-      </ul>
     </div>
-
-    <div class="card">
-      <div class="card-intro">
-        <div>
-          <h2>آخر امتثال تشغيلي</h2>
-          <p>أحدث عمليات إكمال قوائم التشغيل اليومية.</p>
-        </div>
-      </div>
-      <ul class="list">
-        {% for completion in recent_completions %}
-          <li>
-            <strong>{{ completion.checklist.title }}</strong><br>
-            <span class="muted">{{ completion.business.name }} | {{ completion.employee.username }} | {{ completion.completed_for }}</span>
-          </li>
-        {% empty %}
-          <li class="muted">لا توجد عمليات إكمال بعد.</li>
-        {% endfor %}
-      </ul>
-    </div>
+    <ul class="list">
+      {% for user in super_admins %}
+        <li>
+          <strong>{{ user.get_full_name|default:user.username }}</strong><br>
+          <span class="meta">{{ user.username }}{% if user.email %} | {{ user.email }}{% endif %}</span>
+        </li>
+      {% empty %}
+        <li class="muted">لا يوجد مشرفون عامون.</li>
+      {% endfor %}
+    </ul>
   </div>
 </section>
 {% endblock %}

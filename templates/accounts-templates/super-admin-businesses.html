@@ -5,16 +5,166 @@
 {% block hero_text %}إنشاء الشركات، ربط المالكين، وتفعيل أو إيقاف الجهات من مكان واحد.{% endblock %}
 
 {% block content %}
-<section class="content-layout">
-  <div class="card">
-    <div class="card-intro">
-      <div>
-        <h2>الشركات المسجلة</h2>
-        <p>إدارة حالة كل شركة ومراقبة حجم الاستخدام والمحتوى المرتبط بها.</p>
-      </div>
-    </div>
+<style>
+.main{
+  padding-top:calc(var(--topbar-h) + 22px);
+}
+
+.hero-card{
+  display:none;
+}
+
+.section-title{
+  margin:0;
+  color:#0f766e;
+  font-size:22px;
+  font-weight:800;
+}
+
+.page-toolbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  margin-bottom:16px;
+}
+
+.page-toolbar__intro p{
+  margin:6px 0 0;
+  color:var(--muted);
+  font-size:13px;
+}
+
+.page-toolbar__action{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:12px 18px;
+  border-radius:999px;
+  background:#0f766e;
+  color:#fff;
+  text-decoration:none;
+  font-size:14px;
+  font-weight:800;
+  white-space:nowrap;
+}
+
+.dashboard-table-card{
+  padding:0;
+  background:transparent;
+  box-shadow:none;
+}
+
+.table-wrap{
+  border:1px solid #e2e8f0;
+  border-radius:18px;
+  background:#ffffff;
+  overflow-x:auto;
+}
+
+.data-table{
+  width:100%;
+  border-collapse:collapse;
+  table-layout:fixed;
+}
+
+.data-table thead{
+  background:#f8fafc;
+}
+
+.data-table th,
+.data-table td{
+  padding:18px 20px;
+  text-align:right;
+  border-bottom:1px solid #edf2f7;
+  vertical-align:top;
+}
+
+.data-table th{
+  font-size:15px;
+  font-weight:700;
+  color:#334155;
+  white-space:nowrap;
+}
+
+.data-table td{
+  font-size:16px;
+  color:#0f172a;
+}
+
+.data-table td strong{
+  color:#0f766e;
+  font-size:16px;
+  font-weight:800;
+}
+
+.data-table tbody tr:last-child td{
+  border-bottom:0;
+}
+
+.meta{
+  color:var(--muted);
+  font-size:13px;
+}
+
+.pill{
+  display:inline-block;
+  background:#ecfdf3;
+  color:var(--accent);
+  border-radius:999px;
+  padding:4px 10px;
+  font-size:12px;
+  font-weight:700;
+}
+
+.pill.muted{
+  background:#eef2f7;
+  color:#475569;
+}
+
+.table-action{
+  margin:0;
+}
+
+.btn{
+  min-width:92px;
+  border-radius:999px;
+  font-weight:800;
+}
+
+@media (max-width: 900px){
+  .page-toolbar{
+    flex-direction:column;
+    align-items:stretch;
+  }
+
+  .page-toolbar__action{
+    width:100%;
+  }
+
+  .data-table{
+    table-layout:auto;
+  }
+
+  .data-table th,
+  .data-table td{
+    white-space:nowrap;
+  }
+}
+</style>
+
+<section class="page-toolbar">
+  <div class="page-toolbar__intro">
+    <h2 class="section-title">الشركات</h2>
+    <p>إدارة حالة كل شركة ومراقبة حجم الاستخدام والمحتوى المرتبط بها.</p>
+  </div>
+  <a class="page-toolbar__action" href="{% url 'super_admin_business_create_view' %}">إضافة شركة جديدة</a>
+</section>
+
+<section>
+  <div class="card dashboard-table-card">
     <div class="table-wrap">
-      <table>
+      <table class="data-table">
         <thead>
           <tr>
             <th>الشركة</th>
@@ -29,14 +179,17 @@
         <tbody>
           {% for business in businesses %}
             <tr>
-              <td><strong>{{ business.name }}</strong><div class="muted">{{ business.industry }}</div></td>
+              <td>
+                <strong>{{ business.name }}</strong>
+                <div class="meta">{% if business.industry %}{{ business.industry }}{% else %}غير محدد{% endif %}</div>
+              </td>
               <td>{{ business.owner.username }}</td>
               <td><span class="pill {% if not business.is_active %}muted{% endif %}">{{ business.is_active|yesno:"نشطة,موقوفة" }}</span></td>
               <td>{{ business.employee_total }}</td>
               <td>{{ business.course_total }}</td>
               <td>{{ business.checklist_total }}</td>
               <td>
-                <form method="post" action="{% url 'super_admin_business_toggle' business.id %}">
+                <form class="table-action" method="post" action="{% url 'super_admin_business_toggle' business.id %}">
                   {% csrf_token %}
                   <button class="btn {% if business.is_active %}warn{% else %}secondary{% endif %}" type="submit">
                     {{ business.is_active|yesno:"إيقاف,تفعيل" }}
@@ -45,32 +198,12 @@
               </td>
             </tr>
           {% empty %}
-            <tr><td colspan="7" class="muted">لا توجد شركات حتى الآن.</td></tr>
+            <tr>
+              <td colspan="7" class="muted">لا توجد شركات حتى الآن.</td>
+            </tr>
           {% endfor %}
         </tbody>
       </table>
-    </div>
-  </div>
-
-  <div class="stack">
-    <div class="card">
-      <div class="card-intro">
-        <div>
-          <h2>إنشاء شركة جديدة</h2>
-          <p>ينشئ الشركة وحساب مالكها في عملية واحدة.</p>
-        </div>
-      </div>
-      <form method="post" action="{% url 'super_admin_business_create' %}">
-        {% csrf_token %}
-        <div class="field"><label>اسم الشركة</label><input type="text" name="business_name" required></div>
-        <div class="field"><label>القطاع</label><input type="text" name="industry" value="Food & Beverage"></div>
-        <div class="field"><label>اسم مستخدم المالك</label><input type="text" name="owner_username" required></div>
-        <div class="field"><label>البريد الإلكتروني</label><input type="email" name="owner_email"></div>
-        <div class="field"><label>الاسم الكامل</label><input type="text" name="owner_full_name" required></div>
-        <div class="field"><label>كلمة المرور</label><input type="password" name="owner_password" required></div>
-        <label class="inline-check"><input type="checkbox" name="is_active" checked> تفعيل الشركة مباشرة</label>
-        <button class="btn" type="submit">إنشاء الشركة</button>
-      </form>
     </div>
   </div>
 </section>

@@ -645,6 +645,10 @@ def _super_admin_businesses_context():
     return {'businesses': businesses, 'business_form': SuperAdminBusinessCreateForm()}
 
 
+def _super_admin_business_create_context(form: SuperAdminBusinessCreateForm | None = None):
+    return {'business_form': form or SuperAdminBusinessCreateForm()}
+
+
 def _super_admin_users_context():
     users = list(
         User.objects.all()
@@ -672,6 +676,10 @@ def _super_admin_users_context():
         'business_owner_count': business_owner_count,
         'employee_count': employee_count,
     }
+
+
+def _super_admin_user_create_context(form: SuperAdminUserCreateForm | None = None):
+    return {'user_form': form or SuperAdminUserCreateForm()}
 
 
 def _super_admin_learning_context():
@@ -776,10 +784,24 @@ def super_admin_businesses_view(request):
 
 
 @login_required
+def super_admin_business_create_view(request):
+    if not _super_admin_guard(request):
+        return redirect('home')
+    return render(request, 'accounts-templates/super-admin-business-create.html', _super_admin_business_create_context())
+
+
+@login_required
 def super_admin_users_view(request):
     if not _super_admin_guard(request):
         return redirect('home')
     return render(request, 'accounts-templates/super-admin-users.html', _super_admin_users_context())
+
+
+@login_required
+def super_admin_user_create_view(request):
+    if not _super_admin_guard(request):
+        return redirect('home')
+    return render(request, 'accounts-templates/super-admin-user-create.html', _super_admin_user_create_context())
 
 
 @login_required
@@ -1009,11 +1031,11 @@ def super_admin_business_create_action(request):
     form = SuperAdminBusinessCreateForm(request.POST)
     if not form.is_valid():
         messages.error(request, form.errors.as_text())
-        return redirect('super_admin_businesses')
+        return render(request, 'accounts-templates/super-admin-business-create.html', _super_admin_business_create_context(form))
     username = form.cleaned_data['owner_username']
     if User.objects.filter(username=username).exists():
         messages.error(request, 'Username already exists.')
-        return redirect('super_admin_businesses')
+        return render(request, 'accounts-templates/super-admin-business-create.html', _super_admin_business_create_context(form))
     first_name, last_name = _split_full_name(form.cleaned_data['owner_full_name'])
     owner = User.objects.create_user(
         username=username,
@@ -1054,11 +1076,11 @@ def super_admin_user_create_action(request):
     form = SuperAdminUserCreateForm(request.POST)
     if not form.is_valid():
         messages.error(request, form.errors.as_text())
-        return redirect('super_admin_users')
+        return render(request, 'accounts-templates/super-admin-user-create.html', _super_admin_user_create_context(form))
     username = form.cleaned_data['username']
     if User.objects.filter(username=username).exists():
         messages.error(request, 'Username already exists.')
-        return redirect('super_admin_users')
+        return render(request, 'accounts-templates/super-admin-user-create.html', _super_admin_user_create_context(form))
     first_name, last_name = _split_full_name(form.cleaned_data['full_name'])
     role = form.cleaned_data['role']
     user = User.objects.create_user(
