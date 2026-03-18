@@ -716,6 +716,18 @@ def _super_admin_learning_context():
     }
 
 
+def _super_admin_learning_course_create_context(form: SuperAdminCourseCreateForm | None = None):
+    return {'course_form': form or SuperAdminCourseCreateForm()}
+
+
+def _super_admin_learning_content_create_context(form: SuperAdminCourseContentItemForm | None = None):
+    return {'course_content_form': form or SuperAdminCourseContentItemForm()}
+
+
+def _super_admin_learning_catalog_publish_context(form: SuperAdminCourseCatalogPublishForm | None = None):
+    return {'catalog_publish_form': form or SuperAdminCourseCatalogPublishForm()}
+
+
 def _sync_exam_template_total_questions(template: ExamTemplate) -> None:
     total_questions = template.questions.count()
     if template.total_questions != total_questions:
@@ -809,6 +821,27 @@ def super_admin_learning_view(request):
     if not _super_admin_guard(request):
         return redirect('home')
     return render(request, 'accounts-templates/super-admin-learning.html', _super_admin_learning_context())
+
+
+@login_required
+def super_admin_learning_course_create_view(request):
+    if not _super_admin_guard(request):
+        return redirect('home')
+    return render(request, 'accounts-templates/super-admin-learning-course-create.html', _super_admin_learning_course_create_context())
+
+
+@login_required
+def super_admin_learning_content_create_view(request):
+    if not _super_admin_guard(request):
+        return redirect('home')
+    return render(request, 'accounts-templates/super-admin-learning-content-create.html', _super_admin_learning_content_create_context())
+
+
+@login_required
+def super_admin_learning_catalog_publish_view(request):
+    if not _super_admin_guard(request):
+        return redirect('home')
+    return render(request, 'accounts-templates/super-admin-learning-catalog-publish.html', _super_admin_learning_catalog_publish_context())
 
 
 @login_required
@@ -968,7 +1001,7 @@ def super_admin_course_create_action(request):
     form = SuperAdminCourseCreateForm(request.POST)
     if not form.is_valid():
         messages.error(request, form.errors.as_text())
-        return redirect('super_admin_learning')
+        return render(request, 'accounts-templates/super-admin-learning-course-create.html', _super_admin_learning_course_create_context(form))
     course = form.save(commit=False)
     course.created_by = request.user
     course.save()
@@ -984,7 +1017,7 @@ def super_admin_course_content_create_action(request):
     form = SuperAdminCourseContentItemForm(request.POST, request.FILES)
     if not form.is_valid():
         messages.error(request, form.errors.as_text())
-        return redirect('super_admin_learning')
+        return render(request, 'accounts-templates/super-admin-learning-content-create.html', _super_admin_learning_content_create_context(form))
     content_item = form.save(commit=False)
     content_item.save()
     messages.success(request, f'Content item "{content_item.title}" added to "{content_item.course.title}".')
@@ -999,7 +1032,7 @@ def super_admin_publish_employee_catalog_action(request):
     form = SuperAdminCourseCatalogPublishForm(request.POST)
     if not form.is_valid():
         messages.error(request, form.errors.as_text())
-        return redirect('super_admin_learning')
+        return render(request, 'accounts-templates/super-admin-learning-catalog-publish.html', _super_admin_learning_catalog_publish_context(form))
     business = form.cleaned_data['business']
     published_courses = _publish_legacy_employee_course_catalog(business, created_by=request.user)
     messages.success(request, f'Published {len(published_courses)} employee courses to {business.name}.')

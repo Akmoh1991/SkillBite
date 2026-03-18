@@ -5,103 +5,214 @@
 {% block hero_text %}إدارة مركزية للدورات وقوائم التشغيل والاختبارات عبر جميع الشركات.{% endblock %}
 
 {% block content %}
+<style>
+.main{
+  padding-top:calc(var(--topbar-h) + 22px);
+}
+
+.hero-card{
+  display:none;
+}
+
+.stats{
+  gap:14px;
+  margin-bottom:16px;
+}
+
+.section-title{
+  margin:0;
+  color:#0f766e;
+  font-size:22px;
+  font-weight:800;
+}
+
+.stat-card{
+  padding:14px 16px;
+}
+
+.stat-card h4{
+  margin-bottom:6px;
+  font-size:12px;
+}
+
+.stat-card span{
+  font-size:20px;
+}
+
+.page-toolbar{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:16px;
+  margin-bottom:16px;
+}
+
+.page-toolbar__intro p{
+  margin:6px 0 0;
+  color:var(--muted);
+  font-size:13px;
+}
+
+.page-toolbar__actions{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.page-toolbar__action{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:12px 18px;
+  border-radius:999px;
+  background:#0f766e;
+  color:#fff;
+  text-decoration:none;
+  font-size:14px;
+  font-weight:800;
+  white-space:nowrap;
+}
+
+.page-toolbar__action.secondary{
+  background:#ecfdf3;
+  color:#0f766e;
+}
+
+.dashboard-table-card{
+  padding:0;
+  background:transparent;
+  box-shadow:none;
+}
+
+.section-block{
+  margin-bottom:18px;
+}
+
+.table-wrap{
+  border:1px solid #e2e8f0;
+  border-radius:18px;
+  background:#ffffff;
+  overflow-x:auto;
+}
+
+.data-table{
+  width:100%;
+  border-collapse:collapse;
+  table-layout:fixed;
+}
+
+.data-table thead{
+  background:#f8fafc;
+}
+
+.data-table th,
+.data-table td{
+  padding:18px 20px;
+  text-align:right;
+  border-bottom:1px solid #edf2f7;
+  vertical-align:top;
+}
+
+.data-table th{
+  font-size:15px;
+  font-weight:700;
+  color:#334155;
+  white-space:nowrap;
+}
+
+.data-table td{
+  font-size:16px;
+  color:#0f172a;
+}
+
+.data-table td strong{
+  color:#0f766e;
+  font-size:16px;
+  font-weight:800;
+}
+
+.data-table tbody tr:last-child td{
+  border-bottom:0;
+}
+
+.meta{
+  color:var(--muted);
+  font-size:13px;
+}
+
+.pill{
+  display:inline-block;
+  background:#ecfdf3;
+  color:var(--accent);
+  border-radius:999px;
+  padding:4px 10px;
+  font-size:12px;
+  font-weight:700;
+}
+
+.pill.muted{
+  background:#eef2f7;
+  color:#475569;
+}
+
+.table-action{
+  margin:0;
+}
+
+.btn{
+  border-radius:999px;
+  font-weight:800;
+}
+
+@media (max-width: 900px){
+  .page-toolbar{
+    flex-direction:column;
+    align-items:stretch;
+  }
+
+  .page-toolbar__actions{
+    width:100%;
+  }
+
+  .page-toolbar__action{
+    flex:1 1 100%;
+  }
+
+  .data-table{
+    table-layout:auto;
+  }
+
+  .data-table th,
+  .data-table td{
+    white-space:nowrap;
+  }
+}
+</style>
+
 <section class="stats">
   <div class="stat-card"><h4>الدورات</h4><span>{{ course_count }}</span></div>
   <div class="stat-card"><h4>قوائم التشغيل</h4><span>{{ checklist_count }}</span></div>
   <div class="stat-card"><h4>قوالب الاختبارات</h4><span>{{ exam_template_count }}</span></div>
 </section>
 
-<section class="content-layout" style="margin-bottom:24px;">
-  <div class="layout-main">
-    <div class="card">
-      <div class="card-intro">
-        <div>
-          <h2>الاختبارات</h2>
-          <p>إدارة القوالب والأسئلة وربطها مباشرة بالدورات من لوحة المشرف العام.</p>
-        </div>
-      </div>
-      <div style="display:flex; gap:10px; flex-wrap:wrap;">
-        <a class="btn" href="{% url 'super_admin_exam_templates' %}" style="text-decoration:none;">قوالب الاختبارات</a>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-intro">
-        <div>
-          <h2>نشر كتالوج الموظفين الحالي</h2>
-          <p>ينشئ نفس الدورات الظاهرة حاليًا للموظف ولكن كسجلات حقيقية في قاعدة البيانات.</p>
-        </div>
-      </div>
-      <form method="post" action="{% url 'super_admin_publish_employee_catalog' %}" class="inline-form">
-        {% csrf_token %}
-        {{ catalog_publish_form.as_p }}
-        <button class="btn" type="submit">نشر الكتالوج</button>
-      </form>
-    </div>
-
-    <div class="card">
-      <div class="card-intro">
-        <div>
-          <h2>إضافة دورة جديدة</h2>
-          <p>أنشئ الدورة من حساب المشرف العام ثم ستصبح متاحة للتكليف على الموظفين.</p>
-        </div>
-      </div>
-      <form method="post" action="{% url 'super_admin_course_create' %}" class="inline-form">
-        {% csrf_token %}
-        {{ course_form.as_p }}
-        <button class="btn" type="submit">حفظ الدورة</button>
-      </form>
-    </div>
-
-    <div class="card">
-      <div class="card-intro">
-        <div>
-          <h2>رفع محتوى الدورة</h2>
-          <p>أضف صفحات الدورة أو الفيديو أو الملف من لوحة المشرف العام.</p>
-        </div>
-      </div>
-      <form method="post" action="{% url 'super_admin_course_content_create' %}" enctype="multipart/form-data" class="inline-form">
-        {% csrf_token %}
-        {{ course_content_form.as_p }}
-        <button class="btn" type="submit">إضافة المحتوى</button>
-      </form>
-    </div>
+<section class="page-toolbar">
+  <div class="page-toolbar__intro">
+    <h2 class="section-title">المحتوى والتكليفات</h2>
+    <p>إدارة الدورات، المحتوى، ونشر الكتالوج من صفحات مستقلة مع إبقاء المتابعة اليومية هنا.</p>
   </div>
-
-  <div class="layout-side">
-    <div class="card">
-      <div class="card-intro">
-        <div>
-          <h3>اختصارات الاختبارات</h3>
-          <p>المسار الكامل لإضافة الاختبار للدورة.</p>
-        </div>
-      </div>
-      <div class="checklist-form">
-        <strong>1. أنشئ قالب اختبار</strong>
-        <div class="meta">أضف اسم القالب، المدة، وتعليمات التقديم.</div>
-      </div>
-      <div class="checklist-form" style="margin-top:12px;">
-        <strong>2. أضف الأسئلة والخيارات</strong>
-        <div class="meta">ادعم الاختيار المتعدد، صح/خطأ، والأسئلة المقالية.</div>
-      </div>
-      <div class="checklist-form" style="margin-top:12px;">
-        <strong>3. اربط القالب وحدد الموعد</strong>
-        <div class="meta">اربطه بالدورة وأنشئ جلسة اختبار متاحة للموظفين.</div>
-      </div>
-    </div>
+  <div class="page-toolbar__actions">
+    <a class="page-toolbar__action" href="{% url 'super_admin_learning_course_create_view' %}">إضافة دورة</a>
+    <a class="page-toolbar__action" href="{% url 'super_admin_learning_content_create_view' %}">رفع محتوى</a>
+    <a class="page-toolbar__action secondary" href="{% url 'super_admin_learning_catalog_publish_view' %}">نشر الكتالوج</a>
+    <a class="page-toolbar__action secondary" href="{% url 'super_admin_exam_templates' %}">قوالب الاختبارات</a>
   </div>
 </section>
 
-<section class="content-layout">
-  <div class="card">
-    <div class="card-intro">
-      <div>
-        <h2>الدورات</h2>
-        <p>عرض المحتوى النشط والموقوف، وعدد عناصر المحتوى والتكليفات لكل دورة.</p>
-      </div>
-    </div>
+<section class="section-block">
+  <div class="card dashboard-table-card">
     <div class="table-wrap">
-      <table>
+      <table class="data-table">
         <thead>
           <tr>
             <th>الدورة</th>
@@ -116,14 +227,17 @@
         <tbody>
           {% for course in courses %}
             <tr>
-              <td><strong>{{ course.title }}</strong><div class="muted">{{ course.description|default:"-" }}</div></td>
+              <td>
+                <strong>{{ course.title }}</strong>
+                <div class="meta">{{ course.description|default:"-" }}</div>
+              </td>
               <td>{{ course.business.name }}</td>
               <td><span class="pill {% if not course.is_active %}muted{% endif %}">{{ course.is_active|yesno:"نشطة,موقوفة" }}</span></td>
               <td>{{ course.content_item_total }}</td>
               <td>{{ course.assignment_total }}</td>
               <td>{{ course.exam_template.name|default:"-" }}</td>
               <td>
-                <form method="post" action="{% url 'super_admin_course_toggle' course.id %}">
+                <form class="table-action" method="post" action="{% url 'super_admin_course_toggle' course.id %}">
                   {% csrf_token %}
                   <button class="btn {% if course.is_active %}warn{% else %}secondary{% endif %}" type="submit">
                     {{ course.is_active|yesno:"إيقاف,تفعيل" }}
@@ -132,22 +246,20 @@
               </td>
             </tr>
           {% empty %}
-            <tr><td colspan="7" class="muted">لا توجد دورات.</td></tr>
+            <tr>
+              <td colspan="7" class="muted">لا توجد دورات.</td>
+            </tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
   </div>
+</section>
 
-  <div class="card">
-    <div class="card-intro">
-      <div>
-        <h2>قوائم التشغيل</h2>
-        <p>متابعة القوائم التشغيلية وعدد عناصرها وإجمالي مرات الإكمال.</p>
-      </div>
-    </div>
+<section>
+  <div class="card dashboard-table-card">
     <div class="table-wrap">
-      <table>
+      <table class="data-table">
         <thead>
           <tr>
             <th>القائمة</th>
@@ -161,13 +273,16 @@
         <tbody>
           {% for checklist in checklists %}
             <tr>
-              <td><strong>{{ checklist.title }}</strong><div class="muted">{{ checklist.get_frequency_display }}</div></td>
+              <td>
+                <strong>{{ checklist.title }}</strong>
+                <div class="meta">{{ checklist.get_frequency_display }}</div>
+              </td>
               <td>{{ checklist.business.name }}</td>
               <td><span class="pill {% if not checklist.is_active %}muted{% endif %}">{{ checklist.is_active|yesno:"نشطة,موقوفة" }}</span></td>
               <td>{{ checklist.item_total }}</td>
               <td>{{ checklist.completion_total }}</td>
               <td>
-                <form method="post" action="{% url 'super_admin_checklist_toggle' checklist.id %}">
+                <form class="table-action" method="post" action="{% url 'super_admin_checklist_toggle' checklist.id %}">
                   {% csrf_token %}
                   <button class="btn {% if checklist.is_active %}warn{% else %}secondary{% endif %}" type="submit">
                     {{ checklist.is_active|yesno:"إيقاف,تفعيل" }}
@@ -176,7 +291,9 @@
               </td>
             </tr>
           {% empty %}
-            <tr><td colspan="6" class="muted">لا توجد قوائم تشغيل.</td></tr>
+            <tr>
+              <td colspan="6" class="muted">لا توجد قوائم تشغيل.</td>
+            </tr>
           {% endfor %}
         </tbody>
       </table>

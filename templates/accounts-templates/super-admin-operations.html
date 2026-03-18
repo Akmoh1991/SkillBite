@@ -5,16 +5,130 @@
 {% block hero_text %}رصد تقدم التدريب وسجل تنفيذ قوائم التشغيل عبر جميع الشركات من شاشة واحدة.{% endblock %}
 
 {% block content %}
-<section class="content-layout">
-  <div class="card">
-    <div class="card-intro">
-      <div>
-        <h2>آخر إسنادات الدورات</h2>
-        <p>متابعة حالة التكليف، الجهة، والموظف المسؤول عن التنفيذ.</p>
-      </div>
-    </div>
+<style>
+.main{
+  padding-top:calc(var(--topbar-h) + 22px);
+}
+
+.hero-card{
+  display:none;
+}
+
+.page-toolbar{
+  margin-bottom:16px;
+}
+
+.section-title{
+  margin:0;
+  color:#0f766e;
+  font-size:22px;
+  font-weight:800;
+}
+
+.page-toolbar p{
+  margin:6px 0 0;
+  color:var(--muted);
+  font-size:13px;
+}
+
+.section-block{
+  margin-bottom:18px;
+}
+
+.dashboard-table-card{
+  padding:0;
+  background:transparent;
+  box-shadow:none;
+}
+
+.table-wrap{
+  border:1px solid #e2e8f0;
+  border-radius:18px;
+  background:#ffffff;
+  overflow-x:auto;
+}
+
+.data-table{
+  width:100%;
+  border-collapse:collapse;
+  table-layout:fixed;
+}
+
+.data-table thead{
+  background:#f8fafc;
+}
+
+.data-table th,
+.data-table td{
+  padding:18px 20px;
+  text-align:right;
+  border-bottom:1px solid #edf2f7;
+  vertical-align:top;
+}
+
+.data-table th{
+  font-size:15px;
+  font-weight:700;
+  color:#334155;
+  white-space:nowrap;
+}
+
+.data-table td{
+  font-size:16px;
+  color:#0f172a;
+}
+
+.data-table td strong{
+  color:#0f766e;
+  font-size:16px;
+  font-weight:800;
+}
+
+.data-table tbody tr:last-child td{
+  border-bottom:0;
+}
+
+.pill{
+  display:inline-block;
+  background:#ecfdf3;
+  color:var(--accent);
+  border-radius:999px;
+  padding:4px 10px;
+  font-size:12px;
+  font-weight:700;
+}
+
+.pill.muted{
+  background:#eef2f7;
+  color:#475569;
+}
+
+.muted{
+  color:var(--muted);
+  font-size:13px;
+}
+
+@media (max-width: 900px){
+  .data-table{
+    table-layout:auto;
+  }
+
+  .data-table th,
+  .data-table td{
+    white-space:nowrap;
+  }
+}
+</style>
+
+<section class="page-toolbar">
+  <h2 class="section-title">المتابعة والامتثال</h2>
+  <p>متابعة آخر إسنادات الدورات وآخر إكمالات قوائم التشغيل في عرض أوضح وأسهل للمراجعة.</p>
+</section>
+
+<section class="section-block">
+  <div class="card dashboard-table-card">
     <div class="table-wrap">
-      <table>
+      <table class="data-table">
         <thead>
           <tr>
             <th>الدورة</th>
@@ -34,22 +148,20 @@
               <td>{{ assignment.assigned_at|date:"Y-m-d H:i" }}</td>
             </tr>
           {% empty %}
-            <tr><td colspan="5" class="muted">لا توجد إسنادات.</td></tr>
+            <tr>
+              <td colspan="5" class="muted">لا توجد إسنادات.</td>
+            </tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
   </div>
+</section>
 
-  <div class="card">
-    <div class="card-intro">
-      <div>
-        <h2>آخر إكمالات قوائم التشغيل</h2>
-        <p>آخر الامتثالات التشغيلية المنجزة مع تاريخ التنفيذ.</p>
-      </div>
-    </div>
+<section>
+  <div class="card dashboard-table-card">
     <div class="table-wrap">
-      <table>
+      <table class="data-table">
         <thead>
           <tr>
             <th>القائمة</th>
@@ -69,7 +181,9 @@
               <td>{{ completion.notes|default:"-" }}</td>
             </tr>
           {% empty %}
-            <tr><td colspan="5" class="muted">لا توجد إكمالات.</td></tr>
+            <tr>
+              <td colspan="5" class="muted">لا توجد إكمالات.</td>
+            </tr>
           {% endfor %}
         </tbody>
       </table>
