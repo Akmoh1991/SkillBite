@@ -6,6 +6,17 @@
 
 {% block content %}
 <style>
+  .hero-card h1 {
+    color: #0f766e;
+  }
+
+  .course-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
   .course-empty-state {
     font-size: 18px;
     font-weight: 700;
@@ -13,14 +24,18 @@
     text-align: center;
     padding: 24px 16px;
   }
+
+  .course-actions .btn.secondary {
+    background: #0f766e;
+  }
 </style>
 <section class="section">
   <div class="card" style="grid-column:1 / -1;">
     <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; margin-bottom:18px;">
       <div>
-        <h2 style="margin-bottom:6px;">محتوى الدورة</h2>
+        <h2 style="margin-bottom:6px; color:#0f766e;">محتوى الدورة</h2>
       </div>
-      <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+      <div class="course-actions">
         <a class="btn secondary" href="{% url 'employee_course_exam' assignment.id %}" style="text-decoration:none; display:inline-flex; align-items:center;">
           الاختبار
         </a>
@@ -33,13 +48,7 @@
     {% if content_items %}
       <div class="list">
         {% for item in content_items %}
-          <div class="checklist-form" style="margin-bottom:14px;">
-            <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:8px; flex-wrap:wrap;">
-              <div>
-                <strong style="display:block; margin-bottom:4px;">{{ item.title }}</strong>
-              </div>
-            </div>
-
+          <div class="checklist-form" style="margin-top:0; margin-bottom:14px;">
             {% if item.material_url %}
               <div style="margin-top:10px;">
                 <a href="{{ item.material_url }}" target="_blank" rel="noopener">فتح الرابط الخارجي</a>
@@ -64,16 +73,7 @@
         {% endfor %}
       </div>
     {% else %}
-      <div class="course-empty-state">لا يوجد محتوى لهذه الدورة بعد.</div>
-    {% endif %}
-
-    {% if assignment.status != 'COMPLETED' %}
-      <form method="post" action="{% url 'employee_course_complete' assignment.id %}" style="margin-top:18px;">
-        {% csrf_token %}
-        <button class="btn secondary" type="submit">إكمال الدورة</button>
-      </form>
-    {% else %}
-      <div class="meta" style="margin-top:18px;">اكتملت في {{ assignment.completed_at|date:"Y-m-d H:i" }}</div>
+      <div class="course-empty-state">لا يوجد محتوى لهذه الدورة</div>
     {% endif %}
   </div>
 </section>
