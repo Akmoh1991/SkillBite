@@ -17,36 +17,40 @@
 .section-title{
   margin:0;
   color:#0f766e;
-  font-size:22px;
+  font-size:34px;
   font-weight:800;
+  line-height:1.15;
 }
 
 .page-toolbar{
   display:flex;
-  align-items:center;
+  align-items:flex-start;
   justify-content:space-between;
-  gap:16px;
-  margin-bottom:16px;
+  gap:24px;
+  margin-bottom:22px;
 }
 
 .page-toolbar__intro p{
-  margin:6px 0 0;
+  margin:10px 0 0;
   color:var(--muted);
-  font-size:13px;
+  font-size:16px;
+  line-height:1.7;
+  max-width:760px;
 }
 
 .page-toolbar__action{
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  padding:12px 18px;
+  padding:14px 22px;
   border-radius:999px;
   background:#0f766e;
   color:#fff;
   text-decoration:none;
-  font-size:14px;
+  font-size:15px;
   font-weight:800;
   white-space:nowrap;
+  box-shadow:0 14px 28px rgba(15, 118, 110, 0.18);
 }
 
 .dashboard-table-card{
@@ -57,9 +61,10 @@
 
 .table-wrap{
   border:1px solid #e2e8f0;
-  border-radius:18px;
+  border-radius:24px;
   background:#ffffff;
   overflow-x:auto;
+  box-shadow:0 18px 40px rgba(15, 23, 42, 0.08);
 }
 
 .data-table{
@@ -156,7 +161,7 @@
 <section class="page-toolbar">
   <div class="page-toolbar__intro">
     <h2 class="section-title">الشركات</h2>
-    <p>إدارة حالة كل شركة ومراقبة حجم الاستخدام والمحتوى المرتبط بها.</p>
+    <p>مشهد مركزي لجميع الشركات مع حالتها ومالكها وحجم المحتوى والاستخدام المرتبط بها.</p>
   </div>
   <a class="page-toolbar__action" href="{% url 'super_admin_business_create_view' %}">إضافة شركة جديدة</a>
 </section>
