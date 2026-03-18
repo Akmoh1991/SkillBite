@@ -236,6 +236,7 @@ WHITENOISE_MAX_AGE = 31536000  # سنة
 # ==================================================
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
+SUPER_ADMIN_SCORM_PAGE_ENABLED = env_bool("SUPER_ADMIN_SCORM_PAGE_ENABLED", False)
 
 
 # ==================================================

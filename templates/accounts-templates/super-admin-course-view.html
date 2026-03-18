@@ -1,0 +1,72 @@
+{% extends "accounts-templates/super-admin-base.html" %}
+
+{% block page_title %}SkillBite | {{ course.title }}{% endblock %}
+{% block hero_title %}{{ course.title }}{% endblock %}
+{% block hero_text %}{% endblock %}
+
+{% block content %}
+<style>
+  .hero-card h1 {
+    color: #0f766e;
+  }
+  .course-view-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .course-empty-state {
+    font-size: 18px;
+    font-weight: 700;
+    color: #475569;
+    text-align: center;
+    padding: 24px 16px;
+  }
+</style>
+<section class="section">
+  <div class="card" style="grid-column:1 / -1;">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; margin-bottom:18px;">
+      <div>
+        <h2 style="margin-bottom:6px; color:#0f766e;">محتوى الدورة</h2>
+        <p class="muted" style="margin:0;">الشركة: {{ course.business.name }}</p>
+      </div>
+      <div class="course-view-actions">
+        <a class="btn" href="{% url 'super_admin_course_list' %}" style="text-decoration:none; display:inline-flex; align-items:center;">
+          العودة إلى الدورات
+        </a>
+      </div>
+    </div>
+
+    {% if content_items %}
+      <div class="list">
+        {% for item in content_items %}
+          <div class="checklist-form" style="margin-top:0; margin-bottom:14px;">
+            {% if item.material_url %}
+              <div style="margin-top:10px;">
+                <a href="{{ item.material_url }}" target="_blank" rel="noopener">فتح الرابط الخارجي</a>
+              </div>
+            {% endif %}
+
+            {% if item.video_file %}
+              <div style="margin-top:12px;">
+                <video controls preload="metadata" style="display:block; width:100%; border-radius:12px; background:#000;">
+                  <source src="{{ item.video_playback_url }}" type="{{ item.video_mime_type }}">
+                  متصفحك لا يدعم تشغيل الفيديو.
+                </video>
+              </div>
+            {% endif %}
+
+            {% if item.pdf_file and not item.video_file %}
+              <div style="margin-top:10px;">
+                <a href="{{ item.pdf_file.url }}" target="_blank" rel="noopener">فتح ملف PDF</a>
+              </div>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="course-empty-state">لا يوجد محتوى لهذه الدورة بعد</div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

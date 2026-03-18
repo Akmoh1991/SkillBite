@@ -824,6 +824,50 @@ def super_admin_learning_view(request):
 
 
 @login_required
+def super_admin_course_list_view(request):
+    if not _super_admin_guard(request):
+        return redirect('home')
+    courses = list(
+        Course.objects.select_related('business')
+        .filter(is_active=True)
+        .prefetch_related(Prefetch('content_items', queryset=CourseContentItem.objects.order_by('order', 'id')))
+        .order_by('title', 'id')
+    )
+    for course in courses:
+        _course_card_defaults(course)
+    return render(
+        request,
+        'accounts-templates/super-admin-course-list.html',
+        {
+            'courses': courses,
+        },
+    )
+
+
+@login_required
+def super_admin_course_view(request, course_id: int):
+    if not _super_admin_guard(request):
+        return redirect('home')
+    course = get_object_or_404(
+        Course.objects.select_related('business').prefetch_related(
+            Prefetch('content_items', queryset=CourseContentItem.objects.order_by('order', 'id'))
+        ),
+        id=course_id,
+        is_active=True,
+    )
+    _course_card_defaults(course)
+    content_items = _visible_course_content_items(course.content_items.all())
+    return render(
+        request,
+        'accounts-templates/super-admin-course-view.html',
+        {
+            'course': course,
+            'content_items': content_items,
+        },
+    )
+
+
+@login_required
 def super_admin_learning_course_create_view(request):
     if not _super_admin_guard(request):
         return redirect('home')
@@ -1049,6 +1093,8 @@ def super_admin_operations_view(request):
 @login_required
 def super_admin_scorm_library_view(request):
     if not _super_admin_guard(request):
+        return redirect('home')
+    if not getattr(settings, 'SUPER_ADMIN_SCORM_PAGE_ENABLED', False):
         return redirect('home')
     if request.method == 'POST':
         return _handle_scorm_upload_post(request, 'super_admin_scorm')

@@ -6,7 +6,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.management import call_command
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from accounts.models import BusinessTenant, EmployeeProfile, JobTitle
@@ -965,6 +965,28 @@ class SuperAdminFlowTests(TestCase):
         self.client.login(username='owner_sa', password='pass12345')
         response = self.client.get(reverse('super_admin_dashboard'))
         self.assertRedirects(response, reverse('home'), fetch_redirect_response=False)
+
+    def test_super_admin_course_list_requires_super_admin_role(self):
+        self.client.login(username='owner_sa', password='pass12345')
+        response = self.client.get(reverse('super_admin_course_list'))
+        self.assertRedirects(response, reverse('home'), fetch_redirect_response=False)
+
+    def test_super_admin_course_list_is_available_for_super_admin(self):
+        self.client.login(username='platform_admin', password='pass12345')
+        response = self.client.get(reverse('super_admin_course_list'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.course.title)
+
+    def test_super_admin_scorm_page_is_hidden_when_disabled(self):
+        self.client.login(username='platform_admin', password='pass12345')
+        response = self.client.get(reverse('super_admin_scorm'))
+        self.assertRedirects(response, reverse('home'), fetch_redirect_response=False)
+
+    @override_settings(SUPER_ADMIN_SCORM_PAGE_ENABLED=True)
+    def test_super_admin_scorm_page_is_available_when_enabled(self):
+        self.client.login(username='platform_admin', password='pass12345')
+        response = self.client.get(reverse('super_admin_scorm'))
+        self.assertEqual(response.status_code, 200)
 
     def test_super_admin_can_create_business_and_owner(self):
         self.client.login(username='platform_admin', password='pass12345')

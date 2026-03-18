@@ -122,6 +122,12 @@
         </a>
       </li>
       <li>
+        <a href="{% url 'super_admin_course_list' %}"
+           class="{% if request.resolver_match.url_name == 'super_admin_course_list' or request.resolver_match.url_name == 'super_admin_course_view' %}active{% endif %}">
+          الدورات التدريبية
+        </a>
+      </li>
+      <li>
         <a href="{% url 'super_admin_learning' %}"
            class="{% if request.resolver_match.url_name == 'super_admin_learning' %}active{% endif %}">
           المحتوى والتكليفات
@@ -133,12 +139,7 @@
           المتابعة والامتثال
         </a>
       </li>
-      <li>
-        <a href="{% url 'super_admin_scorm' %}"
-           class="{% if request.resolver_match.url_name == 'super_admin_scorm' %}active{% endif %}">
-          مكتبة SCORM
-        </a>
-      </li>
+      {# SCORM library link intentionally hidden while the page is disabled. #}
     {% elif request.resolver_match.url_name == 'employee_dashboard' or request.resolver_match.url_name == 'employee_courses' or request.resolver_match.url_name == 'employee_course_view' or request.resolver_match.url_name == 'employee_learning_history' or request.resolver_match.url_name == 'employee_checklists' or employee_profile %}
       <li>
         <a href="{% url 'employee_dashboard' %}"
