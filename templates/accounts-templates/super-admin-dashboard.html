@@ -170,12 +170,8 @@
 <section class="stats">
   <div class="stat-card"><h4>إجمالي الشركات</h4><span>{{ business_count }}</span></div>
   <div class="stat-card"><h4>الشركات النشطة</h4><span>{{ active_business_count }}</span></div>
-  <div class="stat-card"><h4>الموظفون النشطون</h4><span>{{ employee_count }}</span></div>
-  <div class="stat-card"><h4>المشرفون العامون</h4><span>{{ super_admin_count }}</span></div>
   <div class="stat-card"><h4>الدورات</h4><span>{{ course_count }}</span></div>
   <div class="stat-card"><h4>قوائم التشغيل</h4><span>{{ checklist_count }}</span></div>
-  <div class="stat-card"><h4>الدورات النشطة</h4><span>{{ active_course_count }}</span></div>
-  <div class="stat-card"><h4>الدورات المكتملة</h4><span>{{ completed_assignment_count }}</span></div>
 </section>
 
 <h2 class="section-title">الشركات</h2>
@@ -212,25 +208,37 @@
   </div>
 </section>
 
-<h2 class="section-title">المشرفون العامون</h2>
+<h2 class="section-title">مدير النظام</h2>
 <section class="section">
-  <div class="card list-card">
-    <div class="card-intro">
-      <div>
-        <h2>قائمة المشرفين</h2>
-        <p>الحسابات التي تملك صلاحية إدارة المنصة بالكامل.</p>
+  <div class="card dashboard-table-card">
+    {% if super_admins %}
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>الاسم</th>
+              <th>اسم المستخدم</th>
+              <th>البريد الإلكتروني</th>
+              <th>الدور</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for user in super_admins %}
+              <tr>
+                <td><strong>{{ user.get_full_name|default:user.username }}</strong></td>
+                <td>{{ user.username }}</td>
+                <td>{% if user.email %}{{ user.email }}{% else %}<span class="muted">غير محدد</span>{% endif %}</td>
+                <td><span class="pill">مدير النظام</span></td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
       </div>
-    </div>
-    <ul class="list">
-      {% for user in super_admins %}
-        <li>
-          <strong>{{ user.get_full_name|default:user.username }}</strong><br>
-          <span class="meta">{{ user.username }}{% if user.email %} | {{ user.email }}{% endif %}</span>
-        </li>
-      {% empty %}
-        <li class="muted">لا يوجد مشرفون عامون.</li>
-      {% endfor %}
-    </ul>
+    {% else %}
+      <div class="card list-card">
+        <p class="muted">لا يوجد مشرفون عامون.</p>
+      </div>
+    {% endif %}
   </div>
 </section>
 {% endblock %}

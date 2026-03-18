@@ -177,7 +177,7 @@
 </style>
 
 <section class="stats">
-  <div class="stat-card"><h4>المشرفون العامون</h4><span>{{ super_admin_count }}</span></div>
+  <div class="stat-card"><h4>مدير النظام</h4><span>{{ super_admin_count }}</span></div>
   <div class="stat-card"><h4>ملاك الشركات</h4><span>{{ business_owner_count }}</span></div>
   <div class="stat-card"><h4>الموظفون</h4><span>{{ employee_count }}</span></div>
 </section>
@@ -221,7 +221,7 @@
                   </form>
                   <form method="post" action="{% url 'super_admin_user_toggle_role' user.id %}">
                     {% csrf_token %}
-                    <button class="btn" type="submit">{% if user.is_staff or user.is_superuser %}إزالة الإشراف{% else %}ترقية مشرف عام{% endif %}</button>
+                    <button class="btn" type="submit">{% if user.is_staff or user.is_superuser %}إزالة صلاحية مدير النظام{% else %}ترقية إلى مدير النظام{% endif %}</button>
                   </form>
                 </div>
               </td>
