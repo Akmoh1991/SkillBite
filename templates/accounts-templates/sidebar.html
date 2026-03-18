@@ -106,7 +106,7 @@
       <li>
         <a href="{% url 'super_admin_dashboard' %}"
            class="{% if request.resolver_match.url_name == 'super_admin_dashboard' %}active{% endif %}">
-          منصة التحكم
+          الصفحة الرئيسية
         </a>
       </li>
       <li>
@@ -117,7 +117,7 @@
       </li>
       <li>
         <a href="{% url 'super_admin_users' %}"
-           class="{% if request.resolver_match.url_name == 'super_admin_users' %}active{% endif %}">
+           class="{% if request.resolver_match.url_name == 'super_admin_users' or request.resolver_match.url_name == 'super_admin_user_create_view' or request.resolver_match.url_name == 'super_admin_user_role_grant_view' %}active{% endif %}">
           المستخدمون
         </a>
       </li>
@@ -130,13 +130,13 @@
       <li>
         <a href="{% url 'super_admin_learning' %}"
            class="{% if request.resolver_match.url_name == 'super_admin_learning' %}active{% endif %}">
-          المحتوى والتكليفات
+          إدارة المحتوى
         </a>
       </li>
       <li>
         <a href="{% url 'super_admin_operations' %}"
            class="{% if request.resolver_match.url_name == 'super_admin_operations' %}active{% endif %}">
-          المتابعة والامتثال
+           التقارير
         </a>
       </li>
       {# SCORM library link intentionally hidden while the page is disabled. #}

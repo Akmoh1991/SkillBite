@@ -48,6 +48,7 @@ from .forms import (
     SuperAdminExamQuestionForm,
     SuperAdminExamSessionForm,
     SuperAdminExamTemplateForm,
+    SuperAdminGrantRoleForm,
     SuperAdminUserCreateForm,
 )
 from .models import BusinessTenant, EmployeeProfile, JobTitle
@@ -682,6 +683,10 @@ def _super_admin_user_create_context(form: SuperAdminUserCreateForm | None = Non
     return {'user_form': form or SuperAdminUserCreateForm()}
 
 
+def _super_admin_user_role_grant_context(form: SuperAdminGrantRoleForm | None = None):
+    return {'grant_role_form': form or SuperAdminGrantRoleForm()}
+
+
 def _super_admin_learning_context():
     courses = list(
         Course.objects.select_related('business', 'created_by')
@@ -814,6 +819,13 @@ def super_admin_user_create_view(request):
     if not _super_admin_guard(request):
         return redirect('home')
     return render(request, 'accounts-templates/super-admin-user-create.html', _super_admin_user_create_context())
+
+
+@login_required
+def super_admin_user_role_grant_view(request):
+    if not _super_admin_guard(request):
+        return redirect('home')
+    return render(request, 'accounts-templates/super-admin-user-role-grant.html', _super_admin_user_role_grant_context())
 
 
 @login_required
@@ -1177,6 +1189,26 @@ def super_admin_user_create_action(request):
         business.owner = user
         business.save(update_fields=['owner'])
     messages.success(request, 'User account created.')
+    return redirect('super_admin_users')
+
+
+@login_required
+@require_POST
+def super_admin_user_role_grant_action(request):
+    if not _super_admin_guard(request):
+        return redirect('home')
+    form = SuperAdminGrantRoleForm(request.POST)
+    if not form.is_valid():
+        messages.error(request, form.errors.as_text())
+        return render(request, 'accounts-templates/super-admin-user-role-grant.html', _super_admin_user_role_grant_context(form))
+    target = form.cleaned_data['user']
+    if target.is_staff or target.is_superuser:
+        messages.error(request, 'This user already has super admin access.')
+        return render(request, 'accounts-templates/super-admin-user-role-grant.html', _super_admin_user_role_grant_context(form))
+    target.is_staff = True
+    target.is_superuser = True
+    target.save(update_fields=['is_staff', 'is_superuser'])
+    messages.success(request, f'User "{target.username}" is now a super admin.')
     return redirect('super_admin_users')
 
 

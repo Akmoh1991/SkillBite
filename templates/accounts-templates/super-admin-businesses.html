@@ -95,6 +95,7 @@
 .data-table td{
   font-size:16px;
   color:#0f172a;
+  font-weight:500;
 }
 
 .data-table td strong{
@@ -108,8 +109,9 @@
 }
 
 .meta{
-  color:var(--muted);
+  color:#5f6f85;
   font-size:13px;
+  font-weight:500;
 }
 
 .pill{
@@ -161,7 +163,6 @@
 <section class="page-toolbar">
   <div class="page-toolbar__intro">
     <h2 class="section-title">الشركات</h2>
-    <p>مشهد مركزي لجميع الشركات مع حالتها ومالكها وحجم المحتوى والاستخدام المرتبط بها.</p>
   </div>
   <a class="page-toolbar__action" href="{% url 'super_admin_business_create_view' %}">إضافة شركة جديدة</a>
 </section>
@@ -186,7 +187,6 @@
             <tr>
               <td>
                 <strong>{{ business.name }}</strong>
-                <div class="meta">{% if business.industry %}{{ business.industry }}{% else %}غير محدد{% endif %}</div>
               </td>
               <td>{{ business.owner.username }}</td>
               <td><span class="pill {% if not business.is_active %}muted{% endif %}">{{ business.is_active|yesno:"نشطة,موقوفة" }}</span></td>

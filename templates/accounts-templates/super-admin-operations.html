@@ -80,6 +80,7 @@
 .data-table td{
   font-size:16px;
   color:#0f172a;
+  font-weight:500;
 }
 
 .data-table td strong{
@@ -93,23 +94,41 @@
 }
 
 .pill{
-  display:inline-block;
-  background:#ecfdf3;
-  color:var(--accent);
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:110px;
+  border:1px solid transparent;
   border-radius:999px;
-  padding:4px 10px;
+  padding:6px 14px;
   font-size:12px;
-  font-weight:700;
+  font-weight:800;
+  line-height:1;
+  letter-spacing:0.01em;
 }
 
-.pill.muted{
-  background:#eef2f7;
-  color:#475569;
+.pill.status-assigned{
+  background:#eff6ff;
+  border-color:#bfdbfe;
+  color:#1d4ed8;
+}
+
+.pill.status-in-progress{
+  background:#fff7ed;
+  border-color:#fdba74;
+  color:#c2410c;
+}
+
+.pill.status-completed{
+  background:#ecfdf5;
+  border-color:#86efac;
+  color:#166534;
 }
 
 .muted{
-  color:var(--muted);
+  color:#5f6f85;
   font-size:13px;
+  font-weight:500;
 }
 
 @media (max-width: 900px){
@@ -125,8 +144,7 @@
 </style>
 
 <section class="page-toolbar">
-  <h2 class="section-title">المتابعة والامتثال</h2>
-  <p>متابعة آخر إسنادات الدورات وآخر إكمالات قوائم التشغيل في عرض أوضح وأسهل للمراجعة.</p>
+  <h2 class="section-title">التقارير </h2>
 </section>
 
 <section class="section-block">
@@ -148,7 +166,11 @@
               <td><strong>{{ assignment.course.title }}</strong></td>
               <td>{{ assignment.business.name }}</td>
               <td>{{ assignment.employee.username }}</td>
-              <td><span class="pill {% if assignment.status != 'COMPLETED' %}muted{% endif %}">{{ assignment.get_status_display }}</span></td>
+              <td>
+                <span class="pill {% if assignment.status == 'ASSIGNED' %}status-assigned{% elif assignment.status == 'IN_PROGRESS' %}status-in-progress{% elif assignment.status == 'COMPLETED' %}status-completed{% else %}status-assigned{% endif %}">
+                  {{ assignment.get_status_display }}
+                </span>
+              </td>
               <td>{{ assignment.assigned_at|date:"Y-m-d H:i" }}</td>
             </tr>
           {% empty %}

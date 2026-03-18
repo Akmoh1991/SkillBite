@@ -200,6 +200,18 @@ class SuperAdminUserCreateForm(forms.Form):
         return cleaned_data
 
 
+class SuperAdminGrantRoleForm(forms.Form):
+    user = forms.ModelChoiceField(
+        queryset=User.objects.none(),
+        empty_label='اختر المستخدم',
+        label='المستخدم',
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['user'].queryset = User.objects.filter(is_staff=False, is_superuser=False).order_by('username', 'id')
+
+
 class SuperAdminCourseCreateForm(forms.ModelForm):
     business = forms.ModelChoiceField(
         queryset=BusinessTenant.objects.none(),

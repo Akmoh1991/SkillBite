@@ -14,30 +14,12 @@
   display:none;
 }
 
-.stats{
-  gap:14px;
-  margin-bottom:16px;
-}
-
 .section-title{
   margin:0;
   color:#0f766e;
   font-size:34px;
   font-weight:800;
   line-height:1.15;
-}
-
-.stat-card{
-  padding:14px 16px;
-}
-
-.stat-card h4{
-  margin-bottom:6px;
-  font-size:12px;
-}
-
-.stat-card span{
-  font-size:20px;
 }
 
 .page-toolbar{
@@ -69,6 +51,13 @@
   font-weight:800;
   white-space:nowrap;
   box-shadow:0 14px 28px rgba(15, 118, 110, 0.18);
+}
+
+.page-toolbar__actions{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
 }
 
 .dashboard-table-card{
@@ -113,6 +102,7 @@
 .data-table td{
   font-size:16px;
   color:#0f172a;
+  font-weight:500;
 }
 
 .data-table td strong{
@@ -126,8 +116,9 @@
 }
 
 .meta{
-  color:var(--muted);
+  color:#5f6f85;
   font-size:13px;
+  font-weight:500;
 }
 
 .pill{
@@ -145,19 +136,14 @@
   color:#475569;
 }
 
-.actions-inline{
-  display:flex;
-  gap:8px;
-  flex-wrap:wrap;
-}
-
-.actions-inline form{
-  margin:0;
-}
-
 .btn{
   border-radius:999px;
   font-weight:800;
+}
+
+.btn.secondary{
+  background:#0f766e;
+  color:#fff;
 }
 
 @media (max-width: 900px){
@@ -167,6 +153,10 @@
   }
 
   .page-toolbar__action{
+    width:100%;
+  }
+
+  .page-toolbar__actions{
     width:100%;
   }
 
@@ -181,18 +171,14 @@
 }
 </style>
 
-<section class="stats">
-  <div class="stat-card"><h4>مدير النظام</h4><span>{{ super_admin_count }}</span></div>
-  <div class="stat-card"><h4>ملاك الشركات</h4><span>{{ business_owner_count }}</span></div>
-  <div class="stat-card"><h4>الموظفون</h4><span>{{ employee_count }}</span></div>
-</section>
-
 <section class="page-toolbar">
   <div class="page-toolbar__intro">
     <h2 class="section-title">المستخدمون</h2>
-    <p>إدارة الحسابات الحالية وتفعيلها أو تعديل صلاحياتها من مكان واحد.</p>
   </div>
-  <a class="page-toolbar__action" href="{% url 'super_admin_user_create_view' %}">إضافة حساب جديد</a>
+  <div class="page-toolbar__actions">
+    <a class="page-toolbar__action" href="{% url 'super_admin_user_create_view' %}">إضافة حساب جديد</a>
+    <a class="page-toolbar__action" href="{% url 'super_admin_user_role_grant_view' %}">منح صلاحية مدير النظام</a>
+  </div>
 </section>
 
 <section>
@@ -205,7 +191,7 @@
             <th>الدور</th>
             <th>الجهة</th>
             <th>الحالة</th>
-            <th>التحكم</th>
+            <th>التفعيل</th>
           </tr>
         </thead>
         <tbody>
@@ -213,22 +199,15 @@
             <tr>
               <td>
                 <strong>{{ user.get_full_name|default:user.username }}</strong>
-                <div class="meta">{{ user.username }}{% if user.email %} | {{ user.email }}{% endif %}</div>
               </td>
               <td>{{ user.role_label }}</td>
               <td>{{ user.business_name|default:"-" }}</td>
-              <td><span class="pill {% if not user.is_active %}muted{% endif %}">{{ user.is_active|yesno:"نشط,معطل" }}</span></td>
+              <td><span class="pill {% if not user.is_active %}muted{% endif %}">{{ user.is_active|yesno:"نشط,غير نشط" }}</span></td>
               <td>
-                <div class="actions-inline">
-                  <form method="post" action="{% url 'super_admin_user_toggle_active' user.id %}">
-                    {% csrf_token %}
-                    <button class="btn secondary" type="submit">{{ user.is_active|yesno:"تعطيل,تفعيل" }}</button>
-                  </form>
-                  <form method="post" action="{% url 'super_admin_user_toggle_role' user.id %}">
-                    {% csrf_token %}
-                    <button class="btn" type="submit">{% if user.is_staff or user.is_superuser %}إزالة صلاحية مدير النظام{% else %}ترقية إلى مدير النظام{% endif %}</button>
-                  </form>
-                </div>
+                <form method="post" action="{% url 'super_admin_user_toggle_active' user.id %}">
+                  {% csrf_token %}
+                  <button class="btn {% if user.is_active %}warn{% else %}secondary{% endif %}" type="submit">{{ user.is_active|yesno:"إيقاف,تفعيل" }}</button>
+                </form>
               </td>
             </tr>
           {% empty %}

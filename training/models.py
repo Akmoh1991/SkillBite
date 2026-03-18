@@ -159,9 +159,9 @@ class CourseContentItem(models.Model):
 
 class CourseAssignment(models.Model):
     class Status(models.TextChoices):
-        ASSIGNED = 'ASSIGNED', 'Assigned'
-        IN_PROGRESS = 'IN_PROGRESS', 'In progress'
-        COMPLETED = 'COMPLETED', 'Completed'
+        ASSIGNED = 'ASSIGNED', 'مدرجة'
+        IN_PROGRESS = 'IN_PROGRESS', 'جاري التنفيذ'
+        COMPLETED = 'COMPLETED', 'مكتمل'
 
     business = models.ForeignKey(
         'accounts.BusinessTenant',

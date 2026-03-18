@@ -14,30 +14,12 @@
   display:none;
 }
 
-.stats{
-  gap:14px;
-  margin-bottom:16px;
-}
-
 .section-title{
   margin:0;
   color:#0f766e;
   font-size:34px;
   font-weight:800;
   line-height:1.15;
-}
-
-.stat-card{
-  padding:14px 16px;
-}
-
-.stat-card h4{
-  margin-bottom:6px;
-  font-size:12px;
-}
-
-.stat-card span{
-  font-size:20px;
 }
 
 .page-toolbar{
@@ -129,6 +111,7 @@
 .data-table td{
   font-size:16px;
   color:#0f172a;
+  font-weight:500;
 }
 
 .data-table td strong{
@@ -139,11 +122,6 @@
 
 .data-table tbody tr:last-child td{
   border-bottom:0;
-}
-
-.meta{
-  color:var(--muted);
-  font-size:13px;
 }
 
 .pill{
@@ -195,16 +173,9 @@
 }
 </style>
 
-<section class="stats">
-  <div class="stat-card"><h4>الدورات</h4><span>{{ course_count }}</span></div>
-  <div class="stat-card"><h4>قوائم التشغيل</h4><span>{{ checklist_count }}</span></div>
-  <div class="stat-card"><h4>قوالب الاختبارات</h4><span>{{ exam_template_count }}</span></div>
-</section>
-
 <section class="page-toolbar">
   <div class="page-toolbar__intro">
-    <h2 class="section-title">المحتوى والتكليفات</h2>
-    <p>إدارة الدورات، المحتوى، ونشر الكتالوج من صفحات مستقلة مع إبقاء المتابعة اليومية هنا.</p>
+    <h2 class="section-title">إدارة المحتوى</h2>
   </div>
   <div class="page-toolbar__actions">
     <a class="page-toolbar__action" href="{% url 'super_admin_learning_course_create_view' %}">إضافة دورة</a>
@@ -232,10 +203,7 @@
         <tbody>
           {% for course in courses %}
             <tr>
-              <td>
-                <strong>{{ course.title }}</strong>
-                <div class="meta">{{ course.description|default:"-" }}</div>
-              </td>
+              <td><strong>{{ course.title }}</strong></td>
               <td>{{ course.business.name }}</td>
               <td><span class="pill {% if not course.is_active %}muted{% endif %}">{{ course.is_active|yesno:"نشطة,موقوفة" }}</span></td>
               <td>{{ course.content_item_total }}</td>
@@ -278,10 +246,7 @@
         <tbody>
           {% for checklist in checklists %}
             <tr>
-              <td>
-                <strong>{{ checklist.title }}</strong>
-                <div class="meta">{{ checklist.get_frequency_display }}</div>
-              </td>
+              <td><strong>{{ checklist.title }}</strong></td>
               <td>{{ checklist.business.name }}</td>
               <td><span class="pill {% if not checklist.is_active %}muted{% endif %}">{{ checklist.is_active|yesno:"نشطة,موقوفة" }}</span></td>
               <td>{{ checklist.item_total }}</td>
