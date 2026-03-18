@@ -1,11 +1,25 @@
 {% extends "accounts-templates/business-owner-base.html" %}
 
 {% block page_title %}{{ business.name }} | {{ checklist.title }}{% endblock %}
+{% block hero_section %}{% endblock %}
 {% block hero_title %}{{ checklist.title }}{% endblock %}
 {% block hero_text %}اعرض القائمة المطلوبة لك وأتممها من هذه الصفحة.{% endblock %}
 
 {% block content %}
 <style>
+  .employee-checklist-detail-page{
+    display:grid;
+    gap:22px;
+  }
+
+  .employee-checklist-detail-toolbar{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:18px;
+    flex-wrap:wrap;
+  }
+
   .employee-checklist-detail-layout{
     display:grid;
     grid-template-columns:minmax(0, 1fr);
@@ -25,11 +39,19 @@
     border-bottom:1px solid #e2e8f0;
   }
 
-  .employee-checklist-detail-title{
+  .employee-checklist-detail-head-actions{
+    display:flex;
+    align-items:center;
+    justify-content:flex-start;
+    flex:0 0 auto;
+  }
+
+  .employee-checklist-detail-page-title{
     margin:0;
-    font-size:31px;
+    font-size:28px;
+    line-height:1.2;
     font-weight:800;
-    color:#0f172a;
+    color:#0b8a72;
   }
 
   .employee-checklist-detail-meta{
@@ -130,12 +152,14 @@
     justify-content:center;
     min-height:46px;
     padding:0 18px;
-    border-radius:999px;
-    border:1px solid #cbd5e1;
+    border-radius:14px;
+    border:1px solid #0f766e;
     text-decoration:none;
-    color:#334155;
-    background:#fff;
+    color:#fff;
+    background:#0f766e;
+    font-size:14px;
     font-weight:700;
+    box-shadow:0 8px 18px rgba(15, 118, 110, .14);
   }
 
   .employee-checklist-done{
@@ -161,17 +185,25 @@
       align-items:flex-start;
     }
 
-    .employee-checklist-detail-title{
-      font-size:25px;
+    .employee-checklist-detail-head-actions{
+      width:100%;
+    }
+
+    .employee-checklist-detail-page-title{
+      font-size:24px;
     }
   }
 </style>
 
-<section class="employee-checklist-detail-layout">
-  <div class="card employee-checklist-detail-card">
+<section class="employee-checklist-detail-page">
+  <div class="employee-checklist-detail-toolbar">
+    <h1 class="employee-checklist-detail-page-title">{{ checklist.title }}</h1>
+  </div>
+
+  <section class="employee-checklist-detail-layout">
+    <div class="card employee-checklist-detail-card">
     <div class="employee-checklist-detail-head">
       <div>
-        <h2 class="employee-checklist-detail-title">{{ checklist.title }}</h2>
         <div class="employee-checklist-detail-meta">
           <span class="meta">{{ checklist.get_frequency_display }}</span>
           <span class="employee-checklist-detail-count">{{ checklist.items.count }} عنصر</span>
@@ -184,6 +216,9 @@
         {% if checklist.description %}
           <p class="employee-checklist-detail-description">{{ checklist.description }}</p>
         {% endif %}
+      </div>
+      <div class="employee-checklist-detail-head-actions">
+        <a class="employee-checklist-back" href="{% url 'employee_dashboard' %}">الرجوع إلى اللوحة</a>
       </div>
     </div>
 
@@ -209,10 +244,10 @@
         <textarea class="employee-checklist-detail-notes" name="notes" placeholder="ملاحظات الوردية (اختياري)"></textarea>
         <div class="employee-checklist-detail-actions">
           <button class="btn" type="submit">إرسال القائمة</button>
-          <a class="employee-checklist-back" href="{% url 'employee_dashboard' %}">الرجوع إلى اللوحة</a>
         </div>
       </form>
     {% endif %}
-  </div>
+    </div>
+  </section>
 </section>
 {% endblock %}

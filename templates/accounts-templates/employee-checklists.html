@@ -1,63 +1,238 @@
 {% extends "accounts-templates/business-owner-base.html" %}
 
 {% block page_title %}{{ business.name }} | قوائم التشغيل{% endblock %}
+{% block hero_section %}{% endblock %}
 {% block hero_title %}قوائم التشغيل اليومية{% endblock %}
 {% block hero_text %}اعرض القوائم المطلوبة منك وسجل إتمامها ضمن نفس الواجهة.{% endblock %}
 
 {% block content %}
 <style>
+  :root{
+    --employee-checklists-brand-green:#0b8a72;
+    --employee-checklists-brand-green-dark:#0a6f5d;
+  }
+
+  .employee-checklists-page{
+    display:grid;
+    gap:22px;
+  }
+
+  .employee-checklists-toolbar{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:18px;
+    flex-wrap:wrap;
+  }
+
+  .employee-checklists-toolbar-title{
+    margin:0;
+    font-size:28px;
+    line-height:1.2;
+    color:var(--employee-checklists-brand-green);
+    font-weight:800;
+  }
+
+  .employee-checklists-toolbar-subtitle{
+    margin:6px 0 0;
+    color:#64748b;
+    font-size:15px;
+    line-height:1.7;
+  }
+
   .employee-checklists-layout{
     grid-template-columns:minmax(0, 1fr);
   }
 
   .employee-checklist-card{
-    padding:28px;
+    padding:24px;
+    border:1px solid #e6ebf2;
+    box-shadow:0 1px 0 rgba(15, 23, 42, .02);
   }
 
-  .employee-checklist-entry{
-    padding:0;
-    border:0;
-  }
-
-  .employee-checklist-entry + .employee-checklist-entry{
-    margin-top:22px;
-    padding-top:22px;
-    border-top:1px solid #e2e8f0;
-  }
-
-  .employee-checklist-header{
+  .employee-checklist-card-header{
     display:flex;
     align-items:flex-start;
     justify-content:space-between;
     gap:16px;
-    margin-bottom:16px;
+    padding-bottom:14px;
+    margin-bottom:18px;
+    border-bottom:1px solid #edf2f7;
   }
 
-  .employee-checklist-title{
-    margin:0;
-    font-size:31px;
-    font-weight:800;
-    color:#0f172a;
-  }
-
-  .employee-checklist-meta{
+  .employee-checklist-card-tools{
     display:flex;
     align-items:center;
-    gap:10px;
+    gap:12px;
     flex-wrap:wrap;
-    margin-top:8px;
   }
 
-  .employee-checklist-count{
+  .employee-checklist-progress{
+    min-width:42px;
+    height:42px;
+    padding:0 14px;
+    border-radius:999px;
     display:inline-flex;
     align-items:center;
-    gap:6px;
+    justify-content:center;
+    background:#ecfdf3;
+    color:var(--employee-checklists-brand-green);
+    font-size:14px;
+    font-weight:800;
+    flex:0 0 auto;
+  }
+
+  .employee-checklist-overview{
+    text-align:right;
+  }
+
+  .employee-checklist-overview-title{
+    margin:0;
+    font-size:28px;
+    line-height:1.2;
+    font-weight:800;
+    color:var(--employee-checklists-brand-green);
+  }
+
+  .employee-checklist-table-wrap{
+    overflow-x:auto;
+    border:1px solid #e6ebf2;
+    border-radius:20px;
+    background:#fff;
+  }
+
+  .employee-checklist-table{
+    width:100%;
+    border-collapse:separate;
+    border-spacing:0;
+    min-width:760px;
+  }
+
+  .employee-checklist-table thead th{
+    padding:14px 16px;
+    background:#f8fbff;
+    color:var(--employee-checklists-brand-green-dark);
+    font-size:14px;
+    font-weight:800;
+    text-align:right;
+    border-bottom:1px solid #e6ebf2;
+    white-space:nowrap;
+  }
+
+  .employee-checklist-table tbody td{
+    padding:14px 16px;
+    vertical-align:middle;
+    border-bottom:1px solid #edf2f7;
+    color:#334155;
+    font-size:15px;
+  }
+
+  .employee-checklist-table tbody tr:last-child td{
+    border-bottom:0;
+  }
+
+  .employee-checklist-table tbody tr:not(.employee-checklist-details-row){
+    transition:background-color .2s ease;
+  }
+
+  .employee-checklist-table tbody tr:not(.employee-checklist-details-row):hover{
+    background:#f8fffc;
+  }
+
+  .employee-checklist-name{
+    font-size:15px;
+    font-weight:800;
+    color:var(--employee-checklists-brand-green-dark);
+  }
+
+  .employee-checklist-frequency,
+  .employee-checklist-task-count{
+    font-size:15px;
+    color:#334155;
+  }
+
+  .employee-checklist-status{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
     padding:6px 12px;
     border-radius:999px;
-    background:#ecfdf3;
-    color:#0f766e;
+    background:#f1f5f9;
+    color:#475569;
     font-size:13px;
-    font-weight:700;
+    font-weight:800;
+    white-space:nowrap;
+  }
+
+  .employee-checklist-status.is-complete{
+    background:#ecfdf3;
+    color:var(--employee-checklists-brand-green);
+  }
+
+  .employee-checklist-action-btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:44px;
+    min-width:98px;
+    padding:10px 16px;
+    border:1px solid #99f6c8;
+    border-radius:999px;
+    background:#ecfdf5;
+    color:var(--employee-checklists-brand-green-dark);
+    font-size:14px;
+    font-weight:800;
+    cursor:pointer;
+    transition:transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+    white-space:nowrap;
+  }
+
+  .employee-checklist-action-btn:hover{
+    transform:translateY(-1px);
+    box-shadow:0 8px 18px rgba(15, 118, 110, .08);
+    border-color:#4ade80;
+  }
+
+  .employee-checklist-back{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:44px;
+    padding:10px 18px;
+    border-radius:999px;
+    border:1px solid #cbd5e1;
+    background:#fff;
+    color:#334155;
+    font-size:14px;
+    font-weight:800;
+    text-decoration:none;
+    white-space:nowrap;
+    transition:transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+  }
+
+  .employee-checklist-back:hover{
+    transform:translateY(-1px);
+    box-shadow:0 8px 18px rgba(15, 23, 42, .08);
+    border-color:#94a3b8;
+  }
+
+  .employee-checklist-details-row{
+    display:none;
+  }
+
+  .employee-checklist-details-row.is-open{
+    display:table-row;
+  }
+
+  .employee-checklist-details-cell{
+    padding:0 16px 16px;
+    background:#fff;
+    border-bottom:1px solid #edf2f7;
+  }
+
+  .employee-checklist-details-row:last-child .employee-checklist-details-cell{
+    border-bottom:0;
+    padding-bottom:16px;
   }
 
   .employee-checklist-form{
@@ -134,72 +309,183 @@
   }
 
   .employee-checklist-complete{
-    margin-top:14px;
+    padding:18px;
+    border-radius:18px;
+    background:linear-gradient(180deg, #f8fbff 0%, #f3f7fb 100%);
+    border:1px solid #dbe5f0;
+  }
+
+  .employee-checklist-complete .pill{
+    background:#ecfdf3;
+    color:#0f766e;
+  }
+
+  .employee-checklist-empty{
+    padding:36px 20px;
+    text-align:center;
+    color:#64748b;
+    font-size:17px;
   }
 
   @media (max-width:768px){
+    .employee-checklists-toolbar-title{
+      font-size:24px;
+    }
+
     .employee-checklist-card{
-      padding:20px;
+      padding:18px;
     }
 
-    .employee-checklist-header{
-      flex-direction:column;
+    .employee-checklist-card-header{
       align-items:flex-start;
+      flex-direction:column-reverse;
+      margin-bottom:16px;
     }
 
-    .employee-checklist-title{
-      font-size:25px;
+    .employee-checklist-card-tools{
+      width:100%;
+      justify-content:space-between;
     }
 
-    .employee-checklist-item{
-      padding:13px 14px;
+    .employee-checklist-overview-title{
+      font-size:24px;
+    }
+
+    .employee-checklist-table-wrap{
+      overflow:auto;
+      border-radius:20px;
+    }
+
+    .employee-checklist-table{
+      min-width:640px;
+    }
+
+    .employee-checklist-details-cell{
+      padding:0 16px 16px;
     }
   }
 </style>
 
-<section class="content-layout employee-checklists-layout">
-  <div class="layout-main">
-    <div class="card employee-checklist-card">
-      <ul class="list">
-        {% for checklist in assigned_checklists %}
-          <li class="employee-checklist-entry">
-            <div class="employee-checklist-header">
-              <div>
-                <strong class="employee-checklist-title">{{ checklist.title }}</strong>
-                <div class="employee-checklist-meta">
-                  <span class="meta">{{ checklist.get_frequency_display }}</span>
-                  <span class="employee-checklist-count">{{ checklist.items.count }} عنصر</span>
-                </div>
-              </div>
-            </div>
-
-            {% if checklist.id in today_completions %}
-              <div class="employee-checklist-complete">
-                <span class="pill">مكتملة اليوم</span>
-              </div>
-            {% else %}
-              <form class="checklist-form employee-checklist-form" method="post" action="{% url 'employee_checklist_complete' checklist.id %}">
-                {% csrf_token %}
-                <div class="employee-checklist-items">
-                  {% for item in checklist.items.all %}
-                    <label class="employee-checklist-item">
-                      <input type="checkbox" name="item_ids" value="{{ item.id }}">
-                      <span class="employee-checklist-item-text">{{ item.title }}</span>
-                    </label>
-                  {% endfor %}
-                </div>
-                <textarea class="employee-checklist-notes" name="notes" placeholder="ملاحظات الوردية (اختياري)"></textarea>
-                <div class="employee-checklist-actions">
-                  <button class="btn" type="submit">إرسال القائمة</button>
-                </div>
-              </form>
-            {% endif %}
-          </li>
-        {% empty %}
-          <li class="muted">لا توجد قوائم تشغيل مسندة حالياً.</li>
-        {% endfor %}
-      </ul>
+<section class="employee-checklists-page">
+  <div class="employee-checklists-toolbar">
+    <div>
+      <h2 class="employee-checklists-toolbar-title">قوائم التشغيل اليومية</h2>
     </div>
   </div>
+
+  <section class="content-layout employee-checklists-layout">
+    <div class="layout-main">
+      <div class="card employee-checklist-card">
+        <div class="employee-checklist-card-header">
+          <div class="employee-checklist-overview">
+            <h2 class="employee-checklist-overview-title">مهام اليوم</h2>
+          </div>
+          <div class="employee-checklist-card-tools">
+            <span class="employee-checklist-progress">{{ assigned_checklists|length }}</span>
+          </div>
+        </div>
+
+        <div class="employee-checklist-table-wrap">
+          <table class="employee-checklist-table">
+            <thead>
+              <tr>
+                <th>القائمة</th>
+                <th>التكرار</th>
+                <th>عدد المهام</th>
+                <th>الحالة</th>
+                <th>إجراء</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for checklist in assigned_checklists %}
+                <tr>
+                  <td><span class="employee-checklist-name">{{ checklist.title }}</span></td>
+                  <td><span class="employee-checklist-frequency">{{ checklist.get_frequency_display }}</span></td>
+                  <td><span class="employee-checklist-task-count">{{ checklist.items.count }}</span></td>
+                  <td>
+                    {% if checklist.id in today_completions %}
+                      <span class="employee-checklist-status is-complete">مكتملة اليوم</span>
+                    {% else %}
+                      <span class="employee-checklist-status">مطلوبة اليوم</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <button
+                      class="employee-checklist-action-btn"
+                      type="button"
+                      data-toggle-checklist="checklist-{{ checklist.id }}"
+                      aria-expanded="false">
+                      عرض القائمة
+                    </button>
+                  </td>
+                </tr>
+                <tr class="employee-checklist-details-row" id="checklist-{{ checklist.id }}">
+                  <td class="employee-checklist-details-cell" colspan="5">
+                    {% if checklist.id in today_completions %}
+                      <div class="employee-checklist-complete">
+                        <span class="pill">مكتملة اليوم</span>
+                      </div>
+                    {% else %}
+                      <form class="checklist-form employee-checklist-form" method="post" action="{% url 'employee_checklist_complete' checklist.id %}">
+                        {% csrf_token %}
+                        <div class="employee-checklist-items">
+                          {% for item in checklist.items.all %}
+                            <label class="employee-checklist-item">
+                              <input type="checkbox" name="item_ids" value="{{ item.id }}">
+                              <span class="employee-checklist-item-text">{{ item.title }}</span>
+                            </label>
+                          {% endfor %}
+                        </div>
+                        <textarea class="employee-checklist-notes" name="notes" placeholder="ملاحظات الوردية (اختياري)"></textarea>
+                        <div class="employee-checklist-actions">
+                          <button class="btn" type="submit">إرسال القائمة</button>
+                        </div>
+                      </form>
+                    {% endif %}
+                  </td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <td class="employee-checklist-empty" colspan="5">لا توجد قوائم تشغيل مسندة حالياً.</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
 </section>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const toggleButtons = document.querySelectorAll('[data-toggle-checklist]');
+
+    toggleButtons.forEach(function (button) {
+      button.addEventListener('click', function () {
+        const targetId = button.getAttribute('data-toggle-checklist');
+        const targetRow = document.getElementById(targetId);
+
+        if (!targetRow) {
+          return;
+        }
+
+        const isOpen = targetRow.classList.contains('is-open');
+
+        document.querySelectorAll('.employee-checklist-details-row.is-open').forEach(function (row) {
+          row.classList.remove('is-open');
+        });
+
+        toggleButtons.forEach(function (item) {
+          item.setAttribute('aria-expanded', 'false');
+        });
+
+        if (!isOpen) {
+          targetRow.classList.add('is-open');
+          button.setAttribute('aria-expanded', 'true');
+        }
+      });
+    });
+  });
+</script>
 {% endblock %}

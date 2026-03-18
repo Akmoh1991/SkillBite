@@ -1,15 +1,19 @@
 {% extends "accounts-templates/business-owner-base.html" %}
 
-{% block page_title %}{{ business.name }} | سجل التعلم{% endblock %}
-{% block hero_title %}سجل التعلم{% endblock %}
+{% block page_title %}{{ business.name }} | السجل التدريبي{% endblock %}
+{% block hero_title %}السجل التدريبي{% endblock %}
 {% block hero_text %}استعرض الدورات التي أكملتها وحمّل شهاداتك بصيغة PDF من مكان واحد.{% endblock %}
 
 {% block content %}
 <style>
+  :root {
+    --employee-history-brand-green: #0b8a72;
+    --employee-history-brand-green-dark: #0a6f5d;
+  }
   .hero-card { display: none; }
   .employee-history-page { display: grid; gap: 22px; }
   .employee-history-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap; }
-  .employee-history-title { margin: 0; font-size: 28px; line-height: 1.2; color: #1f2937; font-weight: 800; }
+  .employee-history-title { margin: 0; font-size: 28px; line-height: 1.2; color: var(--employee-history-brand-green); font-weight: 800; }
   .employee-history-subtitle { margin: 6px 0 0; color: #64748b; font-size: 15px; }
   .employee-history-search-wrap { min-width: 280px; height: 44px; border: 1px solid #e5e7eb; border-radius: 999px; background: #fff; display: flex; align-items: center; padding: 0 14px; gap: 10px; }
   .employee-history-search { flex: 1; min-width: 0; border: 0; outline: none; background: transparent; color: #111827; font: inherit; }
@@ -23,7 +27,7 @@
   .employee-history-table tbody tr:last-child td { border-bottom: 0; }
   .employee-history-row.employee-history-hidden { display: none; }
   .employee-history-course { display: grid; gap: 6px; min-width: 220px; }
-  .employee-history-course-title { font-size: 16px; font-weight: 800; color: #0f172a; }
+  .employee-history-course-title { font-size: 16px; font-weight: 800; color: var(--employee-history-brand-green-dark); }
   .employee-history-course-desc { color: #64748b; line-height: 1.6; font-size: 13px; }
   .employee-history-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 96px; padding: 8px 14px; border-radius: 999px; font-size: 12px; font-weight: 800; }
   .employee-history-badge.completed { color: #166534; background: #ecfdf5; border: 1px solid #86efac; }
@@ -32,7 +36,7 @@
   .employee-history-empty { display: none; background: #fff; border: 1px solid #e6ebf2; border-radius: 18px; padding: 28px; text-align: center; color: #64748b; }
   .employee-history-empty.is-visible { display: block; }
   .employee-history-empty-card { padding: 36px 28px; text-align: center; }
-  .employee-history-empty-card h3 { margin: 0 0 10px; font-size: 22px; color: #0f172a; }
+  .employee-history-empty-card h3 { margin: 0 0 10px; font-size: 22px; color: var(--employee-history-brand-green-dark); }
   .employee-history-empty-card p { margin: 0; color: #64748b; line-height: 1.8; }
 
   @media (max-width: 760px) {
@@ -44,11 +48,10 @@
 <section class="employee-history-page">
   <div class="employee-history-toolbar">
     <div>
-      <h2 class="employee-history-title">سجل الدورات المكتملة</h2>
-      <p class="employee-history-subtitle">كل دورة أنهيتها ستظهر هنا مع تاريخ الإنجاز ورابط تحميل الشهادة.</p>
+      <h2 class="employee-history-title">السجل التدريبي</h2>
     </div>
     <label class="employee-history-search-wrap" for="employee-history-search">
-      <input id="employee-history-search" class="employee-history-search" type="search" placeholder="ابحث في سجل التعلم">
+      <input id="employee-history-search" class="employee-history-search" type="search" placeholder="ابحث في السجل التدريبي">
       <span class="employee-history-search-icon">⌕</span>
     </label>
   </div>
@@ -105,8 +108,8 @@
     </div>
   {% else %}
     <div class="employee-history-card employee-history-empty-card">
-      <h3>لا يوجد سجل تعلم بعد</h3>
-      <p>ستظهر هنا الدورات التي أكملتها بعد إنهاء التدريب أو اجتياز الاختبارات المرتبطة بها.</p>
+      <h3>لا يوجد لديك سجل تدريبي</h3>
+      <p>ستظهر هنا الدورات التي أكملتها بعد إنهاء التدريب و اجتياز الاختبار  </p>
     </div>
   {% endif %}
 </section>
