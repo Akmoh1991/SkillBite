@@ -3,53 +3,353 @@
 {% block page_title %}SkillBite | محرر قالب الاختبار{% endblock %}
 {% block hero_title %}{% if template_obj %}{{ template_obj.name }}{% else %}قالب اختبار جديد{% endif %}{% endblock %}
 {% block hero_text %}شاشة إنشاء وتعديل القالب مبنية على `trainer-exam-template-editor.html` ومربوطة بالدورات الحالية.{% endblock %}
+{% block main_class %}main--modern-page{% endblock %}
 
 {% block content %}
 <style>
-  .content-layout{
-    display:block;
+.editor-shell{
+  display:grid;
+  gap:18px;
+}
+
+.form-card{
+  border-radius:24px;
+}
+
+.form-grid{
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0, 1fr));
+  gap:18px 20px;
+}
+
+.field{
+  margin:0;
+}
+
+.field--full{
+  grid-column:1 / -1;
+}
+
+.field label{
+  display:block;
+  margin-bottom:8px;
+  color:#0f172a;
+  font-size:15px;
+  font-weight:800;
+}
+
+.field input[type="text"],
+.field input[type="number"],
+.field select,
+.field textarea{
+  width:100%;
+  border:1px solid #cbd5e1;
+  border-radius:16px;
+  padding:14px 16px;
+  background:#fff;
+  color:#0f172a;
+  font:inherit;
+  transition:border-color .2s ease, box-shadow .2s ease;
+}
+
+.field select{
+  min-height:54px;
+}
+
+.field select[multiple]{
+  min-height:160px;
+  padding:10px 12px;
+}
+
+.field textarea{
+  min-height:220px;
+  resize:vertical;
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus{
+  outline:none;
+  border-color:#0f766e;
+  box-shadow:0 0 0 4px rgba(15, 118, 110, 0.12);
+}
+
+.field-help{
+  margin:8px 0 0;
+  color:#64748b;
+  font-size:13px;
+  line-height:1.6;
+}
+
+.checkbox-grid{
+  grid-column:1 / -1;
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0, 1fr));
+  gap:12px 16px;
+}
+
+.check-field{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:14px 16px;
+  border:1px solid #dbe3ec;
+  border-radius:16px;
+  background:#f8fafc;
+}
+
+.check-field input{
+  width:18px;
+  height:18px;
+  margin:0;
+  accent-color:#0f766e;
+}
+
+.check-field label{
+  margin:0;
+  font-size:15px;
+  font-weight:700;
+  color:#0f172a;
+}
+
+.form-actions{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin-top:22px;
+  flex-wrap:wrap;
+}
+
+.btn{
+  min-width:120px;
+  border-radius:999px;
+  font-weight:800;
+}
+
+.summary-grid{
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0, 1fr));
+  gap:18px;
+}
+
+.summary-card{
+  border-radius:24px;
+}
+
+.summary-stat{
+  display:block;
+  margin-top:6px;
+  font-size:28px;
+  font-weight:800;
+  color:#0f766e;
+}
+
+.summary-list{
+  display:grid;
+  gap:12px;
+}
+
+.summary-item{
+  padding:14px 16px;
+  border:1px solid #e2e8f0;
+  border-radius:16px;
+  background:#f8fafc;
+}
+
+.table-actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+.field-errors,
+.form-errors{
+  margin:8px 0 0;
+  padding:0;
+  list-style:none;
+  color:#b91c1c;
+  font-size:13px;
+  font-weight:700;
+}
+
+.form-errors{
+  margin:0 0 18px;
+  padding:14px 16px;
+  border:1px solid #fecaca;
+  border-radius:16px;
+  background:#fef2f2;
+}
+
+@media (max-width: 900px){
+  .form-grid,
+  .checkbox-grid,
+  .summary-grid{
+    grid-template-columns:1fr;
   }
 
-  .layout-main,
-  .layout-side{
-    display:grid;
-    gap:18px;
+  .form-actions .btn{
+    width:100%;
   }
-
-  .layout-side{
-    margin-top:18px;
-  }
+}
 </style>
-<section class="content-layout">
-  <div class="layout-main">
-    <div class="card">
+
+<section class="page-toolbar--system">
+  <div class="page-toolbar__intro">
+    <h2 class="page-title--system">{% if template_obj %}تعديل قالب الاختبار{% else %}قالب اختبار جديد{% endif %}</h2>
+  </div>
+  <div class="page-toolbar__actions">
+    <a class="page-toolbar__action secondary" href="{% url 'super_admin_exam_templates' %}">العودة للقوالب</a>
+    {% if template_obj %}
+      <a class="page-toolbar__action" href="{% url 'super_admin_exam_question_create' template_obj.id %}">+ إضافة سؤال</a>
+    {% endif %}
+  </div>
+</section>
+
+<div class="editor-shell">
+  <section class="page-section--full">
+    <div class="card form-card">
       <div class="card-intro">
         <div>
           <h2>بيانات القالب</h2>
-          <p>احفظ القالب أولًا ثم أضف الأسئلة من القسم التالي.</p>
         </div>
-        <a class="btn secondary" href="{% url 'super_admin_exam_templates' %}" style="text-decoration:none;">العودة للقوالب</a>
       </div>
 
-      <form method="post" class="inline-form">
+      <form method="post" novalidate>
         {% csrf_token %}
-        {{ template_form.as_p }}
-        <button class="btn" type="submit">حفظ القالب</button>
-      </form>
-    </div>
 
-    {% if template_obj %}
-      <div class="card">
-        <div class="card-intro">
-          <div>
-            <h2>الأسئلة</h2>
-            <p>مستوحاة من محرر الأسئلة الذي أرسلته، مع ربط مباشر بقالب الاختبار.</p>
+        {% if template_form.non_field_errors %}
+          <ul class="form-errors">
+            {% for error in template_form.non_field_errors %}
+              <li>{{ error }}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+
+        <div class="form-grid">
+          <div class="field">
+            <label for="{{ template_form.business.id_for_label }}">{{ template_form.business.label }}</label>
+            {{ template_form.business }}
+            {% if template_form.business.help_text %}<p class="field-help">{{ template_form.business.help_text }}</p>{% endif %}
+            {% if template_form.business.errors %}
+              <ul class="field-errors">{% for error in template_form.business.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
           </div>
-          <a class="btn" href="{% url 'super_admin_exam_question_create' template_obj.id %}" style="text-decoration:none;">+ إضافة سؤال</a>
+
+          <div class="field">
+            <label for="{{ template_form.name.id_for_label }}">{{ template_form.name.label }}</label>
+            {{ template_form.name }}
+            {% if template_form.name.errors %}
+              <ul class="field-errors">{% for error in template_form.name.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+          </div>
+
+          <div class="field field--full">
+            <label for="{{ template_form.courses.id_for_label }}">{{ template_form.courses.label }}</label>
+            {{ template_form.courses }}
+            {% if template_form.courses.errors %}
+              <ul class="field-errors">{% for error in template_form.courses.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+          </div>
+
+          <div class="field">
+            <label for="{{ template_form.duration_minutes.id_for_label }}">{{ template_form.duration_minutes.label }}</label>
+            {{ template_form.duration_minutes }}
+            {% if template_form.duration_minutes.errors %}
+              <ul class="field-errors">{% for error in template_form.duration_minutes.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+          </div>
+
+          <div class="field">
+            <label for="{{ template_form.passing_score_percent.id_for_label }}">{{ template_form.passing_score_percent.label }}</label>
+            {{ template_form.passing_score_percent }}
+            {% if template_form.passing_score_percent.errors %}
+              <ul class="field-errors">{% for error in template_form.passing_score_percent.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+          </div>
+
+          <div class="field field--full">
+            <label for="{{ template_form.instructions.id_for_label }}">{{ template_form.instructions.label }}</label>
+            {{ template_form.instructions }}
+            {% if template_form.instructions.errors %}
+              <ul class="field-errors">{% for error in template_form.instructions.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+          </div>
+
+          <div class="checkbox-grid">
+            <div class="check-field">
+              {{ template_form.show_result_after_submit }}
+              <label for="{{ template_form.show_result_after_submit.id_for_label }}">{{ template_form.show_result_after_submit.label }}</label>
+            </div>
+            <div class="check-field">
+              {{ template_form.shuffle_questions }}
+              <label for="{{ template_form.shuffle_questions.id_for_label }}">{{ template_form.shuffle_questions.label }}</label>
+            </div>
+          </div>
         </div>
 
-        <div class="table-wrap">
-          <table>
+        <div class="form-actions">
+          <button class="btn" type="submit">حفظ القالب</button>
+          <a class="btn secondary" href="{% url 'super_admin_exam_templates' %}" style="text-decoration:none;">إلغاء</a>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  {% if template_obj %}
+    <section class="page-section--full">
+      <div class="summary-grid">
+        <div class="card summary-card">
+          <div class="card-intro">
+            <div>
+              <h3>ملخص سريع</h3>
+              <p>لمحة سريعة عن القالب وعدد الأسئلة والدورات المرتبطة.</p>
+            </div>
+          </div>
+          <div class="summary-list">
+            <div class="summary-item">
+              <div class="meta">عدد الأسئلة</div>
+              <strong class="summary-stat">{{ template_obj.total_questions|default:0 }}</strong>
+            </div>
+            <div class="summary-item">
+              <div class="meta">الدورات المرتبطة</div>
+              {% for course in assigned_courses %}
+                <div style="margin-top:8px;"><strong>{{ course.title }}</strong><div class="meta">{{ course.business.name }}</div></div>
+              {% empty %}
+                <div class="meta" style="margin-top:8px;">لا توجد دورة مرتبطة مباشرة بهذا القالب.</div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+
+        <div class="card summary-card">
+          <div class="card-intro">
+            <div>
+              <h3>حالة القالب</h3>
+              <p>معلومات أساسية تساعدك قبل إضافة أو تعديل الأسئلة.</p>
+            </div>
+          </div>
+          <div class="summary-list">
+            <div class="summary-item">
+              <div class="meta">اسم القالب</div>
+              <strong>{{ template_obj.name }}</strong>
+            </div>
+            <div class="summary-item">
+              <div class="meta">الشركة</div>
+              <strong>{{ template_obj.business.name|default:"-" }}</strong>
+            </div>
+            <div class="summary-item">
+              <div class="meta">مدة الاختبار</div>
+              <strong>{{ template_obj.duration_minutes }} دقيقة</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="page-section--full">
+      <div class="card dashboard-table-card--system">
+        <div class="table-wrap table-wrap--system">
+          <table class="data-table data-table--system">
             <thead>
               <tr>
                 <th>الترتيب</th>
@@ -69,7 +369,7 @@
                   <td>{{ question.points }}</td>
                   <td>{{ question.options.count }}</td>
                   <td>
-                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <div class="table-actions">
                       <a class="btn secondary" href="{% url 'super_admin_exam_question_editor' template_obj.id question.id %}" style="text-decoration:none;">تعديل</a>
                       <form method="post" action="{% url 'super_admin_exam_question_delete' template_obj.id question.id %}">
                         {% csrf_token %}
@@ -85,30 +385,7 @@
           </table>
         </div>
       </div>
-    {% endif %}
-  </div>
-
-  <div class="layout-side">
-    <div class="card">
-      <div class="card-intro">
-        <div>
-          <h3>ملخص سريع</h3>
-          <p>مبني على أسلوب بطاقات `trainer-exam-template-editor.html`.</p>
-        </div>
-      </div>
-      <div class="checklist-form">
-        <div class="meta">عدد الأسئلة</div>
-        <strong style="display:block; font-size:24px; margin-top:6px;">{{ template_obj.total_questions|default:0 }}</strong>
-      </div>
-      <div class="checklist-form" style="margin-top:12px;">
-        <div class="meta">الدورات المرتبطة</div>
-        {% for course in assigned_courses %}
-          <div style="margin-top:8px;"><strong>{{ course.title }}</strong><div class="meta">{{ course.business.name }}</div></div>
-        {% empty %}
-          <div class="meta" style="margin-top:8px;">لا توجد دورة مرتبطة مباشرة بهذا القالب.</div>
-        {% endfor %}
-      </div>
-    </div>
-  </div>
-</section>
+    </section>
+  {% endif %}
+</div>
 {% endblock %}
