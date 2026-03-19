@@ -5,6 +5,21 @@
 {% block hero_text %}شاشة إنشاء وتعديل القالب مبنية على `trainer-exam-template-editor.html` ومربوطة بالدورات الحالية.{% endblock %}
 
 {% block content %}
+<style>
+  .content-layout{
+    display:block;
+  }
+
+  .layout-main,
+  .layout-side{
+    display:grid;
+    gap:18px;
+  }
+
+  .layout-side{
+    margin-top:18px;
+  }
+</style>
 <section class="content-layout">
   <div class="layout-main">
     <div class="card">
