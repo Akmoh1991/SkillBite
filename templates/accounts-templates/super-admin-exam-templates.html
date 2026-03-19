@@ -3,24 +3,28 @@
 {% block page_title %}SkillBite | قوالب الاختبارات{% endblock %}
 {% block hero_title %}قوالب الاختبارات{% endblock %}
 {% block hero_text %}إدارة بنك الاختبارات وربطه بالدورات من لوحة المشرف العام.{% endblock %}
+{% block main_class %}main--modern-page{% endblock %}
 
 {% block content %}
-<section class="stats">
-  <div class="stat-card"><h4>قوالب الاختبارات</h4><span>{{ template_count }}</span></div>
+<style>
+.btn{
+  min-width:92px;
+  border-radius:999px;
+  font-weight:800;
+}
+</style>
+
+<section class="page-toolbar--system">
+  <div class="page-toolbar__intro">
+    <h2 class="page-title--system">قوالب الاختبارات</h2>
+  </div>
+  <a class="page-toolbar__action" href="{% url 'super_admin_exam_template_create' %}">+ إنشاء قالب جديد</a>
 </section>
 
-<section class="section">
-  <div class="card" style="grid-column:1 / -1;">
-    <div class="card-intro">
-      <div>
-        <h2>بنك الاختبارات</h2>
-        <p>مستوحاة من شاشة `trainer-exam-templates.html` مع تكييفها للمشرف العام والدورات الحالية.</p>
-      </div>
-      <a class="btn" href="{% url 'super_admin_exam_template_create' %}" style="text-decoration:none;">+ إنشاء قالب جديد</a>
-    </div>
-
-    <div class="table-wrap">
-      <table>
+<section class="page-section--full">
+  <div class="card dashboard-table-card--system">
+    <div class="table-wrap table-wrap--system">
+      <table class="data-table data-table--system">
         <thead>
           <tr>
             <th>#</th>
@@ -36,7 +40,7 @@
           {% for template in templates %}
             <tr>
               <td><strong>#{{ template.id }}</strong></td>
-              <td>{{ template.name }}</td>
+              <td><strong>{{ template.name }}</strong></td>
               <td>{{ template.business.name|default:"-" }}</td>
               <td>{{ template.duration_minutes }} دقيقة</td>
               <td>{{ template.question_total }}</td>

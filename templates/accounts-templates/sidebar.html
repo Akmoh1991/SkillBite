@@ -134,6 +134,12 @@
         </a>
       </li>
       <li>
+        <a href="{% url 'super_admin_exam_templates' %}"
+           class="{% if request.resolver_match.url_name == 'super_admin_exam_templates' or request.resolver_match.url_name == 'super_admin_exam_template_create' or request.resolver_match.url_name == 'super_admin_exam_template_editor' or request.resolver_match.url_name == 'super_admin_exam_question_create' or request.resolver_match.url_name == 'super_admin_exam_question_editor' %}active{% endif %}">
+          قوالب الاختبارات
+        </a>
+      </li>
+      <li>
         <a href="{% url 'super_admin_operations' %}"
            class="{% if request.resolver_match.url_name == 'super_admin_operations' %}active{% endif %}">
            التقارير
