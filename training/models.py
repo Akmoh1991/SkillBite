@@ -16,6 +16,8 @@ class Course(models.Model):
         on_delete=models.CASCADE,
         related_name='courses',
         verbose_name='Business',
+        null=True,
+        blank=True,
     )
     title = models.CharField(
         max_length=255,
@@ -62,6 +64,44 @@ class Course(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class CourseBusinessAssignment(models.Model):
+    course = models.ForeignKey(
+        Course,
+        on_delete=models.CASCADE,
+        related_name='business_assignments',
+        verbose_name='Course',
+    )
+    business = models.ForeignKey(
+        'accounts.BusinessTenant',
+        on_delete=models.CASCADE,
+        related_name='assigned_courses',
+        verbose_name='Business',
+    )
+    assigned_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='course_business_assignments',
+        verbose_name='Assigned by',
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Created at',
+    )
+
+    class Meta:
+        verbose_name = 'Course business assignment'
+        verbose_name_plural = 'Course business assignments'
+        ordering = ['course__title', 'business__name', 'id']
+        constraints = [
+            models.UniqueConstraint(fields=['course', 'business'], name='unique_course_business_assignment'),
+        ]
+
+    def __str__(self):
+        return f'{self.course} -> {self.business}'
 
 
 class CourseContentItem(models.Model):

@@ -89,6 +89,14 @@
               <span>{{ course.content_items.count }} عناصر</span>
             </span>
           </div>
+          {% if not course.business_id %}
+            <div class="business-owner-course-meta">
+              <span class="business-owner-course-meta-item">
+                <span class="business-owner-course-meta-icon">◈</span>
+                <span>دورة مركزية من المشرف العام</span>
+              </span>
+            </div>
+          {% endif %}
           <div class="business-owner-course-actions">
             <a class="business-owner-course-link" href="{% url 'business_owner_course_view' course.id %}">
               عرض الدورة

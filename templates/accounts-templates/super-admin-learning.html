@@ -179,8 +179,7 @@
   </div>
   <div class="page-toolbar__actions">
     <a class="page-toolbar__action" href="{% url 'super_admin_learning_course_create_view' %}">إضافة دورة</a>
-    <a class="page-toolbar__action" href="{% url 'super_admin_learning_content_create_view' %}">رفع محتوى</a>
-    <a class="page-toolbar__action secondary" href="{% url 'super_admin_learning_catalog_publish_view' %}">نشر الكتالوج</a>
+    <a class="page-toolbar__action" href="{% url 'super_admin_course_business_assignments' %}">تعيين الشركات</a>
     <a class="page-toolbar__action secondary" href="{% url 'super_admin_exam_templates' %}">قوالب الاختبارات</a>
   </div>
 </section>
@@ -204,7 +203,15 @@
           {% for course in courses %}
             <tr>
               <td><strong>{{ course.title }}</strong></td>
-              <td>{{ course.business.name }}</td>
+              <td>
+                {% if course.business %}
+                  {{ course.business.name }}
+                {% elif course.visible_businesses %}
+                  {{ course.visible_businesses|length }} شركة
+                {% else %}
+                  -
+                {% endif %}
+              </td>
               <td><span class="pill {% if not course.is_active %}muted{% endif %}">{{ course.is_active|yesno:"نشطة,موقوفة" }}</span></td>
               <td>{{ course.content_item_total }}</td>
               <td>{{ course.assignment_total }}</td>

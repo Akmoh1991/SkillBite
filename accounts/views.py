@@ -29,7 +29,7 @@ from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.views.decorators.http import require_POST
 
 from certification.models import ScormCertificate
-from training.models import Course, CourseAssignment, CourseContentItem, SOPChecklist, SOPChecklistAssignmentRule, SOPChecklistCompletion, SOPChecklistItem, SOPChecklistItemCompletion
+from training.models import Course, CourseAssignment, CourseBusinessAssignment, CourseContentItem, SOPChecklist, SOPChecklistAssignmentRule, SOPChecklistCompletion, SOPChecklistItem, SOPChecklistItemCompletion
 from training.models import CourseExamSession, ExamOption, ExamQuestion, ExamTemplate
 
 from .forms import (
@@ -41,7 +41,7 @@ from .forms import (
     SOPChecklistAssignmentRuleForm,
     SOPChecklistForm,
     SuperAdminBusinessCreateForm,
-    SuperAdminCourseCatalogPublishForm,
+    SuperAdminCourseBusinessAssignmentForm,
     SuperAdminCourseContentItemForm,
     SuperAdminCourseCreateForm,
     SuperAdminExamOptionForm,
@@ -182,6 +182,15 @@ def _visible_course_content_items(items):
         ):
             visible_items.append(item)
     return visible_items
+
+
+def _accessible_business_courses_queryset(business):
+    return (
+        Course.objects.filter(
+            Q(business=business) | Q(business_assignments__business=business)
+        )
+        .distinct()
+    )
 
 
 def _publish_legacy_employee_course_catalog(business, created_by=None):
@@ -690,9 +699,16 @@ def _super_admin_user_role_grant_context(form: SuperAdminGrantRoleForm | None = 
 def _super_admin_learning_context():
     courses = list(
         Course.objects.select_related('business', 'created_by')
-        .annotate(content_item_total=Count('content_items'), assignment_total=Count('assignments'))
-        .order_by('business__name', 'title', 'id')
+        .prefetch_related('business_assignments__business')
+        .annotate(
+            content_item_total=Count('content_items', distinct=True),
+            assignment_total=Count('assignments', distinct=True),
+            assigned_business_total=Count('business_assignments', distinct=True),
+        )
+        .order_by('title', 'id')
     )
+    for course in courses:
+        course.visible_businesses = [assignment.business for assignment in course.business_assignments.all()]
     checklists = list(
         SOPChecklist.objects.select_related('business', 'created_by')
         .annotate(item_total=Count('items'), completion_total=Count('completions'))
@@ -715,8 +731,8 @@ def _super_admin_learning_context():
         'exam_template_count': len(exam_templates),
         'exam_session_count': len(exam_sessions),
         'course_form': SuperAdminCourseCreateForm(),
+        'course_business_assignment_form': SuperAdminCourseBusinessAssignmentForm(),
         'course_content_form': SuperAdminCourseContentItemForm(),
-        'catalog_publish_form': SuperAdminCourseCatalogPublishForm(),
         'businesses': BusinessTenant.objects.filter(is_active=True).order_by('name', 'id'),
     }
 
@@ -725,12 +741,22 @@ def _super_admin_learning_course_create_context(form: SuperAdminCourseCreateForm
     return {'course_form': form or SuperAdminCourseCreateForm()}
 
 
+def _super_admin_course_business_assignment_context(form: SuperAdminCourseBusinessAssignmentForm | None = None):
+    courses = list(
+        Course.objects.select_related('business')
+        .prefetch_related('business_assignments__business')
+        .order_by('title', 'id')
+    )
+    for course in courses:
+        course.visible_businesses = [assignment.business for assignment in course.business_assignments.all()]
+    return {
+        'assignment_form': form or SuperAdminCourseBusinessAssignmentForm(),
+        'courses': courses,
+    }
+
+
 def _super_admin_learning_content_create_context(form: SuperAdminCourseContentItemForm | None = None):
     return {'course_content_form': form or SuperAdminCourseContentItemForm()}
-
-
-def _super_admin_learning_catalog_publish_context(form: SuperAdminCourseCatalogPublishForm | None = None):
-    return {'catalog_publish_form': form or SuperAdminCourseCatalogPublishForm()}
 
 
 def _sync_exam_template_total_questions(template: ExamTemplate) -> None:
@@ -842,11 +868,13 @@ def super_admin_course_list_view(request):
     courses = list(
         Course.objects.select_related('business')
         .filter(is_active=True)
+        .prefetch_related('business_assignments__business')
         .prefetch_related(Prefetch('content_items', queryset=CourseContentItem.objects.order_by('order', 'id')))
         .order_by('title', 'id')
     )
     for course in courses:
         _course_card_defaults(course)
+        course.visible_businesses = [assignment.business for assignment in course.business_assignments.all()]
     return render(
         request,
         'accounts-templates/super-admin-course-list.html',
@@ -862,12 +890,14 @@ def super_admin_course_view(request, course_id: int):
         return redirect('home')
     course = get_object_or_404(
         Course.objects.select_related('business').prefetch_related(
+            'business_assignments__business',
             Prefetch('content_items', queryset=CourseContentItem.objects.order_by('order', 'id'))
         ),
         id=course_id,
         is_active=True,
     )
     _course_card_defaults(course)
+    course.visible_businesses = [assignment.business for assignment in course.business_assignments.all()]
     content_items = _visible_course_content_items(course.content_items.all())
     return render(
         request,
@@ -887,17 +917,21 @@ def super_admin_learning_course_create_view(request):
 
 
 @login_required
+def super_admin_course_business_assignments_view(request):
+    if not _super_admin_guard(request):
+        return redirect('home')
+    return render(
+        request,
+        'accounts-templates/super-admin-course-business-assignments.html',
+        _super_admin_course_business_assignment_context(),
+    )
+
+
+@login_required
 def super_admin_learning_content_create_view(request):
     if not _super_admin_guard(request):
         return redirect('home')
     return render(request, 'accounts-templates/super-admin-learning-content-create.html', _super_admin_learning_content_create_context())
-
-
-@login_required
-def super_admin_learning_catalog_publish_view(request):
-    if not _super_admin_guard(request):
-        return redirect('home')
-    return render(request, 'accounts-templates/super-admin-learning-catalog-publish.html', _super_admin_learning_catalog_publish_context())
 
 
 @login_required
@@ -1051,17 +1085,85 @@ def super_admin_exam_grading_view(request):
 
 @login_required
 @require_POST
+@transaction.atomic
 def super_admin_course_create_action(request):
     if not _super_admin_guard(request):
         return redirect('home')
+    if not request.FILES.get('content_video_file'):
+        messages.error(request, 'ملف الفيديو: هذا الحقل مطلوب.')
+        return render(
+            request,
+            'accounts-templates/super-admin-learning-course-create.html',
+            _super_admin_learning_course_create_context(SuperAdminCourseCreateForm(request.POST)),
+        )
     form = SuperAdminCourseCreateForm(request.POST)
     if not form.is_valid():
-        messages.error(request, form.errors.as_text())
+        _flash_form_errors(request, form, {
+            'title': 'عنوان الدورة',
+            'description': 'الوصف',
+            'estimated_minutes': 'المدة التقديرية بالدقائق',
+            'is_active': 'الدورة نشطة',
+        })
         return render(request, 'accounts-templates/super-admin-learning-course-create.html', _super_admin_learning_course_create_context(form))
+
+    content_title = (request.POST.get('content_title') or '').strip()
+    content_body = (request.POST.get('content_body') or '').strip()
+    content_material_url = (request.POST.get('content_material_url') or '').strip()
+    content_order = (request.POST.get('content_order') or '').strip() or '1'
+    content_type = (request.POST.get('content_type') or CourseContentItem.ContentType.LESSON).strip()
+    has_initial_content = any([
+        content_title,
+        content_body,
+        content_material_url,
+        request.FILES.get('content_video_file'),
+        request.FILES.get('content_pdf_file'),
+    ])
+
+    if request.FILES.get('content_video_file') and not content_title:
+        content_title = (request.POST.get('title') or '').strip()
+
     course = form.save(commit=False)
+    course.business = None
     course.created_by = request.user
     course.save()
-    messages.success(request, f'Course "{course.title}" created for {course.business.name}.')
+
+    if has_initial_content:
+        content_data = request.POST.copy()
+        content_data['course'] = str(course.id)
+        content_data['title'] = content_title
+        content_data['body'] = content_body
+        content_data['material_url'] = content_material_url
+        content_data['content_type'] = content_type
+        content_data['order'] = content_order
+        content_files = request.FILES.copy()
+        if request.FILES.get('content_video_file'):
+            content_files['video_file'] = request.FILES['content_video_file']
+        if request.FILES.get('content_pdf_file'):
+            content_files['pdf_file'] = request.FILES['content_pdf_file']
+        content_form = SuperAdminCourseContentItemForm(content_data, content_files)
+        if content_form.is_valid():
+            content_item = content_form.save(commit=False)
+            content_item.course = course
+            content_item.save()
+        else:
+            _flash_form_errors(request, content_form, {
+                'course': 'الدورة',
+                'content_type': 'نوع المحتوى',
+                'title': 'عنوان المحتوى',
+                'body': 'الوصف',
+                'material_url': 'رابط المادة',
+                'video_file': 'ملف الفيديو',
+                'pdf_file': 'ملف PDF',
+                'order': 'الترتيب',
+            })
+            transaction.set_rollback(True)
+            return render(
+                request,
+                'accounts-templates/super-admin-learning-course-create.html',
+                _super_admin_learning_course_create_context(form),
+            )
+
+    messages.success(request, f'تم إنشاء الدورة "{course.title}" بنجاح.')
     return redirect('super_admin_learning')
 
 
@@ -1082,17 +1184,31 @@ def super_admin_course_content_create_action(request):
 
 @login_required
 @require_POST
-def super_admin_publish_employee_catalog_action(request):
+@transaction.atomic
+def super_admin_course_business_assignments_action(request):
     if not _super_admin_guard(request):
         return redirect('home')
-    form = SuperAdminCourseCatalogPublishForm(request.POST)
+    form = SuperAdminCourseBusinessAssignmentForm(request.POST)
     if not form.is_valid():
-        messages.error(request, form.errors.as_text())
-        return render(request, 'accounts-templates/super-admin-learning-catalog-publish.html', _super_admin_learning_catalog_publish_context(form))
-    business = form.cleaned_data['business']
-    published_courses = _publish_legacy_employee_course_catalog(business, created_by=request.user)
-    messages.success(request, f'Published {len(published_courses)} employee courses to {business.name}.')
-    return redirect('super_admin_learning')
+        _flash_form_errors(request, form, {
+            'course': 'الدورة',
+            'businesses': 'الشركات',
+        })
+        return render(
+            request,
+            'accounts-templates/super-admin-course-business-assignments.html',
+            _super_admin_course_business_assignment_context(form),
+        )
+
+    course = form.cleaned_data['course']
+    businesses = list(form.cleaned_data['businesses'])
+    CourseBusinessAssignment.objects.filter(course=course).delete()
+    CourseBusinessAssignment.objects.bulk_create([
+        CourseBusinessAssignment(course=course, business=business, assigned_by=request.user)
+        for business in businesses
+    ])
+    messages.success(request, f'تم تحديث الشركات المسموح لها بمشاهدة الدورة "{course.title}".')
+    return redirect('super_admin_course_business_assignments')
 
 
 @login_required
@@ -1469,8 +1585,9 @@ def business_owner_course_list_view(request):
     business = _get_owned_business(request.user)
     _ensure_employee_courses_are_backed_by_db(business)
     courses = list(
-        business.courses
+        _accessible_business_courses_queryset(business)
         .filter(is_active=True)
+        .select_related('business')
         .prefetch_related(Prefetch('content_items', queryset=CourseContentItem.objects.order_by('order', 'id')))
         .order_by('title', 'id')
     )
@@ -1492,7 +1609,7 @@ def business_owner_course_view(request, course_id: int):
         return redirect('home')
     business = _get_owned_business(request.user)
     course = get_object_or_404(
-        business.courses.prefetch_related(
+        _accessible_business_courses_queryset(business).prefetch_related(
             Prefetch('content_items', queryset=CourseContentItem.objects.order_by('order', 'id'))
         ),
         id=course_id,
@@ -1522,7 +1639,7 @@ def business_owner_course_assign_employees_action(request, course_id: int):
     if not _business_owner_guard(request):
         return redirect('home')
     business = _get_owned_business(request.user)
-    course = get_object_or_404(business.courses.filter(is_active=True), id=course_id)
+    course = get_object_or_404(_accessible_business_courses_queryset(business).filter(is_active=True), id=course_id)
     employees = list(
         EmployeeProfile.objects.select_related('user', 'job_title').filter(
             business=business,

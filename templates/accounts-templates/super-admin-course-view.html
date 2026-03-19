@@ -28,7 +28,18 @@
     <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; margin-bottom:18px;">
       <div>
         <h2 style="margin-bottom:6px; color:#0f766e;">محتوى الدورة</h2>
-        <p class="muted" style="margin:0;">الشركة: {{ course.business.name }}</p>
+        <p class="muted" style="margin:0;">
+          الشركة:
+          {% if course.business %}
+            {{ course.business.name }}
+          {% elif course.visible_businesses %}
+            {% for business in course.visible_businesses %}
+              {{ business.name }}{% if not forloop.last %}، {% endif %}
+            {% endfor %}
+          {% else %}
+            دورة عامة
+          {% endif %}
+        </p>
       </div>
       <div class="course-view-actions">
         <a class="btn" href="{% url 'super_admin_course_list' %}" style="text-decoration:none; display:inline-flex; align-items:center;">

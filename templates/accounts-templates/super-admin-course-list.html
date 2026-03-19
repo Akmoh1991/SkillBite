@@ -92,7 +92,15 @@
           <div class="business-owner-course-meta">
             <span class="business-owner-course-meta-item">
               <span class="business-owner-course-meta-icon">◈</span>
-              <span>{{ course.business.name }}</span>
+              <span>
+                {% if course.business %}
+                  {{ course.business.name }}
+                {% elif course.visible_businesses %}
+                  {{ course.visible_businesses|length }} شركة
+                {% else %}
+                  دورة عامة
+                {% endif %}
+              </span>
             </span>
           </div>
           <div class="business-owner-course-actions">

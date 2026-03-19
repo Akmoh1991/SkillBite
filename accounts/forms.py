@@ -7,6 +7,7 @@ from django.core.validators import RegexValidator
 from .models import BusinessTenant, JobTitle
 from training.models import (
     Course,
+    CourseBusinessAssignment,
     CourseContentItem,
     CourseExamSession,
     ExamOption,
@@ -213,24 +214,23 @@ class SuperAdminGrantRoleForm(forms.Form):
 
 
 class SuperAdminCourseCreateForm(forms.ModelForm):
-    business = forms.ModelChoiceField(
-        queryset=BusinessTenant.objects.none(),
-        empty_label='Select business',
-    )
-
     class Meta:
         model = Course
-        fields = ['business', 'title', 'description', 'estimated_minutes', 'is_active']
+        fields = ['title', 'description', 'estimated_minutes', 'is_active']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['business'].queryset = BusinessTenant.objects.filter(is_active=True).order_by('name', 'id')
+        self.fields['title'].label = 'عنوان الدورة'
+        self.fields['description'].label = 'الوصف'
+        self.fields['estimated_minutes'].label = 'المدة التقديرية بالدقائق'
+        self.fields['is_active'].label = 'الدورة نشطة'
 
 
 class SuperAdminCourseContentItemForm(forms.ModelForm):
     business = forms.ModelChoiceField(
         queryset=BusinessTenant.objects.none(),
         empty_label='Select business',
+        required=False,
     )
 
     class Meta:
@@ -254,12 +254,14 @@ class SuperAdminCourseContentItemForm(forms.ModelForm):
 
         if business:
             self.fields['course'].queryset = Course.objects.filter(business=business).order_by('title', 'id')
+        else:
+            self.fields['course'].queryset = Course.objects.filter(business__isnull=True).order_by('title', 'id')
 
     def clean(self):
         cleaned_data = super().clean()
         business = cleaned_data.get('business')
         course = cleaned_data.get('course')
-        if business and course and course.business_id != business.id:
+        if business and course and course.business_id and course.business_id != business.id:
             self.add_error('course', 'Select a course from the same business.')
         return cleaned_data
 
@@ -277,6 +279,25 @@ class SuperAdminCourseCatalogPublishForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['business'].queryset = BusinessTenant.objects.filter(is_active=True).order_by('name', 'id')
+
+
+class SuperAdminCourseBusinessAssignmentForm(forms.Form):
+    course = forms.ModelChoiceField(
+        queryset=Course.objects.none(),
+        empty_label='اختر الدورة',
+        label='الدورة',
+    )
+    businesses = forms.ModelMultipleChoiceField(
+        queryset=BusinessTenant.objects.none(),
+        required=False,
+        label='الشركات',
+        widget=forms.SelectMultiple,
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['course'].queryset = Course.objects.order_by('title', 'id')
+        self.fields['businesses'].queryset = BusinessTenant.objects.filter(is_active=True).order_by('name', 'id')
 
 
 class SuperAdminExamTemplateForm(forms.ModelForm):
