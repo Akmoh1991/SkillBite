@@ -1053,7 +1053,7 @@ class SuperAdminFlowTests(TestCase):
         self.assertEqual(employee_response.status_code, 200)
         self.assertNotContains(employee_response, self.course.title)
 
-    def test_super_admin_can_create_exam_template_and_assign_it_to_multiple_courses(self):
+    def test_super_admin_can_create_exam_template_and_assign_it_to_single_course(self):
         second_course = Course.objects.create(
             business=self.business,
             title='Kitchen Hygiene',
@@ -1064,8 +1064,7 @@ class SuperAdminFlowTests(TestCase):
         create_response = self.client.post(
             reverse('super_admin_exam_template_create'),
             {
-                'business': self.business.id,
-                'courses': [self.course.id, second_course.id],
+                'primary_course': self.course.id,
                 'name': 'Food Safety Final',
                 'duration_minutes': 25,
                 'passing_score_percent': 80,
@@ -1080,12 +1079,12 @@ class SuperAdminFlowTests(TestCase):
         self.course.refresh_from_db()
         second_course.refresh_from_db()
         self.assertEqual(self.course.exam_template_id, template.id)
-        self.assertEqual(second_course.exam_template_id, template.id)
+        self.assertIsNone(second_course.exam_template_id)
 
         templates_page = self.client.get(reverse('super_admin_exam_templates'))
         self.assertEqual(templates_page.status_code, 200)
         self.assertContains(templates_page, 'Food Safety Final')
-        self.assertContains(templates_page, '2')
+        self.assertContains(templates_page, '1')
 
     def test_super_admin_can_create_question_with_multiple_options(self):
         template = ExamTemplate.objects.create(

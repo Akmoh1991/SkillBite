@@ -949,21 +949,18 @@ def super_admin_exam_template_editor_view(request, template_id: int | None = Non
         ExamTemplate.objects.select_related('business', 'created_by').prefetch_related('questions__options', 'courses'),
         id=template_id,
     ) if template_id is not None else None
-    initial = {}
-    if template_obj and template_obj.business_id:
-        initial['business'] = template_obj.business
-    form = SuperAdminExamTemplateForm(request.POST or None, instance=template_obj, initial=initial)
+    form = SuperAdminExamTemplateForm(request.POST or None, instance=template_obj)
     if request.method == 'POST':
         if form.is_valid():
             saved_template = form.save(commit=False)
             saved_template.created_by = template_obj.created_by if template_obj else request.user
+            saved_template.business = form.cleaned_data.get('business')
             saved_template.save()
-            selected_courses = list(form.cleaned_data.get('courses') or [])
-            Course.objects.filter(exam_template=saved_template).exclude(id__in=[course.id for course in selected_courses]).update(exam_template=None)
-            for selected_course in selected_courses:
-                if selected_course.exam_template_id != saved_template.id:
-                    selected_course.exam_template = saved_template
-                    selected_course.save(update_fields=['exam_template'])
+            selected_course = form.cleaned_data.get('primary_course')
+            Course.objects.filter(exam_template=saved_template).exclude(id=selected_course.id if selected_course else None).update(exam_template=None)
+            if selected_course and selected_course.exam_template_id != saved_template.id:
+                selected_course.exam_template = saved_template
+                selected_course.save(update_fields=['exam_template'])
             _sync_exam_template_total_questions(saved_template)
             messages.success(request, f'تم حفظ قالب الاختبار "{saved_template.name}".')
             return redirect('super_admin_exam_template_editor', template_id=saved_template.id)

@@ -301,23 +301,15 @@ class SuperAdminCourseBusinessAssignmentForm(forms.Form):
 
 
 class SuperAdminExamTemplateForm(forms.ModelForm):
-    business = forms.ModelChoiceField(
-        queryset=BusinessTenant.objects.none(),
-        empty_label='اختر الشركة',
-        label='الشركة',
-    )
-    courses = forms.ModelMultipleChoiceField(
+    primary_course = forms.ModelChoiceField(
         queryset=Course.objects.none(),
-        required=False,
-        label='الدورات المرتبطة',
-        widget=forms.SelectMultiple,
+        empty_label='اختر الدورة',
+        label='الدورة',
     )
 
     class Meta:
         model = ExamTemplate
         fields = [
-            'business',
-            'courses',
             'name',
             'duration_minutes',
             'passing_score_percent',
@@ -328,9 +320,9 @@ class SuperAdminExamTemplateForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        business_queryset = BusinessTenant.objects.filter(is_active=True).order_by('name', 'id')
-        self.fields['business'].queryset = business_queryset
-        self.fields['courses'].queryset = Course.objects.none()
+        course_queryset = Course.objects.filter(is_active=True, business__isnull=False).select_related('business').order_by('title', 'id')
+        self.fields['primary_course'].queryset = course_queryset
+        self.fields['primary_course'].label = 'الدورة'
         self.fields['name'].label = 'اسم قالب الاختبار'
         self.fields['duration_minutes'].label = 'مدة الاختبار بالدقائق'
         self.fields['passing_score_percent'].label = 'نسبة النجاح %'
@@ -338,30 +330,25 @@ class SuperAdminExamTemplateForm(forms.ModelForm):
         self.fields['show_result_after_submit'].label = 'إظهار النتيجة بعد التسليم'
         self.fields['shuffle_questions'].label = 'خلط الأسئلة'
 
-        business = None
+        primary_course = None
         if self.is_bound:
-            business_id = self.data.get(self.add_prefix('business'))
-            if business_id:
-                business = business_queryset.filter(id=business_id).first()
+            primary_course_id = self.data.get(self.add_prefix('primary_course'))
+            if primary_course_id:
+                primary_course = course_queryset.filter(id=primary_course_id).first()
         else:
-            business = self.initial.get('business') or getattr(self.instance, 'business', None)
-
-        if business:
-            self.fields['courses'].queryset = Course.objects.filter(business=business).order_by('title', 'id')
-
-        if self.instance.pk:
-            assigned_courses = self.instance.courses.order_by('id')
-            if assigned_courses and not self.is_bound:
-                self.fields['courses'].initial = assigned_courses
+            assigned_courses = self.instance.courses.order_by('title', 'id') if self.instance.pk else Course.objects.none()
+            if assigned_courses:
+                primary_course = assigned_courses.first()
+                self.fields['primary_course'].initial = primary_course
 
     def clean(self):
         cleaned_data = super().clean()
-        business = cleaned_data.get('business')
-        courses = cleaned_data.get('courses') or []
-        for course in courses:
-            if business and course.business_id != business.id:
-                self.add_error('courses', 'اختر دورات من نفس الشركة.')
-                break
+        primary_course = cleaned_data.get('primary_course')
+        if not primary_course:
+            self.add_error('primary_course', 'اختر دورة واحدة على الأقل.')
+            return cleaned_data
+
+        cleaned_data['business'] = primary_course.business
         return cleaned_data
 
 

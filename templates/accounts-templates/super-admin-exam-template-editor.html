@@ -56,11 +56,6 @@
   min-height:54px;
 }
 
-.field select[multiple]{
-  min-height:160px;
-  padding:10px 12px;
-}
-
 .field textarea{
   min-height:220px;
   resize:vertical;
@@ -118,12 +113,43 @@
   gap:12px;
   margin-top:22px;
   flex-wrap:wrap;
+  justify-content:flex-start;
 }
 
 .btn{
-  min-width:120px;
+  min-width:140px;
+  height:44px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:0 20px;
   border-radius:999px;
   font-weight:800;
+  font-size:15px;
+}
+
+.btn-danger{
+  background:#c86408;
+  color:#fff;
+  box-shadow:0 12px 24px rgba(200, 100, 8, 0.18);
+}
+
+.btn-secondary-strong{
+  background:#334155;
+  color:#fff;
+  box-shadow:0 12px 24px rgba(51, 65, 85, 0.18);
+}
+
+.toolbar-back{
+  background:#0f766e;
+  color:#fff;
+  box-shadow:0 14px 28px rgba(15, 118, 110, 0.18);
+}
+
+.toolbar-back:hover,
+.btn-secondary-strong:hover,
+.btn-danger:hover{
+  filter:brightness(0.98);
 }
 
 .summary-grid{
@@ -187,6 +213,10 @@
     grid-template-columns:1fr;
   }
 
+  .form-actions{
+    justify-content:stretch;
+  }
+
   .form-actions .btn{
     width:100%;
   }
@@ -198,7 +228,7 @@
     <h2 class="page-title--system">{% if template_obj %}تعديل قالب الاختبار{% else %}قالب اختبار جديد{% endif %}</h2>
   </div>
   <div class="page-toolbar__actions">
-    <a class="page-toolbar__action secondary" href="{% url 'super_admin_exam_templates' %}">العودة للقوالب</a>
+    <a class="page-toolbar__action toolbar-back" href="{% url 'super_admin_exam_templates' %}">العودة للقوالب</a>
     {% if template_obj %}
       <a class="page-toolbar__action" href="{% url 'super_admin_exam_question_create' template_obj.id %}">+ إضافة سؤال</a>
     {% endif %}
@@ -227,11 +257,10 @@
 
         <div class="form-grid">
           <div class="field">
-            <label for="{{ template_form.business.id_for_label }}">{{ template_form.business.label }}</label>
-            {{ template_form.business }}
-            {% if template_form.business.help_text %}<p class="field-help">{{ template_form.business.help_text }}</p>{% endif %}
-            {% if template_form.business.errors %}
-              <ul class="field-errors">{% for error in template_form.business.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            <label for="{{ template_form.primary_course.id_for_label }}">{{ template_form.primary_course.label }}</label>
+            {{ template_form.primary_course }}
+            {% if template_form.primary_course.errors %}
+              <ul class="field-errors">{% for error in template_form.primary_course.errors %}<li>{{ error }}</li>{% endfor %}</ul>
             {% endif %}
           </div>
 
@@ -240,14 +269,6 @@
             {{ template_form.name }}
             {% if template_form.name.errors %}
               <ul class="field-errors">{% for error in template_form.name.errors %}<li>{{ error }}</li>{% endfor %}</ul>
-            {% endif %}
-          </div>
-
-          <div class="field field--full">
-            <label for="{{ template_form.courses.id_for_label }}">{{ template_form.courses.label }}</label>
-            {{ template_form.courses }}
-            {% if template_form.courses.errors %}
-              <ul class="field-errors">{% for error in template_form.courses.errors %}<li>{{ error }}</li>{% endfor %}</ul>
             {% endif %}
           </div>
 
@@ -289,7 +310,7 @@
 
         <div class="form-actions">
           <button class="btn" type="submit">حفظ القالب</button>
-          <a class="btn secondary" href="{% url 'super_admin_exam_templates' %}" style="text-decoration:none;">إلغاء</a>
+          <a class="btn btn-danger" href="{% url 'super_admin_exam_templates' %}" style="text-decoration:none;">إلغاء</a>
         </div>
       </form>
     </div>
@@ -311,7 +332,7 @@
               <strong class="summary-stat">{{ template_obj.total_questions|default:0 }}</strong>
             </div>
             <div class="summary-item">
-              <div class="meta">الدورات المرتبطة</div>
+              <div class="meta">الدورة المرتبطة</div>
               {% for course in assigned_courses %}
                 <div style="margin-top:8px;"><strong>{{ course.title }}</strong><div class="meta">{{ course.business.name }}</div></div>
               {% empty %}
@@ -334,7 +355,7 @@
               <strong>{{ template_obj.name }}</strong>
             </div>
             <div class="summary-item">
-              <div class="meta">الشركة</div>
+              <div class="meta">الشركة المرتبطة</div>
               <strong>{{ template_obj.business.name|default:"-" }}</strong>
             </div>
             <div class="summary-item">
@@ -370,7 +391,7 @@
                   <td>{{ question.options.count }}</td>
                   <td>
                     <div class="table-actions">
-                      <a class="btn secondary" href="{% url 'super_admin_exam_question_editor' template_obj.id question.id %}" style="text-decoration:none;">تعديل</a>
+                      <a class="btn btn-secondary-strong" href="{% url 'super_admin_exam_question_editor' template_obj.id question.id %}" style="text-decoration:none;">تعديل</a>
                       <form method="post" action="{% url 'super_admin_exam_question_delete' template_obj.id question.id %}">
                         {% csrf_token %}
                         <button class="btn warn" type="submit">حذف</button>
