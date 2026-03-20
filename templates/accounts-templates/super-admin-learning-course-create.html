@@ -41,6 +41,7 @@ body{
   font-weight:800;
   white-space:nowrap;
   box-shadow:0 14px 28px rgba(15, 118, 110, 0.18);
+  transition:background-color .2s ease, box-shadow .2s ease, transform .2s ease;
 }
 
 .course-create-card{
@@ -117,6 +118,7 @@ body{
   border:1px solid #cbd5e1;
   border-radius:18px;
   background:#fff;
+  transition:border-color .2s ease, box-shadow .2s ease, background-color .2s ease;
 }
 
 .file-upload__input{
@@ -145,6 +147,7 @@ body{
   font-size:15px;
   font-weight:800;
   cursor:pointer;
+  transition:background-color .2s ease, border-color .2s ease, box-shadow .2s ease, transform .2s ease;
 }
 
 .file-upload__name{
@@ -163,6 +166,22 @@ body{
   font-size:15px;
   font-weight:700;
   background:#fff;
+}
+
+.page-toolbar__back:hover,
+.page-toolbar__back:focus-visible,
+.file-upload:hover .file-upload__button,
+.file-upload__input:focus-visible + .file-upload__button{
+  background:#dcfce7;
+  border-color:#4ade80;
+  box-shadow:0 12px 24px rgba(134, 239, 172, .24);
+  transform:translateY(-1px);
+}
+
+.file-upload:hover{
+  border-color:#86efac;
+  box-shadow:0 14px 28px rgba(134, 239, 172, .16);
+  background:#fafffc;
 }
 
 .inline-check{
@@ -192,6 +211,12 @@ body{
   display:inline-flex;
   align-items:center;
   justify-content:center;
+}
+
+.btn.secondary:hover,
+.btn.secondary:focus-visible{
+  background:#b45309;
+  box-shadow:0 12px 24px rgba(200, 100, 8, .24);
 }
 
 @media (max-width: 900px){

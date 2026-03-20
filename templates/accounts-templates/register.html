@@ -3,29 +3,42 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>إنشاء حساب</title>
 
     <style>
 @import url('/static/branding/branding.css');
+        :root {
+            --auth-green: #0f766e;
+            --auth-green-light: #11a36b;
+            --auth-border: #dbe4ef;
+            --auth-muted: #617182;
+            --auth-bg: linear-gradient(180deg, #eef6f2 0%, #f7faf9 100%);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             margin: 0;
             font-family: "SE", "Segoe UI", Tahoma, Arial, sans-serif;
-            background: #ffffff;
+            background: var(--auth-bg);
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             padding: 24px 16px;
-            box-sizing: border-box;
         }
 
         .register-container {
             background: #ffffff;
             width: 100%;
-            max-width: 480px;
-            padding: 40px 32px;
-            border-radius: 16px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            max-width: 560px;
+            padding: 40px 34px;
+            border-radius: 28px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 24px 56px rgba(15, 23, 42, 0.12);
             margin: 24px 0;
         }
 
@@ -37,18 +50,28 @@
 
         .logo {
             text-align: center;
-            margin-bottom: 24px;
+            margin-bottom: 22px;
         }
 
         .logo img {
-            height: 74px;
+            height: 78px;
         }
 
         h1 {
             text-align: center;
-            margin-bottom: 32px;
-            color: #00B476;
-            font-size: 26px;
+            margin: 0 0 10px;
+            color: var(--auth-green);
+            font-size: 34px;
+            font-weight: 800;
+            line-height: 1.15;
+        }
+
+        .subtitle {
+            margin: 0 0 28px;
+            text-align: center;
+            color: var(--auth-muted);
+            font-size: 15px;
+            line-height: 1.7;
         }
 
         .form-group {
@@ -57,46 +80,50 @@
 
         label {
             display: block;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
             font-size: 14px;
-            color: #333;
+            font-weight: 700;
+            color: #17212f;
         }
 
         input, select {
             width: 100%;
-            padding: 12px 14px;
-            border-radius: 10px;
-            border: 1px solid #ccc;
+            padding: 12px 16px;
+            border-radius: 16px;
+            border: 1px solid var(--auth-border);
             font-size: 14px;
             transition: border 0.3s, box-shadow 0.3s;
             background: #fff;
-            box-sizing: border-box;
-            min-height: 46px;
+            min-height: 52px;
             line-height: 1.4;
+            color: #17212f;
         }
 
         input:focus, select:focus {
             outline: none;
-            border-color: #00B476;
-            box-shadow: 0 0 0 3px rgba(0,180,118,0.20);
+            border-color: #86efac;
+            box-shadow: 0 0 0 4px rgba(134,239,172,0.20);
         }
 
         .btn {
             width: 100%;
-            padding: 14px;
+            min-height: 52px;
+            padding: 14px 18px;
             border: none;
-            border-radius: 12px;
-            background: #00B476;
+            border-radius: 999px;
+            background: var(--auth-green);
             color: #fff;
             font-size: 15px;
-            font-weight: bold;
+            font-weight: 800;
             cursor: pointer;
-            transition: background 0.3s, transform 0.2s;
+            transition: background 0.3s, transform 0.2s, box-shadow 0.2s;
             margin-top: 10px;
+            box-shadow: 0 14px 28px rgba(15, 118, 110, 0.18);
         }
 
         .btn:hover {
-            background: #009964;
+            background: var(--auth-green-light);
+            box-shadow: 0 16px 30px rgba(134,239,172,0.28);
             transform: translateY(-1px);
         }
 
@@ -107,20 +134,28 @@
         .messages p {
             background: #e7f7ee;
             color: #0f5132;
-            padding: 10px 14px;
-            border-radius: 8px;
+            padding: 12px 14px;
+            border-radius: 14px;
             font-size: 14px;
             margin: 0;
         }
 
         .messages p.error {
             background: #fff1f2;
+            border: 1px solid #fecdd3;
             color: #9f1239;
         }
 
         .messages p.warning {
             background: #fff7ed;
+            border: 1px solid #fed7aa;
             color: #9a3412;
+        }
+
+        .field-error {
+            margin-top: 6px;
+            color: #9f1239;
+            font-size: 13px;
         }
 
         .footer {
@@ -130,9 +165,9 @@
         }
 
         .footer a {
-            color: #00B476;
+            color: var(--auth-green);
             text-decoration: none;
-            font-weight: bold;
+            font-weight: 800;
         }
 
         .footer a:hover {
@@ -149,6 +184,7 @@
     </div>
 
     <h1>إنشاء حساب جديد</h1>
+    <p class="subtitle">انشئ حسابك لبدء إدارة الدورات والمهام داخل SkillBite.</p>
 
     {% if messages %}
         <div class="messages">
@@ -158,13 +194,13 @@
         </div>
     {% endif %}
 
-        {% if form.non_field_errors %}
-            <div class="messages">
-                {% for err in form.non_field_errors %}
-                    <p style="background:#fff1f2; color:#9f1239;">{{ err }}</p>
-                {% endfor %}
-            </div>
-        {% endif %}
+    {% if form.non_field_errors %}
+        <div class="messages">
+            {% for err in form.non_field_errors %}
+                <p class="error">{{ err }}</p>
+            {% endfor %}
+        </div>
+    {% endif %}
 
     <form method="post" novalidate>
         {% csrf_token %}
@@ -174,15 +210,15 @@
             <label>اسم المستخدم</label>
             {{ form.username }}
             {% if form.username.errors %}
-                <div style="margin-top:6px; color:#9f1239; font-size:13px;">{{ form.username.errors|striptags }}</div>
+                <div class="field-error">{{ form.username.errors|striptags }}</div>
             {% endif %}
         </div>
 
         <div class="form-group">
-            <label>البريد الإلكتروني </label>
+            <label>البريد الإلكتروني</label>
             {{ form.email }}
             {% if form.email.errors %}
-                <div style="margin-top:6px; color:#9f1239; font-size:13px;">{{ form.email.errors|striptags }}</div>
+                <div class="field-error">{{ form.email.errors|striptags }}</div>
             {% endif %}
         </div>
 
@@ -190,7 +226,7 @@
             <label>الاسم الكامل</label>
             {{ form.full_name_en }}
             {% if form.full_name_en.errors %}
-                <div style="margin-top:6px; color:#9f1239; font-size:13px;">{{ form.full_name_en.errors|striptags }}</div>
+                <div class="field-error">{{ form.full_name_en.errors|striptags }}</div>
             {% endif %}
         </div>
 
@@ -198,7 +234,7 @@
             <label>كلمة المرور</label>
             {{ form.password }}
             {% if form.password.errors %}
-                <div style="margin-top:6px; color:#9f1239; font-size:13px;">{{ form.password.errors|striptags }}</div>
+                <div class="field-error">{{ form.password.errors|striptags }}</div>
             {% endif %}
         </div>
 
@@ -206,7 +242,7 @@
             <label>اسم الشركة</label>
             {{ form.company_name }}
             {% if form.company_name.errors %}
-                <div style="margin-top:6px; color:#9f1239; font-size:13px;">{{ form.company_name.errors|striptags }}</div>
+                <div class="field-error">{{ form.company_name.errors|striptags }}</div>
             {% endif %}
         </div>
 
@@ -214,7 +250,7 @@
             <label>المنطقة</label>
             {{ form.region }}
             {% if form.region.errors %}
-                <div style="margin-top:6px; color:#9f1239; font-size:13px;">{{ form.region.errors|striptags }}</div>
+                <div class="field-error">{{ form.region.errors|striptags }}</div>
             {% endif %}
         </div>
 
@@ -222,7 +258,7 @@
             <label>رقم الجوال</label>
             {{ form.phone_number }}
             {% if form.phone_number.errors %}
-                <div style="margin-top:6px; color:#9f1239; font-size:13px;">{{ form.phone_number.errors|striptags }}</div>
+                <div class="field-error">{{ form.phone_number.errors|striptags }}</div>
             {% endif %}
         </div>
 
