@@ -2077,7 +2077,18 @@ def employee_course_view(request, assignment_id: int):
         assignment.status = CourseAssignment.Status.IN_PROGRESS
         assignment.save(update_fields=['status'])
     content_items = _visible_course_content_items(assignment.course.content_items.all())
-    return render(request, 'accounts-templates/employee-course-view.html', {'employee_profile': employee_profile, 'business': employee_profile.business, 'assignment': assignment, 'course': assignment.course, 'content_items': content_items})
+    return render(
+        request,
+        'accounts-templates/employee-course-view.html',
+        {
+            'employee_profile': employee_profile,
+            'business': employee_profile.business,
+            'assignment': assignment,
+            'course': assignment.course,
+            'content_items': content_items,
+            'exam_template': assignment.course.exam_template,
+        },
+    )
 
 
 @login_required

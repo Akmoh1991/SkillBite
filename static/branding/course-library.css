@@ -1,0 +1,345 @@
+.business-owner-course-list-page,
+.employee-courses-page {
+  --course-library-brand-green: #0b8a72;
+  --course-library-brand-green-dark: #0a6f5d;
+  display: grid;
+  gap: 22px;
+}
+
+.business-owner-course-list-page {
+  --course-library-title-size: 28px;
+  --course-library-title-line: 1.2;
+}
+
+.business-owner-course-list-page.course-list-page--system {
+  --course-library-title-size: 34px;
+  --course-library-title-line: 1.15;
+}
+
+.business-owner-course-list-toolbar,
+.employee-courses-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.business-owner-course-list-title {
+  margin: 0;
+  font-size: var(--course-library-title-size);
+  line-height: var(--course-library-title-line);
+  color: #0f766e;
+  font-weight: 800;
+}
+
+.employee-courses-toolbar-title {
+  margin: 0;
+  font-size: 28px;
+  line-height: 1.2;
+  color: var(--course-library-brand-green);
+  font-weight: 800;
+}
+
+.business-owner-course-list-actions,
+.employee-courses-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.business-owner-course-list-search-wrap,
+.employee-courses-search-wrap {
+  min-width: 260px;
+  height: 42px;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  gap: 10px;
+}
+
+.employee-courses-filter {
+  min-width: 170px;
+  height: 42px;
+  padding: 0 18px;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  background: #fff;
+  color: #111827;
+  font: inherit;
+}
+
+.business-owner-course-list-search,
+.employee-courses-search {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: #111827;
+  font: inherit;
+}
+
+.business-owner-course-list-search::placeholder,
+.employee-courses-search::placeholder {
+  color: #c0c7d1;
+}
+
+.business-owner-course-list-search-icon,
+.employee-courses-search-icon {
+  color: #6b7280;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.business-owner-course-list-grid,
+.employee-courses-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.business-owner-course-card,
+.employee-course-card {
+  background: #fff;
+  border: 1px solid #e6ebf2;
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 1px 0 rgba(15, 23, 42, 0.02);
+  display: grid;
+  gap: 18px;
+}
+
+.business-owner-course-card.is-hidden,
+.employee-course-card.employee-course-hidden {
+  display: none;
+}
+
+.course-library-card--full {
+  grid-column: 1 / -1;
+}
+
+.business-owner-course-image,
+.employee-course-image {
+  width: 100%;
+  height: 170px;
+  border-radius: 14px;
+  object-fit: cover;
+  display: block;
+  background: #e5e7eb;
+}
+
+.business-owner-course-content,
+.employee-course-content {
+  display: grid;
+  gap: 10px;
+}
+
+.business-owner-course-name,
+.employee-course-title {
+  margin: 0;
+  font-size: 20px;
+  line-height: 1.25;
+  color: var(--course-library-brand-green-dark);
+  font-weight: 800;
+}
+
+.business-owner-course-description,
+.employee-course-description {
+  margin: 0;
+  color: #6b7280;
+  font-size: 15px;
+  line-height: 1.6;
+  min-height: 72px;
+}
+
+.business-owner-course-meta,
+.employee-course-meta {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  color: #7b8794;
+  font-size: 14px;
+}
+
+.business-owner-course-meta-item,
+.employee-course-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.business-owner-course-meta-icon,
+.employee-course-meta-icon {
+  width: 16px;
+  text-align: center;
+  opacity: 0.8;
+}
+
+.business-owner-course-actions,
+.employee-course-actions {
+  display: grid;
+  gap: 10px;
+}
+
+.business-owner-course-link,
+.employee-course-link {
+  min-height: 56px;
+  border-radius: 999px;
+  border: 1px solid #99f6c8;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  color: var(--course-library-brand-green-dark);
+  font-size: 16px;
+  font-weight: 800;
+  background: #ecfdf5;
+}
+
+.business-owner-course-link.secondary-link,
+.employee-course-link.secondary-link {
+  min-height: 48px;
+  font-size: 15px;
+}
+
+.business-owner-course-empty,
+.employee-course-empty {
+  display: none;
+  background: #fff;
+  border: 1px solid #e6ebf2;
+  border-radius: 18px;
+  padding: 24px;
+  text-align: center;
+  color: #6b7280;
+}
+
+.business-owner-course-empty.is-visible,
+.employee-course-empty.is-visible {
+  display: block;
+}
+
+.employee-success-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(15, 23, 42, 0.38);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.employee-success-modal-card {
+  width: min(560px, 100%);
+  background: linear-gradient(180deg, #ffffff 0%, #f6fffb 100%);
+  border: 1px solid #86efac;
+  border-radius: 24px;
+  box-shadow: 0 24px 80px rgba(15, 23, 42, 0.2);
+  padding: 28px;
+  display: grid;
+  gap: 16px;
+}
+
+.employee-success-modal-badge {
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 30% 30%, #34d399, #0f766e);
+  color: #fff;
+  font-size: 28px;
+  font-weight: 800;
+}
+
+.employee-success-modal-title {
+  margin: 0;
+  font-size: 30px;
+  line-height: 1.2;
+  color: #064e3b;
+  font-weight: 800;
+}
+
+.employee-success-modal-text {
+  margin: 0;
+  color: #475569;
+  line-height: 1.8;
+  font-size: 15px;
+}
+
+.employee-success-modal-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.employee-success-modal-meta-card {
+  background: #fff;
+  border: 1px solid #d1fae5;
+  border-radius: 18px;
+  padding: 14px 16px;
+  display: grid;
+  gap: 6px;
+}
+
+.employee-success-modal-meta-label {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.employee-success-modal-meta-value {
+  color: #0f172a;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.employee-success-modal-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.employee-success-modal-close {
+  margin-right: auto;
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+@media (max-width: 1200px) {
+  .business-owner-course-list-grid,
+  .employee-courses-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .business-owner-course-list-toolbar,
+  .employee-courses-toolbar {
+    align-items: stretch;
+  }
+
+  .business-owner-course-list-actions,
+  .employee-courses-toolbar-actions {
+    width: 100%;
+  }
+
+  .business-owner-course-list-search-wrap,
+  .employee-courses-search-wrap,
+  .employee-courses-filter {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .business-owner-course-list-grid,
+  .employee-courses-grid,
+  .employee-success-modal-meta {
+    grid-template-columns: 1fr;
+  }
+}

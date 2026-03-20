@@ -3,70 +3,14 @@
 {% block page_title %}{{ business.name }} | قوائم التشغيل اليومية{% endblock %}
 {% block hero_title %}قوائم التشغيل اليومية{% endblock %}
 {% block hero_text %}أنشئ قوائم SOP اليومية أو الأسبوعية واربطها بالمسميات الوظيفية لمتابعة التنفيذ اليومي.{% endblock %}
+{% block main_class %}main--business-modern main--business-tight{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="/static/branding/business-owner-modern.css">
+{% endblock %}
 
 {% block content %}
-<style>
-html,
-body{
-  overflow-x:hidden;
-}
-
-.hero-card{
-  display:none;
-}
-
-.main{
-  padding-top:calc(var(--topbar-h) + 18px);
-}
-
-.checklist-create-card{
-  padding:18px;
-  overflow:hidden;
-}
-
-.checklist-create-card .card-intro{
-  margin-bottom:14px;
-}
-
-.checklist-create-card .card-intro h2{
-  font-size:32px;
-  color:#0f766e;
-}
-
-.checklist-create-card .card-intro p{
-  font-size:15px;
-}
-
-.form-section{
-  margin-top:16px;
-  padding-top:14px;
-  border-top:1px solid #e2e8f0;
-}
-
-.form-section h3{
-  margin:0 0 8px;
-  font-size:15px;
-  color:#334155;
-}
-
-.form-section p{
-  margin:0 0 14px;
-  color:var(--muted);
-  font-size:14px;
-}
-
-.checklist-create-card .field{
-  margin-bottom:10px;
-}
-
-#checklist-description,
-#checklist-items{
-  min-height:120px;
-}
-</style>
-
 <section class="section">
-  <div class="card section-full checklist-create-card">
+  <div class="card section-full creator-card checklist-create-card">
     <div class="card-intro">
       <div>
         <h2>إنشاء قائمة تشغيل يومية</h2>
@@ -81,7 +25,7 @@ body{
       </div>
       <div class="field">
         <label for="checklist-description">الوصف</label>
-        <textarea id="checklist-description" name="description"></textarea>
+        <textarea id="checklist-description" class="textarea-tall" name="description"></textarea>
       </div>
       <div class="field">
         <label for="checklist-frequency">التكرار</label>
@@ -93,7 +37,7 @@ body{
       </div>
       <div class="field">
         <label for="checklist-items">العناصر</label>
-        <textarea id="checklist-items" name="item_lines" required placeholder="كل عنصر في سطر مستقل"></textarea>
+        <textarea id="checklist-items" class="textarea-tall" name="item_lines" required placeholder="كل عنصر في سطر مستقل"></textarea>
       </div>
 
       <div class="form-section">

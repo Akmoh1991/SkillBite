@@ -3,122 +3,14 @@
 {% block page_title %}SkillBite | منح صلاحية مدير النظام{% endblock %}
 {% block hero_title %}منح صلاحية مدير النظام{% endblock %}
 {% block hero_text %}ترقية مستخدم موجود إلى مدير نظام من صفحة مستقلة وواضحة.{% endblock %}
+{% block main_class %}main--modern-page{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="/static/branding/super-admin-modern.css">
+{% endblock %}
 
 {% block content %}
-<style>
-.main{
-  padding-top:calc(var(--topbar-h) + 22px);
-}
-
-.hero-card{
-  display:none;
-}
-
-.page-toolbar{
-  display:flex;
-  align-items:flex-start;
-  justify-content:space-between;
-  gap:24px;
-  margin-bottom:22px;
-}
-
-.section-title{
-  margin:0;
-  color:#0f766e;
-  font-size:34px;
-  font-weight:800;
-  line-height:1.15;
-}
-
-.page-toolbar p{
-  margin:10px 0 0;
-  color:var(--muted);
-  font-size:16px;
-  line-height:1.7;
-  max-width:760px;
-}
-
-.page-toolbar__back{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  padding:14px 22px;
-  border-radius:999px;
-  background:#0f766e;
-  color:#fff;
-  text-decoration:none;
-  font-size:15px;
-  font-weight:800;
-  white-space:nowrap;
-  box-shadow:0 14px 28px rgba(15, 118, 110, 0.18);
-}
-
-.form-card{
-  width:100%;
-  max-width:none;
-}
-
-.form-card form p{
-  margin:0 0 14px;
-}
-
-.form-card label{
-  display:block;
-  margin-bottom:6px;
-  font-size:13px;
-  font-weight:700;
-}
-
-.form-card select{
-  width:100%;
-  border:1px solid #cbd5e1;
-  border-radius:12px;
-  padding:12px 14px;
-  font:inherit;
-  background:#fff;
-}
-
-.form-actions{
-  display:flex;
-  align-items:center;
-  gap:12px;
-  margin-top:18px;
-}
-
-.btn{
-  border-radius:999px;
-  padding:12px 22px;
-  font-weight:800;
-}
-
-.btn.secondary{
-  background:#c86408;
-  color:#fff;
-  text-decoration:none;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-}
-
-@media (max-width: 900px){
-  .page-toolbar{
-    flex-direction:column;
-    align-items:stretch;
-  }
-
-  .page-toolbar__back{
-    width:100%;
-  }
-
-  .form-actions{
-    flex-direction:column;
-    align-items:stretch;
-  }
-}
-</style>
-
 <section class="page-toolbar">
-  <div>
+  <div class="page-toolbar__intro">
     <h2 class="section-title">منح صلاحية مدير النظام</h2>
     <p>اختر مستخدماً موجوداً من القائمة ثم امنحه صلاحية مدير النظام من خطوة واضحة ومباشرة.</p>
   </div>
@@ -132,7 +24,7 @@
       {{ grant_role_form.as_p }}
       <div class="form-actions">
         <button class="btn" type="submit">منح صلاحية مدير النظام</button>
-        <a class="btn secondary" href="{% url 'super_admin_users' %}">إلغاء</a>
+        <a class="btn btn-warm" href="{% url 'super_admin_users' %}">إلغاء</a>
       </div>
     </form>
   </div>

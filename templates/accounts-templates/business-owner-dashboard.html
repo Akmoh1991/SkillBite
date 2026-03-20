@@ -3,251 +3,38 @@
 {% block page_title %}{{ business.name }} | لوحة التحكم{% endblock %}
 {% block hero_title %}{{ business.name }}{% endblock %}
 {% block hero_text %}نظرة سريعة على فريقك، الدورات المسندة، وقوائم التشغيل اليومية داخل SkillBite.{% endblock %}
+{% block main_class %}main--business-modern{% endblock %}
+{% block extra_head %}
+  <link rel="stylesheet" href="/static/branding/business-owner-modern.css">
+{% endblock %}
 
 {% block content %}
-<style>
-.main{
-  padding-top:calc(var(--topbar-h) + 22px);
-}
-
-.hero-card{
-  display:none;
-}
-
-.hero-card h1{
-  color:#0f766e;
-  margin:0;
-  font-size:28px;
-}
-
-.stats{
-  gap:14px;
-  margin-bottom:16px;
-}
-
-.section-title{
-  margin:0 0 12px;
-  color:#0f766e;
-  font-size:22px;
-  font-weight:800;
-}
-
-.stat-card{
-  padding:14px 16px;
-}
-
-.stat-card h4{
-  margin-bottom:6px;
-  font-size:12px;
-}
-
-.stat-card span{
-  font-size:20px;
-}
-
-.dashboard-table-card{
-  padding:0;
-  background:transparent;
-  box-shadow:none;
-}
-
-.section{
-  gap:0;
-  margin-bottom:0;
-}
-
-.table-wrap{
-  border-radius:16px;
-}
-
-.data-table th,
-.data-table td{
-  padding:14px 16px;
-}
-
-.data-table th{
-  font-size:14px;
-}
-
-.data-table td,
-.data-table td strong{
-  font-size:15px;
-}
-
-.data-table td strong{
-  color:#0f766e;
-}
-
-.dashboard-actions{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  flex-wrap:nowrap;
-}
-
-.action-btn{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  min-width:98px;
-  padding:10px 16px;
-  border:0;
-  border-radius:999px;
-  font-size:14px;
-  font-weight:800;
-  text-decoration:none;
-  cursor:pointer;
-  white-space:nowrap;
-}
-
-.action-btn--assign{
-  background:#0f766e;
-  color:#fff;
-}
-
-.action-btn--delete{
-  background:#fee2e2;
-  color:#b91c1c;
-}
-
-.action-form{
-  margin:0;
-}
-
-.modal-backdrop{
-  position:fixed;
-  inset:0;
-  display:none;
-  align-items:center;
-  justify-content:center;
-  padding:24px;
-  background:rgba(15, 23, 42, 0.52);
-  backdrop-filter:blur(6px);
-  z-index:2000;
-}
-
-.modal-backdrop.is-open{
-  display:flex;
-}
-
-.assign-modal{
-  width:min(100%, 720px);
-  overflow:hidden;
-  border-radius:28px;
-  background:#fff;
-  box-shadow:0 40px 80px rgba(15, 23, 42, 0.16);
-}
-
-.assign-modal__header{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  flex-direction:row-reverse;
-  gap:16px;
-  padding:20px 22px;
-  border-bottom:1px solid #e2e8f0;
-}
-
-.assign-modal__title{
-  margin:0;
-  font-size:20px;
-  color:#0f766e;
-}
-
-.assign-modal__close{
-  width:48px;
-  height:48px;
-  border:0;
-  border-radius:16px;
-  background:#ecfdf3;
-  color:#0f766e;
-  font-size:28px;
-  line-height:1;
-  cursor:pointer;
-}
-
-.assign-modal__body{
-  padding:18px 22px 26px;
-}
-
-.assign-modal__body p{
-  margin:0 0 18px;
-  color:#64748b;
-  font-size:15px;
-}
-
-.assign-modal__footer{
-  display:flex;
-  align-items:center;
-  justify-content:flex-start;
-  gap:12px;
-  margin-top:22px;
-}
-
-.assign-modal__empty{
-  display:none;
-  margin-top:12px;
-  padding:14px 16px;
-  border-radius:16px;
-  background:#f8fafc;
-  border:1px dashed #cbd5e1;
-  color:#64748b;
-  font-size:14px;
-}
-
-.assign-modal__empty.is-visible{
-  display:block;
-}
-
-.assign-modal__cancel{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  min-width:90px;
-  padding:12px 18px;
-  border:0;
-  border-radius:16px;
-  background:#ecfdf3;
-  color:#0f766e;
-  font-size:15px;
-  font-weight:800;
-  cursor:pointer;
-}
-
-@media (max-width: 900px){
-  .data-table th,
-  .data-table td{
-    white-space:nowrap;
-  }
-}
-</style>
-
-<h2 class="section-title">إحصائيات</h2>
-<section class="stats">
-  <div class="stat-card">
+<h2 class="section-title section-title--compact">إحصائيات</h2>
+<section class="stats stats--compact">
+  <div class="stat-card stat-card--compact">
     <h4>عدد الموظفين</h4>
     <span>{{ employees|length }}</span>
   </div>
-  <div class="stat-card">
+  <div class="stat-card stat-card--compact">
     <h4>المسميات الوظيفية</h4>
     <span>{{ job_titles|length }}</span>
   </div>
-  <div class="stat-card">
+  <div class="stat-card stat-card--compact">
     <h4>الدورات التدريبية</h4>
     <span>{{ courses|length }}</span>
   </div>
-  <div class="stat-card">
+  <div class="stat-card stat-card--compact">
     <h4>قوائم التشغيل اليومية</h4>
     <span>{{ checklists|length }}</span>
   </div>
 </section>
 
-<h2 class="section-title">قائمة الموظفين</h2>
-<section class="section">
-  <div class="card section-full dashboard-table-card">
+<h2 class="section-title section-title--compact">قائمة الموظفين</h2>
+<section class="section section--dense">
+  <div class="card section-full dashboard-table-card dashboard-table-card--flat">
     {% if employees %}
-      <div class="table-wrap">
-        <table class="data-table">
+      <div class="table-wrap table-wrap--compact">
+        <table class="data-table data-table--compact">
           <thead>
             <tr>
               <th>الاسم</th>

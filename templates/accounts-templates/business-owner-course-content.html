@@ -3,74 +3,11 @@
 {% block page_title %}{{ business.name }} | محتوى الدورات{% endblock %}
 {% block hero_title %}محتوى الدورات{% endblock %}
 {% block hero_text %}أضف دروساً ونصوصاً وروابط مواد لكل دورة حتى تصبح الدورات قابلة للاستخدام فعلاً من الموظفين.{% endblock %}
+{% block extra_head %}
+  <link rel="stylesheet" href="/static/branding/business-owner-modern.css">
+{% endblock %}
 
 {% block content %}
-<style>
-.course-content-layout{
-  display:grid;
-  grid-template-columns:minmax(280px, .9fr) minmax(0, 1.7fr);
-  gap:18px;
-  align-items:start;
-  margin-bottom:18px;
-}
-
-.file-upload{
-  display:flex;
-  align-items:center;
-  gap:12px;
-  flex-wrap:wrap;
-  width:100%;
-  border:1px solid #cbd5e1;
-  border-radius:10px;
-  padding:12px 14px;
-  background:#fff;
-  transition:border-color .2s ease, box-shadow .2s ease, background-color .2s ease;
-}
-
-.file-upload__input{
-  position:absolute;
-  width:1px;
-  height:1px;
-  padding:0;
-  margin:-1px;
-  overflow:hidden;
-  clip:rect(0, 0, 0, 0);
-  white-space:nowrap;
-  border:0;
-}
-
-.file-upload__button{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  min-width:150px;
-  transition:background-color .2s ease, border-color .2s ease, box-shadow .2s ease, transform .2s ease;
-}
-
-.file-upload__name{
-  color:var(--muted);
-  font-size:13px;
-  font-weight:700;
-}
-
-.file-upload:hover{
-  border-color:#86efac;
-  box-shadow:0 14px 28px rgba(134, 239, 172, .16);
-  background:#fafffc;
-}
-
-.file-upload:hover .file-upload__button,
-.file-upload__input:focus-visible + .file-upload__button{
-  box-shadow:0 12px 24px rgba(134, 239, 172, .24);
-  transform:translateY(-1px);
-}
-
-@media (max-width:1100px){
-  .course-content-layout{
-    grid-template-columns:1fr;
-  }
-}
-</style>
 <section class="stats">
   <div class="stat-card">
     <h4>عدد الدورات</h4>
@@ -78,7 +15,7 @@
   </div>
   <div class="stat-card">
     <h4>الدورة المحددة</h4>
-    <span style="font-size:18px;">{% if selected_course %}{{ selected_course.title }}{% else %}لا توجد دورة{% endif %}</span>
+    <span class="stat-card__value--sm">{% if selected_course %}{{ selected_course.title }}{% else %}لا توجد دورة{% endif %}</span>
   </div>
 </section>
 
@@ -95,8 +32,8 @@
             <strong>{{ course.title }}</strong>
             <span class="pill">{{ course.content_item_total }} عنصر محتوى</span><br>
             <span class="muted">{{ course.estimated_minutes }} دقيقة{% if course.description %} | {{ course.description }}{% endif %}</span>
-            <div style="margin-top:10px;">
-              <a class="btn {% if selected_course and selected_course.id == course.id %}secondary{% endif %}" href="{% url 'business_owner_course_content' %}?course={{ course.id }}" style="display:inline-block; text-decoration:none;">
+            <div class="content-button-wrap">
+              <a class="btn content-button-link {% if selected_course and selected_course.id == course.id %}secondary{% endif %}" href="{% url 'business_owner_course_content' %}?course={{ course.id }}">
                 {% if selected_course and selected_course.id == course.id %}جاري الإدارة{% else %}إدارة المحتوى{% endif %}
               </a>
             </div>
@@ -166,7 +103,7 @@
       <ul class="list">
         {% for item in content_items %}
           <li>
-            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:10px;">
+            <div class="content-item-head">
               <strong>{{ item.title }}</strong>
               <span class="pill">
                 {% if item.content_type == 'LESSON' %}
@@ -179,7 +116,7 @@
               </span>
               <span class="muted">ترتيب {{ item.order }}</span>
             </div>
-            <form method="post" action="{% url 'business_owner_course_content_update' item.id %}" class="checklist-form" style="margin-top:0;" enctype="multipart/form-data">
+            <form method="post" action="{% url 'business_owner_course_content_update' item.id %}" class="checklist-form content-form--tight" enctype="multipart/form-data">
               {% csrf_token %}
               <div class="field">
                 <label>الدورة</label>
@@ -206,7 +143,7 @@
                 </div>
               </div>
               {% if item.video_file %}
-                <div class="meta" style="margin-bottom:12px;">
+                <div class="meta content-meta-block">
                   الملف الحالي:
                   <a href="{{ item.video_file.url }}" target="_blank" rel="noopener">{{ item.video_file.name|cut:"course_content_videos/" }}</a>
                 </div>
@@ -217,9 +154,9 @@
               </div>
               <button class="btn" type="submit">حفظ التعديل</button>
             </form>
-            <form method="post" action="{% url 'business_owner_course_content_delete' item.id %}" style="margin-top:10px;">
+            <form method="post" action="{% url 'business_owner_course_content_delete' item.id %}" class="content-form-actions">
               {% csrf_token %}
-              <div style="display:flex; gap:10px; flex-wrap:wrap;">
+              <div class="content-item-actions">
                 <button class="btn secondary" type="submit">حذف العنصر</button>
               </div>
             </form>

@@ -3,139 +3,14 @@
 {% block page_title %}{{ business.name }} | الدورات التدريبية{% endblock %}
 {% block hero_title %}الدورات التدريبية{% endblock %}
 {% block hero_text %}أنشئ الدورات، ثم اربطها بالمسميات الوظيفية ليتم إسنادها تلقائياً للموظفين المناسبين.{% endblock %}
+{% block main_class %}main--business-modern main--business-tight{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="/static/branding/business-owner-modern.css">
+{% endblock %}
 
 {% block content %}
-<style>
-html,
-body{
-  overflow-x:hidden;
-}
-
-.hero-card{
-  display:none;
-}
-
-.main{
-  padding-top:calc(var(--topbar-h) + 18px);
-}
-
-.course-create-card{
-  padding:18px;
-  overflow:hidden;
-}
-
-.course-create-card .card-intro{
-  margin-bottom:14px;
-}
-
-.course-create-card .card-intro h2{
-  font-size:32px;
-  color:#0f766e;
-}
-
-.course-create-card .card-intro p{
-  font-size:15px;
-}
-
-.form-section{
-  margin-top:16px;
-  padding-top:14px;
-  border-top:1px solid #e2e8f0;
-}
-
-.form-section h3{
-  margin:0 0 8px;
-  font-size:15px;
-  color:#334155;
-}
-
-.form-section p{
-  margin:0 0 14px;
-  color:var(--muted);
-  font-size:14px;
-}
-
-.file-upload{
-  display:flex;
-  align-items:center;
-  gap:14px;
-  width:100%;
-  padding:10px;
-  border:1px solid #cbd5e1;
-  border-radius:18px;
-  background:#fff;
-  transition:border-color .2s ease, box-shadow .2s ease, background-color .2s ease;
-}
-
-.file-upload__input{
-  position:absolute;
-  width:1px;
-  height:1px;
-  padding:0;
-  margin:-1px;
-  overflow:hidden;
-  clip:rect(0, 0, 0, 0);
-  white-space:nowrap;
-  border:0;
-}
-
-.file-upload__button{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  min-width:180px;
-  padding:12px 18px;
-  border:1px solid #86efac;
-  border-radius:16px;
-  background:#ecfdf3;
-  color:#0f766e;
-  font-size:15px;
-  font-weight:800;
-  cursor:pointer;
-  transition:background-color .2s ease, border-color .2s ease, box-shadow .2s ease, transform .2s ease;
-}
-
-.file-upload__name{
-  flex:1;
-  min-height:48px;
-  display:flex;
-  align-items:center;
-  justify-content:flex-start;
-  text-align:right;
-  padding:0 18px;
-  border:1px solid #dbe4ef;
-  border-radius:16px;
-  color:#64748b;
-  font-size:15px;
-  font-weight:700;
-  background:#fff;
-}
-
-.file-upload:hover{
-  border-color:#86efac;
-  box-shadow:0 14px 28px rgba(134, 239, 172, .16);
-  background:#fafffc;
-}
-
-.file-upload:hover .file-upload__button,
-.file-upload__input:focus-visible + .file-upload__button{
-  background:#dcfce7;
-  border-color:#4ade80;
-  box-shadow:0 12px 24px rgba(134, 239, 172, .24);
-  transform:translateY(-1px);
-}
-
-.course-create-card .field{
-  margin-bottom:10px;
-}
-
-#course-description{
-  min-height:120px;
-}
-</style>
-
 <section class="section">
-  <div class="card section-full course-create-card">
+  <div class="card section-full creator-card course-create-card">
     <div class="card-intro">
       <div>
         <h2>إنشاء دورة تدريبية</h2>
@@ -149,7 +24,7 @@ body{
       </div>
       <div class="field">
         <label for="course-description">الوصف</label>
-        <textarea id="course-description" name="description"></textarea>
+        <textarea id="course-description" class="textarea-tall" name="description"></textarea>
       </div>
       <div class="field">
         <label for="course-minutes">المدة التقديرية بالدقائق</label>

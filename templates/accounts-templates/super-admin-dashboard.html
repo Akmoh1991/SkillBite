@@ -3,210 +3,30 @@
 {% block page_title %}SkillBite | الصفحة الرئيسية{% endblock %}
 {% block hero_title %}الصفحة الرئيسية{% endblock %}
 {% block hero_text %}رؤية مركزية للشركات والمشرفين والمحتوى التدريبي والامتثال التشغيلي عبر المنصة كاملة.{% endblock %}
+{% block main_class %}main--modern-page{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="/static/branding/super-admin-modern.css">
+{% endblock %}
 
 {% block content %}
-<style>
-.main{
-  padding-top:calc(var(--topbar-h) + 22px);
-}
-
-.hero-card{
-  display:none;
-}
-
-.stats{
-  gap:14px;
-  margin-bottom:16px;
-}
-
-.page-toolbar{
-  margin-bottom:22px;
-}
-
-.page-title{
-  margin:0;
-  color:#0f766e;
-  font-size:34px;
-  font-weight:800;
-  line-height:1.15;
-}
-
-.page-toolbar p{
-  margin:10px 0 0;
-  color:var(--muted);
-  font-size:16px;
-  line-height:1.7;
-  max-width:760px;
-}
-
-.section-title{
-  margin:0 0 12px;
-  color:#0f766e;
-  font-size:22px;
-  font-weight:800;
-}
-
-.stat-card{
-  padding:14px 16px;
-}
-
-.stat-card h4{
-  margin-bottom:6px;
-  font-size:12px;
-}
-
-.stat-card span{
-  font-size:20px;
-}
-
-.section{
-  display:grid;
-  grid-template-columns:1fr;
-  gap:18px;
-  margin-bottom:18px;
-}
-
-.dashboard-table-card{
-  padding:0;
-  background:transparent;
-  box-shadow:none;
-}
-
-.table-wrap{
-  border:1px solid #e2e8f0;
-  border-radius:24px;
-  background:#ffffff;
-  overflow-x:auto;
-  box-shadow:0 18px 40px rgba(15, 23, 42, 0.08);
-}
-
-.data-table{
-  width:100%;
-  border-collapse:collapse;
-  table-layout:fixed;
-}
-
-.data-table thead{
-  background:#f8fafc;
-}
-
-.data-table th,
-.data-table td{
-  padding:18px 20px;
-  text-align:right;
-  border-bottom:1px solid #edf2f7;
-  vertical-align:top;
-}
-
-.data-table th{
-  font-size:15px;
-  font-weight:700;
-  color:#334155;
-  white-space:nowrap;
-}
-
-.data-table td{
-  font-size:16px;
-  color:#0f172a;
-  font-weight:500;
-}
-
-.data-table td strong{
-  color:#0f766e;
-  font-size:16px;
-  font-weight:800;
-}
-
-.data-table tbody tr:last-child td{
-  border-bottom:0;
-}
-
-.list-card{
-  padding:20px;
-}
-
-.list-card .card-intro{
-  margin-bottom:8px;
-}
-
-.list-card .card-intro h2{
-  margin:0;
-  font-size:17px;
-}
-
-.list-card .card-intro p{
-  margin:6px 0 0;
-  color:var(--muted);
-  font-size:13px;
-}
-
-.list{
-  margin:0;
-  padding:0;
-  list-style:none;
-}
-
-.list li{
-  padding:14px 0;
-  border-bottom:1px solid #edf2f7;
-}
-
-.list li:last-child{
-  border-bottom:0;
-}
-
-.meta{
-  color:#5f6f85;
-  font-size:13px;
-  font-weight:500;
-}
-
-.pill{
-  display:inline-block;
-  margin-left:8px;
-  background:#ecfdf3;
-  color:var(--accent);
-  border-radius:999px;
-  padding:4px 10px;
-  font-size:12px;
-  font-weight:700;
-}
-
-.pill.muted{
-  background:#eef2f7;
-  color:#475569;
-}
-
-@media (max-width: 900px){
-  .data-table{
-    table-layout:auto;
-  }
-
-  .data-table th,
-  .data-table td{
-    white-space:nowrap;
-  }
-}
-</style>
-
 <section class="page-toolbar">
   <h2 class="page-title">الصفحة الرئيسية</h2>
 </section>
 
-<h2 class="section-title">إحصائيات</h2>
-<section class="stats">
-  <div class="stat-card"><h4>إجمالي الشركات</h4><span>{{ business_count }}</span></div>
-  <div class="stat-card"><h4>الشركات النشطة</h4><span>{{ active_business_count }}</span></div>
-  <div class="stat-card"><h4>الدورات</h4><span>{{ course_count }}</span></div>
-  <div class="stat-card"><h4>قوائم التشغيل</h4><span>{{ checklist_count }}</span></div>
+<h2 class="section-title section-title--compact">إحصائيات</h2>
+<section class="stats stats--compact">
+  <div class="stat-card stat-card--compact"><h4>إجمالي الشركات</h4><span>{{ business_count }}</span></div>
+  <div class="stat-card stat-card--compact"><h4>الشركات النشطة</h4><span>{{ active_business_count }}</span></div>
+  <div class="stat-card stat-card--compact"><h4>الدورات</h4><span>{{ course_count }}</span></div>
+  <div class="stat-card stat-card--compact"><h4>قوائم التشغيل</h4><span>{{ checklist_count }}</span></div>
 </section>
 
-<h2 class="section-title">الشركات</h2>
-<section class="section">
-  <div class="card dashboard-table-card">
+<h2 class="section-title section-title--compact">الشركات</h2>
+<section class="section section--stack">
+  <div class="card dashboard-table-card dashboard-table-card--flat">
     {% if recent_businesses %}
-      <div class="table-wrap">
-        <table class="data-table">
+      <div class="table-wrap table-wrap--compact">
+        <table class="data-table data-table--compact">
           <thead>
             <tr>
               <th>الشركة</th>
@@ -221,7 +41,7 @@
                 <td><strong>{{ business.name }}</strong></td>
                 <td>{{ business.owner.username }}</td>
                 <td>{% if business.industry %}{{ business.industry }}{% else %}<span class="muted">غير محدد</span>{% endif %}</td>
-                <td><span class="pill {% if not business.is_active %}muted{% endif %}">{{ business.is_active|yesno:"نشطة,موقوفة" }}</span></td>
+                <td><span class="pill pill--spaced {% if not business.is_active %}muted{% endif %}">{{ business.is_active|yesno:"نشطة,موقوفة" }}</span></td>
               </tr>
             {% endfor %}
           </tbody>
@@ -235,12 +55,12 @@
   </div>
 </section>
 
-<h2 class="section-title">مدير النظام</h2>
-<section class="section">
-  <div class="card dashboard-table-card">
+<h2 class="section-title section-title--compact">مدير النظام</h2>
+<section class="section section--stack">
+  <div class="card dashboard-table-card dashboard-table-card--flat">
     {% if super_admins %}
-      <div class="table-wrap">
-        <table class="data-table">
+      <div class="table-wrap table-wrap--compact">
+        <table class="data-table data-table--compact">
           <thead>
             <tr>
               <th>الاسم</th>
@@ -255,7 +75,7 @@
                 <td><strong>{{ user.get_full_name|default:user.username }}</strong></td>
                 <td>{{ user.username }}</td>
                 <td>{% if user.email %}{{ user.email }}{% else %}<span class="muted">غير محدد</span>{% endif %}</td>
-                <td><span class="pill">مدير النظام</span></td>
+                <td><span class="pill pill--spaced">مدير النظام</span></td>
               </tr>
             {% endfor %}
           </tbody>

@@ -3,173 +3,20 @@
 {% block page_title %}{{ business.name }} | {{ course.title }}{% endblock %}
 {% block hero_title %}{{ course.title }}{% endblock %}
 {% block hero_text %}{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="/static/branding/course-detail.css">
+{% endblock %}
 
 {% block content %}
-<style>
-  .hero-card h1 {
-    color: #0f766e;
-  }
-  .course-view-actions {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
-  }
-  .course-empty-state {
-    font-size: 18px;
-    font-weight: 700;
-    color: #475569;
-    text-align: center;
-    padding: 24px 16px;
-  }
-  .course-assign-modal-backdrop {
-    position: fixed;
-    inset: 0;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
-    background: rgba(15, 23, 42, 0.52);
-    backdrop-filter: blur(6px);
-    z-index: 2000;
-  }
-  .course-assign-modal-backdrop.is-open {
-    display: flex;
-  }
-  .course-assign-modal {
-    width: min(100%, 680px);
-    max-height: min(90vh, 760px);
-    overflow: hidden;
-    border-radius: 28px;
-    background: #fff;
-    box-shadow: 0 40px 80px rgba(15, 23, 42, 0.16);
-    display: flex;
-    flex-direction: column;
-  }
-  .course-assign-modal__header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    padding: 20px 22px;
-    border-bottom: 1px solid #e2e8f0;
-  }
-  .course-assign-modal__title {
-    margin: 0;
-    color: #0f766e;
-    font-size: 22px;
-  }
-  .course-assign-modal__close {
-    width: 48px;
-    height: 48px;
-    border: 0;
-    border-radius: 16px;
-    background: #ecfdf3;
-    color: #0f766e;
-    font-size: 28px;
-    line-height: 1;
-    cursor: pointer;
-  }
-  .course-assign-modal__body {
-    padding: 20px 22px 24px;
-    overflow: auto;
-  }
-  .course-assign-modal__body p {
-    margin: 0 0 16px;
-    color: #64748b;
-    line-height: 1.8;
-  }
-  .course-assign-summary {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 14px;
-    padding: 14px 16px;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 18px;
-  }
-  .course-assign-summary strong {
-    color: #0f172a;
-    font-size: 15px;
-  }
-  .course-assign-all {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    color: #0f172a;
-    font-weight: 700;
-  }
-  .course-assign-all input,
-  .course-assign-employee input {
-    width: 18px;
-    height: 18px;
-    accent-color: #0f766e;
-  }
-  .course-assign-list {
-    display: grid;
-    gap: 10px;
-  }
-  .course-assign-employee {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    padding: 14px 16px;
-    border: 1px solid #e2e8f0;
-    border-radius: 18px;
-    background: #fff;
-  }
-  .course-assign-employee strong {
-    display: block;
-    color: #0f172a;
-    font-size: 15px;
-  }
-  .course-assign-employee span {
-    display: block;
-    margin-top: 4px;
-    color: #64748b;
-    font-size: 13px;
-  }
-  .course-assign-empty {
-    padding: 18px;
-    border: 1px dashed #cbd5e1;
-    border-radius: 18px;
-    text-align: center;
-    color: #64748b;
-    background: #f8fafc;
-  }
-  .course-assign-modal__footer {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 12px;
-    margin-top: 20px;
-  }
-  .course-assign-cancel {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 90px;
-    padding: 10px 16px;
-    border: 0;
-    border-radius: 16px;
-    background: #ecfdf3;
-    color: #0f766e;
-    font-size: 15px;
-    font-weight: 800;
-    cursor: pointer;
-  }
-</style>
 <section class="section">
-  <div class="card" style="grid-column:1 / -1;">
-    <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; margin-bottom:18px;">
+  <div class="card course-panel-card">
+    <div class="course-panel-header">
       <div>
-        <h2 style="margin-bottom:6px; color:#0f766e;">محتوى الدورة</h2>
+        <h2 class="course-panel-title">محتوى الدورة</h2>
       </div>
       <div class="course-view-actions">
         <button class="btn" type="button" id="open-course-assign-modal">إدراج الدورة</button>
-        <a class="btn" href="{% url 'business_owner_course_list' %}" style="text-decoration:none; display:inline-flex; align-items:center;">
+        <a class="btn course-link-button" href="{% url 'business_owner_course_list' %}">
           العودة إلى الدورات
         </a>
       </div>
@@ -178,16 +25,16 @@
     {% if content_items %}
       <div class="list">
         {% for item in content_items %}
-          <div class="checklist-form" style="margin-top:0; margin-bottom:14px;">
+          <div class="checklist-form course-item">
             {% if item.material_url %}
-              <div style="margin-top:10px;">
+              <div class="course-item-link">
                 <a href="{{ item.material_url }}" target="_blank" rel="noopener">فتح الرابط الخارجي</a>
               </div>
             {% endif %}
 
             {% if item.video_file %}
-              <div style="margin-top:12px;">
-                <video controls preload="metadata" style="display:block; width:100%; border-radius:12px; background:#000;">
+              <div class="course-item-video-wrap">
+                <video class="course-item-video" controls preload="metadata">
                   <source src="{{ item.video_playback_url }}" type="{{ item.video_mime_type }}">
                   متصفحك لا يدعم تشغيل الفيديو.
                 </video>
@@ -195,7 +42,7 @@
             {% endif %}
 
             {% if item.pdf_file and not item.video_file %}
-              <div style="margin-top:10px;">
+              <div class="course-item-link">
                 <a href="{{ item.pdf_file.url }}" target="_blank" rel="noopener">فتح ملف PDF</a>
               </div>
             {% endif %}

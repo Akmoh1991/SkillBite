@@ -3,32 +3,17 @@
 {% block page_title %}SkillBite | {{ course.title }}{% endblock %}
 {% block hero_title %}{{ course.title }}{% endblock %}
 {% block hero_text %}{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="/static/branding/course-detail.css">
+{% endblock %}
 
 {% block content %}
-<style>
-  .hero-card h1 {
-    color: #0f766e;
-  }
-  .course-view-actions {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
-  }
-  .course-empty-state {
-    font-size: 18px;
-    font-weight: 700;
-    color: #475569;
-    text-align: center;
-    padding: 24px 16px;
-  }
-</style>
 <section class="section">
-  <div class="card" style="grid-column:1 / -1;">
-    <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; margin-bottom:18px;">
+  <div class="card course-panel-card">
+    <div class="course-panel-header">
       <div>
-        <h2 style="margin-bottom:6px; color:#0f766e;">محتوى الدورة</h2>
-        <p class="muted" style="margin:0;">
+        <h2 class="course-panel-title">محتوى الدورة</h2>
+        <p class="muted course-panel-meta">
           الشركة:
           {% if course.business %}
             {{ course.business.name }}
@@ -42,7 +27,7 @@
         </p>
       </div>
       <div class="course-view-actions">
-        <a class="btn" href="{% url 'super_admin_course_list' %}" style="text-decoration:none; display:inline-flex; align-items:center;">
+        <a class="btn course-link-button" href="{% url 'super_admin_course_list' %}">
           العودة إلى الدورات
         </a>
       </div>
@@ -51,16 +36,16 @@
     {% if content_items %}
       <div class="list">
         {% for item in content_items %}
-          <div class="checklist-form" style="margin-top:0; margin-bottom:14px;">
+          <div class="checklist-form course-item">
             {% if item.material_url %}
-              <div style="margin-top:10px;">
+              <div class="course-item-link">
                 <a href="{{ item.material_url }}" target="_blank" rel="noopener">فتح الرابط الخارجي</a>
               </div>
             {% endif %}
 
             {% if item.video_file %}
-              <div style="margin-top:12px;">
-                <video controls preload="metadata" style="display:block; width:100%; border-radius:12px; background:#000;">
+              <div class="course-item-video-wrap">
+                <video class="course-item-video" controls preload="metadata">
                   <source src="{{ item.video_playback_url }}" type="{{ item.video_mime_type }}">
                   متصفحك لا يدعم تشغيل الفيديو.
                 </video>
@@ -68,7 +53,7 @@
             {% endif %}
 
             {% if item.pdf_file and not item.video_file %}
-              <div style="margin-top:10px;">
+              <div class="course-item-link">
                 <a href="{{ item.pdf_file.url }}" target="_blank" rel="noopener">فتح ملف PDF</a>
               </div>
             {% endif %}

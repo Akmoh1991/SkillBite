@@ -3,50 +3,12 @@
 {% block page_title %}{{ business.name }} | قائمة الدورات{% endblock %}
 {% block hero_title %}قائمة الدورات{% endblock %}
 {% block hero_text %}اعرض جميع الدورات المتاحة داخل النظام والتي يمكن لموظفيك الاستفادة منها.{% endblock %}
+{% block hero_section %}{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="/static/branding/course-library.css">
+{% endblock %}
 
 {% block content %}
-<style>
-  :root {
-    --business-owner-brand-green: #0b8a72;
-    --business-owner-brand-green-dark: #0a6f5d;
-  }
-  .hero-card { display: none; }
-  .business-owner-course-list-page { display: grid; gap: 22px; }
-  .business-owner-course-list-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap; }
-  .business-owner-course-list-title { margin: 0; font-size: 28px; line-height: 1.2; color: var(--business-owner-brand-green); font-weight: 800; }
-  .business-owner-course-list-actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
-  .business-owner-course-list-search-wrap { min-width: 260px; height: 42px; border: 1px solid #e5e7eb; border-radius: 999px; background: #fff; display: flex; align-items: center; padding: 0 14px; gap: 10px; }
-  .business-owner-course-list-search { flex: 1; min-width: 0; border: 0; outline: none; background: transparent; color: #111827; font: inherit; }
-  .business-owner-course-list-search::placeholder { color: #c0c7d1; }
-  .business-owner-course-list-search-icon { color: #6b7280; font-size: 14px; line-height: 1; }
-  .business-owner-course-list-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
-  .business-owner-course-card { background: #fff; border: 1px solid #e6ebf2; border-radius: 18px; padding: 24px; box-shadow: 0 1px 0 rgba(15, 23, 42, .02); display: grid; gap: 18px; }
-  .business-owner-course-card.is-hidden { display: none; }
-  .business-owner-course-image { width: 100%; height: 170px; border-radius: 14px; object-fit: cover; display: block; background: #e5e7eb; }
-  .business-owner-course-content { display: grid; gap: 10px; }
-  .business-owner-course-name { margin: 0; font-size: 20px; line-height: 1.25; color: var(--business-owner-brand-green-dark); font-weight: 800; }
-  .business-owner-course-description { margin: 0; color: #6b7280; font-size: 15px; line-height: 1.6; min-height: 72px; }
-  .business-owner-course-meta { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; color: #7b8794; font-size: 14px; }
-  .business-owner-course-meta-item { display: inline-flex; align-items: center; gap: 8px; }
-  .business-owner-course-meta-icon { width: 16px; text-align: center; opacity: .8; }
-  .business-owner-course-actions { display: grid; gap: 10px; }
-  .business-owner-course-link { min-height: 56px; border-radius: 999px; border: 1px solid #99f6c8; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; color: var(--business-owner-brand-green-dark); font-size: 16px; font-weight: 800; background: #ecfdf5; }
-  .business-owner-course-link.secondary-link { min-height: 48px; font-size: 15px; color: var(--business-owner-brand-green-dark); border-color: #99f6c8; background: #ecfdf5; }
-  .business-owner-course-empty { display: none; background: #fff; border: 1px solid #e6ebf2; border-radius: 18px; padding: 24px; text-align: center; color: #6b7280; }
-  .business-owner-course-empty.is-visible { display: block; }
-
-  @media (max-width: 1200px) {
-    .business-owner-course-list-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  }
-
-  @media (max-width: 760px) {
-    .business-owner-course-list-toolbar { align-items: stretch; }
-    .business-owner-course-list-actions { width: 100%; }
-    .business-owner-course-list-search-wrap { width: 100%; min-width: 0; }
-    .business-owner-course-list-grid { grid-template-columns: 1fr; }
-  }
-</style>
-
 <section class="business-owner-course-list-page">
   <div class="business-owner-course-list-toolbar">
     <h2 class="business-owner-course-list-title">الدورات المتاحة</h2>
@@ -105,7 +67,7 @@
         </div>
       </article>
     {% empty %}
-      <article class="business-owner-course-card" style="grid-column: 1 / -1;">
+      <article class="business-owner-course-card course-library-card--full">
         <div class="business-owner-course-content">
           <h3 class="business-owner-course-name">لا توجد دورات متاحة حالياً</h3>
           <p class="business-owner-course-description">ستظهر هنا الدورات التي يضيفها المشرف العام للنظام أو الدورات المنشورة داخل شركتك.</p>

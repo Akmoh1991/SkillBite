@@ -1,0 +1,118 @@
+.main--modern-page .section--stack {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.main--modern-page .stats--compact {
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.main--modern-page .stat-card--compact {
+  padding: 14px 16px;
+}
+
+.main--modern-page .stat-card--compact h4 {
+  margin-bottom: 6px;
+  font-size: 12px;
+}
+
+.main--modern-page .stat-card--compact span {
+  font-size: 20px;
+}
+
+.main--modern-page .section-title--compact {
+  margin: 0 0 12px;
+  font-size: 22px;
+}
+
+.main--modern-page .dashboard-table-card--flat {
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.main--modern-page .table-wrap--compact {
+  border-radius: 16px;
+}
+
+.main--modern-page .data-table--compact th,
+.main--modern-page .data-table--compact td {
+  padding: 14px 16px;
+}
+
+.main--modern-page .data-table--compact th {
+  font-size: 14px;
+}
+
+.main--modern-page .data-table--compact td,
+.main--modern-page .data-table--compact td strong {
+  font-size: 15px;
+}
+
+.main--modern-page .list-card {
+  padding: 20px;
+}
+
+.main--modern-page .list-card .card-intro {
+  margin-bottom: 8px;
+}
+
+.main--modern-page .list-card .card-intro h2 {
+  margin: 0;
+  font-size: 17px;
+}
+
+.main--modern-page .list-card .card-intro p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.main--modern-page .pill--spaced {
+  margin-left: 8px;
+}
+
+.main--modern-page .table-action,
+.main--modern-page .action-form {
+  margin: 0;
+}
+
+.main--modern-page .btn-secondary-green {
+  background: #0f766e;
+  color: #fff;
+}
+
+.main--modern-page .btn-secondary-green:hover,
+.main--modern-page .btn-secondary-green:focus-visible {
+  background: #11a36b;
+  box-shadow: 0 12px 24px rgba(134, 239, 172, 0.28);
+}
+
+.main--modern-page .btn-warm {
+  background: #c86408;
+  color: #fff;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.main--modern-page .btn-warm:hover,
+.main--modern-page .btn-warm:focus-visible {
+  background: #b45309;
+  box-shadow: 0 12px 24px rgba(200, 100, 8, 0.24);
+}
+
+@media (max-width: 900px) {
+  .main--modern-page .data-table--compact {
+    table-layout: auto;
+  }
+
+  .main--modern-page .data-table--compact th,
+  .main--modern-page .data-table--compact td {
+    white-space: nowrap;
+  }
+}

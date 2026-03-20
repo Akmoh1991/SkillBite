@@ -3,29 +3,14 @@
 {% block page_title %}{{ business.name }} | الموظفون{% endblock %}
 {% block hero_title %}الموظفون{% endblock %}
 {% block hero_text %}إدارة الفريق، المسميات الوظيفية، وإنشاء حسابات الموظفين من نفس الواجهة.{% endblock %}
+{% block main_class %}main--business-modern{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="/static/branding/business-owner-modern.css">
+{% endblock %}
 
 {% block content %}
-<style>
-.hero-card{
-  display:none;
-}
-
-.main{
-  padding-top:calc(var(--topbar-h) + 22px);
-}
-
-.employee-create-card .card-intro{
-  margin-bottom:18px;
-}
-
-.employee-create-card .card-intro h2{
-  font-size:32px;
-  color:#0f766e;
-}
-</style>
-
 <section class="section">
-  <div class="card section-full employee-create-card">
+  <div class="card section-full creator-card employee-create-card">
     <div class="card-intro">
       <div>
         <h2>إضافة موظف</h2>

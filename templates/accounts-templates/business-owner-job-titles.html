@@ -3,63 +3,14 @@
 {% block page_title %}{{ business.name }} | المسميات الوظيفية{% endblock %}
 {% block hero_title %}المسميات الوظيفية{% endblock %}
 {% block hero_text %}أنشئ المسميات الوظيفية التي تستخدمها عند إضافة الموظفين وربط الدورات وقوائم التشغيل.{% endblock %}
+{% block main_class %}main--business-modern{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="/static/branding/business-owner-modern.css">
+{% endblock %}
 
 {% block content %}
-<style>
-.hero-card{
-  display:none;
-}
-
-.main{
-  padding-top:calc(var(--topbar-h) + 22px);
-}
-
-.job-title-create-card .card-intro{
-  margin-bottom:18px;
-}
-
-.job-title-create-card .card-intro h2{
-  font-size:32px;
-  color:#0f766e;
-}
-
-.job-title-create-card .card-intro p{
-  font-size:15px;
-}
-
-.job-title-table-card{
-  padding:0;
-  background:transparent;
-  box-shadow:none;
-}
-
-.section{
-  gap:16px;
-  margin-bottom:0;
-}
-
-.table-wrap{
-  border-radius:16px;
-}
-
-.data-table th,
-.data-table td{
-  padding:14px 16px;
-}
-
-.data-table th{
-  font-size:14px;
-}
-
-.data-table td,
-.data-table td strong{
-  font-size:15px;
-}
-
-</style>
-
-<section class="section">
-  <div class="card section-full job-title-create-card">
+<section class="section section--spaced">
+  <div class="card section-full creator-card job-title-create-card">
     <div class="card-intro">
       <div>
         <h2>إضافة مسمى وظيفي</h2>
@@ -76,10 +27,10 @@
     </form>
   </div>
 
-  <div class="card section-full job-title-table-card">
+  <div class="card section-full job-title-table-card dashboard-table-card--flat">
     {% if job_titles %}
-      <div class="table-wrap">
-        <table class="data-table">
+      <div class="table-wrap table-wrap--compact">
+        <table class="data-table data-table--compact">
           <thead>
             <tr>
               <th>المسميات الوظيفية الحالية</th>
