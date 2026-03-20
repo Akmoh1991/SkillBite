@@ -1,0 +1,136 @@
+:root {
+  --sidebar-w: 260px;
+  --topbar-h: 70px;
+}
+
+.sidebar {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: var(--sidebar-w);
+  box-sizing: border-box;
+  height: 100vh;
+  background: linear-gradient(180deg, #064e3b 0%, #0b6b58 52%, #00b476 100%);
+  color: #fff;
+  padding: 25px 20px;
+  z-index: 1100;
+}
+
+.sidebar .logo {
+  text-align: center;
+  margin-top: 10px;
+  margin-bottom: 28px;
+}
+
+.sidebar .logo img {
+  width: 124px;
+  height: auto;
+  display: inline-block;
+}
+
+.sidebar ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sidebar li {
+  margin-bottom: 10px;
+}
+
+.sidebar a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  color: #fff;
+  font-weight: 600;
+  text-decoration: none;
+  font-size: 14px;
+  border-radius: 12px;
+  opacity: 0.94;
+  border: 1px solid transparent;
+  transition: background 0.2s ease, opacity 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.sidebar a:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.2);
+  opacity: 1;
+  transform: translateX(-1px);
+}
+
+.sidebar a.active {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.24);
+  box-shadow: inset 3px 0 0 rgba(255, 255, 255, 0.9);
+  opacity: 1;
+}
+
+.sidebar .logout {
+  position: absolute;
+  bottom: 22px;
+  right: 20px;
+  left: 20px;
+}
+
+.sidebar .logout a {
+  justify-content: center;
+  background: #fff;
+  color: #0b6b58;
+  font-weight: 800;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 8px 18px rgba(0, 25, 84, 0.28);
+}
+
+.sidebar .logout a:hover {
+  background: #eaf3ff;
+  color: #064e3b;
+  border-color: #fff;
+}
+
+.topbar {
+  position: fixed;
+  top: 0;
+  right: var(--sidebar-w);
+  left: 0;
+  height: var(--topbar-h);
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  box-shadow: 0 8px 24px rgba(15, 45, 90, 0.08);
+  border-bottom: 1px solid #e8edf5;
+  z-index: 1200;
+}
+
+.topbar .user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--text, #1f2937);
+}
+
+.topbar .user strong {
+  font-weight: 700;
+}
+
+.topbar .actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: var(--muted, #5f6f85);
+  font-size: 14px;
+}
+
+@media (max-width: 900px) {
+  .sidebar {
+    display: none;
+  }
+
+  .topbar {
+    right: 0;
+  }
+}

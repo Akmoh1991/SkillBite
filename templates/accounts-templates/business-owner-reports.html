@@ -55,7 +55,7 @@
                       <span>{{ row.completed_total }}/{{ row.assigned_total }}</span>
                     </div>
                     <div class="employee-rate-track">
-                      <div class="employee-rate-bar" style="width:{{ row.completion_rate }}%;"></div>
+                      <div class="employee-rate-bar" data-progress="{{ row.completion_rate }}"></div>
                     </div>
                   </div>
                 </td>
@@ -74,4 +74,11 @@
     {% endif %}
   </div>
 </section>
+<script>
+document.querySelectorAll('.employee-rate-bar[data-progress]').forEach(function (bar) {
+  var value = parseFloat(bar.getAttribute('data-progress') || '0');
+  if (isNaN(value)) value = 0;
+  bar.style.width = Math.max(0, Math.min(100, value)) + '%';
+});
+</script>
 {% endblock %}

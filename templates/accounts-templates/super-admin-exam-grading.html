@@ -3,22 +3,23 @@
 {% block page_title %}SkillBite | تصحيح الاختبارات{% endblock %}
 {% block hero_title %}تصحيح الاختبارات{% endblock %}
 {% block hero_text %}لوحة متابعة جاهزة مبنية على `trainer-exam-grading.html` لعرض الجلسات والمرشحين المرتبطين بها.{% endblock %}
+{% block main_class %}main--modern-page{% endblock %}
 
 {% block content %}
 <section class="stats">
   <div class="stat-card"><h4>جلسات الاختبار</h4><span>{{ session_count }}</span></div>
 </section>
 
-<section class="section">
-  <div class="card" style="grid-column:1 / -1;">
+<section class="page-section--full">
+  <div class="card dashboard-table-card--system">
     <div class="card-intro">
       <div>
         <h2>متابعة الجلسات</h2>
         <p>الواجهة جاهزة للتصحيح الفعلي عند ربط تسليمات الموظفين بنتائج الاختبار.</p>
       </div>
     </div>
-    <div class="table-wrap">
-      <table>
+    <div class="table-wrap table-wrap--system">
+      <table class="data-table data-table--system">
         <thead>
           <tr>
             <th>الدورة</th>

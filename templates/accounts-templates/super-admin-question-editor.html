@@ -4,197 +4,17 @@
 {% block hero_title %}تعديل السؤال{% endblock %}
 {% block hero_text %}محرر السؤال مستوحى من `trainer-question-editor.html` ومربوط بقالب الاختبار الحالي.{% endblock %}
 {% block main_class %}main--modern-page{% endblock %}
+{% block extra_head %}
+  <link rel="stylesheet" href="/static/branding/admin-exam.css">
+{% endblock %}
 
 {% block content %}
-<style>
-.question-editor-shell{
-  display:grid;
-  gap:18px;
-}
-
-.question-editor-card{
-  border-radius:24px;
-}
-
-.question-editor-intro{
-  display:flex;
-  align-items:flex-start;
-  justify-content:space-between;
-  gap:16px;
-  flex-wrap:wrap;
-  margin-bottom:18px;
-}
-
-.question-editor-intro h3{
-  margin:0;
-  font-size:26px;
-  color:#0f766e;
-  font-weight:800;
-}
-
-.question-editor-intro p{
-  margin:8px 0 0;
-  color:var(--muted);
-  font-size:15px;
-  line-height:1.7;
-}
-
-.inline-form > p,
-.option-form > p{
-  margin:0 0 16px;
-}
-
-.inline-form label,
-.option-form label{
-  display:block;
-  margin-bottom:8px;
-  color:#0f172a;
-  font-size:15px;
-  font-weight:800;
-}
-
-.inline-form input[type="text"],
-.inline-form input[type="number"],
-.inline-form select,
-.inline-form textarea,
-.option-form input[type="text"],
-.option-form input[type="number"],
-.option-form select,
-.option-form textarea{
-  width:100%;
-  border:1px solid #cbd5e1;
-  border-radius:16px;
-  padding:14px 16px;
-  background:#fff;
-  color:#0f172a;
-  font:inherit;
-  transition:border-color .2s ease, box-shadow .2s ease;
-}
-
-.inline-form textarea,
-.option-form textarea{
-  min-height:140px;
-  resize:vertical;
-}
-
-.inline-form input:focus,
-.inline-form select:focus,
-.inline-form textarea:focus,
-.option-form input:focus,
-.option-form select:focus,
-.option-form textarea:focus{
-  outline:none;
-  border-color:#86efac;
-  box-shadow:0 0 0 4px rgba(134, 239, 172, 0.18);
-}
-
-.inline-form input[type="checkbox"],
-.option-form input[type="checkbox"],
-.inline-form input[type="radio"],
-.option-form input[type="radio"]{
-  width:18px;
-  height:18px;
-  margin:0 8px 0 0;
-  accent-color:#0f766e;
-}
-
-.inline-form .helptext,
-.option-form .helptext{
-  display:block;
-  margin-top:8px;
-  color:#64748b;
-  font-size:13px;
-  line-height:1.6;
-}
-
-.inline-form ul.errorlist,
-.option-form ul.errorlist{
-  margin:8px 0 0;
-  padding:0;
-  list-style:none;
-  color:#b91c1c;
-  font-size:13px;
-  font-weight:700;
-}
-
-.options-card{
-  border:1px solid #e2e8f0;
-  box-shadow:none;
-  background:#fcfdfd;
-}
-
-.options-stack{
-  display:grid;
-  gap:12px;
-}
-
-.option-form{
-  padding:16px 18px;
-  border:1px solid #e2e8f0;
-  border-radius:18px;
-  background:#fff;
-}
-
-.option-form input[name$="-DELETE"]{
-  margin-left:8px;
-}
-
-.form-actions{
-  display:flex;
-  gap:12px;
-  flex-wrap:wrap;
-  margin-top:22px;
-}
-
-.btn{
-  min-width:140px;
-  border-radius:999px;
-  font-weight:800;
-}
-
-.btn-danger{
-  background:#c86408;
-  color:#fff;
-  box-shadow:0 12px 24px rgba(200, 100, 8, 0.18);
-}
-
-.btn-danger:hover,
-.btn-danger:focus-visible{
-  background:#b45309;
-  box-shadow:0 12px 24px rgba(200, 100, 8, 0.24);
-}
-
-.toolbar-back{
-  background:#334155;
-  color:#fff;
-  box-shadow:0 12px 24px rgba(51, 65, 85, 0.18);
-}
-
-.toolbar-back:hover,
-.toolbar-back:focus-visible{
-  background:#475569;
-  box-shadow:0 12px 24px rgba(148, 163, 184, 0.22);
-}
-
-@media (max-width:900px){
-  .question-editor-intro{
-    flex-direction:column;
-    align-items:stretch;
-  }
-
-  .form-actions .btn,
-  .question-editor-intro .btn{
-    width:100%;
-  }
-}
-</style>
-
 <section class="page-toolbar--system">
   <div class="page-toolbar__intro">
     <h2 class="page-title--system">تعديل السؤال</h2>
   </div>
   <div class="page-toolbar__actions">
-    <a class="page-toolbar__action toolbar-back" href="{% url 'super_admin_exam_template_editor' template_obj.id %}">العودة للمحرر</a>
+    <a class="page-toolbar__action toolbar-back toolbar-back--neutral" href="{% url 'super_admin_exam_template_editor' template_obj.id %}">العودة للمحرر</a>
   </div>
 </section>
 
@@ -215,10 +35,10 @@
           {{ q_form.as_p }}
         </div>
 
-        <div class="card options-card" style="margin-top:18px;">
-          <div class="question-editor-intro" style="margin-bottom:14px;">
+        <div class="card options-card card--spaced-top">
+          <div class="question-editor-intro question-editor-intro--tight">
             <div>
-              <h3 style="font-size:22px;">خيارات السؤال</h3>
+              <h3 class="question-editor-title--sm">خيارات السؤال</h3>
               <p>للأسئلة المقالية أو القصيرة يمكن ترك الخيارات فارغة.</p>
             </div>
           </div>
@@ -236,7 +56,7 @@
 
         <div class="form-actions">
           <button class="btn" type="submit">حفظ السؤال</button>
-          <a class="btn btn-danger" href="{% url 'super_admin_exam_template_editor' template_obj.id %}" style="text-decoration:none;">إلغاء</a>
+          <a class="btn btn-danger link-button" href="{% url 'super_admin_exam_template_editor' template_obj.id %}">إلغاء</a>
         </div>
       </form>
     </div>

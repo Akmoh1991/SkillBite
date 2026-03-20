@@ -1,0 +1,88 @@
+.scorm-stat-value {
+  font-size: 18px !important;
+}
+
+.scorm-list-link,
+.scorm-link-button {
+  text-decoration: none;
+}
+
+.scorm-link-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.scorm-list-link {
+  color: #0f172a;
+}
+
+.scorm-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.scorm-frame-wrap {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.scorm-frame {
+  width: 100%;
+  height: 650px;
+  border: 0;
+  display: block;
+}
+
+.scorm-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  z-index: 1400;
+  padding: 20px;
+}
+
+.scorm-modal__card {
+  max-width: 460px;
+  margin: 10vh auto 0;
+  background: #fff;
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 24px 48px rgba(15, 23, 42, 0.18);
+}
+
+.scorm-modal__title {
+  margin: 0 0 10px;
+}
+
+.scorm-modal__text {
+  margin: 0 0 18px;
+}
+
+.scorm-modal__actions,
+.actions-inline--spaced {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.actions-inline--spaced {
+  margin-top: 10px;
+}
+
+.scorm-download-btn {
+  display: none;
+}
+
+.scorm-close-btn {
+  background: #475569;
+}
+
+.scorm-close-btn:hover,
+.scorm-close-btn:focus-visible {
+  background: #334155;
+}

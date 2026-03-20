@@ -3,6 +3,9 @@
 {% block page_title %}{{ business.name }} | دورات SCORM{% endblock %}
 {% block hero_title %}دورات SCORM{% endblock %}
 {% block hero_text %}افتح الدورات الإلكترونية المتاحة وأكملها من داخل مشغل SCORM.{% endblock %}
+{% block extra_head %}
+  <link rel="stylesheet" href="/static/branding/scorm.css">
+{% endblock %}
 
 {% block content %}
 <section class="stats">
@@ -12,7 +15,7 @@
   </div>
   <div class="stat-card">
     <h4>النشاط</h4>
-    <span style="font-size:18px;">{{ business.name }}</span>
+    <span class="scorm-stat-value">{{ business.name }}</span>
   </div>
 </section>
 
@@ -26,7 +29,7 @@
       {% for p in packages %}
         <li>
           <strong>
-            <a href="{% url 'employee_scorm_course_view' p.name %}" style="color:#0f172a; text-decoration:none;">
+            <a class="scorm-list-link" href="{% url 'employee_scorm_course_view' p.name %}">
               {{ p.name }}
             </a>
           </strong><br>

@@ -4,16 +4,11 @@
 {% block hero_title %}قوالب الاختبارات{% endblock %}
 {% block hero_text %}إدارة بنك الاختبارات وربطه بالدورات من لوحة المشرف العام.{% endblock %}
 {% block main_class %}main--modern-page{% endblock %}
+{% block extra_head %}
+  <link rel="stylesheet" href="/static/branding/admin-exam.css">
+{% endblock %}
 
 {% block content %}
-<style>
-.btn{
-  min-width:92px;
-  border-radius:999px;
-  font-weight:800;
-}
-</style>
-
 <section class="page-toolbar--system">
   <div class="page-toolbar__intro">
     <h2 class="page-title--system">قوالب الاختبارات</h2>
@@ -46,7 +41,7 @@
               <td>{{ template.question_total }}</td>
               <td>{{ template.course_total }}</td>
               <td>
-                <a class="btn secondary" href="{% url 'super_admin_exam_template_editor' template.id %}" style="text-decoration:none;">تعديل</a>
+                <a class="btn secondary link-button" href="{% url 'super_admin_exam_template_editor' template.id %}">تعديل</a>
               </td>
             </tr>
           {% empty %}

@@ -3,6 +3,10 @@
 {% block page_title %}SkillBite | مكتبة SCORM{% endblock %}
 {% block hero_title %}مكتبة SCORM المركزية{% endblock %}
 {% block hero_text %}رفع الحزم التدريبية ومراجعة المكتبة المشتركة المتاحة عبر المنصة.{% endblock %}
+{% block main_class %}main--modern-page{% endblock %}
+{% block extra_head %}
+  <link rel="stylesheet" href="/static/branding/scorm.css">
+{% endblock %}
 
 {% block content %}
 <section class="content-layout">
@@ -35,8 +39,8 @@
         <li>
           <strong>{{ package.title }}</strong><br>
           <span class="muted">{{ package.name }}</span>
-          <div class="actions-inline" style="margin-top:10px;">
-            <a class="btn secondary" href="{% url 'scorm_zip_download' package.name %}" style="text-decoration:none;">تنزيل</a>
+          <div class="actions-inline actions-inline--spaced">
+            <a class="btn secondary scorm-link-button" href="{% url 'scorm_zip_download' package.name %}">تنزيل</a>
           </div>
         </li>
       {% empty %}

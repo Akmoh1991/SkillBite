@@ -3,6 +3,9 @@
 {% block page_title %}{{ business.name }} | {{ selected.name }}{% endblock %}
 {% block hero_title %}{{ selected.name }}{% endblock %}
 {% block hero_text %}أكمل الدورة ثم استخدم زر التحقق لتسجيل الإنجاز وإصدار شهادة الإكمال.{% endblock %}
+{% block extra_head %}
+  <link rel="stylesheet" href="/static/branding/scorm.css">
+{% endblock %}
 
 {% block content %}
 <section class="content-layout">
@@ -13,18 +16,18 @@
           <h2>مشغل الدورة</h2>
           <p>{% if selected.modified_at %}آخر تعديل: {{ selected.modified_at }}{% endif %}</p>
         </div>
-        <div style="display:flex; gap:10px; flex-wrap:wrap;">
-          <a class="btn" href="{% url 'employee_scorm_courses' %}" style="text-decoration:none;">رجوع للقائمة</a>
+        <div class="scorm-actions">
+          <a class="btn scorm-link-button" href="{% url 'employee_scorm_courses' %}">رجوع للقائمة</a>
           <button class="btn secondary" type="button" id="checkCompleteBtn">التحقق من الإكمال</button>
         </div>
       </div>
 
       {% if selected.player_url %}
-        <div style="border:1px solid #e5e7eb; border-radius:12px; overflow:hidden; background:#fff;">
+        <div class="scorm-frame-wrap">
           <iframe
             id="scormFrame"
             src="{{ selected.player_url }}"
-            style="width:100%; height:650px; border:0; display:block;"
+            class="scorm-frame"
             allowfullscreen
           ></iframe>
         </div>
@@ -50,14 +53,14 @@
   </div>
 </section>
 
-<div id="courseCertModal" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,.45); z-index:1400; padding:20px;">
-  <div style="max-width:460px; margin:10vh auto 0; background:#fff; border-radius:18px; padding:24px; box-shadow:0 24px 48px rgba(15,23,42,.18);">
-    <h3 id="courseCertTitle" style="margin:0 0 10px;">حالة الإكمال</h3>
-    <p id="courseCertText" class="meta" style="margin:0 0 18px;"></p>
-    <div style="display:flex; gap:10px; flex-wrap:wrap;">
-      <a id="courseCertDownloadBtn" class="btn secondary" href="#" target="_blank" rel="noopener" style="display:none; text-decoration:none;">تحميل الشهادة</a>
+<div id="courseCertModal" class="scorm-modal">
+  <div class="scorm-modal__card">
+    <h3 id="courseCertTitle" class="scorm-modal__title">حالة الإكمال</h3>
+    <p id="courseCertText" class="meta scorm-modal__text"></p>
+    <div class="scorm-modal__actions">
+      <a id="courseCertDownloadBtn" class="btn secondary scorm-download-btn scorm-link-button" href="#" target="_blank" rel="noopener">تحميل الشهادة</a>
       <button id="courseCertDashboardBtn" class="btn" type="button">لوحة الموظف</button>
-      <button id="courseCertCloseBtn" class="btn" type="button" style="background:#475569;">إغلاق</button>
+      <button id="courseCertCloseBtn" class="btn scorm-close-btn" type="button">إغلاق</button>
     </div>
   </div>
 </div>
