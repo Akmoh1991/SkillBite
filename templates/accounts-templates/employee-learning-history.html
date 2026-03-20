@@ -1,8 +1,8 @@
 {% extends "accounts-templates/business-owner-base.html" %}
 
-{% block page_title %}{{ business.name }} | السجل التدريبي{% endblock %}
+{% block page_title %}{{ business.name }} | سجل الدورات المكتملة{% endblock %}
 {% block hero_section %}{% endblock %}
-{% block hero_title %}السجل التدريبي{% endblock %}
+{% block hero_title %}سجل الدورات المكتملة{% endblock %}
 {% block hero_text %}استعرض الدورات التي أكملتها وحمّل شهاداتك بصيغة PDF من مكان واحد.{% endblock %}
 {% block extra_head %}
   <link rel="stylesheet" href="/static/branding/employee-learning.css">
@@ -12,7 +12,8 @@
 <section class="employee-history-page">
   <div class="employee-history-toolbar">
     <div>
-      <h2 class="employee-history-title">السجل التدريبي</h2>
+      <h2 class="employee-history-title">سجل الدورات المكتملة</h2>
+      <p class="employee-history-subtitle">السجل التدريبي الخاص بك مع روابط الشهادات المعتمدة.</p>
     </div>
     <label class="employee-history-search-wrap" for="employee-history-search">
       <input id="employee-history-search" class="employee-history-search" type="search" placeholder="ابحث في السجل التدريبي">

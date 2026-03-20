@@ -47,8 +47,28 @@
 }
 
 .course-item {
+  display: grid;
+  gap: 12px;
   margin-top: 0;
   margin-bottom: 14px;
+}
+
+.course-item-copy {
+  display: grid;
+  gap: 8px;
+}
+
+.course-item-title {
+  margin: 0;
+  color: #0f172a;
+  font-size: 22px;
+  line-height: 1.35;
+}
+
+.course-item-body {
+  margin: 0;
+  color: #475569;
+  line-height: 1.8;
 }
 
 .course-item-link {

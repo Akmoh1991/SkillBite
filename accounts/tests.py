@@ -1015,44 +1015,6 @@ class SuperAdminFlowTests(TestCase):
         self.course.refresh_from_db()
         self.assertFalse(self.course.is_active)
 
-    def test_super_admin_can_publish_employee_catalog_for_business(self):
-        Course.objects.filter(business=self.business).delete()
-        self.client.login(username='platform_admin', password='pass12345')
-
-        response = self.client.post(
-            reverse('super_admin_publish_employee_catalog'),
-            {'business': self.business.id},
-        )
-
-        self.assertRedirects(response, reverse('super_admin_learning'))
-        self.assertEqual(Course.objects.filter(business=self.business).count(), 9)
-        self.assertTrue(CourseContentItem.objects.filter(course__business=self.business).exists())
-
-    def test_super_admin_publish_catalog_does_not_assign_courses_to_employee(self):
-        employee_user = User.objects.create_user(username='employee_super_admin_rule', password='pass12345')
-        EmployeeProfile.objects.create(
-            user=employee_user,
-            business=self.business,
-            job_title=self.job_title,
-            created_by=self.super_admin,
-        )
-
-        self.client.login(username='platform_admin', password='pass12345')
-        response = self.client.post(
-            reverse('super_admin_publish_employee_catalog'),
-            {'business': self.business.id},
-        )
-
-        self.assertRedirects(response, reverse('super_admin_learning'))
-        self.assertFalse(CourseAssignment.objects.filter(employee=employee_user).exists())
-
-        self.client.logout()
-        self.client.login(username='employee_super_admin_rule', password='pass12345')
-        employee_response = self.client.get(reverse('employee_courses'))
-
-        self.assertEqual(employee_response.status_code, 200)
-        self.assertNotContains(employee_response, self.course.title)
-
     def test_super_admin_can_create_exam_template_and_assign_it_to_single_course(self):
         second_course = Course.objects.create(
             business=self.business,

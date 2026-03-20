@@ -30,6 +30,17 @@
       <div class="list">
         {% for item in content_items %}
           <div class="checklist-form course-item">
+            {% if item.title or item.body %}
+              <div class="course-item-copy">
+                {% if item.title %}
+                  <h3 class="course-item-title">{{ item.title }}</h3>
+                {% endif %}
+                {% if item.body %}
+                  <p class="course-item-body">{{ item.body|linebreaksbr }}</p>
+                {% endif %}
+              </div>
+            {% endif %}
+
             {% if item.material_url %}
               <div class="course-item-link">
                 <a href="{{ item.material_url }}" target="_blank" rel="noopener">فتح الرابط الخارجي</a>
