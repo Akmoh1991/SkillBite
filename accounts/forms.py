@@ -1,7 +1,9 @@
 from pathlib import Path
 
 from django import forms
+from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.auth.password_validation import validate_password
 from django.core.validators import RegexValidator
 
 from .models import BusinessTenant, JobTitle
@@ -23,17 +25,45 @@ User = get_user_model()
 SAFE_VIDEO_EXTENSIONS = {'.mp4', '.webm'}
 SAFE_VIDEO_MIME_TYPES = {'video/mp4', 'video/webm'}
 SAFE_VIDEO_ACCEPT_ATTR = 'video/mp4,video/webm,.mp4,.webm'
+SAFE_PDF_EXTENSIONS = {'.pdf'}
+SAFE_PDF_MIME_TYPES = {'application/pdf'}
+SAFE_PDF_ACCEPT_ATTR = 'application/pdf,.pdf'
+MAX_VIDEO_UPLOAD_BYTES = int(getattr(settings, 'MAX_VIDEO_UPLOAD_BYTES', 250 * 1024 * 1024))
+MAX_PDF_UPLOAD_BYTES = int(getattr(settings, 'MAX_PDF_UPLOAD_BYTES', 20 * 1024 * 1024))
+
+
+def _validate_upload_size(upload, *, max_bytes: int, label: str):
+    if not upload:
+        return upload
+    if getattr(upload, 'size', 0) > max_bytes:
+        max_mb = max_bytes // (1024 * 1024)
+        raise forms.ValidationError(f'{label} exceeds the allowed size limit of {max_mb} MB.')
+    return upload
 
 
 def validate_browser_safe_video(upload):
     if not upload:
         return upload
+    _validate_upload_size(upload, max_bytes=MAX_VIDEO_UPLOAD_BYTES, label='Video file')
     suffix = Path((upload.name or '').strip()).suffix.lower()
     if suffix not in SAFE_VIDEO_EXTENSIONS:
         raise forms.ValidationError('صيغة الفيديو غير مدعومة. استخدم MP4 أو WebM فقط.')
     content_type = (getattr(upload, 'content_type', '') or '').lower()
     if content_type and content_type not in SAFE_VIDEO_MIME_TYPES:
         raise forms.ValidationError('نوع ملف الفيديو غير مدعوم. استخدم MP4 أو WebM فقط.')
+    return upload
+
+
+def validate_browser_safe_pdf(upload):
+    if not upload:
+        return upload
+    _validate_upload_size(upload, max_bytes=MAX_PDF_UPLOAD_BYTES, label='PDF file')
+    suffix = Path((upload.name or '').strip()).suffix.lower()
+    if suffix not in SAFE_PDF_EXTENSIONS:
+        raise forms.ValidationError('Unsupported document format. Upload a PDF file only.')
+    content_type = (getattr(upload, 'content_type', '') or '').lower()
+    if content_type and content_type not in SAFE_PDF_MIME_TYPES:
+        raise forms.ValidationError('Unsupported PDF content type. Upload a valid PDF file only.')
     return upload
 
 
@@ -83,6 +113,11 @@ class RegisterForm(forms.Form):
     )
     region = forms.ChoiceField(label='المنطقة', choices=REGION_CHOICES, required=False)
 
+    def clean_password(self):
+        password = self.cleaned_data.get('password') or ''
+        validate_password(password)
+        return password
+
     def clean(self):
         cleaned_data = super().clean()
         for field in ('company_name', 'phone_number', 'id_number', 'region', 'sec_business_line'):
@@ -102,6 +137,11 @@ class BusinessEmployeeCreateForm(forms.Form):
         business = kwargs.pop('business')
         super().__init__(*args, **kwargs)
         self.fields['job_title'].queryset = JobTitle.objects.filter(business=business).order_by('name', 'id')
+
+    def clean_password(self):
+        password = self.cleaned_data.get('password') or ''
+        validate_password(password)
+        return password
 
 
 class JobTitleForm(forms.ModelForm):
@@ -126,9 +166,13 @@ class CourseContentItemForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields['course'].queryset = Course.objects.filter(business=business).order_by('title', 'id')
         self.fields['video_file'].widget.attrs['accept'] = SAFE_VIDEO_ACCEPT_ATTR
+        self.fields['pdf_file'].widget.attrs['accept'] = SAFE_PDF_ACCEPT_ATTR
 
     def clean_video_file(self):
         return validate_browser_safe_video(self.cleaned_data.get('video_file'))
+
+    def clean_pdf_file(self):
+        return validate_browser_safe_pdf(self.cleaned_data.get('pdf_file'))
 
 
 class SOPChecklistForm(forms.ModelForm):
@@ -170,6 +214,11 @@ class SuperAdminBusinessCreateForm(forms.Form):
     owner_password = forms.CharField(widget=forms.PasswordInput)
     is_active = forms.BooleanField(required=False, initial=True)
 
+    def clean_owner_password(self):
+        password = self.cleaned_data.get('owner_password') or ''
+        validate_password(password)
+        return password
+
 
 class SuperAdminUserCreateForm(forms.Form):
     ROLE_CHOICES = (
@@ -192,6 +241,11 @@ class SuperAdminUserCreateForm(forms.Form):
         super().__init__(*args, **kwargs)
         self.fields['business'].queryset = BusinessTenant.objects.filter(is_active=True).order_by('name', 'id')
 
+    def clean_password(self):
+        password = self.cleaned_data.get('password') or ''
+        validate_password(password)
+        return password
+
     def clean(self):
         cleaned_data = super().clean()
         role = cleaned_data.get('role')
@@ -210,7 +264,7 @@ class SuperAdminGrantRoleForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['user'].queryset = User.objects.filter(is_staff=False, is_superuser=False).order_by('username', 'id')
+        self.fields['user'].queryset = User.objects.exclude(is_staff=True, is_superuser=True).order_by('username', 'id')
 
 
 class SuperAdminCourseCreateForm(forms.ModelForm):
@@ -243,6 +297,7 @@ class SuperAdminCourseContentItemForm(forms.ModelForm):
         self.fields['business'].queryset = business_queryset
         self.fields['course'].queryset = Course.objects.none()
         self.fields['video_file'].widget.attrs['accept'] = SAFE_VIDEO_ACCEPT_ATTR
+        self.fields['pdf_file'].widget.attrs['accept'] = SAFE_PDF_ACCEPT_ATTR
 
         business = None
         if self.is_bound:
@@ -267,6 +322,9 @@ class SuperAdminCourseContentItemForm(forms.ModelForm):
 
     def clean_video_file(self):
         return validate_browser_safe_video(self.cleaned_data.get('video_file'))
+
+    def clean_pdf_file(self):
+        return validate_browser_safe_pdf(self.cleaned_data.get('pdf_file'))
 
 
 class SuperAdminCourseCatalogPublishForm(forms.Form):

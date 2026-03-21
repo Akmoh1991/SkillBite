@@ -20,6 +20,12 @@
             الاختبار
           </a>
         {% endif %}
+        {% if not exam_template %}
+          <form method="post" action="{% url 'employee_course_complete' assignment.id %}">
+            {% csrf_token %}
+            <button class="btn course-link-button" type="submit">Confirm Completion</button>
+          </form>
+        {% endif %}
         <a class="btn course-link-button" href="{% url 'employee_courses' %}">
           العودة إلى الدورات
         </a>

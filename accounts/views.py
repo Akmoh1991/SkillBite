@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import io
 import json
 import mimetypes
@@ -14,6 +14,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import authenticate, get_user_model, login, logout
 from django.contrib.auth.decorators import login_required
+from django.core.cache import cache
 from django.core.files.base import ContentFile
 from django.core.files.storage import FileSystemStorage
 from django.db import IntegrityError, transaction
@@ -62,13 +63,30 @@ mimetypes.add_type('application/json', '.json')
 mimetypes.add_type('image/svg+xml', '.svg')
 mimetypes.add_type('audio/mpeg', '.mp3')
 
+LOGIN_RATE_LIMIT_ATTEMPTS = int(getattr(settings, 'LOGIN_RATE_LIMIT_ATTEMPTS', 5))
+LOGIN_RATE_LIMIT_WINDOW_SECONDS = int(getattr(settings, 'LOGIN_RATE_LIMIT_WINDOW_SECONDS', 15 * 60))
+MAX_SCORM_UPLOAD_BYTES = int(getattr(settings, 'MAX_SCORM_UPLOAD_BYTES', 100 * 1024 * 1024))
+MAX_SCORM_ARCHIVE_MEMBERS = int(getattr(settings, 'MAX_SCORM_ARCHIVE_MEMBERS', 1500))
+MAX_SCORM_UNCOMPRESSED_BYTES = int(getattr(settings, 'MAX_SCORM_UNCOMPRESSED_BYTES', 500 * 1024 * 1024))
+COURSE_COMPLETION_READY_WINDOW_SECONDS = int(getattr(settings, 'COURSE_COMPLETION_READY_WINDOW_SECONDS', 8 * 60 * 60))
+AUTO_GRADED_QUESTION_TYPES = {
+    ExamQuestion.QuestionType.MCQ_SINGLE,
+    ExamQuestion.QuestionType.MCQ_MULTI,
+    ExamQuestion.QuestionType.TRUE_FALSE,
+}
+
 
 def _is_business_owner(user) -> bool:
     return bool(user and user.is_authenticated and BusinessTenant.objects.filter(owner=user, is_active=True).exists())
 
 
 def _is_super_admin(user) -> bool:
-    return bool(user and user.is_authenticated and (getattr(user, 'is_superuser', False) or getattr(user, 'is_staff', False)))
+    return bool(
+        user
+        and user.is_authenticated
+        and getattr(user, 'is_staff', False)
+        and getattr(user, 'is_superuser', False)
+    )
 
 
 def _is_employee(user) -> bool:
@@ -85,6 +103,154 @@ def _business_owner_guard(request) -> bool:
 
 def _employee_guard(request) -> bool:
     return _is_employee(getattr(request, 'user', None))
+
+
+def _active_super_admins_queryset():
+    return User.objects.filter(is_active=True, is_staff=True, is_superuser=True)
+
+
+def _client_ip(request) -> str:
+    forwarded_for = (request.META.get('HTTP_X_FORWARDED_FOR') or '').split(',')
+    candidate = forwarded_for[0].strip() if forwarded_for and forwarded_for[0].strip() else ''
+    return candidate or (request.META.get('REMOTE_ADDR') or 'unknown')
+
+
+def _login_rate_limit_cache_key(request, username: str) -> str:
+    normalized_username = (username or '').strip().casefold() or '_'
+    return f'login-rate-limit:{_client_ip(request)}:{normalized_username}'
+
+
+def _get_login_rate_limit_state(request, username: str) -> dict:
+    return cache.get(_login_rate_limit_cache_key(request, username), {})
+
+
+def _get_login_block_seconds_remaining(request, username: str) -> int:
+    state = _get_login_rate_limit_state(request, username)
+    blocked_until = state.get('blocked_until')
+    if not blocked_until:
+        return 0
+    remaining = int(blocked_until - timezone.now().timestamp())
+    return max(remaining, 0)
+
+
+def _register_failed_login_attempt(request, username: str) -> int:
+    cache_key = _login_rate_limit_cache_key(request, username)
+    state = cache.get(cache_key, {})
+    count = int(state.get('count', 0)) + 1
+    blocked_until = state.get('blocked_until')
+    timeout = LOGIN_RATE_LIMIT_WINDOW_SECONDS
+    if count >= LOGIN_RATE_LIMIT_ATTEMPTS:
+        blocked_until = timezone.now().timestamp() + LOGIN_RATE_LIMIT_WINDOW_SECONDS
+    cache.set(
+        cache_key,
+        {
+            'count': count,
+            'blocked_until': blocked_until,
+        },
+        timeout=timeout,
+    )
+    return max(int((blocked_until or 0) - timezone.now().timestamp()), 0)
+
+
+def _clear_failed_login_attempts(request, username: str) -> None:
+    cache.delete(_login_rate_limit_cache_key(request, username))
+
+
+def _course_completion_ready_session_key(assignment_id: int) -> str:
+    return f'course-completion-ready:{assignment_id}'
+
+
+def _mark_course_completion_ready(request, assignment) -> None:
+    request.session[_course_completion_ready_session_key(assignment.id)] = {
+        'assignment_id': assignment.id,
+        'course_id': assignment.course_id,
+        'marked_at': timezone.now().isoformat(),
+    }
+    request.session.modified = True
+
+
+def _has_course_completion_ready(request, assignment) -> bool:
+    state = request.session.get(_course_completion_ready_session_key(assignment.id))
+    if not isinstance(state, dict):
+        return False
+    if state.get('assignment_id') != assignment.id or state.get('course_id') != assignment.course_id:
+        return False
+    marked_at_raw = state.get('marked_at')
+    if not marked_at_raw:
+        return False
+    try:
+        marked_at = datetime.fromisoformat(marked_at_raw)
+    except ValueError:
+        return False
+    if timezone.is_naive(marked_at):
+        marked_at = timezone.make_aware(marked_at, timezone.get_current_timezone())
+    age_seconds = (timezone.now() - marked_at).total_seconds()
+    return age_seconds <= COURSE_COMPLETION_READY_WINDOW_SECONDS
+
+
+def _clear_course_completion_ready(request, assignment_id: int) -> None:
+    request.session.pop(_course_completion_ready_session_key(assignment_id), None)
+    request.session.modified = True
+
+
+def _exam_attempt_session_key(assignment_id: int) -> str:
+    return f'exam-attempt:{assignment_id}'
+
+
+def _get_exam_attempt(request, assignment_id: int) -> dict | None:
+    attempt = request.session.get(_exam_attempt_session_key(assignment_id))
+    return attempt if isinstance(attempt, dict) else None
+
+
+def _start_exam_attempt(request, assignment, exam_questions, estimated_exam_minutes: int) -> dict:
+    current_attempt = _get_exam_attempt(request, assignment.id)
+    now = timezone.now()
+    if current_attempt and _remaining_exam_seconds(current_attempt) > 0:
+        return current_attempt
+    expires_at = now + timedelta(minutes=max(estimated_exam_minutes, 1))
+    attempt = {
+        'token': uuid.uuid4().hex,
+        'assignment_id': assignment.id,
+        'course_id': assignment.course_id,
+        'question_ids': [question.id for question in exam_questions],
+        'started_at': now.isoformat(),
+        'expires_at': expires_at.isoformat(),
+    }
+    request.session[_exam_attempt_session_key(assignment.id)] = attempt
+    request.session.modified = True
+    return attempt
+
+
+def _clear_exam_attempt(request, assignment_id: int) -> None:
+    request.session.pop(_exam_attempt_session_key(assignment_id), None)
+    request.session.modified = True
+
+
+def _remaining_exam_seconds(attempt: dict | None) -> int:
+    if not attempt:
+        return 0
+    expires_at_raw = attempt.get('expires_at')
+    if not expires_at_raw:
+        return 0
+    try:
+        expires_at = datetime.fromisoformat(expires_at_raw)
+    except ValueError:
+        return 0
+    if timezone.is_naive(expires_at):
+        expires_at = timezone.make_aware(expires_at, timezone.get_current_timezone())
+    return max(int((expires_at - timezone.now()).total_seconds()), 0)
+
+
+def _annotate_exam_questions_with_answers(exam_questions, answer_source=None):
+    answer_source = answer_source or {}
+    for question in exam_questions:
+        question.selected_option_id = (answer_source.get(f'question_{question.id}') or '').strip()
+        question.selected_option_ids = {
+            str(value).strip()
+            for value in answer_source.getlist(f'question_{question.id}')
+            if str(value).strip()
+        } if hasattr(answer_source, 'getlist') else set()
+        question.submitted_text = (answer_source.get(f'question_{question.id}_text') or '').strip()
 
 
 def _flash_form_errors(request, form, label_map: dict[str, str] | None = None) -> None:
@@ -305,7 +471,11 @@ def _safe_extract_zip(zip_abs_path: str, extract_to_dir: str) -> None:
                 continue
             os.makedirs(os.path.dirname(dest_path), exist_ok=True)
             with zf.open(member) as src, open(dest_path, 'wb') as dst:
-                dst.write(src.read())
+                while True:
+                    chunk = src.read(1024 * 1024)
+                    if not chunk:
+                        break
+                    dst.write(chunk)
 
 
 def _scorm_storage() -> FileSystemStorage:
@@ -339,6 +509,51 @@ def _save_scorm_metadata(data: dict) -> None:
             json.dump(data, handle, ensure_ascii=False, indent=2)
     except Exception:
         pass
+
+
+def _validate_scorm_zip_upload(upload) -> tuple[bool, str | None]:
+    if not upload:
+        return False, 'ÙŠØ±Ø¬Ù‰ Ø§Ø®ØªÙŠØ§Ø± Ù…Ù„Ù SCORM Ø¨ØµÙŠØºØ© ZIP'
+    if not upload.name.lower().endswith('.zip'):
+        return False, 'ØµÙŠØºØ© Ø§Ù„Ù…Ù„Ù ØºÙŠØ± Ù…Ø¯Ø¹ÙˆÙ…Ø©. ÙŠØ±Ø¬Ù‰ Ø±ÙØ¹ Ù…Ù„Ù ZIP ÙÙ‚Ø·'
+    if getattr(upload, 'size', 0) > MAX_SCORM_UPLOAD_BYTES:
+        max_mb = MAX_SCORM_UPLOAD_BYTES // (1024 * 1024)
+        return False, f'SCORM package exceeds the allowed size limit of {max_mb} MB.'
+    try:
+        upload.seek(0)
+        with zipfile.ZipFile(upload) as archive:
+            infos = archive.infolist()
+            if not infos:
+                return False, 'Ù…Ù„Ù SCORM ÙØ§Ø±Øº Ø£Ùˆ ØºÙŠØ± ØµØ§Ù„Ø­.'
+            if len(infos) > MAX_SCORM_ARCHIVE_MEMBERS:
+                return False, 'SCORM package contains too many files.'
+            total_uncompressed = 0
+            has_launch_candidate = False
+            for info in infos:
+                member_name = (info.filename or '').replace('\\', '/').strip()
+                if not member_name:
+                    continue
+                normalized_name = member_name.lstrip('/')
+                if normalized_name.startswith('..') or '/../' in f'/{normalized_name}':
+                    return False, 'SCORM package contains an invalid file path.'
+                if info.file_size < 0:
+                    return False, 'SCORM package contains an invalid file size.'
+                total_uncompressed += info.file_size
+                if total_uncompressed > MAX_SCORM_UNCOMPRESSED_BYTES:
+                    return False, 'SCORM package is too large after extraction.'
+                lower_name = normalized_name.lower()
+                if lower_name == 'imsmanifest.xml' or lower_name.endswith('/imsmanifest.xml') or lower_name.endswith('.html'):
+                    has_launch_candidate = True
+            if not has_launch_candidate:
+                return False, 'SCORM package must include an imsmanifest.xml file or HTML launch file.'
+    except (OSError, zipfile.BadZipFile, RuntimeError):
+        return False, 'Ù…Ù„Ù ZIP ØºÙŠØ± ØµØ§Ù„Ø­ Ø£Ùˆ ØªØ§Ù„Ù.'
+    finally:
+        try:
+            upload.seek(0)
+        except Exception:
+            pass
+    return True, None
 
 
 def _find_scorm_launch_relpath(extract_dir: str) -> str | None:
@@ -465,6 +680,10 @@ def _get_scorm_package_or_404(filename: str, include_download_url: bool = True):
 
 def _handle_scorm_upload_post(request, success_redirect_name: str):
     uploaded = request.FILES.get('scorm_zip')
+    is_valid, error_message = _validate_scorm_zip_upload(uploaded)
+    if not is_valid:
+        messages.error(request, error_message or 'SCORM package is invalid.')
+        return redirect(success_redirect_name)
     if not uploaded:
         messages.error(request, 'يرجى اختيار ملف SCORM بصيغة ZIP')
         return redirect(success_redirect_name)
@@ -579,6 +798,74 @@ def _store_course_completion_popup(request, assignment):
     }
 
 
+def _estimated_exam_minutes_for_assignment(assignment) -> int:
+    exam_template = assignment.course.exam_template
+    return exam_template.duration_minutes if exam_template else max(10, min(45, max(assignment.course.estimated_minutes, 1) // 2))
+
+
+def _exam_questions_for_assignment(assignment):
+    exam_template = assignment.course.exam_template
+    if not exam_template:
+        return []
+    return list(exam_template.questions.prefetch_related('options').order_by('order', 'id'))
+
+
+def _employee_exam_take_context(request, assignment, employee_profile, *, answer_source=None, ensure_attempt: bool = True):
+    exam_questions = _exam_questions_for_assignment(assignment)
+    estimated_exam_minutes = _estimated_exam_minutes_for_assignment(assignment)
+    attempt = _get_exam_attempt(request, assignment.id)
+    if ensure_attempt and exam_questions and not attempt:
+        attempt = _start_exam_attempt(request, assignment, exam_questions, estimated_exam_minutes)
+    _annotate_exam_questions_with_answers(exam_questions, answer_source)
+    return {
+        'employee_profile': employee_profile,
+        'business': employee_profile.business,
+        'assignment': assignment,
+        'course': assignment.course,
+        'exam_template': assignment.course.exam_template,
+        'exam_questions': exam_questions,
+        'total_questions': len(exam_questions),
+        'remaining_seconds': _remaining_exam_seconds(attempt),
+        'estimated_exam_minutes': estimated_exam_minutes,
+        'attempt_token': (attempt or {}).get('token', ''),
+    }
+
+
+def _evaluate_employee_exam_submission(exam_questions, submitted_data) -> dict:
+    missing_required = []
+    unsupported_questions = []
+    earned_points = 0
+    total_points = 0
+    for question in exam_questions:
+        points = max(int(getattr(question, 'points', 1) or 1), 1)
+        total_points += points
+        if question.question_type not in AUTO_GRADED_QUESTION_TYPES:
+            unsupported_questions.append(question)
+            continue
+        correct_option_ids = {str(option.id) for option in question.options.all() if option.is_correct}
+        submitted_values = {
+            str(value).strip()
+            for value in submitted_data.getlist(f'question_{question.id}')
+            if str(value).strip()
+        }
+        if question.question_type != ExamQuestion.QuestionType.MCQ_MULTI:
+            selected_value = (submitted_data.get(f'question_{question.id}') or '').strip()
+            submitted_values = {selected_value} if selected_value else set()
+        if question.is_required and not submitted_values:
+            missing_required.append(question)
+            continue
+        if submitted_values and submitted_values == correct_option_ids:
+            earned_points += points
+    percent = int(round((earned_points / total_points) * 100)) if total_points else 0
+    return {
+        'missing_required': missing_required,
+        'unsupported_questions': unsupported_questions,
+        'earned_points': earned_points,
+        'total_points': total_points,
+        'percent': percent,
+    }
+
+
 @xframe_options_sameorigin
 @login_required
 def scorm_player_file_view(request, folder: str, filepath: str):
@@ -624,7 +911,7 @@ def _super_admin_dashboard_context():
     businesses = BusinessTenant.objects.select_related('owner').order_by('name', 'id')
     assignments = CourseAssignment.objects.select_related('business', 'course', 'employee').order_by('-assigned_at', '-id')
     completions = SOPChecklistCompletion.objects.select_related('business', 'checklist', 'employee').order_by('-completed_for', '-completed_at', '-id')
-    super_admins = User.objects.filter(is_active=True).filter(Q(is_staff=True) | Q(is_superuser=True)).order_by('username')
+    super_admins = _active_super_admins_queryset().order_by('username')
     return {
         'business_count': businesses.count(),
         'active_business_count': businesses.filter(is_active=True).count(),
@@ -1315,7 +1602,7 @@ def super_admin_user_role_grant_action(request):
         messages.error(request, form.errors.as_text())
         return render(request, 'accounts-templates/super-admin-user-role-grant.html', _super_admin_user_role_grant_context(form))
     target = form.cleaned_data['user']
-    if target.is_staff or target.is_superuser:
+    if _is_super_admin(target):
         messages.error(request, 'This user already has super admin access.')
         return render(request, 'accounts-templates/super-admin-user-role-grant.html', _super_admin_user_role_grant_context(form))
     target.is_staff = True
@@ -1334,6 +1621,9 @@ def super_admin_user_toggle_active_action(request, user_id: int):
     if target == request.user and target.is_active:
         messages.error(request, 'You cannot deactivate your own account.')
         return redirect('super_admin_users')
+    if target.is_active and _is_super_admin(target) and _active_super_admins_queryset().count() <= 1:
+        messages.error(request, 'You cannot deactivate the last active super admin.')
+        return redirect('super_admin_users')
     target.is_active = not target.is_active
     target.save(update_fields=['is_active'])
     messages.success(request, f'User "{target.username}" is now {"active" if target.is_active else "inactive"}.')
@@ -1346,7 +1636,7 @@ def super_admin_user_toggle_role_action(request, user_id: int):
     if not _super_admin_guard(request):
         return redirect('home')
     target = get_object_or_404(User, id=user_id)
-    if target == request.user and target.is_staff:
+    if target == request.user and _is_super_admin(target):
         messages.error(request, 'You cannot remove your own super admin access.')
         return redirect('super_admin_users')
     make_super = not _is_super_admin(target)
@@ -1358,6 +1648,9 @@ def super_admin_user_toggle_role_action(request, user_id: int):
         return redirect('super_admin_users')
     if BusinessTenant.objects.filter(owner=target).exists():
         messages.error(request, 'Business owners must be reassigned before removing super admin access.')
+        return redirect('super_admin_users')
+    if _active_super_admins_queryset().count() <= 1:
+        messages.error(request, 'You cannot remove the last active super admin.')
         return redirect('super_admin_users')
     target.is_staff = False
     target.is_superuser = False
@@ -1427,12 +1720,23 @@ def login_view(request):
     if login_type not in {'individual', 'company'}:
         login_type = 'individual'
     if request.method == 'POST':
-        user = authenticate(request, username=(request.POST.get('username') or '').strip(), password=request.POST.get('password') or '')
+        username = (request.POST.get('username') or '').strip()
+        blocked_seconds = _get_login_block_seconds_remaining(request, username)
+        if blocked_seconds:
+            minutes = max(1, (blocked_seconds + 59) // 60)
+            response = render(request, 'accounts-templates/login.html', {'login_type': login_type, 'next': next_url})
+            response.status_code = 429
+            response['Retry-After'] = str(blocked_seconds)
+            messages.error(request, f'Too many failed login attempts. Try again in about {minutes} minute(s).')
+            return response
+        user = authenticate(request, username=username, password=request.POST.get('password') or '')
         if user:
+            _clear_failed_login_attempts(request, username)
             login(request, user)
             if next_url and url_has_allowed_host_and_scheme(url=next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()):
                 return redirect(next_url)
             return redirect(_primary_dashboard_route(user))
+        _register_failed_login_attempt(request, username)
         messages.error(request, 'اسم المستخدم أو كلمة المرور غير صحيحة')
     return render(request, 'accounts-templates/login.html', {'login_type': login_type, 'next': next_url})
 
@@ -1455,7 +1759,8 @@ def _business_owner_dashboard_context(request):
     )
     courses = business.courses.annotate(content_item_total=Count('content_items')).order_by('title', 'id')
     assignable_courses = (
-        Course.objects.all()
+        _accessible_business_courses_queryset(business)
+        .filter(is_active=True)
         .select_related('business')
         .order_by('business__name', 'title', 'id')
     )
@@ -1537,7 +1842,12 @@ def business_owner_dashboard_assign_course_action(request, employee_id: int):
     if not course_id:
         messages.error(request, 'الدورة التدريبية: هذا الحقل مطلوب.')
         return redirect('business_owner_dashboard')
-    course = Course.objects.filter(id=course_id).select_related('business').first()
+    course = (
+        _accessible_business_courses_queryset(business)
+        .filter(is_active=True, id=course_id)
+        .select_related('business')
+        .first()
+    )
     if course is None:
         messages.error(request, 'الدورة التدريبية المحددة غير صالحة.')
         return redirect('business_owner_dashboard')
@@ -2076,6 +2386,7 @@ def employee_course_view(request, assignment_id: int):
     if assignment.status == CourseAssignment.Status.ASSIGNED:
         assignment.status = CourseAssignment.Status.IN_PROGRESS
         assignment.save(update_fields=['status'])
+    _mark_course_completion_ready(request, assignment)
     content_items = _visible_course_content_items(assignment.course.content_items.all())
     return render(
         request,
@@ -2102,7 +2413,7 @@ def employee_course_exam_view(request, assignment_id: int):
     )
     content_items = list(assignment.course.content_items.all())
     exam_template = assignment.course.exam_template
-    estimated_exam_minutes = exam_template.duration_minutes if exam_template else max(10, min(45, max(assignment.course.estimated_minutes, 1) // 2))
+    estimated_exam_minutes = _estimated_exam_minutes_for_assignment(assignment)
     return render(
         request,
         'accounts-templates/employee-course-exam.html',
@@ -2128,37 +2439,14 @@ def employee_course_exam_take_view(request, assignment_id: int):
         _visible_employee_course_assignments_queryset(request.user, employee_profile.business),
         id=assignment_id,
     )
-    content_items = list(assignment.course.content_items.all())
-    exam_template = assignment.course.exam_template
-    exam_questions = list(exam_template.questions.prefetch_related('options').order_by('order', 'id')) if exam_template else []
-    total_questions = max(len(exam_questions) or len(content_items), 1)
-    requested_index = request.GET.get('q', '1')
-    current_index = int(requested_index) if str(requested_index).isdigit() else 1
-    current_index = max(1, min(current_index, total_questions))
-    current_question = exam_questions[current_index - 1] if exam_questions else None
-    current_question_options = list(current_question.options.all()) if current_question else []
-    current_item = content_items[current_index - 1] if content_items and not current_question else None
-    estimated_exam_minutes = exam_template.duration_minutes if exam_template else max(10, min(45, max(assignment.course.estimated_minutes, 1) // 2))
-    return render(
-        request,
-        'accounts-templates/employee-course-exam-take.html',
-        {
-            'employee_profile': employee_profile,
-            'business': employee_profile.business,
-            'assignment': assignment,
-            'course': assignment.course,
-            'content_items': content_items,
-            'exam_template': exam_template,
-            'current_question': current_question,
-            'current_question_options': current_question_options,
-            'current_item': current_item,
-            'current_index': current_index,
-            'total_questions': total_questions,
-            'is_template_question': bool(current_question),
-            'remaining_seconds': estimated_exam_minutes * 60,
-            'estimated_exam_minutes': estimated_exam_minutes,
-        },
-    )
+    if not assignment.course.exam_template_id:
+        messages.error(request, 'No exam is linked to this course.')
+        return redirect('employee_course_view', assignment_id=assignment.id)
+    context = _employee_exam_take_context(request, assignment, employee_profile, ensure_attempt=True)
+    if not context['exam_questions']:
+        messages.error(request, 'No exam questions are configured for this course.')
+        return redirect('employee_course_exam', assignment_id=assignment.id)
+    return render(request, 'accounts-templates/employee-course-exam-take.html', context)
 
 
 @login_required
@@ -2174,9 +2462,37 @@ def employee_course_exam_submit_action(request, assignment_id: int):
     if not assignment.course.exam_template_id:
         messages.error(request, 'لا يوجد اختبار مرتبط بهذه الدورة.')
         return redirect('employee_course_view', assignment_id=assignment.id)
+    exam_questions = _exam_questions_for_assignment(assignment)
+    if not exam_questions:
+        messages.error(request, 'No exam questions are configured for this course.')
+        return redirect('employee_course_exam', assignment_id=assignment.id)
+    attempt = _get_exam_attempt(request, assignment.id)
+    if not attempt or attempt.get('token') != (request.POST.get('attempt_token') or '').strip():
+        messages.error(request, 'The exam session has expired. Start the exam again.')
+        return redirect('employee_course_exam_take', assignment_id=assignment.id)
+    if _remaining_exam_seconds(attempt) <= 0:
+        _clear_exam_attempt(request, assignment.id)
+        messages.error(request, 'The exam time has expired. Start a new attempt.')
+        return redirect('employee_course_exam', assignment_id=assignment.id)
+    evaluation = _evaluate_employee_exam_submission(exam_questions, request.POST)
+    if evaluation['unsupported_questions']:
+        _clear_exam_attempt(request, assignment.id)
+        messages.error(request, 'This exam includes question types that require manual grading.')
+        return redirect('employee_course_exam', assignment_id=assignment.id)
+    if evaluation['missing_required']:
+        messages.error(request, 'Answer all required questions before submitting the exam.')
+        context = _employee_exam_take_context(request, assignment, employee_profile, answer_source=request.POST, ensure_attempt=False)
+        return render(request, 'accounts-templates/employee-course-exam-take.html', context, status=400)
+    passing_score = assignment.course.exam_template.passing_score_percent
+    if evaluation['percent'] < passing_score:
+        _clear_exam_attempt(request, assignment.id)
+        messages.error(request, f'You did not reach the passing score. Your score was {evaluation["percent"]}% and the required score is {passing_score}%.')
+        return redirect('employee_course_exam', assignment_id=assignment.id)
     assignment.status = CourseAssignment.Status.COMPLETED
     assignment.completed_at = timezone.now()
     assignment.save(update_fields=['status', 'completed_at'])
+    _clear_exam_attempt(request, assignment.id)
+    _clear_course_completion_ready(request, assignment.id)
     _store_course_completion_popup(request, assignment)
     messages.success(request, f'تم إنهاء الاختبار وإكمال الدورة: {assignment.course.title}')
     return redirect('employee_courses')
@@ -2210,9 +2526,19 @@ def employee_course_complete_action(request, assignment_id: int):
         _visible_employee_course_assignments_queryset(request.user, employee_profile.business),
         id=assignment_id,
     )
+    if assignment.course.exam_template_id:
+        messages.error(request, 'This course requires passing the exam before completion.')
+        return redirect('employee_course_exam', assignment_id=assignment.id)
+    if assignment.status == CourseAssignment.Status.COMPLETED:
+        messages.info(request, 'This course has already been completed.')
+        return redirect('employee_courses')
+    if not _has_course_completion_ready(request, assignment):
+        messages.error(request, 'Open the course content before confirming completion.')
+        return redirect('employee_course_view', assignment_id=assignment.id)
     assignment.status = CourseAssignment.Status.COMPLETED
     assignment.completed_at = timezone.now()
     assignment.save(update_fields=['status', 'completed_at'])
+    _clear_course_completion_ready(request, assignment.id)
     _store_course_completion_popup(request, assignment)
     messages.success(request, f'تم إكمال الدورة: {assignment.course.title}')
     return redirect('employee_courses')

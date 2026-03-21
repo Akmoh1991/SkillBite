@@ -4,6 +4,7 @@ from unittest.mock import PropertyMock, patch
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.core.cache import cache
 from django.core.management import call_command
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
@@ -95,6 +96,7 @@ class MultiTenantFlowTests(TestCase):
         self.client.login(username='employee2', password='pass12345')
         dashboard_response = self.client.get(reverse('employee_dashboard'))
         self.assertEqual(dashboard_response.status_code, 200)
+        self.client.get(reverse('employee_course_view', args=[assignment.id]))
         response = self.client.post(reverse('employee_course_complete', args=[assignment.id]))
         self.assertRedirects(response, reverse('employee_courses'))
 
@@ -307,7 +309,7 @@ class MultiTenantFlowTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, f'data-assigned-course-ids="{manual_course.id}"')
 
-    def test_owner_dashboard_assign_modal_includes_active_courses_from_other_businesses(self):
+    def test_owner_dashboard_assign_modal_hides_active_courses_from_other_businesses(self):
         other_owner = User.objects.create_user(username='owner_other', password='pass12345')
         other_business = BusinessTenant.objects.create(owner=other_owner, name='Cafe South')
         external_course = Course.objects.create(
@@ -321,9 +323,9 @@ class MultiTenantFlowTests(TestCase):
         response = self.client.get(reverse('business_owner_dashboard'))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, f'{external_course.title} - {other_business.name}')
+        self.assertNotContains(response, f'{external_course.title} - {other_business.name}')
 
-    def test_owner_dashboard_assign_modal_includes_inactive_courses_from_other_businesses(self):
+    def test_owner_dashboard_assign_modal_hides_inactive_courses_from_other_businesses(self):
         other_owner = User.objects.create_user(username='owner_other_inactive', password='pass12345')
         other_business = BusinessTenant.objects.create(owner=other_owner, name='Cafe West')
         external_course = Course.objects.create(
@@ -338,9 +340,9 @@ class MultiTenantFlowTests(TestCase):
         response = self.client.get(reverse('business_owner_dashboard'))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, f'{external_course.title} - {other_business.name}')
+        self.assertNotContains(response, f'{external_course.title} - {other_business.name}')
 
-    def test_owner_can_assign_active_course_from_other_business_on_dashboard(self):
+    def test_owner_cannot_assign_active_course_from_other_business_on_dashboard(self):
         employee_user = User.objects.create_user(username='cross_business_emp', password='pass12345')
         employee_profile = EmployeeProfile.objects.create(
             user=employee_user,
@@ -365,7 +367,7 @@ class MultiTenantFlowTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertTrue(
+        self.assertFalse(
             CourseAssignment.objects.filter(
                 business=self.business,
                 course=external_course,
@@ -373,7 +375,7 @@ class MultiTenantFlowTests(TestCase):
             ).exists()
         )
 
-    def test_owner_can_assign_inactive_course_from_other_business_on_dashboard(self):
+    def test_owner_cannot_assign_inactive_course_from_other_business_on_dashboard(self):
         employee_user = User.objects.create_user(username='cross_business_inactive_emp', password='pass12345')
         employee_profile = EmployeeProfile.objects.create(
             user=employee_user,
@@ -399,7 +401,7 @@ class MultiTenantFlowTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertTrue(
+        self.assertFalse(
             CourseAssignment.objects.filter(
                 business=self.business,
                 course=external_course,
@@ -831,6 +833,7 @@ class MultiTenantFlowTests(TestCase):
         )
 
         self.client.login(username='employee_course_complete_cert', password='pass12345')
+        self.client.get(reverse('employee_course_view', args=[assignment.id]))
         response = self.client.post(reverse('employee_course_complete', args=[assignment.id]), follow=True)
 
         self.assertEqual(response.status_code, 200)
@@ -845,6 +848,53 @@ class MultiTenantFlowTests(TestCase):
         history_response = self.client.get(reverse('employee_learning_history'))
         self.assertContains(history_response, self.course.title)
         self.assertContains(history_response, certificate.pdf_file.url)
+
+    def test_employee_course_complete_requires_course_view_before_manual_completion(self):
+        employee_user = User.objects.create_user(username='employee_course_manual_guard', password='pass12345')
+        EmployeeProfile.objects.create(user=employee_user, business=self.business, job_title=self.job_title, created_by=self.owner)
+        assignment = CourseAssignment.objects.create(
+            business=self.business,
+            course=self.course,
+            employee=employee_user,
+            assigned_by=self.owner,
+            status=CourseAssignment.Status.IN_PROGRESS,
+        )
+
+        self.client.login(username='employee_course_manual_guard', password='pass12345')
+        response = self.client.post(reverse('employee_course_complete', args=[assignment.id]), follow=True)
+
+        self.assertEqual(response.status_code, 200)
+        assignment.refresh_from_db()
+        self.assertNotEqual(assignment.status, CourseAssignment.Status.COMPLETED)
+
+    def test_employee_course_complete_rejects_exam_protected_courses(self):
+        template = ExamTemplate.objects.create(
+            business=self.business,
+            name='Completion Gate',
+            duration_minutes=15,
+            total_questions=1,
+            created_by=self.owner,
+        )
+        self.course.exam_template = template
+        self.course.save(update_fields=['exam_template'])
+
+        employee_user = User.objects.create_user(username='employee_exam_guard', password='pass12345')
+        EmployeeProfile.objects.create(user=employee_user, business=self.business, job_title=self.job_title, created_by=self.owner)
+        assignment = CourseAssignment.objects.create(
+            business=self.business,
+            course=self.course,
+            employee=employee_user,
+            assigned_by=self.owner,
+            status=CourseAssignment.Status.IN_PROGRESS,
+        )
+
+        self.client.login(username='employee_exam_guard', password='pass12345')
+        self.client.get(reverse('employee_course_view', args=[assignment.id]))
+        response = self.client.post(reverse('employee_course_complete', args=[assignment.id]), follow=True)
+
+        self.assertEqual(response.status_code, 200)
+        assignment.refresh_from_db()
+        self.assertNotEqual(assignment.status, CourseAssignment.Status.COMPLETED)
 
     def test_employee_exam_uses_course_template_and_completes_course_on_submit(self):
         template = ExamTemplate.objects.create(
@@ -893,9 +943,14 @@ class MultiTenantFlowTests(TestCase):
         take_response = self.client.get(reverse('employee_course_exam_take', args=[assignment.id]))
         self.assertEqual(take_response.status_code, 200)
         self.assertContains(take_response, 'What is the safe storage temperature?')
+        attempt_token = self.client.session.get(f'exam-attempt:{assignment.id}', {}).get('token')
 
         submit_response = self.client.post(
             reverse('employee_course_exam_submit', args=[assignment.id]),
+            {
+                'attempt_token': attempt_token,
+                f'question_{question.id}': str(question.options.get(is_correct=True).id),
+            },
             follow=True,
         )
         self.assertEqual(submit_response.status_code, 200)
@@ -1125,6 +1180,57 @@ class SuperAdminFlowTests(TestCase):
         self.client.login(username='platform_admin', password='pass12345')
         response = self.client.get(player_url)
         self.assertEqual(response.status_code, 200)
+
+    def test_staff_without_superuser_does_not_gain_super_admin_access(self):
+        partial_admin = User.objects.create_user(
+            username='partial_admin',
+            password='pass12345',
+            is_staff=True,
+            is_superuser=False,
+        )
+        self.client.login(username='partial_admin', password='pass12345')
+        response = self.client.get(reverse('super_admin_dashboard'))
+        self.assertRedirects(response, reverse('home'), fetch_redirect_response=False)
+
+    def test_last_active_super_admin_cannot_be_deactivated(self):
+        self.client.login(username='platform_admin', password='pass12345')
+        response = self.client.post(reverse('super_admin_user_toggle_active', args=[self.super_admin.id]), follow=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.super_admin.refresh_from_db()
+        self.assertTrue(self.super_admin.is_active)
+
+    def test_super_admin_cannot_remove_own_super_admin_role(self):
+        self.client.login(username='platform_admin', password='pass12345')
+        response = self.client.post(reverse('super_admin_user_toggle_role', args=[self.super_admin.id]), follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.super_admin.refresh_from_db()
+        self.assertTrue(self.super_admin.is_staff)
+        self.assertTrue(self.super_admin.is_superuser)
+
+
+class LoginSecurityTests(TestCase):
+    def setUp(self):
+        cache.clear()
+        self.user = User.objects.create_user(username='login_guard', password='pass12345')
+
+    def test_login_rate_limit_blocks_after_repeated_failures(self):
+        login_url = reverse('login')
+        for _ in range(5):
+            response = self.client.post(login_url, {'username': 'login_guard', 'password': 'wrong-pass'})
+            self.assertEqual(response.status_code, 200)
+
+        response = self.client.post(login_url, {'username': 'login_guard', 'password': 'wrong-pass'})
+        self.assertEqual(response.status_code, 429)
+        self.assertIn('Retry-After', response.headers)
+
+    def test_login_rate_limit_is_cleared_after_successful_login(self):
+        login_url = reverse('login')
+        for _ in range(3):
+            self.client.post(login_url, {'username': 'login_guard', 'password': 'wrong-pass'})
+
+        response = self.client.post(login_url, {'username': 'login_guard', 'password': 'pass12345'})
+        self.assertEqual(response.status_code, 302)
 
 
 class SeedSuperAdminCommandTests(TestCase):

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>اختبار الدورة</title>
+<title>Exam</title>
 <link rel="stylesheet" href="/static/branding/branding.css">
 <link rel="stylesheet" href="/static/branding/app-nav.css">
 <link rel="stylesheet" href="/static/branding/employee-exam.css">
@@ -16,8 +16,8 @@
   <div class="exam-shell">
     <section class="exam-header">
       <div>
-        <h1 class="exam-title">اختبار الدورة</h1>
-        <p class="exam-subtitle">{{ exam_template.name|default:"اختبار الدورة" }}</p>
+        <h1 class="exam-title">Exam</h1>
+        <p class="exam-subtitle">{{ exam_template.name|default:"Course Exam" }}</p>
       </div>
     </section>
 
@@ -31,12 +31,12 @@
       <div class="card-head">
         <div class="qmeta">
           <div>
-            <div class="hint">السؤال {{ current_index }} من {{ total_questions }}</div>
-            <div class="title">{{ exam_template.name|default:"اختبار الدورة" }}</div>
+            <div class="hint">{{ total_questions }} question{{ total_questions|pluralize }}</div>
+            <div class="title">{{ course.title }}</div>
           </div>
           <div class="timer">
             <div class="timer-box" id="timerBox">--:--</div>
-            <a class="btn btn-danger" href="{% url 'employee_course_exam' assignment.id %}">إلغاء</a>
+            <a class="btn btn-danger" href="{% url 'employee_course_exam' assignment.id %}">Cancel</a>
           </div>
         </div>
       </div>
@@ -44,62 +44,64 @@
       <div class="card-body">
         <form method="post" action="{% url 'employee_course_exam_submit' assignment.id %}" id="examSubmitForm">
           {% csrf_token %}
+          <input type="hidden" name="attempt_token" value="{{ attempt_token }}">
 
-          <div class="qtext">
-            {% if is_template_question %}
-              {{ current_question.question_text }}
-              {% if current_question.explanation %}
-                <div class="hint hint-detail">{{ current_question.explanation }}</div>
-              {% endif %}
-            {% elif current_item %}
-              {{ current_item.title }}
-              {% if current_item.body %}
-                <div class="hint hint-detail">{{ current_item.body }}</div>
-              {% endif %}
-            {% else %}
-              لا توجد أسئلة مضافة لهذا الاختبار بعد.
-            {% endif %}
-          </div>
+          {% for question in exam_questions %}
+            <section class="card card--flat" style="margin-bottom: 1rem;">
+              <div class="hint">Question {{ forloop.counter }} of {{ total_questions }}</div>
+              <div class="qtext">
+                {{ question.question_text }}
+                {% if question.explanation %}
+                  <div class="hint hint-detail">{{ question.explanation }}</div>
+                {% endif %}
+              </div>
 
-          {% if is_template_question and current_question.question_type == 'MCQ_SINGLE' or is_template_question and current_question.question_type == 'TRUE_FALSE' %}
-            {% for option in current_question_options %}
-              <label class="option">
-                <input type="radio" name="answer_preview_{{ current_question.id }}">
-                <div>{{ option.option_text }}</div>
-              </label>
-            {% empty %}
-              <div class="option"><div class="hint">لا توجد خيارات مضافة لهذا السؤال بعد.</div></div>
-            {% endfor %}
-          {% elif is_template_question and current_question.question_type == 'MCQ_MULTI' %}
-            {% for option in current_question_options %}
-              <label class="option">
-                <input type="checkbox" name="answer_preview_multi_{{ current_question.id }}">
-                <div>{{ option.option_text }}</div>
-              </label>
-            {% empty %}
-              <div class="option"><div class="hint">لا توجد خيارات مضافة لهذا السؤال بعد.</div></div>
-            {% endfor %}
-          {% else %}
-            <textarea class="note-box" placeholder="اكتب إجابتك هنا..."></textarea>
-          {% endif %}
+              {% if question.question_type == 'MCQ_SINGLE' or question.question_type == 'TRUE_FALSE' %}
+                {% for option in question.options.all %}
+                  <label class="option">
+                    <input
+                      type="radio"
+                      name="question_{{ question.id }}"
+                      value="{{ option.id }}"
+                      {% if question.selected_option_id == option.id|stringformat:"s" %}checked{% endif %}
+                    >
+                    <div>{{ option.option_text }}</div>
+                  </label>
+                {% empty %}
+                  <div class="option"><div class="hint">No options configured for this question.</div></div>
+                {% endfor %}
+              {% elif question.question_type == 'MCQ_MULTI' %}
+                {% for option in question.options.all %}
+                  <label class="option">
+                    <input
+                      type="checkbox"
+                      name="question_{{ question.id }}"
+                      value="{{ option.id }}"
+                      {% if option.id|stringformat:"s" in question.selected_option_ids %}checked{% endif %}
+                    >
+                    <div>{{ option.option_text }}</div>
+                  </label>
+                {% empty %}
+                  <div class="option"><div class="hint">No options configured for this question.</div></div>
+                {% endfor %}
+              {% else %}
+                <textarea
+                  class="note-box"
+                  name="question_{{ question.id }}_text"
+                  placeholder="Type your answer here..."
+                >{{ question.submitted_text }}</textarea>
+              {% endif %}
+            </section>
+          {% empty %}
+            <div class="msg error">No questions are configured for this exam.</div>
+          {% endfor %}
 
           <div class="actions actions--spread">
             <div class="left-actions">
-              {% if current_index > 1 %}
-                <a class="btn btn-secondary" href="{% url 'employee_course_exam_take' assignment.id %}?q={{ current_index|add:'-1' }}">السابق</a>
-              {% else %}
-                <span class="btn btn-secondary is-disabled">السابق</span>
-              {% endif %}
-
-              {% if current_index < total_questions %}
-                <a class="btn btn-primary" href="{% url 'employee_course_exam_take' assignment.id %}?q={{ current_index|add:'1' }}">التالي</a>
-              {% else %}
-                <button class="btn btn-primary" type="submit">إنهاء الاختبار</button>
-              {% endif %}
+              <a class="btn btn-secondary" href="{% url 'employee_course_exam' assignment.id %}">Back</a>
             </div>
-
             <div class="right-actions">
-              <button class="btn btn-secondary" type="submit">إنهاء الاختبار</button>
+              <button class="btn btn-primary" type="submit">Submit Exam</button>
             </div>
           </div>
         </form>

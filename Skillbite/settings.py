@@ -101,7 +101,13 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-X_FRAME_OPTIONS = "SAMEORIGIN"
+X_FRAME_OPTIONS = "DENY"
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_REFERRER_POLICY = os.getenv("SECURE_REFERRER_POLICY", "strict-origin-when-cross-origin").strip() or "strict-origin-when-cross-origin"
+SECURE_CROSS_ORIGIN_OPENER_POLICY = os.getenv("SECURE_CROSS_ORIGIN_OPENER_POLICY", "same-origin").strip() or "same-origin"
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = os.getenv("SESSION_COOKIE_SAMESITE", "Lax").strip() or "Lax"
+CSRF_COOKIE_SAMESITE = os.getenv("CSRF_COOKIE_SAMESITE", "Lax").strip() or "Lax"
 
 
 # ==================================================
@@ -237,6 +243,14 @@ WHITENOISE_MAX_AGE = 31536000  # سنة
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 SUPER_ADMIN_SCORM_PAGE_ENABLED = env_bool("SUPER_ADMIN_SCORM_PAGE_ENABLED", False)
+LOGIN_RATE_LIMIT_ATTEMPTS = int(os.getenv("LOGIN_RATE_LIMIT_ATTEMPTS", "5"))
+LOGIN_RATE_LIMIT_WINDOW_SECONDS = int(os.getenv("LOGIN_RATE_LIMIT_WINDOW_SECONDS", "900"))
+COURSE_COMPLETION_READY_WINDOW_SECONDS = int(os.getenv("COURSE_COMPLETION_READY_WINDOW_SECONDS", str(8 * 60 * 60)))
+MAX_VIDEO_UPLOAD_BYTES = int(os.getenv("MAX_VIDEO_UPLOAD_BYTES", str(250 * 1024 * 1024)))
+MAX_PDF_UPLOAD_BYTES = int(os.getenv("MAX_PDF_UPLOAD_BYTES", str(20 * 1024 * 1024)))
+MAX_SCORM_UPLOAD_BYTES = int(os.getenv("MAX_SCORM_UPLOAD_BYTES", str(100 * 1024 * 1024)))
+MAX_SCORM_ARCHIVE_MEMBERS = int(os.getenv("MAX_SCORM_ARCHIVE_MEMBERS", "1500"))
+MAX_SCORM_UNCOMPRESSED_BYTES = int(os.getenv("MAX_SCORM_UNCOMPRESSED_BYTES", str(500 * 1024 * 1024)))
 
 
 # ==================================================
