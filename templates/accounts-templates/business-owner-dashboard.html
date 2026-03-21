@@ -33,8 +33,8 @@
 <section class="section section--dense">
   <div class="card section-full dashboard-table-card dashboard-table-card--flat">
     {% if employees %}
-      <div class="table-wrap table-wrap--compact">
-        <table class="data-table data-table--compact">
+      <div class="table-wrap table-wrap--compact table-wrap--employees">
+        <table class="data-table data-table--compact employee-table">
           <thead>
             <tr>
               <th>الاسم</th>
@@ -47,11 +47,28 @@
           <tbody>
             {% for employee in employees %}
               <tr>
-                <td><strong>{{ employee.user.first_name }} {{ employee.user.last_name|default:'' }}</strong>{% if not employee.user.first_name and not employee.user.last_name %}<strong>{{ employee.user.username }}</strong>{% endif %}</td>
-                <td>{{ employee.user.username }}</td>
-                <td>{% if employee.user.email %}{{ employee.user.email }}{% else %}<span class="muted">غير مضاف</span>{% endif %}</td>
-                <td>{% if employee.job_title %}{{ employee.job_title.name }}{% else %}<span class="muted">بدون مسمى</span>{% endif %}</td>
-                <td>
+                <td data-label="الاسم">
+                  <strong>{{ employee.user.first_name }} {{ employee.user.last_name|default:'' }}</strong>
+                  {% if not employee.user.first_name and not employee.user.last_name %}
+                    <strong>{{ employee.user.username }}</strong>
+                  {% endif %}
+                </td>
+                <td data-label="اسم المستخدم">{{ employee.user.username }}</td>
+                <td data-label="البريد الإلكتروني">
+                  {% if employee.user.email %}
+                    {{ employee.user.email }}
+                  {% else %}
+                    <span class="muted">غير مضاف</span>
+                  {% endif %}
+                </td>
+                <td data-label="المسمى الوظيفي">
+                  {% if employee.job_title %}
+                    {{ employee.job_title.name }}
+                  {% else %}
+                    <span class="muted">بدون مسمى</span>
+                  {% endif %}
+                </td>
+                <td data-label="إجراء">
                   <div class="dashboard-actions">
                     <button
                       class="action-btn action-btn--assign"
@@ -83,7 +100,7 @@
 <div class="modal-backdrop" id="assign-course-modal" aria-hidden="true">
   <div class="assign-modal" role="dialog" aria-modal="true" aria-labelledby="assign-course-modal-title">
     <div class="assign-modal__header">
-      <button class="assign-modal__close" type="button" data-close-assign-modal aria-label="إغلاق">×</button>
+      <button class="assign-modal__close" type="button" data-close-assign-modal aria-label="إغلاق">&times;</button>
       <h3 class="assign-modal__title" id="assign-course-modal-title">إدراج دورة لموظف</h3>
     </div>
     <form method="post" id="assign-course-modal-form">

@@ -512,10 +512,21 @@ body {
 @media (max-width: 900px) {
   .main {
     margin-right: 0;
-    padding-top: calc(var(--topbar-h) + 24px);
+    padding: calc(var(--topbar-h) + 18px) 16px 28px;
+  }
+
+  .hero-card {
+    padding: 22px 20px;
+    border-radius: 20px;
   }
 
   .page-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .card-intro,
+  .list-head {
     flex-direction: column;
     align-items: stretch;
   }
@@ -528,5 +539,25 @@ body {
   .form-actions {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .hero-card h1,
+  .page-title,
+  .section-title {
+    font-size: 28px;
+  }
+
+  .hero-card p,
+  .page-toolbar p {
+    font-size: 15px;
+    line-height: 1.65;
+  }
+}
+
+@media (max-width: 640px) {
+  .hero-card h1,
+  .page-title,
+  .section-title {
+    font-size: 24px;
   }
 }

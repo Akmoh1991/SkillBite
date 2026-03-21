@@ -242,3 +242,60 @@
   font-weight: 800;
   cursor: pointer;
 }
+
+@media (max-width: 760px) {
+  .course-panel-header,
+  .course-assign-summary,
+  .course-assign-modal__header,
+  .course-assign-modal__footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .course-actions {
+    align-items: stretch;
+  }
+
+  .course-actions .btn {
+    width: 100%;
+  }
+
+  .course-view-actions {
+    width: 100%;
+    align-items: flex-start;
+    justify-content: flex-end;
+  }
+
+  .course-view-actions .btn {
+    width: auto;
+    min-width: 0;
+    padding-inline: 18px;
+    flex: 0 1 auto;
+  }
+
+  .course-item-title {
+    font-size: 20px;
+  }
+
+  .course-assign-modal-backdrop {
+    padding: 16px;
+  }
+
+  .course-assign-modal {
+    max-height: calc(100dvh - 32px);
+    border-radius: 22px;
+  }
+
+  .course-assign-modal__header,
+  .course-assign-modal__body {
+    padding: 16px;
+  }
+
+  .course-assign-modal__close {
+    align-self: flex-start;
+  }
+
+  .course-assign-cancel {
+    width: 100%;
+  }
+}

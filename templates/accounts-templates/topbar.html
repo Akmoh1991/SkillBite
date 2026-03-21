@@ -1,6 +1,72 @@
 <header class="topbar">
+  <button
+    class="topbar__menu-toggle"
+    type="button"
+    data-nav-open
+    aria-controls="appSidebar"
+    aria-expanded="false"
+    aria-label="فتح القائمة"
+  >
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
   <div class="user">
-     <strong><span>مرحباً بك {{ request.user.username }} 👋</span></strong>
+    <strong><span>مرحباً بك {{ request.user.username }} &#128075;</span></strong>
   </div>
-
 </header>
+<script>
+(function () {
+  var body = document.body;
+  var sidebar = document.getElementById('appSidebar');
+  var openButton = document.querySelector('[data-nav-open]');
+  var closeButtons = Array.from(document.querySelectorAll('[data-nav-close]'));
+  if (!body || !sidebar || !openButton) return;
+
+  var mobileQuery = window.matchMedia('(max-width: 900px)');
+
+  function setNavOpen(isOpen) {
+    if (!mobileQuery.matches) {
+      isOpen = false;
+    }
+    body.classList.toggle('nav-open', isOpen);
+    openButton.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    sidebar.setAttribute('aria-hidden', isOpen ? 'false' : (mobileQuery.matches ? 'true' : 'false'));
+  }
+
+  openButton.addEventListener('click', function () {
+    setNavOpen(!body.classList.contains('nav-open'));
+  });
+
+  closeButtons.forEach(function (button) {
+    button.addEventListener('click', function () {
+      setNavOpen(false);
+    });
+  });
+
+  sidebar.querySelectorAll('a').forEach(function (link) {
+    link.addEventListener('click', function () {
+      setNavOpen(false);
+    });
+  });
+
+  document.addEventListener('keydown', function (event) {
+    if (event.key === 'Escape' && body.classList.contains('nav-open')) {
+      setNavOpen(false);
+      openButton.focus();
+    }
+  });
+
+  function handleViewportChange() {
+    setNavOpen(false);
+  }
+
+  if (typeof mobileQuery.addEventListener === 'function') {
+    mobileQuery.addEventListener('change', handleViewportChange);
+  } else if (typeof mobileQuery.addListener === 'function') {
+    mobileQuery.addListener(handleViewportChange);
+  }
+
+  setNavOpen(false);
+})();
+</script>

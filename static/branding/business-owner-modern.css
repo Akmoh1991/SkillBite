@@ -539,4 +539,253 @@
   .main--business-modern .data-table--compact td {
     white-space: nowrap;
   }
+
+  .main--business-modern .data-table--compact {
+    table-layout: auto;
+  }
+
+  .main--business-modern .dashboard-actions,
+  .assign-modal__header,
+  .assign-modal__footer,
+  .creator-card .card-intro,
+  .creator-card .card-intro--split,
+  .reports-header,
+  .file-upload {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .creator-card .card-intro h2,
+  .reports-title {
+    font-size: 26px;
+  }
+
+  .action-btn,
+  .file-upload__button,
+  .file-upload__name,
+  .assign-modal__cancel {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .modal-backdrop {
+    padding: 16px;
+  }
+
+  .assign-modal {
+    max-height: calc(100dvh - 32px);
+    overflow: auto;
+    border-radius: 22px;
+  }
+}
+
+@media (max-width: 760px) {
+  .course-create-card,
+  .course-create-card form,
+  .course-create-card .field,
+  .course-create-card .field input,
+  .course-create-card .field select,
+  .course-create-card .field textarea,
+  .course-create-card .file-upload,
+  .course-create-card .file-upload__button,
+  .course-create-card .file-upload__name {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .course-create-card {
+    width: 100%;
+    padding: 16px;
+  }
+
+  .course-create-card .card-intro {
+    margin-bottom: 10px;
+  }
+
+  .course-create-card .card-intro h2 {
+    font-size: 24px;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+  }
+
+  .course-create-card .field {
+    margin-bottom: 10px;
+  }
+
+  .course-create-card .field label,
+  .course-create-card .form-section h3 {
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+  }
+
+  .course-create-card .field input,
+  .course-create-card .field select,
+  .course-create-card .field textarea {
+    font-size: 15px;
+  }
+
+  .course-create-card .textarea-tall {
+    min-height: 160px;
+  }
+
+  .course-create-card .form-section {
+    margin-top: 14px;
+    padding-top: 12px;
+  }
+
+  .course-create-card .file-upload {
+    gap: 10px;
+    padding: 8px;
+  }
+
+  .course-create-card .file-upload__button,
+  .course-create-card .file-upload__name {
+    width: 100%;
+  }
+
+  .course-create-card .file-upload__button {
+    min-width: 0;
+    padding: 12px 14px;
+  }
+
+  .course-create-card .file-upload__name {
+    min-height: 44px;
+    padding: 12px 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .course-create-card .inline-check {
+    width: 100%;
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .course-create-card .btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 760px) {
+  .table-wrap--employees {
+    overflow: visible;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .employee-table {
+    min-width: 0;
+    table-layout: auto;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+
+  .employee-table thead {
+    display: none;
+  }
+
+  .employee-table,
+  .employee-table tbody,
+  .employee-table tr,
+  .employee-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .employee-table tbody {
+    display: grid;
+    gap: 12px;
+  }
+
+  .employee-table tr {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px 14px;
+    align-items: start;
+    padding: 14px 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+    background: #fff;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
+  }
+
+  .employee-table td {
+    width: auto;
+    padding: 0;
+    border: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    font-size: 16px;
+    line-height: 1.4;
+  }
+
+  .employee-table td strong {
+    font-size: 18px;
+    line-height: 1.25;
+    color: #0f766e;
+  }
+
+  .employee-table td + td {
+    margin-top: 0;
+  }
+
+  .employee-table td::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 3px;
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+  }
+
+  .employee-table td:nth-child(1),
+  .employee-table td:nth-child(3),
+  .employee-table td:nth-child(5) {
+    grid-column: 1 / -1;
+  }
+
+  .employee-table td:nth-child(1) {
+    padding-bottom: 2px;
+  }
+
+  .employee-table td:nth-child(5) {
+    margin-top: 4px;
+    padding-top: 10px;
+    border-top: 1px solid #edf2f7;
+  }
+
+  .employee-table td:nth-child(5)::before {
+    display: none;
+  }
+
+  .employee-table .dashboard-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 0.85fr);
+    gap: 10px;
+    margin-top: 0;
+  }
+
+  .employee-table .action-form {
+    width: 100%;
+  }
+
+  .employee-table .action-btn {
+    width: 100%;
+    min-height: 46px;
+    font-size: 14px;
+    border-radius: 14px;
+    box-shadow: none;
+  }
+
+  .employee-table .action-btn--assign {
+    box-shadow: 0 12px 24px rgba(15, 118, 110, 0.14);
+  }
+
+  .employee-table .action-btn--delete {
+    border: 1px solid #fecdd3;
+    background: #fff5f5;
+  }
 }

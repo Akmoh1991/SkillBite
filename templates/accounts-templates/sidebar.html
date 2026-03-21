@@ -1,5 +1,7 @@
 {% load static %}
-<aside class="sidebar">
+<button class="nav-overlay" type="button" data-nav-close aria-label="إغلاق القائمة"></button>
+<aside class="sidebar" id="appSidebar">
+  <button class="sidebar__mobile-close" type="button" data-nav-close aria-label="إغلاق القائمة">&times;</button>
   <div class="logo">
     <img src="{% static 'media/SkillBite_logo.png' %}" alt="SkillBite Logo">
   </div>
