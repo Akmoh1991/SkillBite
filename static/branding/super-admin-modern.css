@@ -80,6 +80,19 @@
   margin: 0;
 }
 
+.main--modern-page .table-actions {
+  display: inline-flex;
+  gap: 8px;
+  flex-wrap: nowrap;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.main--modern-page .table-actions .btn,
+.main--modern-page .table-actions .table-action {
+  flex: 0 0 auto;
+}
+
 .main--modern-page .btn-secondary-green {
   background: #0f766e;
   color: #fff;

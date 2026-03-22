@@ -53,6 +53,7 @@ from .forms import (
     SuperAdminExamTemplateForm,
     SuperAdminGrantRoleForm,
     SuperAdminUserCreateForm,
+    validate_browser_safe_video,
 )
 from .models import BusinessTenant, EmployeeProfile, JobTitle
 
@@ -344,6 +345,181 @@ def _load_employee_course_catalog():
         return json.load(catalog_file)
 
 
+@lru_cache(maxsize=1)
+def _employee_course_catalog_by_title():
+    return {entry['title']: entry for entry in _load_employee_course_catalog()}
+
+
+def _catalog_content_item_title(course_title: str, order: int) -> str:
+    return f'{course_title} - الجزء {order}'
+
+
+def _ensure_catalog_course_content_items(course, entry) -> None:
+    if course.content_items.exists():
+        return
+    for order in range(1, entry['content_count'] + 1):
+        CourseContentItem.objects.create(
+            course=course,
+            content_type=CourseContentItem.ContentType.TEXT,
+            title=_catalog_content_item_title(entry['title'], order),
+            body=entry['description'],
+            order=order,
+        )
+
+
+def _catalog_course_content_items_match(course, entry) -> bool:
+    content_items = list(course.content_items.order_by('order', 'id'))
+    if not content_items:
+        return True
+    if len(content_items) != entry['content_count']:
+        return False
+    for index, item in enumerate(content_items, start=1):
+        if item.content_type != CourseContentItem.ContentType.TEXT:
+            return False
+        if (item.title or '').strip() != _catalog_content_item_title(entry['title'], index):
+            return False
+        if (item.body or '').strip() != (entry['description'] or '').strip():
+            return False
+        if any(((item.material_url or '').strip(), bool(item.video_file), bool(item.pdf_file))):
+            return False
+    return True
+
+
+def _is_legacy_catalog_course(course, entry) -> bool:
+    if course.business_id is None or course.title != entry['title']:
+        return False
+    if (course.description or '').strip() != (entry['description'] or '').strip():
+        return False
+    if int(course.estimated_minutes or 0) != int(entry['estimated_minutes'] or 0):
+        return False
+    if course.exam_template_id:
+        return False
+    return _catalog_course_content_items_match(course, entry)
+
+
+def _ensure_global_catalog_course(entry, created_by=None):
+    course = (
+        Course.objects.filter(business__isnull=True, title=entry['title'])
+        .order_by('id')
+        .first()
+    )
+    if course is None:
+        course = Course.objects.create(
+            business=None,
+            title=entry['title'],
+            description=entry['description'],
+            estimated_minutes=entry['estimated_minutes'],
+            is_active=True,
+            created_by=created_by,
+        )
+    else:
+        changed_fields = []
+        if not (course.description or '').strip():
+            course.description = entry['description']
+            changed_fields.append('description')
+        if not course.estimated_minutes:
+            course.estimated_minutes = entry['estimated_minutes']
+            changed_fields.append('estimated_minutes')
+        if not course.is_active:
+            course.is_active = True
+            changed_fields.append('is_active')
+        if created_by and not course.created_by_id:
+            course.created_by = created_by
+            changed_fields.append('created_by')
+        if changed_fields:
+            course.save(update_fields=changed_fields)
+    _ensure_catalog_course_content_items(course, entry)
+    return course
+
+
+def _merge_legacy_course_records_into_global_course(legacy_course, global_course) -> None:
+    status_rank = {
+        CourseAssignment.Status.ASSIGNED: 0,
+        CourseAssignment.Status.IN_PROGRESS: 1,
+        CourseAssignment.Status.COMPLETED: 2,
+    }
+    for exam_session in legacy_course.exam_sessions.all():
+        exam_session.course = global_course
+        exam_session.save(update_fields=['course'])
+    for assignment in legacy_course.assignments.all():
+        existing_assignment = (
+            CourseAssignment.objects.filter(course=global_course, employee=assignment.employee)
+            .exclude(id=assignment.id)
+            .first()
+        )
+        if existing_assignment is None:
+            assignment.course = global_course
+            assignment.save(update_fields=['course'])
+            continue
+
+        changed_fields = []
+        if status_rank.get(assignment.status, -1) > status_rank.get(existing_assignment.status, -1):
+            existing_assignment.status = assignment.status
+            changed_fields.append('status')
+        if assignment.completed_at and (
+            existing_assignment.completed_at is None or assignment.completed_at > existing_assignment.completed_at
+        ):
+            existing_assignment.completed_at = assignment.completed_at
+            changed_fields.append('completed_at')
+        if assignment.assigned_by_id and not existing_assignment.assigned_by_id:
+            existing_assignment.assigned_by_id = assignment.assigned_by_id
+            changed_fields.append('assigned_by')
+        if changed_fields:
+            existing_assignment.save(update_fields=changed_fields)
+        assignment.delete()
+
+    if legacy_course.exam_template_id and not global_course.exam_template_id:
+        global_course.exam_template_id = legacy_course.exam_template_id
+        global_course.save(update_fields=['exam_template'])
+
+
+def _normalize_legacy_catalog_course_for_business(business, entry, created_by=None):
+    global_course = _ensure_global_catalog_course(entry, created_by=created_by)
+    CourseBusinessAssignment.objects.get_or_create(
+        course=global_course,
+        business=business,
+        defaults={'assigned_by': created_by},
+    )
+    legacy_courses = list(
+        Course.objects.filter(business=business, title=entry['title'])
+        .exclude(id=global_course.id)
+        .prefetch_related('content_items', 'assignments', 'exam_sessions')
+        .order_by('id')
+    )
+    for legacy_course in legacy_courses:
+        if not _is_legacy_catalog_course(legacy_course, entry):
+            continue
+        _merge_legacy_course_records_into_global_course(legacy_course, global_course)
+        legacy_course.delete()
+    return global_course
+
+
+def _legacy_catalog_business_course_ids(business):
+    if business is None:
+        return []
+    catalog_entries = _employee_course_catalog_by_title()
+    assigned_global_titles = set(
+        CourseBusinessAssignment.objects.filter(
+            business=business,
+            course__business__isnull=True,
+            course__title__in=list(catalog_entries.keys()),
+        ).values_list('course__title', flat=True)
+    )
+    if not assigned_global_titles:
+        return []
+    legacy_course_ids = []
+    legacy_courses = (
+        Course.objects.filter(business=business, title__in=assigned_global_titles)
+        .prefetch_related('content_items')
+        .order_by('title', 'id')
+    )
+    for course in legacy_courses:
+        entry = catalog_entries.get(course.title)
+        if entry and _is_legacy_catalog_course(course, entry):
+            legacy_course_ids.append(course.id)
+    return legacy_course_ids
+
+
 def _course_card_defaults(course):
     fallback = {
         'card_image_url': 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=900&q=80',
@@ -374,7 +550,7 @@ def _visible_course_content_items(items):
     return visible_items
 
 
-def _accessible_business_courses_queryset(business):
+def _accessible_business_courses_queryset_legacy(business):
     return (
         Course.objects.filter(
             Q(business=business) | Q(business_assignments__business=business)
@@ -383,7 +559,7 @@ def _accessible_business_courses_queryset(business):
     )
 
 
-def _publish_legacy_employee_course_catalog(business, created_by=None):
+def _publish_legacy_employee_course_catalog_legacy(business, created_by=None):
     catalog_entries = _load_employee_course_catalog()
     creator = created_by or User.objects.filter(is_active=True, is_staff=True, is_superuser=True).order_by('id').first() or business.owner
     published_courses = []
@@ -419,6 +595,30 @@ def _publish_legacy_employee_course_catalog(business, created_by=None):
                 )
         published_courses.append(course)
 
+    return published_courses
+
+
+def _accessible_business_courses_queryset(business):
+    queryset = (
+        Course.objects.filter(
+            Q(business=business) | Q(business_assignments__business=business)
+        )
+        .distinct()
+    )
+    legacy_course_ids = _legacy_catalog_business_course_ids(business)
+    if legacy_course_ids:
+        queryset = queryset.exclude(id__in=legacy_course_ids)
+    return queryset
+
+
+def _publish_legacy_employee_course_catalog(business, created_by=None):
+    catalog_entries = _load_employee_course_catalog()
+    creator = created_by or User.objects.filter(is_active=True, is_staff=True, is_superuser=True).order_by('id').first() or business.owner
+    published_courses = []
+    for entry in catalog_entries:
+        published_courses.append(
+            _normalize_legacy_catalog_course_for_business(business, entry, created_by=creator)
+        )
     return published_courses
 
 
@@ -1036,6 +1236,7 @@ def _super_admin_user_role_grant_context(form: SuperAdminGrantRoleForm | None = 
 def _super_admin_learning_context():
     courses = list(
         Course.objects.select_related('business', 'created_by')
+        .filter(business__isnull=True)
         .prefetch_related('business_assignments__business')
         .annotate(
             content_item_total=Count('content_items', distinct=True),
@@ -1074,13 +1275,41 @@ def _super_admin_learning_context():
     }
 
 
-def _super_admin_learning_course_create_context(form: SuperAdminCourseCreateForm | None = None):
-    return {'course_form': form or SuperAdminCourseCreateForm()}
+def _primary_course_video_content_item(course):
+    if not course or not getattr(course, 'pk', None):
+        return None
+    if hasattr(course, '_prefetched_objects_cache') and 'content_items' in course._prefetched_objects_cache:
+        for item in course.content_items.all():
+            if item.video_file:
+                return item
+        return None
+    return course.content_items.exclude(video_file='').order_by('order', 'id').first()
+
+
+def _super_admin_learning_course_create_context(form: SuperAdminCourseCreateForm | None = None, course: Course | None = None):
+    course_form = form or SuperAdminCourseCreateForm(instance=course)
+    is_edit_mode = course is not None
+    current_video_item = _primary_course_video_content_item(course) if is_edit_mode else None
+    current_video_name = Path(current_video_item.video_file.name).name if current_video_item and current_video_item.video_file else 'لا يوجد ملف حالياً'
+    return {
+        'course_form': course_form,
+        'course': course,
+        'is_edit_mode': is_edit_mode,
+        'page_title_text': 'تعديل دورة تدريبية' if is_edit_mode else 'إنشاء دورة تدريبية',
+        'hero_title_text': 'تعديل دورة تدريبية' if is_edit_mode else 'إنشاء دورة تدريبية',
+        'hero_text_value': 'حدّث بيانات الدورة التدريبية الحالية دون التأثير على تعيين الشركات أو سجل التكليفات.' if is_edit_mode else 'أنشئ دورة تدريبية جديدة ثم عيّن الشركات المستهدفة لها من صفحة التعيين.',
+        'form_heading_text': 'تعديل دورة تدريبية' if is_edit_mode else 'إنشاء دورة تدريبية',
+        'form_action_url': reverse('super_admin_course_update', args=[course.id]) if is_edit_mode else reverse('super_admin_course_create'),
+        'submit_label': 'حفظ التعديلات' if is_edit_mode else 'إنشاء الدورة',
+        'video_button_label': 'استبدال ملف الفيديو' if is_edit_mode else 'رفع ملف الفيديو',
+        'current_video_name': current_video_name,
+    }
 
 
 def _super_admin_course_business_assignment_context(form: SuperAdminCourseBusinessAssignmentForm | None = None):
     courses = list(
         Course.objects.select_related('business')
+        .filter(business__isnull=True)
         .prefetch_related('business_assignments__business')
         .order_by('title', 'id')
     )
@@ -1101,6 +1330,12 @@ def _sync_exam_template_total_questions(template: ExamTemplate) -> None:
     if template.total_questions != total_questions:
         template.total_questions = total_questions
         template.save(update_fields=['total_questions', 'updated_at'])
+
+
+def _reassign_exam_template_to_course(course: Course) -> None:
+    if not getattr(course, 'exam_template_id', None):
+        return
+    Course.objects.filter(exam_template_id=course.exam_template_id).exclude(id=course.id).update(exam_template=None)
 
 
 def _super_admin_exam_templates_context():
@@ -1204,7 +1439,7 @@ def super_admin_course_list_view(request):
         return redirect('home')
     courses = list(
         Course.objects.select_related('business')
-        .filter(is_active=True)
+        .filter(is_active=True, business__isnull=True)
         .prefetch_related('business_assignments__business')
         .prefetch_related(Prefetch('content_items', queryset=CourseContentItem.objects.order_by('order', 'id')))
         .order_by('title', 'id')
@@ -1232,6 +1467,7 @@ def super_admin_course_view(request, course_id: int):
         ),
         id=course_id,
         is_active=True,
+        business__isnull=True,
     )
     _course_card_defaults(course)
     course.visible_businesses = [assignment.business for assignment in course.business_assignments.all()]
@@ -1251,6 +1487,27 @@ def super_admin_learning_course_create_view(request):
     if not _super_admin_guard(request):
         return redirect('home')
     return render(request, 'accounts-templates/super-admin-learning-course-create.html', _super_admin_learning_course_create_context())
+
+
+@login_required
+def super_admin_course_edit_view(request, course_id: int):
+    if not _super_admin_guard(request):
+        return redirect('home')
+    course = get_object_or_404(
+        Course.objects.prefetch_related(
+            Prefetch('content_items', queryset=CourseContentItem.objects.order_by('order', 'id'))
+        ),
+        id=course_id,
+        business__isnull=True,
+    )
+    return render(
+        request,
+        'accounts-templates/super-admin-learning-course-create.html',
+        _super_admin_learning_course_create_context(
+            SuperAdminCourseCreateForm(instance=course),
+            course=course,
+        ),
+    )
 
 
 @login_required
@@ -1436,6 +1693,7 @@ def super_admin_course_create_action(request):
             'title': 'عنوان الدورة',
             'description': 'الوصف',
             'estimated_minutes': 'المدة التقديرية بالدقائق',
+            'exam_template': 'قالب الاختبار',
             'is_active': 'الدورة نشطة',
         })
         return render(request, 'accounts-templates/super-admin-learning-course-create.html', _super_admin_learning_course_create_context(form))
@@ -1460,6 +1718,7 @@ def super_admin_course_create_action(request):
     course.business = None
     course.created_by = request.user
     course.save()
+    _reassign_exam_template_to_course(course)
 
     if has_initial_content:
         content_data = request.POST.copy()
@@ -1498,6 +1757,75 @@ def super_admin_course_create_action(request):
             )
 
     messages.success(request, f'تم إنشاء الدورة "{course.title}" بنجاح.')
+    return redirect('super_admin_learning')
+
+
+@login_required
+@require_POST
+@transaction.atomic
+def super_admin_course_update_action(request, course_id: int):
+    if not _super_admin_guard(request):
+        return redirect('home')
+    course = get_object_or_404(
+        Course.objects.prefetch_related(
+            Prefetch('content_items', queryset=CourseContentItem.objects.order_by('order', 'id'))
+        ),
+        id=course_id,
+        business__isnull=True,
+    )
+    old_title = course.title
+    form = SuperAdminCourseCreateForm(request.POST, instance=course)
+    if not form.is_valid():
+        _flash_form_errors(request, form, {
+            'title': 'عنوان الدورة',
+            'description': 'الوصف',
+            'estimated_minutes': 'المدة التقديرية بالدقائق',
+            'exam_template': 'قالب الاختبار',
+            'is_active': 'الدورة نشطة',
+        })
+        return render(
+            request,
+            'accounts-templates/super-admin-learning-course-create.html',
+            _super_admin_learning_course_create_context(form, course=course),
+        )
+
+    uploaded_video = request.FILES.get('content_video_file')
+    if uploaded_video:
+        try:
+            validate_browser_safe_video(uploaded_video)
+        except forms.ValidationError as exc:
+            for message in exc.messages:
+                messages.error(request, f'ملف الفيديو: {message}')
+            return render(
+                request,
+                'accounts-templates/super-admin-learning-course-create.html',
+                _super_admin_learning_course_create_context(form, course=course),
+            )
+
+    course = form.save()
+    _reassign_exam_template_to_course(course)
+    primary_video_item = _primary_course_video_content_item(course)
+    if primary_video_item and (primary_video_item.title or '').strip() == old_title and course.title != old_title:
+        primary_video_item.title = course.title
+        if uploaded_video:
+            primary_video_item.video_file = uploaded_video
+            primary_video_item.save(update_fields=['title', 'video_file'])
+        else:
+            primary_video_item.save(update_fields=['title'])
+    elif uploaded_video and primary_video_item:
+        primary_video_item.video_file = uploaded_video
+        primary_video_item.save(update_fields=['video_file'])
+    elif uploaded_video:
+        next_order = course.content_items.order_by('-order', '-id').values_list('order', flat=True).first() or 0
+        CourseContentItem.objects.create(
+            course=course,
+            content_type=CourseContentItem.ContentType.LESSON,
+            title=course.title,
+            order=next_order + 1,
+            video_file=uploaded_video,
+        )
+
+    messages.success(request, f'تم تحديث الدورة "{course.title}" بنجاح.')
     return redirect('super_admin_learning')
 
 
@@ -1798,6 +2126,7 @@ def logout_view(request):
 
 def _business_owner_dashboard_context(request):
     business = _get_owned_business(request.user)
+    _ensure_employee_courses_are_backed_by_db(business)
     employees = list(
         EmployeeProfile.objects.filter(
             business=business,
@@ -2453,28 +2782,7 @@ def employee_course_view(request, assignment_id: int):
 def employee_course_exam_view(request, assignment_id: int):
     if not _employee_guard(request):
         return redirect('home')
-    employee_profile = _get_employee_profile(request.user)
-    assignment = get_object_or_404(
-        _visible_employee_course_assignments_queryset(request.user, employee_profile.business),
-        id=assignment_id,
-    )
-    content_items = list(assignment.course.content_items.all())
-    exam_template = assignment.course.exam_template
-    estimated_exam_minutes = _estimated_exam_minutes_for_assignment(assignment)
-    return render(
-        request,
-        'accounts-templates/employee-course-exam.html',
-        {
-            'employee_profile': employee_profile,
-            'business': employee_profile.business,
-            'assignment': assignment,
-            'course': assignment.course,
-            'exam_template': exam_template,
-            'content_items': content_items,
-            'content_items_count': len(content_items),
-            'estimated_exam_minutes': estimated_exam_minutes,
-        },
-    )
+    return redirect('employee_course_exam_take', assignment_id=assignment_id)
 
 
 @login_required
@@ -2492,7 +2800,7 @@ def employee_course_exam_take_view(request, assignment_id: int):
     context = _employee_exam_take_context(request, assignment, employee_profile, ensure_attempt=True)
     if not context['exam_questions']:
         messages.error(request, 'No exam questions are configured for this course.')
-        return redirect('employee_course_exam', assignment_id=assignment.id)
+        return redirect('employee_course_view', assignment_id=assignment.id)
     return render(request, 'accounts-templates/employee-course-exam-take.html', context)
 
 
@@ -2512,7 +2820,7 @@ def employee_course_exam_submit_action(request, assignment_id: int):
     exam_questions = _exam_questions_for_assignment(assignment)
     if not exam_questions:
         messages.error(request, 'No exam questions are configured for this course.')
-        return redirect('employee_course_exam', assignment_id=assignment.id)
+        return redirect('employee_course_view', assignment_id=assignment.id)
     attempt = _get_exam_attempt(request, assignment.id)
     if not attempt or attempt.get('token') != (request.POST.get('attempt_token') or '').strip():
         messages.error(request, 'The exam session has expired. Start the exam again.')
@@ -2520,12 +2828,12 @@ def employee_course_exam_submit_action(request, assignment_id: int):
     if _remaining_exam_seconds(attempt) <= 0:
         _clear_exam_attempt(request, assignment.id)
         messages.error(request, 'The exam time has expired. Start a new attempt.')
-        return redirect('employee_course_exam', assignment_id=assignment.id)
+        return redirect('employee_course_exam_take', assignment_id=assignment.id)
     evaluation = _evaluate_employee_exam_submission(exam_questions, request.POST)
     if evaluation['unsupported_questions']:
         _clear_exam_attempt(request, assignment.id)
         messages.error(request, 'This exam includes question types that require manual grading.')
-        return redirect('employee_course_exam', assignment_id=assignment.id)
+        return redirect('employee_course_view', assignment_id=assignment.id)
     if evaluation['missing_required']:
         messages.error(request, 'Answer all required questions before submitting the exam.')
         context = _employee_exam_take_context(request, assignment, employee_profile, answer_source=request.POST, ensure_attempt=False)
@@ -2534,7 +2842,7 @@ def employee_course_exam_submit_action(request, assignment_id: int):
     if evaluation['percent'] < passing_score:
         _clear_exam_attempt(request, assignment.id)
         messages.error(request, f'You did not reach the passing score. Your score was {evaluation["percent"]}% and the required score is {passing_score}%.')
-        return redirect('employee_course_exam', assignment_id=assignment.id)
+        return redirect('employee_course_exam_take', assignment_id=assignment.id)
     assignment.status = CourseAssignment.Status.COMPLETED
     assignment.completed_at = timezone.now()
     assignment.save(update_fields=['status', 'completed_at'])
@@ -2575,7 +2883,7 @@ def employee_course_complete_action(request, assignment_id: int):
     )
     if assignment.course.exam_template_id:
         messages.error(request, 'يجب اجتياز الاختبار قبل إكمال هذه الدورة.')
-        return redirect('employee_course_exam', assignment_id=assignment.id)
+        return redirect('employee_course_exam_take', assignment_id=assignment.id)
     if assignment.status == CourseAssignment.Status.COMPLETED:
         messages.error(request, 'تم إكمال هذه الدورة مسبقاً')
         return redirect('employee_courses')

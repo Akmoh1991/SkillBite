@@ -34,7 +34,7 @@
       </li>
       <li>
         <a href="{% url 'super_admin_learning' %}"
-           class="{% if request.resolver_match.url_name == 'super_admin_learning' %}active{% endif %}">
+           class="{% if request.resolver_match.url_name == 'super_admin_learning' or request.resolver_match.url_name == 'super_admin_learning_course_create_view' or request.resolver_match.url_name == 'super_admin_course_edit_view' or request.resolver_match.url_name == 'super_admin_course_business_assignments' or request.resolver_match.url_name == 'super_admin_learning_content_create_view' %}active{% endif %}">
           إدارة المحتوى
         </a>
       </li>

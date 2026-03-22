@@ -65,6 +65,18 @@ body {
   box-shadow: none;
 }
 
+.exam-take-card {
+  padding-top: 8px;
+}
+
+.exam-question-card {
+  margin-bottom: 10px;
+}
+
+.exam-question-card:last-of-type {
+  margin-bottom: 4px;
+}
+
 .msg {
   padding: 12px 14px;
   border-radius: 14px;
@@ -231,6 +243,10 @@ body {
   background: #fff;
 }
 
+.exam-take-card .card-head {
+  padding-top: 8px;
+}
+
 .card-body {
   padding: 20px;
 }
@@ -259,6 +275,7 @@ body {
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .timer-box {
@@ -271,6 +288,13 @@ body {
   color: #111827;
   min-width: 92px;
   text-align: center;
+}
+
+.exam-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .qmeta {
@@ -335,7 +359,7 @@ body {
 }
 
 .actions.actions--spread {
-  margin-top: 18px;
+  margin-top: 8px;
   justify-content: space-between;
 }
 
@@ -364,7 +388,8 @@ body {
   .actions,
   .left-actions,
   .right-actions,
-  .timer {
+  .timer,
+  .exam-header-actions {
     flex-direction: column;
     align-items: stretch;
   }

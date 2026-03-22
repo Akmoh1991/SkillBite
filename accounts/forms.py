@@ -267,17 +267,43 @@ class SuperAdminGrantRoleForm(forms.Form):
         self.fields['user'].queryset = User.objects.exclude(is_staff=True, is_superuser=True).order_by('username', 'id')
 
 
+class ExamTemplateChoiceField(forms.ModelChoiceField):
+    def label_from_instance(self, obj):
+        if obj.business_id and obj.business:
+            return f'{obj.name} - {obj.business.name}'
+        return obj.name
+
+
 class SuperAdminCourseCreateForm(forms.ModelForm):
+    exam_template = ExamTemplateChoiceField(
+        queryset=ExamTemplate.objects.none(),
+        required=False,
+        empty_label='بدون قالب اختبار',
+    )
+
     class Meta:
         model = Course
-        fields = ['title', 'description', 'estimated_minutes', 'is_active']
+        fields = ['title', 'description', 'estimated_minutes', 'exam_template', 'is_active']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields['exam_template'].queryset = ExamTemplate.objects.select_related('business').order_by('business__name', 'name', 'id')
+        self.fields['exam_template'].label = 'قالب الاختبار'
         self.fields['title'].label = 'عنوان الدورة'
         self.fields['description'].label = 'الوصف'
         self.fields['estimated_minutes'].label = 'المدة التقديرية بالدقائق'
         self.fields['is_active'].label = 'الدورة نشطة'
+
+    def clean_title(self):
+        title = (self.cleaned_data.get('title') or '').strip()
+        if not title:
+            return title
+        queryset = Course.objects.filter(business__isnull=True, title__iexact=title)
+        if self.instance.pk:
+            queryset = queryset.exclude(pk=self.instance.pk)
+        if queryset.exists():
+            raise forms.ValidationError('يوجد بالفعل دورة عامة بهذا العنوان.')
+        return title
 
 
 class SuperAdminCourseContentItemForm(forms.ModelForm):
@@ -354,7 +380,7 @@ class SuperAdminCourseBusinessAssignmentForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['course'].queryset = Course.objects.order_by('title', 'id')
+        self.fields['course'].queryset = Course.objects.filter(business__isnull=True).order_by('title', 'id')
         self.fields['businesses'].queryset = BusinessTenant.objects.filter(is_active=True).order_by('name', 'id')
 
 
@@ -378,7 +404,7 @@ class SuperAdminExamTemplateForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        course_queryset = Course.objects.filter(is_active=True, business__isnull=False).select_related('business').order_by('title', 'id')
+        course_queryset = Course.objects.filter(is_active=True).select_related('business').order_by('title', 'id')
         self.fields['primary_course'].queryset = course_queryset
         self.fields['primary_course'].label = 'الدورة'
         self.fields['name'].label = 'اسم قالب الاختبار'

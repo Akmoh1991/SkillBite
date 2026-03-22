@@ -17,7 +17,6 @@
     <section class="exam-header">
       <div>
         <h1 class="exam-title">Exam</h1>
-        <p class="exam-subtitle">{{ exam_template.name|default:"Course Exam" }}</p>
       </div>
     </section>
 
@@ -27,16 +26,19 @@
       {% endfor %}
     {% endif %}
 
-    <div class="card">
+    <div class="card exam-take-card">
       <div class="card-head">
         <div class="qmeta">
           <div>
-            <div class="hint">{{ total_questions }} question{{ total_questions|pluralize }}</div>
+            <div class="hint">عدد الأسئلة: {{ total_questions }}</div>
             <div class="title">{{ course.title }}</div>
           </div>
           <div class="timer">
             <div class="timer-box" id="timerBox">--:--</div>
-            <a class="btn btn-danger" href="{% url 'employee_course_exam' assignment.id %}">Cancel</a>
+            <div class="exam-header-actions">
+              <button class="btn btn-primary" type="submit" form="examSubmitForm">إنهاء الاختبار</button>
+              <a class="btn btn-secondary" href="{% url 'employee_course_view' assignment.id %}">رجوع</a>
+            </div>
           </div>
         </div>
       </div>
@@ -47,8 +49,8 @@
           <input type="hidden" name="attempt_token" value="{{ attempt_token }}">
 
           {% for question in exam_questions %}
-            <section class="card card--flat" style="margin-bottom: 1rem;">
-              <div class="hint">Question {{ forloop.counter }} of {{ total_questions }}</div>
+            <section class="card card--flat exam-question-card">
+              <div class="hint">السؤال {{ forloop.counter }} من {{ total_questions }}</div>
               <div class="qtext">
                 {{ question.question_text }}
                 {% if question.explanation %}
@@ -95,15 +97,6 @@
           {% empty %}
             <div class="msg error">No questions are configured for this exam.</div>
           {% endfor %}
-
-          <div class="actions actions--spread">
-            <div class="left-actions">
-              <a class="btn btn-secondary" href="{% url 'employee_course_exam' assignment.id %}">Back</a>
-            </div>
-            <div class="right-actions">
-              <button class="btn btn-primary" type="submit">Submit Exam</button>
-            </div>
-          </div>
         </form>
       </div>
     </div>

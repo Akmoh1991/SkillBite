@@ -1,8 +1,8 @@
 {% extends "accounts-templates/super-admin-base.html" %}
 
-{% block page_title %}SkillBite | إنشاء دورة تدريبية{% endblock %}
-{% block hero_title %}إنشاء دورة تدريبية{% endblock %}
-{% block hero_text %}أنشئ دورة تدريبية جديدة ثم عيّن الشركات المستهدفة لها من صفحة التعيين.{% endblock %}
+{% block page_title %}SkillBite | {{ page_title_text|default:"إنشاء دورة تدريبية" }}{% endblock %}
+{% block hero_title %}{{ hero_title_text|default:"إنشاء دورة تدريبية" }}{% endblock %}
+{% block hero_text %}{{ hero_text_value|default:"أنشئ دورة تدريبية جديدة ثم عيّن الشركات المستهدفة لها من صفحة التعيين." }}{% endblock %}
 {% block main_class %}main--modern-page{% endblock %}
 {% block extra_head %}
   <link rel="stylesheet" href="/static/branding/super-admin-tools.css">
@@ -13,11 +13,11 @@
   <div class="card section-full course-create-card">
     <div class="card-intro">
       <div>
-        <h2>إنشاء دورة تدريبية</h2>
+        <h2>{{ form_heading_text|default:"إنشاء دورة تدريبية" }}</h2>
       </div>
       <a class="page-toolbar__back page-toolbar__back--accent" href="{% url 'super_admin_learning' %}">العودة إلى المحتوى</a>
     </div>
-    <form method="post" action="{% url 'super_admin_course_create' %}" enctype="multipart/form-data">
+    <form method="post" action="{{ form_action_url|default:'#' }}" enctype="multipart/form-data">
       {% csrf_token %}
 
       <div class="field">
@@ -44,14 +44,25 @@
         {% endfor %}
       </div>
 
+      <div class="field">
+        <label for="{{ course_form.exam_template.id_for_label }}">قالب الاختبار</label>
+        {{ course_form.exam_template }}
+        {% for error in course_form.exam_template.errors %}
+          <p class="muted">{{ error }}</p>
+        {% endfor %}
+      </div>
+
       <div class="form-section">
         <h3>إضافة المحتوى</h3>
         <div class="field">
           <div class="file-upload">
-            <input id="content-video-file" class="file-upload__input" type="file" name="content_video_file" accept="video/mp4,video/webm,.mp4,.webm" data-file-upload required>
-            <label for="content-video-file" class="file-upload__button">رفع ملف الفيديو</label>
-            <span class="file-upload__name" data-file-upload-name>لا يوجد ملف حالياً</span>
+            <input id="content-video-file" class="file-upload__input" type="file" name="content_video_file" accept="video/mp4,video/webm,.mp4,.webm" data-file-upload {% if not is_edit_mode %}required{% endif %}>
+            <label for="content-video-file" class="file-upload__button">{{ video_button_label|default:"رفع ملف الفيديو" }}</label>
+            <span class="file-upload__name" data-file-upload-name>{{ current_video_name|default:"لا يوجد ملف حالياً" }}</span>
           </div>
+          {% if is_edit_mode %}
+            <p class="muted">اترك ملف الفيديو فارغاً للاحتفاظ بالملف الحالي.</p>
+          {% endif %}
         </div>
         <label class="inline-check">
           {{ course_form.is_active }}
@@ -69,7 +80,7 @@
       {% endif %}
 
       <div class="form-actions">
-        <button class="btn" type="submit">إنشاء الدورة</button>
+        <button class="btn" type="submit">{{ submit_label|default:"إنشاء الدورة" }}</button>
         <a class="btn secondary" href="{% url 'super_admin_learning' %}">إلغاء</a>
       </div>
     </form>

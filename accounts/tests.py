@@ -16,6 +16,7 @@ from training.models import (
     Course,
     CourseContentItem,
     CourseAssignment,
+    CourseBusinessAssignment,
     ExamOption,
     ExamQuestion,
     ExamTemplate,
@@ -745,6 +746,7 @@ class MultiTenantFlowTests(TestCase):
 
     def test_employee_courses_page_backfills_nine_catalog_courses_from_database(self):
         CourseAssignment.objects.all().delete()
+        CourseBusinessAssignment.objects.all().delete()
         CourseContentItem.objects.all().delete()
         Course.objects.all().delete()
         employee_user = User.objects.create_user(username='employee_seeded_catalog', password='pass12345')
@@ -754,7 +756,9 @@ class MultiTenantFlowTests(TestCase):
         response = self.client.get(reverse('employee_courses'))
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(Course.objects.filter(business=self.business).count(), 9)
+        self.assertEqual(Course.objects.filter(business__isnull=True).count(), 9)
+        self.assertEqual(Course.objects.filter(business=self.business).count(), 0)
+        self.assertEqual(CourseBusinessAssignment.objects.filter(business=self.business).count(), 9)
         self.assertEqual(CourseAssignment.objects.filter(employee=employee_user).count(), 0)
         return
         self.assertContains(response, 'مهارات الكاشير')
@@ -763,6 +767,7 @@ class MultiTenantFlowTests(TestCase):
         self.assertTrue(CourseAssignment.objects.filter(employee=employee_user, course__title='مهارات الكاشير').exists())
 
     def test_employee_courses_page_completes_catalog_when_one_matching_course_already_exists(self):
+        CourseBusinessAssignment.objects.all().delete()
         Course.objects.all().delete()
         CourseContentItem.objects.all().delete()
         Course.objects.create(
@@ -990,17 +995,16 @@ class MultiTenantFlowTests(TestCase):
 
         self.client.login(username='employee_exam_view', password='pass12345')
         course_response = self.client.get(reverse('employee_course_view', args=[assignment.id]))
-        exam_url = reverse('employee_course_exam', args=[assignment.id])
+        exam_take_url = reverse('employee_course_exam_take', args=[assignment.id])
+        legacy_exam_url = reverse('employee_course_exam', args=[assignment.id])
 
         self.assertEqual(course_response.status_code, 200)
-        self.assertContains(course_response, exam_url)
+        self.assertContains(course_response, exam_take_url)
 
-        exam_response = self.client.get(exam_url)
-        self.assertEqual(exam_response.status_code, 200)
-        self.assertContains(exam_response, 'Food Safety Final')
-        self.assertContains(exam_response, reverse('employee_course_exam_take', args=[assignment.id]))
+        legacy_exam_response = self.client.get(legacy_exam_url)
+        self.assertRedirects(legacy_exam_response, exam_take_url)
 
-        take_response = self.client.get(reverse('employee_course_exam_take', args=[assignment.id]))
+        take_response = self.client.get(exam_take_url)
         self.assertEqual(take_response.status_code, 200)
         self.assertContains(take_response, 'What is the safe storage temperature?')
         attempt_token = self.client.session.get(f'exam-attempt:{assignment.id}', {}).get('token')
@@ -1050,6 +1054,55 @@ class MultiTenantFlowTests(TestCase):
         self.assertContains(response, self.checklist.title)
 
 
+    def test_employee_courses_page_completes_catalog_when_one_matching_course_already_exists(self):
+        CourseBusinessAssignment.objects.all().delete()
+        Course.objects.all().delete()
+        CourseContentItem.objects.all().delete()
+        Course.objects.create(
+            business=self.business,
+            title='مهارات الكاشير',
+            description='دورة عن مهارات الكاشير',
+            estimated_minutes=10,
+            created_by=self.owner,
+        )
+        employee_user = User.objects.create_user(username='employee_partial_catalog', password='pass12345')
+        EmployeeProfile.objects.create(user=employee_user, business=self.business, job_title=self.job_title, created_by=self.owner)
+
+        self.client.login(username='employee_partial_catalog', password='pass12345')
+        response = self.client.get(reverse('employee_courses'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(Course.objects.filter(business__isnull=True).count(), 9)
+        self.assertEqual(CourseBusinessAssignment.objects.filter(business=self.business).count(), 9)
+        self.assertEqual(Course.objects.filter(business=self.business, title='مهارات الكاشير').count(), 0)
+
+    def test_employee_course_catalog_is_shared_globally_across_businesses(self):
+        CourseAssignment.objects.all().delete()
+        CourseBusinessAssignment.objects.all().delete()
+        CourseContentItem.objects.all().delete()
+        Course.objects.all().delete()
+        first_employee = User.objects.create_user(username='employee_catalog_one', password='pass12345')
+        EmployeeProfile.objects.create(user=first_employee, business=self.business, job_title=self.job_title, created_by=self.owner)
+        second_owner = User.objects.create_user(username='owner_catalog_two', password='pass12345')
+        second_business = BusinessTenant.objects.create(owner=second_owner, name='Cafe West')
+        second_job_title = JobTitle.objects.create(business=second_business, name='Cashier')
+        second_employee = User.objects.create_user(username='employee_catalog_two', password='pass12345')
+        EmployeeProfile.objects.create(user=second_employee, business=second_business, job_title=second_job_title, created_by=second_owner)
+
+        self.client.login(username='employee_catalog_one', password='pass12345')
+        first_response = self.client.get(reverse('employee_courses'))
+        self.assertEqual(first_response.status_code, 200)
+
+        self.client.login(username='employee_catalog_two', password='pass12345')
+        second_response = self.client.get(reverse('employee_courses'))
+        self.assertEqual(second_response.status_code, 200)
+
+        self.assertEqual(Course.objects.filter(business__isnull=True).count(), 9)
+        self.assertEqual(CourseBusinessAssignment.objects.filter(course__business__isnull=True).count(), 18)
+        self.assertEqual(Course.objects.filter(business=self.business).count(), 0)
+        self.assertEqual(Course.objects.filter(business=second_business).count(), 0)
+
+
 class SuperAdminFlowTests(TestCase):
     def setUp(self):
         self.super_admin = User.objects.create_user(
@@ -1096,6 +1149,167 @@ class SuperAdminFlowTests(TestCase):
         response = self.client.get(reverse('super_admin_course_list'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, self.course.title)
+
+    def test_super_admin_course_list_is_available_for_super_admin(self):
+        self.client.login(username='platform_admin', password='pass12345')
+        global_course = Course.objects.create(
+            business=None,
+            title='Platform Safety',
+            estimated_minutes=12,
+            created_by=self.super_admin,
+        )
+        CourseBusinessAssignment.objects.create(
+            course=global_course,
+            business=self.business,
+            assigned_by=self.super_admin,
+        )
+
+        response = self.client.get(reverse('super_admin_course_list'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, global_course.title)
+        self.assertNotContains(response, self.course.title)
+        self.assertNotContains(response, self.business.name)
+
+    def test_super_admin_course_business_assignment_page_lists_only_global_courses(self):
+        self.client.login(username='platform_admin', password='pass12345')
+        global_course = Course.objects.create(
+            business=None,
+            title='Platform Operations',
+            estimated_minutes=14,
+            created_by=self.super_admin,
+        )
+
+        response = self.client.get(reverse('super_admin_course_business_assignments'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, global_course.title)
+        self.assertNotContains(response, self.course.title)
+
+    def test_super_admin_learning_page_shows_edit_link_for_global_course(self):
+        self.client.login(username='platform_admin', password='pass12345')
+        global_course = Course.objects.create(
+            business=None,
+            title='Platform Editing',
+            estimated_minutes=16,
+            created_by=self.super_admin,
+        )
+
+        response = self.client.get(reverse('super_admin_learning'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, reverse('super_admin_course_edit_view', args=[global_course.id]))
+        self.assertContains(response, 'تعديل')
+
+    def test_super_admin_course_edit_view_prefills_existing_course(self):
+        self.client.login(username='platform_admin', password='pass12345')
+        global_course = Course.objects.create(
+            business=None,
+            title='Platform Editing',
+            description='Existing description',
+            estimated_minutes=18,
+            created_by=self.super_admin,
+        )
+        CourseContentItem.objects.create(
+            course=global_course,
+            content_type=CourseContentItem.ContentType.LESSON,
+            title='Platform Editing',
+            order=1,
+            video_file=SimpleUploadedFile('existing_edit_view.mp4', b'video-bytes', content_type='video/mp4'),
+        )
+
+        response = self.client.get(reverse('super_admin_course_edit_view', args=[global_course.id]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, global_course.title)
+        self.assertContains(response, global_course.description)
+        self.assertContains(response, reverse('super_admin_course_update', args=[global_course.id]))
+        self.assertContains(response, 'existing_edit_view')
+
+    def test_super_admin_can_update_course_without_reuploading_video(self):
+        self.client.login(username='platform_admin', password='pass12345')
+        global_course = Course.objects.create(
+            business=None,
+            title='Platform Editing',
+            description='Existing description',
+            estimated_minutes=18,
+            created_by=self.super_admin,
+        )
+        content_item = CourseContentItem.objects.create(
+            course=global_course,
+            content_type=CourseContentItem.ContentType.LESSON,
+            title='Platform Editing',
+            order=1,
+            video_file=SimpleUploadedFile('existing_update.mp4', b'video-bytes', content_type='video/mp4'),
+        )
+
+        response = self.client.post(
+            reverse('super_admin_course_update', args=[global_course.id]),
+            {
+                'title': 'Platform Editing Updated',
+                'description': 'Updated description',
+                'estimated_minutes': 27,
+                'is_active': 'on',
+            },
+        )
+
+        self.assertRedirects(response, reverse('super_admin_learning'))
+        global_course.refresh_from_db()
+        content_item.refresh_from_db()
+        self.assertEqual(global_course.title, 'Platform Editing Updated')
+        self.assertEqual(global_course.description, 'Updated description')
+        self.assertEqual(global_course.estimated_minutes, 27)
+        self.assertIn('existing_update', content_item.video_file.name)
+        self.assertTrue(content_item.video_file.name.endswith('.mp4'))
+        self.assertEqual(content_item.title, 'Platform Editing Updated')
+
+    def test_super_admin_course_edit_form_can_assign_exam_template(self):
+        self.client.login(username='platform_admin', password='pass12345')
+        global_course = Course.objects.create(
+            business=None,
+            title='Platform Editing',
+            description='Existing description',
+            estimated_minutes=18,
+            created_by=self.super_admin,
+        )
+        other_global_course = Course.objects.create(
+            business=None,
+            title='Platform Safety',
+            estimated_minutes=20,
+            created_by=self.super_admin,
+        )
+        template = ExamTemplate.objects.create(
+            business=None,
+            name='Platform Final',
+            duration_minutes=25,
+            total_questions=0,
+            created_by=self.super_admin,
+        )
+        other_global_course.exam_template = template
+        other_global_course.save(update_fields=['exam_template'])
+
+        edit_response = self.client.get(reverse('super_admin_course_edit_view', args=[global_course.id]))
+
+        self.assertEqual(edit_response.status_code, 200)
+        self.assertContains(edit_response, 'قالب الاختبار')
+        self.assertContains(edit_response, 'Platform Final')
+
+        update_response = self.client.post(
+            reverse('super_admin_course_update', args=[global_course.id]),
+            {
+                'title': 'Platform Editing',
+                'description': 'Existing description',
+                'estimated_minutes': 18,
+                'exam_template': str(template.id),
+                'is_active': 'on',
+            },
+        )
+
+        self.assertRedirects(update_response, reverse('super_admin_learning'))
+        global_course.refresh_from_db()
+        other_global_course.refresh_from_db()
+        self.assertEqual(global_course.exam_template_id, template.id)
+        self.assertIsNone(other_global_course.exam_template_id)
 
     def test_super_admin_scorm_page_is_hidden_when_disabled(self):
         self.client.login(username='platform_admin', password='pass12345')
