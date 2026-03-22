@@ -19,10 +19,13 @@ body {
   font-family: "SE", "Segoe UI", Tahoma, Arial, sans-serif;
   background: var(--bg);
   color: var(--text);
+  overflow-x: hidden;
 }
 
 .main {
   margin-right: var(--sidebar-w);
+  width: calc(100% - var(--sidebar-w));
+  max-width: calc(100vw - var(--sidebar-w));
   padding: calc(var(--topbar-h) + 36px) 28px 40px;
 }
 
@@ -512,6 +515,8 @@ body {
 @media (max-width: 900px) {
   .main {
     margin-right: 0;
+    width: 100%;
+    max-width: 100%;
     padding: calc(var(--topbar-h) + 18px) 16px 28px;
   }
 

@@ -80,6 +80,15 @@
   flex-wrap: nowrap;
 }
 
+.main--business-modern .dashboard-empty-state {
+  margin: 0;
+  padding: 24px 16px;
+  color: #475569;
+  font-size: 18px;
+  font-weight: 700;
+  text-align: center;
+}
+
 .main--business-modern .action-btn {
   display: inline-flex;
   align-items: center;
