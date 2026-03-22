@@ -14,14 +14,10 @@
     <div id="employee-course-success-modal" class="employee-success-modal">
       <div class="employee-success-modal-card">
         <span class="employee-success-modal-badge">✓</span>
-        <h3 class="employee-success-modal-title">تم اجتياز الاختبار بنجاح</h3>
+        <h3 class="employee-success-modal-title">تم إكمال الدورة بنجاح</h3>
         <p class="employee-success-modal-text">
           أكملت دورة <strong>{{ course_completion_popup.course_title }}</strong> بنجاح.
-          {% if course_completion_popup.certificate_url %}
-            تم إنشاء شهادة PDF قابلة للطباعة باسمك ويمكنك تنزيلها الآن.
-          {% elif course_completion_popup.certificate_error %}
-            {{ course_completion_popup.certificate_error }}
-          {% endif %}
+          تم تسجيل الدورة كمكتملة في حسابك.
         </p>
         <div class="employee-success-modal-meta">
           <div class="employee-success-modal-meta-card">
@@ -34,11 +30,6 @@
           </div>
         </div>
         <div class="employee-success-modal-actions">
-          {% if course_completion_popup.certificate_url %}
-            <a class="employee-course-link secondary-link" href="{{ course_completion_popup.certificate_url }}" target="_blank" rel="noopener">
-              عرض الشهادة PDF
-            </a>
-          {% endif %}
           <button id="employee-course-success-close" class="employee-course-link employee-success-modal-close" type="button">
             إغلاق
           </button>
@@ -101,11 +92,6 @@
             <a class="employee-course-link" href="{% url 'employee_course_view' assignment.id %}">
               عرض تفاصيل الدورة
             </a>
-            {% if assignment.status == 'COMPLETED' and assignment.course_certificate_url %}
-              <a class="employee-course-link secondary-link" href="{{ assignment.course_certificate_url }}" target="_blank" rel="noopener">
-                عرض الشهادة
-              </a>
-            {% endif %}
           </div>
         </div>
       </article>

@@ -43,7 +43,19 @@
               {% for checklist in assigned_checklists %}
                 <tr>
                   <td><span class="employee-checklist-name">{{ checklist.title }}</span></td>
-                  <td><span class="employee-checklist-frequency">{{ checklist.get_frequency_display }}</span></td>
+                  <td>
+                    <span class="employee-checklist-frequency">
+                      {% if checklist.frequency == 'DAILY' %}
+                        يومي
+                      {% elif checklist.frequency == 'WEEKLY' %}
+                        أسبوعي
+                      {% elif checklist.frequency == 'ON_DEMAND' %}
+                        عند الطلب
+                      {% else %}
+                        {{ checklist.get_frequency_display }}
+                      {% endif %}
+                    </span>
+                  </td>
                   <td><span class="employee-checklist-task-count">{{ checklist.items.count }}</span></td>
                   <td>
                     {% if checklist.id in today_completions %}

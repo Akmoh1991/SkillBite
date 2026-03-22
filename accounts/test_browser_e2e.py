@@ -240,7 +240,7 @@ class BrowserE2ESmokeTests(StaticLiveServerTestCase):
         self.page.locator("#employee-email").fill("browser-created@example.com")
         self.page.locator("#employee-name").fill("Browser Created")
         self.page.locator("#employee-password").fill("pass12345")
-        self.page.locator("#employee-job-title").select_option(str(self.job_title.id))
+        self.page.locator("#employee-job-title").fill(self.job_title.name)
         self.page.locator('form[action="' + reverse("business_owner_employee_create") + '"] button[type="submit"]').click()
         self.page.wait_for_url(self._url("business_owner_employees"))
 

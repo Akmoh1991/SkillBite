@@ -56,6 +56,28 @@ class MultiTenantFlowTests(TestCase):
             assigned_by=self.owner,
         )
 
+    def test_public_registration_accepts_visible_signup_fields(self):
+        response = self.client.post(
+            reverse('register'),
+            {
+                'username': 'newowner',
+                'email': 'owner@example.com',
+                'full_name_en': 'Ahmed Al Ahmed',
+                'password': 'StrongPass123!',
+                'role': 'business_owner',
+                'company_name': 'Brave Cafe',
+                'region': 'Eastern region',
+                'phone_number': '0555555555',
+            },
+        )
+
+        self.assertRedirects(response, reverse('business_owner_dashboard'), fetch_redirect_response=False)
+        user = User.objects.get(username='newowner')
+        business = BusinessTenant.objects.get(owner=user)
+        self.assertEqual(user.email, 'owner@example.com')
+        self.assertEqual(user.first_name, 'Ahmed Al Ahmed')
+        self.assertEqual(business.name, 'Brave Cafe')
+
     def test_home_redirects_business_owner_to_owner_dashboard(self):
         self.client.login(username='owner', password='pass12345')
         response = self.client.get(reverse('home'))
@@ -72,7 +94,7 @@ class MultiTenantFlowTests(TestCase):
                 'email': 'employee1@example.com',
                 'full_name': 'Employee One',
                 'password': 'pass12345',
-                'job_title': self.job_title.id,
+                'job_title': self.job_title.name,
             },
         )
         self.assertRedirects(response, reverse('business_owner_employees'))
@@ -82,6 +104,25 @@ class MultiTenantFlowTests(TestCase):
         self.assertEqual(employee_profile.business, self.business)
         self.assertEqual(employee_profile.job_title, self.job_title)
         self.assertFalse(CourseAssignment.objects.filter(employee=employee_user, course=self.course).exists())
+
+    def test_owner_can_create_employee_with_new_text_job_title(self):
+        self.client.login(username='owner', password='pass12345')
+        response = self.client.post(
+            reverse('business_owner_employee_create'),
+            {
+                'username': 'employee2a',
+                'email': 'employee2a@example.com',
+                'full_name': 'Employee Two',
+                'password': 'pass12345',
+                'job_title': 'Shift Lead',
+            },
+        )
+        self.assertRedirects(response, reverse('business_owner_employees'))
+
+        employee_user = User.objects.get(username='employee2a')
+        employee_profile = EmployeeProfile.objects.get(user=employee_user)
+        self.assertEqual(employee_profile.job_title.name, 'Shift Lead')
+        self.assertTrue(JobTitle.objects.filter(business=self.business, name='Shift Lead').exists())
 
     def test_employee_can_complete_assigned_course(self):
         employee_user = User.objects.create_user(username='employee2', password='pass12345')
@@ -120,6 +161,26 @@ class MultiTenantFlowTests(TestCase):
                 'https://res.cloudinary.com/dtmyrie3t/video/upload/v1/course_content_videos/sample-video.mp4',
             )
             self.assertEqual(item.video_mime_type, 'video/mp4')
+
+    def test_certificate_download_url_uses_signed_cloudinary_pdf_download(self):
+        from accounts.views import _certificate_file_url
+
+        class DummyFieldFile:
+            name = 'media/certificates/sample-certificate.pdf'
+            url = 'https://res.cloudinary.com/dtmyrie3t/raw/upload/v1/media/certificates/sample-certificate.pdf'
+
+        with patch('accounts.views.private_download_url', return_value='https://api.cloudinary.com/v1_1/dtmyrie3t/raw/download?signature=test') as mocked_download_url:
+            result = _certificate_file_url(DummyFieldFile())
+
+        mocked_download_url.assert_called_once_with(
+            'media/certificates/sample-certificate',
+            'pdf',
+            resource_type='raw',
+            type='upload',
+            attachment='sample-certificate.pdf',
+            secure=True,
+        )
+        self.assertEqual(result, 'https://api.cloudinary.com/v1_1/dtmyrie3t/raw/download?signature=test')
 
     def test_employee_can_complete_daily_sop_checklist(self):
         employee_user = User.objects.create_user(username='employee3', password='pass12345')
@@ -773,7 +834,7 @@ class MultiTenantFlowTests(TestCase):
         assignment.refresh_from_db()
         self.assertEqual(assignment.status, CourseAssignment.Status.IN_PROGRESS)
 
-    def test_employee_learning_history_lists_completed_courses_with_certificate_links(self):
+    def test_employee_learning_history_lists_completed_courses_without_certificate_links(self):
         employee_user = User.objects.create_user(username='employee_learning_history', password='pass12345')
         EmployeeProfile.objects.create(user=employee_user, business=self.business, job_title=self.job_title, created_by=self.owner)
         completed_assignment = CourseAssignment.objects.create(
@@ -799,18 +860,6 @@ class MultiTenantFlowTests(TestCase):
             status=CourseAssignment.Status.IN_PROGRESS,
         )
 
-        certificate = ScormCertificate.objects.create(
-            owner=employee_user,
-            scorm_filename=f'course_exam_{self.course.id}',
-            course_name=self.course.title,
-            verification_code='CERT123456',
-        )
-        certificate.pdf_file.save(
-            'history_certificate.pdf',
-            SimpleUploadedFile('history_certificate.pdf', b'%PDF-1.4 test certificate', content_type='application/pdf'),
-            save=True,
-        )
-
         self.client.login(username='employee_learning_history', password='pass12345')
         response = self.client.get(reverse('employee_learning_history'))
 
@@ -818,10 +867,12 @@ class MultiTenantFlowTests(TestCase):
         self.assertContains(response, 'سجل الدورات المكتملة')
         self.assertContains(response, self.course.title)
         self.assertNotContains(response, pending_course.title)
+        self.assertNotContains(response, 'PDF')
+        return
         self.assertContains(response, 'تنزيل PDF')
-        self.assertContains(response, certificate.pdf_file.url)
+        self.assertNotContains(response, 'PDF')
 
-    def test_employee_course_complete_action_creates_certificate_for_learning_history(self):
+    def test_employee_course_complete_action_marks_course_completed_without_certificate(self):
         employee_user = User.objects.create_user(username='employee_course_complete_cert', password='pass12345')
         EmployeeProfile.objects.create(user=employee_user, business=self.business, job_title=self.job_title, created_by=self.owner)
         assignment = CourseAssignment.objects.create(
@@ -840,6 +891,15 @@ class MultiTenantFlowTests(TestCase):
         assignment.refresh_from_db()
         self.assertEqual(assignment.status, CourseAssignment.Status.COMPLETED)
         self.assertIsNotNone(assignment.completed_at)
+        self.assertFalse(
+            ScormCertificate.objects.filter(owner=employee_user, scorm_filename=f'course_exam_{self.course.id}').exists()
+        )
+        self.assertNotContains(response, 'PDF')
+
+        history_response = self.client.get(reverse('employee_learning_history'))
+        self.assertContains(history_response, self.course.title)
+        self.assertNotContains(history_response, 'PDF')
+        return
 
         certificate = ScormCertificate.objects.get(owner=employee_user, scorm_filename=f'course_exam_{self.course.id}')
         self.assertTrue(bool(certificate.pdf_file))
@@ -959,6 +1019,11 @@ class MultiTenantFlowTests(TestCase):
         assignment.refresh_from_db()
         self.assertEqual(assignment.status, CourseAssignment.Status.COMPLETED)
         self.assertIsNotNone(assignment.completed_at)
+        self.assertFalse(
+            ScormCertificate.objects.filter(owner=employee_user, scorm_filename=f'course_exam_{self.course.id}').exists()
+        )
+        self.assertNotContains(submit_response, 'PDF')
+        return
 
         certificate = ScormCertificate.objects.get(owner=employee_user, scorm_filename=f'course_exam_{self.course.id}')
         self.assertEqual(certificate.course_name, self.course.title)

@@ -3,7 +3,7 @@
 {% block page_title %}{{ business.name }} | سجل الدورات المكتملة{% endblock %}
 {% block hero_section %}{% endblock %}
 {% block hero_title %}سجل الدورات المكتملة{% endblock %}
-{% block hero_text %}استعرض الدورات التي أكملتها وحمّل شهاداتك بصيغة PDF من مكان واحد.{% endblock %}
+{% block hero_text %}استعرض الدورات التي أكملتها من مكان واحد.{% endblock %}
 {% block extra_head %}
   <link rel="stylesheet" href="/static/branding/employee-learning.css">
 {% endblock %}
@@ -13,7 +13,6 @@
   <div class="employee-history-toolbar">
     <div>
       <h2 class="employee-history-title">سجل الدورات المكتملة</h2>
-      <p class="employee-history-subtitle">السجل التدريبي الخاص بك مع روابط الشهادات المعتمدة.</p>
     </div>
     <label class="employee-history-search-wrap" for="employee-history-search">
       <input id="employee-history-search" class="employee-history-search" type="search" placeholder="ابحث في السجل التدريبي">
@@ -29,10 +28,9 @@
             <tr>
               <th>الدورة</th>
               <th>التصنيف</th>
-              <th>تاريخ الإسناد</th>
+              <th>تاريخ الإدراج</th>
               <th>تاريخ الإكمال</th>
               <th>الحالة</th>
-              <th>الشهادة</th>
             </tr>
           </thead>
           <tbody id="employee-history-table-body">
@@ -41,26 +39,12 @@
                 <td>
                   <div class="employee-history-course">
                     <span class="employee-history-course-title">{{ assignment.course.title }}</span>
-                    <span class="employee-history-course-desc">
-                      {% if assignment.course.description %}
-                        {{ assignment.course.description|truncatechars:120 }}
-                      {% else %}
-                        دورة مكتملة ضمن مسارك التدريبي داخل SkillBite.
-                      {% endif %}
-                    </span>
                   </div>
                 </td>
                 <td>{{ assignment.course.card_label }}</td>
                 <td>{{ assignment.assigned_at|date:"Y-m-d" }}</td>
                 <td>{{ assignment.completed_at|date:"Y-m-d" }}</td>
                 <td><span class="employee-history-badge completed">مكتملة</span></td>
-                <td>
-                  {% if assignment.course_certificate_url %}
-                    <a class="employee-history-certificate" href="{{ assignment.course_certificate_url }}" target="_blank" rel="noopener">تنزيل PDF</a>
-                  {% else %}
-                    <span class="employee-history-certificate muted">غير متاح</span>
-                  {% endif %}
-                </td>
               </tr>
             {% endfor %}
           </tbody>

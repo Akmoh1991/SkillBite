@@ -10,6 +10,8 @@ import uuid
 import xml.etree.ElementTree as ET
 import zipfile
 
+from cloudinary.utils import private_download_url
+from django import forms
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import authenticate, get_user_model, login, logout
@@ -74,6 +76,28 @@ AUTO_GRADED_QUESTION_TYPES = {
     ExamQuestion.QuestionType.MCQ_MULTI,
     ExamQuestion.QuestionType.TRUE_FALSE,
 }
+
+
+class PublicRegisterForm(RegisterForm):
+    def clean(self):
+        cleaned_data = super(RegisterForm, self).clean()
+        company_name = (cleaned_data.get('company_name') or '').strip()
+        if not company_name:
+            self.add_error('company_name', 'هذا الحقل مطلوب')
+        else:
+            cleaned_data['company_name'] = company_name
+        return cleaned_data
+
+
+class BusinessOwnerEmployeeCreateForm(BusinessEmployeeCreateForm):
+    job_title = forms.CharField(max_length=150)
+
+    def __init__(self, *args, **kwargs):
+        kwargs.pop('business', None)
+        forms.Form.__init__(self, *args, **kwargs)
+
+    def clean_job_title(self):
+        return (self.cleaned_data.get('job_title') or '').strip()
 
 
 def _is_business_owner(user) -> bool:
@@ -755,6 +779,35 @@ def _generate_certificate_pdf_bytes(owner_name: str, course_name: str, verificat
     return buffer.getvalue()
 
 
+def _certificate_file_url(pdf_file) -> str | None:
+    if not pdf_file:
+        return None
+    try:
+        url = pdf_file.url
+    except Exception:
+        return None
+    if 'res.cloudinary.com' not in url:
+        return url
+    normalized_name = str(getattr(pdf_file, 'name', '') or '').replace('\\', '/').strip('/')
+    suffix = Path(normalized_name).suffix.lower()
+    if suffix != '.pdf':
+        return url
+    public_id = normalized_name[:-len(suffix)]
+    if not public_id:
+        return url
+    try:
+        return private_download_url(
+            public_id,
+            suffix.lstrip('.'),
+            resource_type='raw',
+            type='upload',
+            attachment=Path(normalized_name).name,
+            secure=True,
+        )
+    except Exception:
+        return url
+
+
 def _issue_course_exam_certificate(user, course) -> tuple[str | None, str | None]:
     certificate_key = f'course_exam_{course.id}'
     cert, _created = ScormCertificate.objects.get_or_create(
@@ -784,17 +837,14 @@ def _issue_course_exam_certificate(user, course) -> tuple[str | None, str | None
             cert.save()
         except Exception:
             return None, 'تم إنهاء الاختبار، لكن تعذر إنشاء ملف الشهادة الآن.'
-    return cert.pdf_file.url if cert.pdf_file else None, None
+    return _certificate_file_url(cert.pdf_file), None
 
 
 def _store_course_completion_popup(request, assignment):
-    certificate_url, certificate_error = _issue_course_exam_certificate(request.user, assignment.course)
     request.session['course_completion_popup'] = {
         'course_title': assignment.course.title,
         'employee_name': _display_name(request.user),
         'completed_at': timezone.localtime(assignment.completed_at).strftime('%Y-%m-%d'),
-        'certificate_url': certificate_url,
-        'certificate_error': certificate_error,
     }
 
 
@@ -1692,7 +1742,7 @@ def home_view(request):
 def register_view(request):
     if request.user.is_authenticated:
         return redirect('home')
-    form = RegisterForm(request.POST or None, initial={'role': 'business_owner'})
+    form = PublicRegisterForm(request.POST or None, initial={'role': 'business_owner'})
     if request.method == 'POST' and form.is_valid():
         username = form.cleaned_data['username']
         if User.objects.filter(username=username).exists():
@@ -1793,7 +1843,7 @@ def _business_owner_dashboard_context(request):
         'checklists': checklists,
         'job_titles': job_titles,
         'checklist_rules': checklist_rules,
-        'employee_form': BusinessEmployeeCreateForm(business=business),
+        'employee_form': BusinessOwnerEmployeeCreateForm(business=business),
         'job_title_form': JobTitleForm(),
         'course_form': CourseForm(),
         'checklist_form': SOPChecklistForm(),
@@ -2128,7 +2178,7 @@ def business_owner_employee_create_action(request):
     if not (request.POST.get('job_title') or '').strip():
         messages.error(request, 'المسمى الوظيفي: هذا الحقل مطلوب.')
         return redirect('business_owner_employees')
-    form = BusinessEmployeeCreateForm(request.POST, business=business)
+    form = BusinessOwnerEmployeeCreateForm(request.POST, business=business)
     if not form.is_valid():
         messages.error(request, form.errors.as_text())
         return redirect('business_owner_employees')
@@ -2136,9 +2186,16 @@ def business_owner_employee_create_action(request):
     if User.objects.filter(username=username).exists():
         messages.error(request, 'اسم المستخدم مستخدم مسبقاً')
         return redirect('business_owner_employees')
+    job_title_name = form.cleaned_data['job_title']
+    job_title = JobTitle.objects.filter(business=business, name__iexact=job_title_name).order_by('id').first()
+    if job_title is None:
+        try:
+            job_title = JobTitle.objects.create(business=business, name=job_title_name)
+        except IntegrityError:
+            job_title = JobTitle.objects.filter(business=business, name__iexact=job_title_name).order_by('id').first()
     first_name, _, last_name = form.cleaned_data['full_name'].partition(' ')
     user = User.objects.create_user(username=username, password=form.cleaned_data['password'], email=(form.cleaned_data.get('email') or '').strip(), first_name=first_name.strip(), last_name=last_name.strip())
-    employee_profile = EmployeeProfile.objects.create(user=user, business=business, job_title=form.cleaned_data.get('job_title'), created_by=request.user)
+    employee_profile = EmployeeProfile.objects.create(user=user, business=business, job_title=job_title, created_by=request.user)
     messages.success(request, 'تم إنشاء حساب الموظف')
     return redirect('business_owner_employees')
 
@@ -2324,18 +2381,8 @@ def _employee_dashboard_context(request):
     today = timezone.localdate()
     _ensure_employee_courses_are_backed_by_db(business)
     course_assignments = _visible_employee_course_assignments_queryset(request.user, business)
-    certificate_map = {}
-    for cert in ScormCertificate.objects.filter(owner=request.user, scorm_filename__startswith='course_exam_'):
-        suffix = (cert.scorm_filename or '').replace('course_exam_', '', 1)
-        if suffix.isdigit() and cert.pdf_file:
-            certificate_map[int(suffix)] = cert.pdf_file.url
     for assignment in course_assignments:
         _course_card_defaults(assignment.course)
-        if assignment.status == CourseAssignment.Status.COMPLETED and assignment.course_id not in certificate_map:
-            certificate_url, _certificate_error = _issue_course_exam_certificate(request.user, assignment.course)
-            if certificate_url:
-                certificate_map[assignment.course_id] = certificate_url
-        assignment.course_certificate_url = certificate_map.get(assignment.course_id)
     completed_course_count = sum(1 for assignment in course_assignments if assignment.status == CourseAssignment.Status.COMPLETED)
     active_course_assignments = [assignment for assignment in course_assignments if assignment.status != CourseAssignment.Status.COMPLETED]
     dashboard_course_assignments = active_course_assignments[:3]
@@ -2527,13 +2574,13 @@ def employee_course_complete_action(request, assignment_id: int):
         id=assignment_id,
     )
     if assignment.course.exam_template_id:
-        messages.error(request, 'This course requires passing the exam before completion.')
+        messages.error(request, 'يجب اجتياز الاختبار قبل إكمال هذه الدورة.')
         return redirect('employee_course_exam', assignment_id=assignment.id)
     if assignment.status == CourseAssignment.Status.COMPLETED:
-        messages.info(request, 'This course has already been completed.')
+        messages.error(request, 'تم إكمال هذه الدورة مسبقاً')
         return redirect('employee_courses')
     if not _has_course_completion_ready(request, assignment):
-        messages.error(request, 'Open the course content before confirming completion.')
+        messages.error(request, 'افتح محتوى الدورة قبل تأكيد الإكمال.')
         return redirect('employee_course_view', assignment_id=assignment.id)
     assignment.status = CourseAssignment.Status.COMPLETED
     assignment.completed_at = timezone.now()
@@ -2618,14 +2665,14 @@ def employee_scorm_check_complete_action(request, filename: str):
     if not cert.course_name:
         cert.course_name = course_name
         cert.save(update_fields=['course_name'])
-    certificate_url = cert.pdf_file.url if cert.pdf_file else None
+    certificate_url = _certificate_file_url(cert.pdf_file)
     certificate_error = None
     if not certificate_url:
         try:
             pdf_bytes = _generate_certificate_pdf_bytes(owner_name=_display_name(request.user), course_name=course_name, verification_code=cert.verification_code, issued_at=getattr(cert, 'issued_at', None) or timezone.now())
             cert.pdf_file.save(f'scorm_certificate_{request.user.id}_{cert.verification_code}.pdf', ContentFile(pdf_bytes), save=False)
             cert.save()
-            certificate_url = cert.pdf_file.url if cert.pdf_file else None
+            certificate_url = _certificate_file_url(cert.pdf_file)
         except Exception:
             certificate_error = 'تم تسجيل الإكمال، لكن تعذر إنشاء ملف PDF الآن. حاول لاحقاً.'
     return JsonResponse({'ok': True, 'completed': True, 'certificate_url': certificate_url, 'certificate_error': certificate_error})

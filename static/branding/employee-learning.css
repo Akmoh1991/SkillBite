@@ -567,10 +567,20 @@
   vertical-align: middle;
   color: #0f172a;
   font-size: 14px;
+  background: #fff;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .employee-history-table tbody tr:last-child td {
   border-bottom: 0;
+}
+
+.employee-history-table tbody tr:hover td {
+  background: #f0fdf7;
+}
+
+.employee-history-table tbody tr:hover .employee-history-course-title {
+  color: #0b8a72;
 }
 
 .employee-history-row.employee-history-hidden {

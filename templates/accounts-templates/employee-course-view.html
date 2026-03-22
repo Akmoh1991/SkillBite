@@ -23,7 +23,7 @@
         {% if not exam_template %}
           <form method="post" action="{% url 'employee_course_complete' assignment.id %}">
             {% csrf_token %}
-            <button class="btn course-link-button" type="submit">Confirm Completion</button>
+            <button class="btn course-link-button" type="submit">تأكيد الإكمال</button>
           </form>
         {% endif %}
         <a class="btn course-link-button" href="{% url 'employee_courses' %}">
@@ -38,7 +38,7 @@
           <div class="checklist-form course-item">
             {% if item.title or item.body %}
               <div class="course-item-copy">
-                {% if item.title %}
+                {% if item.title and item.title != course.title %}
                   <h3 class="course-item-title">{{ item.title }}</h3>
                 {% endif %}
                 {% if item.body %}
