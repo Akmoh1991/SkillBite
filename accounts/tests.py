@@ -1545,3 +1545,156 @@ class SeedSuperAdminCommandTests(TestCase):
         self.assertEqual(user.first_name, 'Existing')
         self.assertEqual(user.last_name, 'Admin')
         self.assertTrue(user.check_password('newpass123'))
+
+
+class MobileApiTests(TestCase):
+    def setUp(self):
+        self.owner = User.objects.create_user(username='mobile_owner', password='pass12345', first_name='Owner')
+        self.business = BusinessTenant.objects.create(owner=self.owner, name='Mobile Cafe')
+        self.job_title = JobTitle.objects.create(business=self.business, name='Cashier')
+        self.employee_user = User.objects.create_user(username='mobile_employee', password='pass12345', first_name='Employee')
+        self.employee_profile = EmployeeProfile.objects.create(
+            user=self.employee_user,
+            business=self.business,
+            job_title=self.job_title,
+            created_by=self.owner,
+        )
+        self.course = Course.objects.create(
+            business=self.business,
+            title='Mobile Basics',
+            estimated_minutes=10,
+            created_by=self.owner,
+        )
+        CourseContentItem.objects.create(
+            course=self.course,
+            content_type=CourseContentItem.ContentType.LESSON,
+            title='Lesson 1',
+            body='Read me first',
+            order=1,
+            pdf_file=SimpleUploadedFile('intro.pdf', b'%PDF-1.4', content_type='application/pdf'),
+        )
+        self.assignment = CourseAssignment.objects.create(
+            business=self.business,
+            course=self.course,
+            employee=self.employee_user,
+            assigned_by=self.owner,
+        )
+        self.checklist = SOPChecklist.objects.create(
+            business=self.business,
+            title='Opening',
+            frequency=SOPChecklist.Frequency.DAILY,
+            created_by=self.owner,
+        )
+        self.checklist_item_1 = SOPChecklistItem.objects.create(checklist=self.checklist, title='Unlock door', order=1)
+        self.checklist_item_2 = SOPChecklistItem.objects.create(checklist=self.checklist, title='Start register', order=2)
+        SOPChecklistAssignmentRule.objects.create(
+            business=self.business,
+            job_title=self.job_title,
+            checklist=self.checklist,
+            assigned_by=self.owner,
+        )
+
+    def _mobile_login(self, username: str, password: str) -> str:
+        response = self.client.post(
+            reverse('mobile_login'),
+            data=json.dumps({'username': username, 'password': password, 'device_name': 'test-suite'}),
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertTrue(payload['ok'])
+        return payload['token']
+
+    def test_mobile_login_returns_bearer_token_and_profile(self):
+        token = self._mobile_login('mobile_owner', 'pass12345')
+        me_response = self.client.get(
+            reverse('mobile_me'),
+            HTTP_AUTHORIZATION=f'Bearer {token}',
+        )
+        self.assertEqual(me_response.status_code, 200)
+        payload = me_response.json()
+        self.assertEqual(payload['user']['role'], 'business_owner')
+        self.assertEqual(payload['user']['business']['name'], 'Mobile Cafe')
+
+    def test_employee_mobile_course_flow_can_complete_without_exam(self):
+        token = self._mobile_login('mobile_employee', 'pass12345')
+        detail_response = self.client.get(
+            reverse('mobile_employee_course_detail', args=[self.assignment.id]),
+            HTTP_AUTHORIZATION=f'Bearer {token}',
+        )
+        self.assertEqual(detail_response.status_code, 200)
+        complete_response = self.client.post(
+            reverse('mobile_employee_course_complete', args=[self.assignment.id]),
+            data='{}',
+            content_type='application/json',
+            HTTP_AUTHORIZATION=f'Bearer {token}',
+        )
+        self.assertEqual(complete_response.status_code, 200)
+        self.assignment.refresh_from_db()
+        self.assertEqual(self.assignment.status, CourseAssignment.Status.COMPLETED)
+
+    def test_employee_mobile_can_complete_daily_checklist(self):
+        token = self._mobile_login('mobile_employee', 'pass12345')
+        response = self.client.post(
+            reverse('mobile_employee_checklist_complete', args=[self.checklist.id]),
+            data=json.dumps(
+                {
+                    'item_ids': [self.checklist_item_1.id, self.checklist_item_2.id],
+                    'notes': 'done',
+                }
+            ),
+            content_type='application/json',
+            HTTP_AUTHORIZATION=f'Bearer {token}',
+        )
+        self.assertEqual(response.status_code, 200)
+        completion = SOPChecklistCompletion.objects.get(employee=self.employee_user, checklist=self.checklist)
+        self.assertEqual(completion.notes, 'done')
+
+    def test_owner_mobile_can_assign_course_to_employee(self):
+        token = self._mobile_login('mobile_owner', 'pass12345')
+        second_course = Course.objects.create(
+            business=self.business,
+            title='Assigned From API',
+            estimated_minutes=12,
+            created_by=self.owner,
+        )
+        response = self.client.post(
+            reverse('mobile_owner_course_assign', args=[second_course.id]),
+            data=json.dumps({'employee_ids': [self.employee_profile.id]}),
+            content_type='application/json',
+            HTTP_AUTHORIZATION=f'Bearer {token}',
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(
+            CourseAssignment.objects.filter(
+                business=self.business,
+                course=second_course,
+                employee=self.employee_user,
+            ).exists()
+        )
+
+    def test_owner_mobile_can_create_course_with_text_content(self):
+        token = self._mobile_login('mobile_owner', 'pass12345')
+        response = self.client.post(
+            reverse('mobile_owner_course_create'),
+            data=json.dumps(
+                {
+                    'title': 'API Course',
+                    'description': 'Created from mobile API',
+                    'estimated_minutes': 15,
+                    'is_active': True,
+                    'content_items': [
+                        {
+                            'title': 'Intro',
+                            'body': 'Read the basics',
+                            'content_type': 'TEXT',
+                        }
+                    ],
+                }
+            ),
+            content_type='application/json',
+            HTTP_AUTHORIZATION=f'Bearer {token}',
+        )
+        self.assertEqual(response.status_code, 201)
+        created_course = Course.objects.get(title='API Course', business=self.business)
+        self.assertTrue(CourseContentItem.objects.filter(course=created_course, title='Intro').exists())
