@@ -46,16 +46,7 @@ class _SkillBiteMobileAppState extends State<SkillBiteMobileApp> {
     return MaterialApp(
       title: 'SkillBite Mobile',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF0F766E)),
-        scaffoldBackgroundColor: const Color(0xFFF5F5F0),
-        cardTheme: const CardThemeData(
-          margin: EdgeInsets.zero,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(18)),
-          ),
-        ),
-      ),
+      theme: _buildTheme(),
       home: sessionUser == null
           ? LoginScreen(api: api, onLoggedIn: _handleLogin)
           : RoleShell(
@@ -65,6 +56,105 @@ class _SkillBiteMobileAppState extends State<SkillBiteMobileApp> {
             ),
     );
   }
+}
+
+ThemeData _buildTheme() {
+  const seed = Color(0xFF0F766E);
+  final scheme = ColorScheme.fromSeed(
+    seedColor: seed,
+    brightness: Brightness.light,
+    primary: seed,
+    secondary: const Color(0xFFE9A33B),
+    surface: Colors.white,
+  );
+  return ThemeData(
+    useMaterial3: true,
+    colorScheme: scheme,
+    scaffoldBackgroundColor: const Color(0xFFF4F1E8),
+    textTheme: const TextTheme(
+      headlineLarge: TextStyle(fontSize: 34, fontWeight: FontWeight.w800, letterSpacing: -1.2),
+      headlineMedium: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, letterSpacing: -0.8),
+      headlineSmall: TextStyle(fontSize: 24, fontWeight: FontWeight.w700, letterSpacing: -0.4),
+      titleLarge: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+      titleMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+      bodyLarge: TextStyle(fontSize: 16, height: 1.45),
+      bodyMedium: TextStyle(fontSize: 14, height: 1.45),
+      bodySmall: TextStyle(fontSize: 12, height: 1.4),
+    ),
+    appBarTheme: const AppBarTheme(
+      centerTitle: false,
+      scrolledUnderElevation: 0,
+      backgroundColor: Colors.transparent,
+      foregroundColor: Color(0xFF11221F),
+      elevation: 0,
+      titleTextStyle: TextStyle(
+        color: Color(0xFF11221F),
+        fontSize: 20,
+        fontWeight: FontWeight.w700,
+      ),
+    ),
+    cardTheme: CardThemeData(
+      margin: EdgeInsets.zero,
+      elevation: 0,
+      color: Colors.white,
+      shadowColor: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(26),
+        side: BorderSide(color: const Color(0xFF12312C).withValues(alpha: 0.08)),
+      ),
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: Colors.white.withValues(alpha: 0.94),
+      labelStyle: const TextStyle(color: Color(0xFF5D6D69)),
+      hintStyle: const TextStyle(color: Color(0xFF90A09C)),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(18),
+        borderSide: BorderSide.none,
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(18),
+        borderSide: BorderSide(color: const Color(0xFF12312C).withValues(alpha: 0.08)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(18),
+        borderSide: const BorderSide(color: seed, width: 1.4),
+      ),
+    ),
+    navigationBarTheme: NavigationBarThemeData(
+      backgroundColor: Colors.white.withValues(alpha: 0.96),
+      indicatorColor: const Color(0xFFD7EFE8),
+      iconTheme: WidgetStateProperty.resolveWith((states) {
+        return IconThemeData(
+          color: states.contains(WidgetState.selected) ? seed : const Color(0xFF71807C),
+        );
+      }),
+      labelTextStyle: WidgetStateProperty.resolveWith((states) {
+        return TextStyle(
+          color: states.contains(WidgetState.selected) ? seed : const Color(0xFF71807C),
+          fontWeight: states.contains(WidgetState.selected) ? FontWeight.w700 : FontWeight.w500,
+        );
+      }),
+    ),
+    filledButtonTheme: FilledButtonThemeData(
+      style: FilledButton.styleFrom(
+        backgroundColor: seed,
+        foregroundColor: Colors.white,
+        minimumSize: const Size.fromHeight(56),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+      ),
+    ),
+    chipTheme: ChipThemeData(
+      backgroundColor: const Color(0xFFF1F6F4),
+      selectedColor: const Color(0xFFD7EFE8),
+      side: BorderSide.none,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+      labelStyle: const TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF24403A)),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+    ),
+  );
 }
 
 class MobileApiClient {
@@ -169,15 +259,28 @@ class _LoginScreenState extends State<LoginScreen> {
   bool loading = false;
   String? errorText;
 
+  @override
+  void dispose() {
+    usernameController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
+
   Future<void> _submit() async {
+    final username = usernameController.text.trim();
+    final password = passwordController.text;
+    if (username.isEmpty || password.isEmpty) {
+      setState(() => errorText = 'Username and password are required.');
+      return;
+    }
     setState(() {
       loading = true;
       errorText = null;
     });
     try {
       final user = await widget.api.login(
-        usernameController.text.trim(),
-        passwordController.text,
+        username,
+        password,
       );
       widget.onLoggedIn(user);
     } catch (error) {
@@ -194,47 +297,135 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 430),
-          child: Card(
-            margin: const EdgeInsets.all(24),
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text('SkillBite Mobile', style: Theme.of(context).textTheme.headlineSmall),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Employee and business-owner access through the new mobile API.',
-                    style: Theme.of(context).textTheme.bodyMedium,
+      body: DecoratedBox(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFFEAF4EF), Color(0xFFF4F1E8)],
+          ),
+        ),
+        child: Stack(
+          children: [
+            const Positioned(
+              top: -120,
+              right: -40,
+              child: _BackdropOrb(size: 260, color: Color(0xFFB9E1D6)),
+            ),
+            const Positioned(
+              top: 140,
+              left: -70,
+              child: _BackdropOrb(size: 180, color: Color(0xFFE8C98E)),
+            ),
+            SafeArea(
+              child: Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 430),
+                    child: Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Container(
+                              width: 58,
+                              height: 58,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFD9EEE8),
+                                borderRadius: BorderRadius.circular(18),
+                              ),
+                              child: const Icon(Icons.auto_stories_rounded, size: 28),
+                            ),
+                            const SizedBox(height: 18),
+                            Text('SkillBite Mobile', style: Theme.of(context).textTheme.headlineMedium),
+                            const SizedBox(height: 10),
+                            Text(
+                              'Employee and business-owner access through the new mobile API.',
+                              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                color: const Color(0xFF556560),
+                              ),
+                            ),
+                            const SizedBox(height: 18),
+                            Container(
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF7F8F4),
+                                borderRadius: BorderRadius.circular(18),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Demo Access',
+                                    style: Theme.of(context).textTheme.titleMedium,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Wrap(
+                                    spacing: 8,
+                                    runSpacing: 8,
+                                    children: [
+                                      _DemoChip(
+                                        label: 'Owner Demo',
+                                        onTap: () {
+                                          usernameController.text = 'demo_owner';
+                                          passwordController.text = 'pass12345';
+                                          setState(() => errorText = null);
+                                        },
+                                      ),
+                                      _DemoChip(
+                                        label: 'Employee Demo',
+                                        onTap: () {
+                                          usernameController.text = 'demo_employee';
+                                          passwordController.text = 'pass12345';
+                                          setState(() => errorText = null);
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 18),
+                            TextField(
+                              controller: usernameController,
+                              textInputAction: TextInputAction.next,
+                              decoration: const InputDecoration(
+                                labelText: 'Username',
+                                prefixIcon: Icon(Icons.person_outline),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            TextField(
+                              controller: passwordController,
+                              obscureText: true,
+                              onSubmitted: (_) => loading ? null : _submit(),
+                              decoration: const InputDecoration(
+                                labelText: 'Password',
+                                prefixIcon: Icon(Icons.lock_outline),
+                              ),
+                            ),
+                            if (errorText != null) ...[
+                              const SizedBox(height: 12),
+                              _InlineError(message: errorText!),
+                            ],
+                            const SizedBox(height: 18),
+                            FilledButton.icon(
+                              onPressed: loading ? null : _submit,
+                              icon: Icon(loading ? Icons.hourglass_top_rounded : Icons.arrow_forward_rounded),
+                              label: Text(loading ? 'Signing in...' : 'Sign in'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   ),
-                  const SizedBox(height: 20),
-                  TextField(
-                    controller: usernameController,
-                    decoration: const InputDecoration(labelText: 'Username'),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: passwordController,
-                    obscureText: true,
-                    decoration: const InputDecoration(labelText: 'Password'),
-                  ),
-                  if (errorText != null) ...[
-                    const SizedBox(height: 12),
-                    Text(errorText!, style: const TextStyle(color: Colors.red)),
-                  ],
-                  const SizedBox(height: 18),
-                  FilledButton(
-                    onPressed: loading ? null : _submit,
-                    child: Text(loading ? 'Signing in...' : 'Sign in'),
-                  ),
-                ],
+                ),
               ),
             ),
-          ),
+          ],
         ),
       ),
     );
@@ -292,12 +483,39 @@ class _RoleShellState extends State<RoleShell> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.user.displayName),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(widget.user.displayName),
+            Text(
+              ownerMode ? 'Business owner workspace' : 'Employee workspace',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: const Color(0xFF6A7A76),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
         actions: [
           if (widget.user.businessName.isNotEmpty)
             Padding(
-              padding: const EdgeInsets.only(right: 12),
-              child: Center(child: Text(widget.user.businessName)),
+              padding: const EdgeInsets.only(right: 8),
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.82),
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(color: const Color(0xFF12312C).withValues(alpha: 0.08)),
+                  ),
+                  child: Text(
+                    widget.user.businessName,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
             ),
           IconButton(
             onPressed: () async => widget.onLogout(),
@@ -305,11 +523,26 @@ class _RoleShellState extends State<RoleShell> {
           ),
         ],
       ),
-      body: pages[index],
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: index,
-        destinations: destinations,
-        onDestinationSelected: (value) => setState(() => index = value),
+      body: DecoratedBox(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFFEAF4EF), Color(0xFFF4F1E8)],
+          ),
+        ),
+        child: IndexedStack(index: index, children: pages),
+      ),
+      bottomNavigationBar: SafeArea(
+        minimum: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(26),
+          child: NavigationBar(
+            selectedIndex: index,
+            destinations: destinations,
+            onDestinationSelected: (value) => setState(() => index = value),
+          ),
+        ),
       ),
     );
   }
@@ -1384,14 +1617,11 @@ class ApiFutureBuilder extends StatelessWidget {
       future: future,
       builder: (context, snapshot) {
         if (snapshot.connectionState != ConnectionState.done) {
-          return const Center(child: CircularProgressIndicator());
+          return const _LoadingState();
         }
         if (snapshot.hasError) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Text(snapshot.error.toString().replaceFirst('Exception: ', '')),
-            ),
+          return _ErrorState(
+            message: snapshot.error.toString().replaceFirst('Exception: ', ''),
           );
         }
         return builder(context, snapshot.data ?? <String, dynamic>{});
@@ -1407,9 +1637,17 @@ class _PageBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: children,
+    return SafeArea(
+      child: Align(
+        alignment: Alignment.topCenter,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 720),
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
+            children: children,
+          ),
+        ),
+      ),
     );
   }
 }
@@ -1428,21 +1666,41 @@ class _HeroCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
         gradient: const LinearGradient(
-          colors: [Color(0xFF0F766E), Color(0xFF115E59)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF0F766E), Color(0xFF184C49)],
         ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: const Text(
+              'SkillBite',
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+            ),
+          ),
+          const SizedBox(height: 16),
           Text(title, style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: Colors.white)),
           const SizedBox(height: 8),
-          Text(subtitle, style: const TextStyle(color: Colors.white70)),
+          Text(
+            subtitle,
+            style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w500),
+          ),
           const SizedBox(height: 16),
-          Text(value, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w700)),
+          Text(
+            value,
+            style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w800),
+          ),
         ],
       ),
     );
@@ -1456,12 +1714,11 @@ class _MetricRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Wrap(
+      spacing: 12,
+      runSpacing: 12,
       children: [
-        for (var i = 0; i < metrics.length; i++) ...[
-          Expanded(child: _MetricCard(data: metrics[i])),
-          if (i < metrics.length - 1) const SizedBox(width: 12),
-        ],
+        for (final metric in metrics) SizedBox(width: 210, child: _MetricCard(data: metric)),
       ],
     );
   }
@@ -1476,13 +1733,34 @@ class _MetricCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(18),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(data.label, style: Theme.of(context).textTheme.bodySmall),
-            const SizedBox(height: 8),
-            Text(data.value, style: Theme.of(context).textTheme.headlineSmall),
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: const Color(0xFFE4F1EC),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: const Icon(Icons.show_chart_rounded, size: 22),
+            ),
+            const SizedBox(height: 18),
+            Text(
+              data.value,
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                color: const Color(0xFF122421),
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              data.label,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: const Color(0xFF5C6B67),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ],
         ),
       ),
@@ -1510,11 +1788,16 @@ class _SectionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(18),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title, style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              title,
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                color: const Color(0xFF122421),
+              ),
+            ),
             const SizedBox(height: 12),
             child,
           ],
@@ -1537,7 +1820,14 @@ class _HeaderRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Expanded(child: Text(title, style: Theme.of(context).textTheme.headlineSmall)),
+        Expanded(
+          child: Text(
+            title,
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              color: const Color(0xFF122421),
+            ),
+          ),
+        ),
         if (trailing != null) trailing!,
       ],
     );
@@ -1551,7 +1841,20 @@ class _StatusChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Chip(label: Text(label));
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: const Color(0xFFE8F3EF),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
+          color: Color(0xFF1D4B43),
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
   }
 }
 
@@ -1566,27 +1869,185 @@ class _SimpleListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF7F8F4),
+        borderRadius: BorderRadius.circular(18),
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Padding(
-            padding: EdgeInsets.only(top: 4),
-            child: Icon(Icons.circle, size: 8),
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: const Color(0xFFDCEDE8),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(Icons.check_circle_outline_rounded, size: 18),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
+                Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
                 const SizedBox(height: 4),
-                Text(subtitle),
+                Text(
+                  subtitle,
+                  style: const TextStyle(color: Color(0xFF61706C)),
+                ),
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _BackdropOrb extends StatelessWidget {
+  const _BackdropOrb({required this.size, required this.color});
+
+  final double size;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: RadialGradient(
+            colors: [color.withValues(alpha: 0.9), color.withValues(alpha: 0.05)],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DemoChip extends StatelessWidget {
+  const _DemoChip({required this.label, required this.onTap});
+
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return ActionChip(
+      avatar: const Icon(Icons.bolt_rounded, size: 16),
+      label: Text(label),
+      onPressed: onTap,
+    );
+  }
+}
+
+class _InlineError extends StatelessWidget {
+  const _InlineError({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFECE8),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.error_outline_rounded, color: Color(0xFFC54C2B)),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              message,
+              style: const TextStyle(
+                color: Color(0xFFC54C2B),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LoadingState extends StatelessWidget {
+  const _LoadingState();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: 28,
+            height: 28,
+            child: CircularProgressIndicator(strokeWidth: 2.6),
+          ),
+          SizedBox(height: 14),
+          Text('Loading workspace...'),
+        ],
+      ),
+    );
+  }
+}
+
+class _ErrorState extends StatelessWidget {
+  const _ErrorState({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420),
+          child: Card(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 52,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFECE8),
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    child: const Icon(Icons.wifi_off_rounded, color: Color(0xFFC54C2B)),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Could not load this screen',
+                    style: Theme.of(context).textTheme.titleLarge,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    message,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: const Color(0xFF61706C),
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
