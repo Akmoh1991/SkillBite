@@ -1,10 +1,13 @@
-// ignore_for_file: use_build_context_synchronously
+// ignore_for_file: deprecated_member_use, use_build_context_synchronously
 
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
+import 'package:video_player/video_player.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
 void main() {
   runApp(const SkillBiteMobileApp());
@@ -195,8 +198,28 @@ class MobileApiClient {
     };
   }
 
+  String resolveUrl(String rawUrl) {
+    final trimmed = rawUrl.trim();
+    if (trimmed.isEmpty) {
+      return '';
+    }
+    final parsed = Uri.tryParse(trimmed);
+    if (parsed != null && parsed.hasScheme) {
+      return parsed.toString();
+    }
+    return Uri.parse(baseUrl).resolve(trimmed).toString();
+  }
+
   Map<String, dynamic> _parseResponse(http.Response response) {
-    final payload = jsonDecode(response.body) as Map<String, dynamic>;
+    Map<String, dynamic> payload;
+    try {
+      payload = jsonDecode(response.body) as Map<String, dynamic>;
+    } catch (_) {
+      throw Exception('Unexpected server response.');
+    }
+    if (payload['ok'] == true) {
+      return payload;
+    }
     if (response.statusCode >= 400 || payload['ok'] != true) {
       throw Exception(_extractError(payload));
     }
@@ -736,6 +759,38 @@ class _EmployeeCourseDetailScreenState extends State<EmployeeCourseDetailScreen>
     });
   }
 
+  Future<void> _openContentItem(Map<String, dynamic> item) async {
+    final title = _readString(item, 'title');
+    final videoUrl = widget.api.resolveUrl(_readString(item, 'video_url'));
+    final pdfUrl = widget.api.resolveUrl(_readString(item, 'pdf_url'));
+    final materialUrl = widget.api.resolveUrl(_readString(item, 'material_url'));
+    if (videoUrl.isNotEmpty) {
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => CourseVideoScreen(title: title, videoUrl: videoUrl),
+        ),
+      );
+      return;
+    }
+    final browserUrl = pdfUrl.isNotEmpty ? pdfUrl : materialUrl;
+    if (browserUrl.isEmpty) {
+      _showSnack(
+        context,
+        _readString(item, 'body').isNotEmpty ? _readString(item, 'body') : 'No content URL available.',
+      );
+      return;
+    }
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => CourseWebContentScreen(
+          title: title,
+          url: browserUrl,
+          isPdf: pdfUrl.isNotEmpty,
+        ),
+      ),
+    );
+  }
+
   Future<void> _completeCourse() async {
     setState(() => submitting = true);
     try {
@@ -784,9 +839,11 @@ class _EmployeeCourseDetailScreenState extends State<EmployeeCourseDetailScreen>
                     : Column(
                         children: [
                           for (final item in contentItems)
-                            _SimpleListTile(
+                            _CourseContentTile(
                               title: _readString(item, 'title'),
                               subtitle: _contentSubtitle(item),
+                              icon: _contentIcon(item),
+                              onTap: () => _openContentItem(_asMap(item)),
                             ),
                         ],
                       ),
@@ -798,9 +855,29 @@ class _EmployeeCourseDetailScreenState extends State<EmployeeCourseDetailScreen>
                   children: [
                     Expanded(
                       child: FilledButton(
-                        onPressed: hasExam || submitting ? null : _completeCourse,
+                        onPressed: submitting
+                            ? null
+                            : hasExam
+                            ? () async {
+                                final changed = await Navigator.of(context).push<bool>(
+                                  MaterialPageRoute(
+                                    builder: (_) => EmployeeExamScreen(
+                                      api: widget.api,
+                                      assignmentId: widget.assignmentId,
+                                    ),
+                                  ),
+                                );
+                                if (changed == true) {
+                                  _reload();
+                                }
+                              }
+                            : _completeCourse,
                         child: Text(
-                          hasExam ? 'Exam Required' : submitting ? 'Completing...' : 'Mark Complete',
+                          hasExam
+                              ? 'Start Exam'
+                              : submitting
+                              ? 'Completing...'
+                              : 'Mark Complete',
                         ),
                       ),
                     ),
@@ -811,6 +888,381 @@ class _EmployeeCourseDetailScreenState extends State<EmployeeCourseDetailScreen>
           );
         },
       ),
+    );
+  }
+}
+
+class CourseVideoScreen extends StatefulWidget {
+  const CourseVideoScreen({
+    super.key,
+    required this.title,
+    required this.videoUrl,
+  });
+
+  final String title;
+  final String videoUrl;
+
+  @override
+  State<CourseVideoScreen> createState() => _CourseVideoScreenState();
+}
+
+class _CourseVideoScreenState extends State<CourseVideoScreen> {
+  VideoPlayerController? controller;
+  String? errorText;
+
+  @override
+  void initState() {
+    super.initState();
+    _initialize();
+  }
+
+  Future<void> _initialize() async {
+    try {
+      final nextController = VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl));
+      await nextController.initialize();
+      await nextController.setLooping(false);
+      await nextController.play();
+      if (!mounted) {
+        await nextController.dispose();
+        return;
+      }
+      setState(() {
+        controller = nextController;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        errorText = 'Could not load this video.';
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    controller?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(widget.title)),
+      body: controller == null
+          ? Center(
+              child: errorText == null
+                  ? const _LoadingState()
+                  : _ErrorState(message: errorText!),
+            )
+          : ListView(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+              children: [
+                AspectRatio(
+                  aspectRatio: controller!.value.aspectRatio == 0 ? 16 / 9 : controller!.value.aspectRatio,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(24),
+                    child: ColoredBox(
+                      color: Colors.black,
+                      child: VideoPlayer(controller!),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: FilledButton.tonalIcon(
+                        onPressed: () {
+                          final isPlaying = controller!.value.isPlaying;
+                          setState(() {
+                            if (isPlaying) {
+                              controller!.pause();
+                            } else {
+                              controller!.play();
+                            }
+                          });
+                        },
+                        icon: Icon(controller!.value.isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded),
+                        label: Text(controller!.value.isPlaying ? 'Pause' : 'Play'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: FilledButton.tonalIcon(
+                        onPressed: () async {
+                          final uri = Uri.parse(widget.videoUrl);
+                          if (!await launchUrl(uri, mode: LaunchMode.externalApplication) && mounted) {
+                            _showSnack(context, 'Could not open this video externally.');
+                          }
+                        },
+                        icon: const Icon(Icons.open_in_new_rounded),
+                        label: const Text('Open Externally'),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+    );
+  }
+}
+
+class CourseWebContentScreen extends StatefulWidget {
+  const CourseWebContentScreen({
+    super.key,
+    required this.title,
+    required this.url,
+    required this.isPdf,
+  });
+
+  final String title;
+  final String url;
+  final bool isPdf;
+
+  @override
+  State<CourseWebContentScreen> createState() => _CourseWebContentScreenState();
+}
+
+class _CourseWebContentScreenState extends State<CourseWebContentScreen> {
+  late final WebViewController controller;
+  bool loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    controller = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onPageFinished: (_) {
+            if (mounted) {
+              setState(() => loading = false);
+            }
+          },
+        ),
+      )
+      ..loadRequest(Uri.parse(widget.url));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.title),
+        actions: [
+          IconButton(
+            onPressed: () async {
+              final uri = Uri.parse(widget.url);
+              if (!await launchUrl(uri, mode: LaunchMode.externalApplication) && mounted) {
+                _showSnack(context, 'Could not open this file externally.');
+              }
+            },
+            icon: const Icon(Icons.open_in_new_rounded),
+          ),
+        ],
+      ),
+      body: Stack(
+        children: [
+          WebViewWidget(controller: controller),
+          if (loading) const Center(child: CircularProgressIndicator()),
+          if (widget.isPdf)
+            Positioned(
+              left: 16,
+              right: 16,
+              bottom: 16,
+              child: Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(14),
+                  child: Text(
+                    'If this PDF does not preview properly inside the app, use the open button in the top bar.',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class EmployeeExamScreen extends StatefulWidget {
+  const EmployeeExamScreen({
+    super.key,
+    required this.api,
+    required this.assignmentId,
+  });
+
+  final MobileApiClient api;
+  final int assignmentId;
+
+  @override
+  State<EmployeeExamScreen> createState() => _EmployeeExamScreenState();
+}
+
+class _EmployeeExamScreenState extends State<EmployeeExamScreen> {
+  late Future<Map<String, dynamic>> future;
+  bool submitting = false;
+  final Map<String, dynamic> answers = {};
+  final Map<int, TextEditingController> textControllers = {};
+
+  @override
+  void initState() {
+    super.initState();
+    future = widget.api.post('/employee/courses/${widget.assignmentId}/exam/start/', {});
+  }
+
+  @override
+  void dispose() {
+    for (final controller in textControllers.values) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  TextEditingController _controllerForQuestion(int questionId) {
+    return textControllers.putIfAbsent(questionId, TextEditingController.new);
+  }
+
+  Future<void> _submit(Map<String, dynamic> exam) async {
+    setState(() => submitting = true);
+    try {
+      final result = await widget.api.post('/employee/courses/${widget.assignmentId}/exam/submit/', {
+        'attempt_token': _readString(exam, 'attempt_token'),
+        'answers': answers,
+      });
+      if (!mounted) return;
+      final payload = _asMap(result['result']);
+      final passed = _readBool(payload, 'passed');
+      _showSnack(
+        context,
+        passed
+            ? 'Exam passed with ${_readInt(payload, 'score_percent')}%.'
+            : 'Exam submitted: ${_readInt(payload, 'score_percent')}%.',
+      );
+      Navigator.of(context).pop(passed);
+    } catch (error) {
+      if (!mounted) return;
+      _showSnack(context, error.toString().replaceFirst('Exception: ', ''));
+    } finally {
+      if (mounted) {
+        setState(() => submitting = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Exam')),
+      body: ApiFutureBuilder(
+        future: future,
+        builder: (context, payload) {
+          final exam = _asMap(payload['exam']);
+          final questions = _asList(exam['questions']);
+          return _PageBody(
+            children: [
+              _HeroCard(
+                title: 'Course Exam',
+                subtitle: 'Pass score ${_readInt(exam, 'passing_score_percent')}%',
+                value: '${_readInt(exam, 'duration_minutes')} min',
+              ),
+              const SizedBox(height: 16),
+              for (final rawQuestion in questions) ...[
+                _SectionCard(
+                  title: 'Question ${_readInt(rawQuestion, 'order')}',
+                  child: _ExamQuestionCard(
+                    question: _asMap(rawQuestion),
+                    answers: answers,
+                    controller: _controllerForQuestion(_readInt(rawQuestion, 'id')),
+                    onChanged: () => setState(() {}),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+              FilledButton(
+                onPressed: submitting ? null : () => _submit(exam),
+                child: Text(submitting ? 'Submitting...' : 'Submit Exam'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _ExamQuestionCard extends StatelessWidget {
+  const _ExamQuestionCard({
+    required this.question,
+    required this.answers,
+    required this.controller,
+    required this.onChanged,
+  });
+
+  final Map<String, dynamic> question;
+  final Map<String, dynamic> answers;
+  final TextEditingController controller;
+  final VoidCallback onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final questionId = _readInt(question, 'id');
+    final questionKey = questionId.toString();
+    final questionType = _readString(question, 'question_type');
+    final options = _asList(question['options']);
+    final answer = answers[questionKey];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          _readString(question, 'question_text'),
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        const SizedBox(height: 12),
+        if (questionType == 'MCQ_SINGLE' || questionType == 'TRUE_FALSE')
+          for (final option in options)
+            RadioListTile<String>(
+              value: _readInt(option, 'id').toString(),
+              groupValue: answer?.toString(),
+              contentPadding: EdgeInsets.zero,
+              title: Text(_readString(option, 'text')),
+              onChanged: (value) {
+                answers[questionKey] = value ?? '';
+                onChanged();
+              },
+            ),
+        if (questionType == 'MCQ_MULTI')
+          for (final option in options)
+            CheckboxListTile(
+              value: (answer is List ? answer : const []).contains(_readInt(option, 'id').toString()),
+              contentPadding: EdgeInsets.zero,
+              title: Text(_readString(option, 'text')),
+              onChanged: (checked) {
+                final values = List<String>.from(answer is List ? answer : const <String>[]);
+                final optionId = _readInt(option, 'id').toString();
+                if (checked == true) {
+                  if (!values.contains(optionId)) values.add(optionId);
+                } else {
+                  values.remove(optionId);
+                }
+                answers[questionKey] = values;
+                onChanged();
+              },
+            ),
+        if (questionType == 'SHORT_ANSWER' || questionType == 'ESSAY')
+          TextField(
+            controller: controller,
+            minLines: questionType == 'ESSAY' ? 4 : 2,
+            maxLines: questionType == 'ESSAY' ? 8 : 3,
+            onChanged: (value) {
+              answers[questionKey] = value;
+            },
+            decoration: const InputDecoration(
+              labelText: 'Your answer',
+              alignLabelWithHint: true,
+            ),
+          ),
+      ],
     );
   }
 }
@@ -1908,6 +2360,67 @@ class _SimpleListTile extends StatelessWidget {
   }
 }
 
+class _CourseContentTile extends StatelessWidget {
+  const _CourseContentTile({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.onTap,
+  });
+
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF7F8F4),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFDCEDE8),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Icon(icon),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: const TextStyle(color: Color(0xFF61706C)),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Icon(Icons.chevron_right_rounded),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _BackdropOrb extends StatelessWidget {
   const _BackdropOrb({required this.size, required this.color});
 
@@ -2109,6 +2622,22 @@ String _contentSubtitle(dynamic item) {
     return materialUrl;
   }
   return _readString(item, 'body');
+}
+
+IconData _contentIcon(dynamic item) {
+  final videoUrl = _readString(item, 'video_url');
+  final pdfUrl = _readString(item, 'pdf_url');
+  final materialUrl = _readString(item, 'material_url');
+  if (videoUrl.isNotEmpty) {
+    return Icons.play_circle_outline_rounded;
+  }
+  if (pdfUrl.isNotEmpty) {
+    return Icons.picture_as_pdf_outlined;
+  }
+  if (materialUrl.isNotEmpty) {
+    return Icons.language_rounded;
+  }
+  return Icons.article_outlined;
 }
 
 void _showSnack(BuildContext context, String message) {
