@@ -9,6 +9,7 @@ from accounts.views import scorm_zip_download_view
 urlpatterns = [
     # Protect SCORM ZIP downloads (contractors must not download)
     path('media/scorm/<path:filename>', scorm_zip_download_view, name='scorm_zip_download'),
+    path('api/mobile/v1/', include('accounts.api_urls')),
 
     # الشاشة الرئيسية (accounts هو المسؤول)
     path('', include('accounts.urls')),

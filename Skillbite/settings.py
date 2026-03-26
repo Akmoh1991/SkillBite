@@ -61,6 +61,17 @@ ALLOWED_HOSTS = env_csv("DJANGO_ALLOWED_HOSTS", "")
 
 if DJANGO_ENV == "production" and not ALLOWED_HOSTS:
     ALLOWED_HOSTS = ["skillbite.onrender.com"]
+elif DJANGO_ENV != "production":
+    ALLOWED_HOSTS = list(
+        dict.fromkeys(
+            [
+                *ALLOWED_HOSTS,
+                "127.0.0.1",
+                "localhost",
+                "testserver",
+            ]
+        )
+    )
 
 
 # ==================================================
@@ -95,6 +106,7 @@ MIDDLEWARE = [
 
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
+    "Skillbite.middleware.LocalDevCorsMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",

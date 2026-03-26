@@ -1,5 +1,9 @@
+import hashlib
+import secrets
+
 from django.conf import settings
 from django.db import models
+from django.utils import timezone
 from django.utils.text import slugify
 
 
@@ -129,3 +133,85 @@ class EmployeeProfile(models.Model):
 
     def __str__(self):
         return f'{self.user} - {self.business.name}'
+
+
+class MobileAuthToken(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='mobile_auth_tokens',
+        verbose_name='User',
+    )
+    label = models.CharField(
+        max_length=120,
+        default='flutter-mobile',
+        verbose_name='Label',
+    )
+    token_hash = models.CharField(
+        max_length=64,
+        unique=True,
+        verbose_name='Token hash',
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Created at',
+    )
+    last_used_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name='Last used at',
+    )
+    expires_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name='Expires at',
+    )
+    revoked_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name='Revoked at',
+    )
+
+    class Meta:
+        verbose_name = 'Mobile auth token'
+        verbose_name_plural = 'Mobile auth tokens'
+        ordering = ['-created_at', '-id']
+
+    def __str__(self):
+        return f'{self.user} [{self.label}]'
+
+    @staticmethod
+    def _hash_token(raw_token: str) -> str:
+        return hashlib.sha256((raw_token or '').encode('utf-8')).hexdigest()
+
+    @classmethod
+    def issue(cls, *, user, label: str = 'flutter-mobile', expires_at=None) -> tuple['MobileAuthToken', str]:
+        raw_token = f'skbm_{secrets.token_urlsafe(32)}'
+        token = cls.objects.create(
+            user=user,
+            label=(label or 'flutter-mobile').strip()[:120] or 'flutter-mobile',
+            token_hash=cls._hash_token(raw_token),
+            expires_at=expires_at,
+            last_used_at=timezone.now(),
+        )
+        return token, raw_token
+
+    @classmethod
+    def find_active(cls, raw_token: str):
+        token_hash = cls._hash_token(raw_token)
+        now = timezone.now()
+        return (
+            cls.objects.select_related('user')
+            .filter(token_hash=token_hash, revoked_at__isnull=True, user__is_active=True)
+            .filter(models.Q(expires_at__isnull=True) | models.Q(expires_at__gt=now))
+            .first()
+        )
+
+    def touch(self) -> None:
+        self.last_used_at = timezone.now()
+        self.save(update_fields=['last_used_at'])
+
+    def revoke(self) -> None:
+        if self.revoked_at is None:
+            self.revoked_at = timezone.now()
+            self.save(update_fields=['revoked_at'])
