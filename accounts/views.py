@@ -55,7 +55,16 @@ from .forms import (
     SuperAdminUserCreateForm,
     validate_browser_safe_video,
 )
-from .models import BusinessTenant, EmployeeProfile, JobTitle
+from .models import (
+    BusinessTenant,
+    EmployeeProfile,
+    JobTitle,
+    PrivateChatMessage,
+    PrivateChatReadReceipt,
+    PrivateChatThread,
+    TeamChatMessage,
+    TeamChatReadReceipt,
+)
 
 
 User = get_user_model()
@@ -115,7 +124,13 @@ def _is_super_admin(user) -> bool:
 
 
 def _is_employee(user) -> bool:
-    return bool(user and user.is_authenticated and EmployeeProfile.objects.filter(user=user, is_active=True, business__is_active=True).exists())
+    return bool(
+        user
+        and user.is_authenticated
+        and not _is_super_admin(user)
+        and not _is_business_owner(user)
+        and EmployeeProfile.objects.filter(user=user, is_active=True, business__is_active=True).exists()
+    )
 
 
 def _super_admin_guard(request) -> bool:
@@ -317,6 +332,335 @@ def _get_business_employee_profile(business, employee_id: int):
         .filter(id=employee_id)
         .first()
     )
+
+
+def _active_chat_participants(business):
+    participants = [business.owner]
+    participants.extend(
+        profile.user
+        for profile in EmployeeProfile.objects.filter(
+            business=business,
+            is_active=True,
+            user__is_active=True,
+        )
+        .select_related('user')
+        .order_by('user__first_name', 'user__last_name', 'user__username', 'id')
+    )
+    unique_participants = []
+    seen_user_ids = set()
+    for participant in participants:
+        if participant.id in seen_user_ids:
+            continue
+        unique_participants.append(participant)
+        seen_user_ids.add(participant.id)
+    return unique_participants
+
+
+def _team_chat_business_for_user(user):
+    business = _get_owned_business(user)
+    if business is not None:
+        return business, 'business_owner'
+    employee_profile = _get_employee_profile(user)
+    if employee_profile is not None:
+        return employee_profile.business, 'employee'
+    return None, None
+
+
+def _mark_team_chat_messages_read(*, business, user) -> None:
+    unread_messages = list(
+        TeamChatMessage.objects.filter(business=business)
+        .exclude(sender=user)
+        .exclude(read_receipts__user=user)
+        .values_list('id', flat=True)
+    )
+    if not unread_messages:
+        return
+    TeamChatReadReceipt.objects.bulk_create(
+        [TeamChatReadReceipt(message_id=message_id, user=user) for message_id in unread_messages],
+        ignore_conflicts=True,
+    )
+
+
+def _mark_private_chat_messages_read(*, thread, user) -> None:
+    unread_messages = list(
+        PrivateChatMessage.objects.filter(thread=thread)
+        .exclude(sender=user)
+        .exclude(read_receipts__user=user)
+        .values_list('id', flat=True)
+    )
+    if not unread_messages:
+        return
+    PrivateChatReadReceipt.objects.bulk_create(
+        [PrivateChatReadReceipt(message_id=message_id, user=user) for message_id in unread_messages],
+        ignore_conflicts=True,
+    )
+
+
+def _team_message_receipt_state(message, participant_count: int) -> dict:
+    if message.sender_id is None:
+        return {'status': '', 'label': ''}
+    recipient_total = max(participant_count - 1, 0)
+    if recipient_total == 0:
+        return {'status': 'delivered', 'label': 'تم التسليم'}
+    read_count = len({receipt.user_id for receipt in getattr(message, 'prefetched_receipts', []) if receipt.user_id != message.sender_id})
+    if read_count >= recipient_total:
+        return {'status': 'read', 'label': 'تمت القراءة'}
+    return {'status': 'delivered', 'label': 'تم التسليم'}
+
+
+def _private_message_receipt_state(message, partner_id: int | None) -> dict:
+    if message.sender_id != partner_id and message.sender_id is not None:
+        read_by_partner = any(receipt.user_id == partner_id for receipt in getattr(message, 'prefetched_receipts', []))
+        return {'status': 'read', 'label': 'تمت القراءة'} if read_by_partner else {'status': 'delivered', 'label': 'تم التسليم'}
+    return {'status': '', 'label': ''}
+
+
+def _private_chat_thread_for_users(*, business, user, other_user):
+    ordered_users = sorted([user, other_user], key=lambda item: item.id)
+    return PrivateChatThread.objects.get_or_create(
+        business=business,
+        user_one=ordered_users[0],
+        user_two=ordered_users[1],
+    )[0]
+
+
+def _existing_private_chat_thread_for_users(*, business, user, other_user):
+    ordered_users = sorted([user, other_user], key=lambda item: item.id)
+    return PrivateChatThread.objects.filter(
+        business=business,
+        user_one=ordered_users[0],
+        user_two=ordered_users[1],
+    ).first()
+
+
+def _private_chat_selected_user(*, request, request_user, participants):
+    selected_user_id = (request.GET.get('private_with') or '').strip()
+    if selected_user_id.isdigit():
+        selected_user = next((participant for participant in participants if participant.id == int(selected_user_id)), None)
+        if selected_user and selected_user.id != request_user.id:
+            return selected_user
+    return next((participant for participant in participants if participant.id != request_user.id), None)
+
+
+def _private_chat_conversation_summaries(*, business, user):
+    thread_qs = (
+        PrivateChatThread.objects.filter(business=business)
+        .filter(Q(user_one=user) | Q(user_two=user))
+        .select_related('user_one', 'user_two')
+        .prefetch_related(
+            Prefetch(
+                'messages',
+                queryset=PrivateChatMessage.objects.select_related('sender').order_by('-created_at', '-id'),
+                to_attr='prefetched_messages',
+            )
+        )
+        .order_by('-updated_at', '-id')
+    )
+    summaries = []
+    for thread in thread_qs:
+        partner = thread.user_two if thread.user_one_id == user.id else thread.user_one
+        latest_message = thread.prefetched_messages[0] if thread.prefetched_messages else None
+        unread_count = (
+            PrivateChatMessage.objects.filter(thread=thread)
+            .exclude(sender=user)
+            .exclude(read_receipts__user=user)
+            .count()
+        )
+        summaries.append(
+            {
+                'thread': thread,
+                'partner': partner,
+                'latest_message': latest_message,
+                'unread_count': unread_count,
+            }
+        )
+    return summaries
+
+
+def _team_chat_context(request):
+    business, role = _team_chat_business_for_user(request.user)
+    participants = _active_chat_participants(business)
+    participant_ids = [participant.id for participant in participants]
+    _mark_team_chat_messages_read(business=business, user=request.user)
+    team_messages_qs = (
+        TeamChatMessage.objects.filter(
+            business=business,
+            sender__is_active=True,
+        )
+        .select_related('sender')
+        .prefetch_related(
+            Prefetch(
+                'read_receipts',
+                queryset=TeamChatReadReceipt.objects.filter(user_id__in=participant_ids),
+                to_attr='prefetched_receipts',
+            )
+        )
+        .order_by('-created_at', '-id')[:50]
+    )
+    team_messages = list(reversed(team_messages_qs))
+    for message in team_messages:
+        message.read_receipt = _team_message_receipt_state(message, len(participants))
+
+    private_conversations = _private_chat_conversation_summaries(business=business, user=request.user)
+    selected_private_user = _private_chat_selected_user(
+        request=request,
+        request_user=request.user,
+        participants=participants,
+    )
+    selected_private_thread = None
+    private_messages = []
+    if selected_private_user is not None:
+        selected_private_thread = _existing_private_chat_thread_for_users(
+            business=business,
+            user=request.user,
+            other_user=selected_private_user,
+        )
+        if selected_private_thread is not None:
+            _mark_private_chat_messages_read(thread=selected_private_thread, user=request.user)
+            private_messages_qs = (
+                PrivateChatMessage.objects.filter(thread=selected_private_thread)
+                .select_related('sender')
+                .prefetch_related(
+                    Prefetch(
+                        'read_receipts',
+                        queryset=PrivateChatReadReceipt.objects.filter(user_id__in=[request.user.id, selected_private_user.id]),
+                        to_attr='prefetched_receipts',
+                    )
+                )
+                .order_by('-created_at', '-id')[:50]
+            )
+            private_messages = list(reversed(private_messages_qs))
+            for message in private_messages:
+                message.read_receipt = _private_message_receipt_state(message, selected_private_user.id)
+
+    return {
+        'business': business,
+        'employee_profile': _get_employee_profile(request.user) if role == 'employee' else None,
+        'team_chat_messages': team_messages,
+        'team_chat_participants': participants,
+        'team_chat_role': role,
+        'private_chat_participants': [participant for participant in participants if participant.id != request.user.id],
+        'private_chat_conversations': private_conversations,
+        'private_chat_selected_user': selected_private_user,
+        'private_chat_selected_thread': selected_private_thread,
+        'private_chat_messages': private_messages,
+    }
+
+
+def _team_chat_redirect_name(request) -> str:
+    _, role = _team_chat_business_for_user(request.user)
+    if role == 'business_owner':
+        return 'business_owner_chat'
+    if role == 'employee':
+        return 'employee_chat'
+    return 'home'
+
+
+def _team_chat_view(request, template_name: str, *, role: str):
+    business, resolved_role = _team_chat_business_for_user(request.user)
+    guard_map = {
+        'business_owner': _business_owner_guard,
+        'employee': _employee_guard,
+    }
+    if resolved_role != role or not guard_map[role](request):
+        return redirect('home')
+    return render(request, template_name, _team_chat_context(request))
+
+
+def _post_team_chat_message(request, *, role: str):
+    business, resolved_role = _team_chat_business_for_user(request.user)
+    guard_map = {
+        'business_owner': _business_owner_guard,
+        'employee': _employee_guard,
+    }
+    if resolved_role != role or business is None or not guard_map[role](request):
+        return redirect('home')
+    body = (request.POST.get('body') or '').strip()
+    redirect_name = _team_chat_redirect_name(request)
+    if not body:
+        messages.error(request, 'Message text is required.')
+        return redirect(redirect_name)
+    message = TeamChatMessage.objects.create(
+        business=business,
+        sender=request.user,
+        body=body[:1000],
+    )
+    TeamChatReadReceipt.objects.get_or_create(message=message, user=request.user)
+    messages.success(request, 'تم إرسال الرسالة.')
+    return redirect(redirect_name)
+
+
+def _post_private_chat_message(request, *, role: str):
+    business, resolved_role = _team_chat_business_for_user(request.user)
+    guard_map = {
+        'business_owner': _business_owner_guard,
+        'employee': _employee_guard,
+    }
+    if resolved_role != role or business is None or not guard_map[role](request):
+        return redirect('home')
+    recipient_id = (request.POST.get('recipient_id') or '').strip()
+    body = (request.POST.get('body') or '').strip()
+    redirect_name = _team_chat_redirect_name(request)
+    if not recipient_id.isdigit():
+        messages.error(request, 'اختر مستخدماً لبدء المحادثة الخاصة.')
+        return redirect(redirect_name)
+    participants = _active_chat_participants(business)
+    recipient = next((participant for participant in participants if participant.id == int(recipient_id)), None)
+    if recipient is None or recipient.id == request.user.id:
+        messages.error(request, 'المستخدم المحدد غير صالح لهذه المحادثة.')
+        return redirect(redirect_name)
+    if not body:
+        messages.error(request, 'نص الرسالة مطلوب.')
+        return redirect(f"{reverse(redirect_name)}?private_with={recipient.id}")
+    thread = _private_chat_thread_for_users(
+        business=business,
+        user=request.user,
+        other_user=recipient,
+    )
+    message = PrivateChatMessage.objects.create(
+        thread=thread,
+        sender=request.user,
+        body=body[:1000],
+    )
+    PrivateChatReadReceipt.objects.get_or_create(message=message, user=request.user)
+    thread.save(update_fields=['updated_at'])
+    messages.success(request, 'تم إرسال الرسالة الخاصة.')
+    return redirect(f"{reverse(redirect_name)}?private_with={recipient.id}")
+
+
+def _chat_url_for_role(role: str) -> str:
+    if role == 'business_owner':
+        return 'business_owner_chat'
+    return 'employee_chat'
+
+
+def _private_chat_send_url_for_role(role: str) -> str:
+    if role == 'business_owner':
+        return 'business_owner_private_chat_send'
+    return 'employee_private_chat_send'
+
+
+def _post_team_chat_message(request, *, role: str):
+    business, resolved_role = _team_chat_business_for_user(request.user)
+    guard_map = {
+        'business_owner': _business_owner_guard,
+        'employee': _employee_guard,
+    }
+    if resolved_role != role or business is None or not guard_map[role](request):
+        return redirect('home')
+    body = (request.POST.get('body') or '').strip()
+    redirect_name = _team_chat_redirect_name(request)
+    if not body:
+        messages.error(request, 'نص الرسالة مطلوب')
+        return redirect(redirect_name)
+    message = TeamChatMessage.objects.create(
+        business=business,
+        sender=request.user,
+        body=body[:1000],
+    )
+    TeamChatReadReceipt.objects.get_or_create(message=message, user=request.user)
+    messages.success(request, 'تم إرسال الرسالة')
+    return redirect(redirect_name)
 
 
 def _assign_course_to_employee(*, business, course, employee_profile, assigned_by):
@@ -2478,6 +2822,28 @@ def business_owner_reports_view(request):
 
 
 @login_required
+def business_owner_chat_view(request):
+    return _team_chat_view(request, 'accounts-templates/team-chat.html', role='business_owner')
+
+
+@login_required
+def business_owner_private_chat_view(request):
+    return _team_chat_view(request, 'accounts-templates/private-chat.html', role='business_owner')
+
+
+@login_required
+@require_POST
+def business_owner_chat_send_action(request):
+    return _post_team_chat_message(request, role='business_owner')
+
+
+@login_required
+@require_POST
+def business_owner_private_chat_send_action(request):
+    return _post_private_chat_message(request, role='business_owner')
+
+
+@login_required
 @require_POST
 def business_owner_job_title_create_action(request):
     if not _business_owner_guard(request):
@@ -2726,6 +3092,28 @@ def employee_dashboard_view(request):
     if not _employee_guard(request):
         return redirect('home')
     return render(request, 'accounts-templates/employee-dashboard.html', _employee_dashboard_context(request))
+
+
+@login_required
+def employee_chat_view(request):
+    return _team_chat_view(request, 'accounts-templates/team-chat.html', role='employee')
+
+
+@login_required
+def employee_private_chat_view(request):
+    return _team_chat_view(request, 'accounts-templates/private-chat.html', role='employee')
+
+
+@login_required
+@require_POST
+def employee_chat_send_action(request):
+    return _post_team_chat_message(request, role='employee')
+
+
+@login_required
+@require_POST
+def employee_private_chat_send_action(request):
+    return _post_private_chat_message(request, role='employee')
 
 
 @login_required

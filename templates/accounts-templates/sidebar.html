@@ -51,7 +51,7 @@
         </a>
       </li>
       {# SCORM library link intentionally hidden while the page is disabled. #}
-    {% elif request.resolver_match.url_name == 'employee_dashboard' or request.resolver_match.url_name == 'employee_courses' or request.resolver_match.url_name == 'employee_course_view' or request.resolver_match.url_name == 'employee_learning_history' or request.resolver_match.url_name == 'employee_checklists' or employee_profile %}
+    {% elif request.resolver_match.url_name == 'employee_dashboard' or request.resolver_match.url_name == 'employee_courses' or request.resolver_match.url_name == 'employee_course_view' or request.resolver_match.url_name == 'employee_learning_history' or request.resolver_match.url_name == 'employee_checklists' or request.resolver_match.url_name == 'employee_chat' or request.resolver_match.url_name == 'employee_private_chat' or employee_profile %}
       <li>
         <a href="{% url 'employee_dashboard' %}"
            class="{% if request.resolver_match.url_name == 'employee_dashboard' %}active{% endif %}">
@@ -76,7 +76,16 @@
           قوائم التشغيل اليومية
         </a>
       </li>
-    {% elif request.resolver_match.url_name == 'business_owner_dashboard' or request.resolver_match.url_name == 'business_owner_employees' or request.resolver_match.url_name == 'business_owner_job_titles' or request.resolver_match.url_name == 'business_owner_courses' or request.resolver_match.url_name == 'business_owner_course_list' or request.resolver_match.url_name == 'business_owner_course_view' or request.resolver_match.url_name == 'business_owner_checklists' or request.resolver_match.url_name == 'business_owner_reports' or business %}
+      <li>
+        <a href="{% url 'employee_chat' %}"
+           class="{% if request.resolver_match.url_name == 'employee_chat' or request.resolver_match.url_name == 'employee_private_chat' %}active{% endif %}{% if chat_unread_count %} has-notification{% endif %}">
+          دردشة الفريق
+          {% if chat_unread_count %}
+            <span class="nav-badge nav-badge--alert" style="margin-inline-start:auto;min-width:28px;height:28px;padding:0 8px;border-radius:999px;background:#ffedd5;color:#c2410c;border:1px solid #fdba74;display:inline-flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;box-shadow:0 6px 14px rgba(194, 65, 12, 0.18);">{{ chat_unread_count }}</span>
+          {% endif %}
+        </a>
+      </li>
+    {% elif request.resolver_match.url_name == 'business_owner_dashboard' or request.resolver_match.url_name == 'business_owner_employees' or request.resolver_match.url_name == 'business_owner_job_titles' or request.resolver_match.url_name == 'business_owner_courses' or request.resolver_match.url_name == 'business_owner_course_list' or request.resolver_match.url_name == 'business_owner_course_view' or request.resolver_match.url_name == 'business_owner_checklists' or request.resolver_match.url_name == 'business_owner_chat' or request.resolver_match.url_name == 'business_owner_private_chat' or request.resolver_match.url_name == 'business_owner_reports' or business %}
       <li>
         <a href="{% url 'business_owner_dashboard' %}"
            class="{% if request.resolver_match.url_name == 'business_owner_dashboard' %}active{% endif %}">
@@ -111,6 +120,15 @@
         <a href="{% url 'business_owner_checklists' %}"
            class="{% if request.resolver_match.url_name == 'business_owner_checklists' %}active{% endif %}">
           قوائم التشغيل اليومية
+        </a>
+      </li>
+      <li>
+        <a href="{% url 'business_owner_chat' %}"
+           class="{% if request.resolver_match.url_name == 'business_owner_chat' or request.resolver_match.url_name == 'business_owner_private_chat' %}active{% endif %}{% if chat_unread_count %} has-notification{% endif %}">
+          دردشة الفريق
+          {% if chat_unread_count %}
+            <span class="nav-badge nav-badge--alert" style="margin-inline-start:auto;min-width:28px;height:28px;padding:0 8px;border-radius:999px;background:#ffedd5;color:#c2410c;border:1px solid #fdba74;display:inline-flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;box-shadow:0 6px 14px rgba(194, 65, 12, 0.18);">{{ chat_unread_count }}</span>
+          {% endif %}
         </a>
       </li>
       <li>

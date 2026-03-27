@@ -1,0 +1,108 @@
+{% extends "accounts-templates/business-owner-base.html" %}
+
+{% block page_title %}{{ business.name }} | المحادثات الخاصة{% endblock %}
+{% block hero_section %}{% endblock %}
+{% block hero_title %}المحادثات الخاصة{% endblock %}
+{% block hero_text %}ابدأ محادثة مباشرة بينك وبين أي عضو من أعضاء فريق {{ business.name }}.{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="/static/branding/team-chat.css">
+{% endblock %}
+
+{% block content %}
+<section class="team-chat-page">
+  <div class="team-chat-toolbar">
+    <div>
+      <h2 class="team-chat-toolbar-title">المحادثات الخاصة</h2>
+    </div>
+    <a
+      class="team-chat-toolbar__button team-chat-toolbar__button--ghost"
+      href="{% if team_chat_role == 'business_owner' %}{% url 'business_owner_chat' %}{% else %}{% url 'employee_chat' %}{% endif %}"
+    >
+      العودة إلى دردشة الفريق
+    </a>
+  </div>
+
+  <div class="card team-chat-card" id="private-chat-card">
+    <div class="private-chat-conversations">
+      <div class="private-chat-conversations__head">
+        <h3>المحادثات النشطة</h3>
+        <span class="count-badge">{{ private_chat_conversations|length }}</span>
+      </div>
+      <div class="private-chat-conversations__list">
+        {% for conversation in private_chat_conversations %}
+          <a class="private-chat-conversation-chip{% if private_chat_selected_user and private_chat_selected_user.id == conversation.partner.id %} is-active{% endif %}" href="?private_with={{ conversation.partner.id }}#private-chat-card">
+            <strong>{{ conversation.partner.get_full_name|default:conversation.partner.username }}</strong>
+            <span>{{ conversation.latest_message.body|truncatechars:42 }}</span>
+            {% if conversation.unread_count %}
+              <em>{{ conversation.unread_count }}</em>
+            {% endif %}
+          </a>
+        {% empty %}
+          <div class="private-chat-empty-inline">لا توجد محادثات خاصة نشطة حتى الآن</div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <form class="private-chat-picker" method="get" action="">
+      <label for="private-with">اختر عضواً للمحادثة الخاصة</label>
+      <div class="private-chat-picker__controls">
+        <select id="private-with" name="private_with">
+          {% for participant in private_chat_participants %}
+            <option value="{{ participant.id }}"{% if private_chat_selected_user and private_chat_selected_user.id == participant.id %} selected{% endif %}>
+              {{ participant.get_full_name|default:participant.username }}
+            </option>
+          {% endfor %}
+        </select>
+        <button type="submit">فتح</button>
+      </div>
+    </form>
+
+    {% if private_chat_selected_user %}
+      <div class="private-chat-thread">
+        <div class="private-chat-thread__head">
+          <h3>المحادثة مع {{ private_chat_selected_user.get_full_name|default:private_chat_selected_user.username }}</h3>
+        </div>
+
+        <div class="team-chat-thread">
+          {% for chat_message in private_chat_messages %}
+            <article class="team-chat-message{% if chat_message.sender_id == request.user.id %} is-own{% endif %}">
+              <header class="team-chat-message__meta">
+                <strong>{{ chat_message.sender.get_full_name|default:chat_message.sender.username }}</strong>
+                <span>{{ chat_message.created_at|date:"j F Y، g:i A" }}</span>
+              </header>
+              <p>{{ chat_message.body|linebreaksbr }}</p>
+              {% if chat_message.sender_id == request.user.id and chat_message.read_receipt.status %}
+                <div
+                  class="team-chat-message__receipt team-chat-message__receipt--{{ chat_message.read_receipt.status }}"
+                  aria-label="{{ chat_message.read_receipt.label }}"
+                  title="{{ chat_message.read_receipt.label }}"
+                >
+                  {% if chat_message.read_receipt.status == 'read' %}
+                    <span class="team-chat-message__receipt-icon">✓✓</span>
+                  {% else %}
+                    <span class="team-chat-message__receipt-icon">✓</span>
+                  {% endif %}
+                </div>
+              {% endif %}
+            </article>
+          {% empty %}
+            <div class="team-chat-empty">
+              لا توجد رسائل خاصة بعد. ابدأ المحادثة الآن.
+            </div>
+          {% endfor %}
+        </div>
+
+        <form class="team-chat-form" method="post" action="{% if team_chat_role == 'business_owner' %}{% url 'business_owner_private_chat_send' %}{% else %}{% url 'employee_private_chat_send' %}{% endif %}">
+          {% csrf_token %}
+          <input type="hidden" name="recipient_id" value="{{ private_chat_selected_user.id }}">
+          <label class="team-chat-form__label" for="private-chat-body">رسالة خاصة جديدة</label>
+          <textarea id="private-chat-body" name="body" rows="4" maxlength="1000" placeholder="اكتب رسالتك الخاصة هنا..." required></textarea>
+          <div class="team-chat-form__actions">
+            <button type="submit">إرسال</button>
+          </div>
+        </form>
+      </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,84 @@
+{% extends "accounts-templates/business-owner-base.html" %}
+
+{% block page_title %}{{ business.name }} | دردشة الفريق{% endblock %}
+{% block hero_section %}{% endblock %}
+{% block hero_title %}دردشة الفريق{% endblock %}
+{% block hero_text %}تواصل سريع وبسيط بين أعضاء الفريق داخل {{ business.name }}.{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="/static/branding/team-chat.css">
+{% endblock %}
+
+{% block content %}
+<section class="team-chat-page">
+  <div class="team-chat-toolbar">
+    <div>
+      <h2 class="team-chat-toolbar-title">دردشة الفريق</h2>
+    </div>
+    <a
+      class="team-chat-toolbar__button"
+      href="{% if team_chat_role == 'business_owner' %}{% url 'business_owner_private_chat' %}{% else %}{% url 'employee_private_chat' %}{% endif %}"
+    >
+      المحادثات الخاصة
+    </a>
+  </div>
+
+  <div class="card team-chat-card">
+    <div class="team-chat-members-strip">
+      <div class="team-chat-members-strip__head">
+        <h3>أعضاء الفريق</h3>
+        <span>{{ team_chat_participants|length }}</span>
+      </div>
+      <div class="team-chat-members-strip__list">
+        {% for participant in team_chat_participants %}
+          <div class="team-chat-member-chip{% if participant.id == request.user.id %} is-current{% endif %}">
+            <strong>{{ participant.get_full_name|default:participant.username }}</strong>
+            <span>{{ participant.username }}</span>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="team-chat-thread">
+      <div class="private-chat-conversations__head">
+        <h3>رسائل الفريق</h3>
+        <span class="count-badge">{{ team_chat_messages|length }}</span>
+      </div>
+      {% for chat_message in team_chat_messages %}
+        <article class="team-chat-message{% if chat_message.sender_id == request.user.id %} is-own{% endif %}">
+          <header class="team-chat-message__meta">
+            <strong>{{ chat_message.sender.get_full_name|default:chat_message.sender.username }}</strong>
+            <span>{{ chat_message.created_at|date:"j F Y، g:i A" }}</span>
+          </header>
+          <p>{{ chat_message.body|linebreaksbr }}</p>
+          {% if chat_message.sender_id == request.user.id and chat_message.read_receipt.status %}
+            <div
+              class="team-chat-message__receipt team-chat-message__receipt--{{ chat_message.read_receipt.status }}"
+              aria-label="{{ chat_message.read_receipt.label }}"
+              title="{{ chat_message.read_receipt.label }}"
+            >
+              {% if chat_message.read_receipt.status == 'read' %}
+                <span class="team-chat-message__receipt-icon">✓✓</span>
+              {% else %}
+                <span class="team-chat-message__receipt-icon">✓</span>
+              {% endif %}
+            </div>
+          {% endif %}
+        </article>
+      {% empty %}
+        <div class="team-chat-empty">
+          لا توجد رسائل بعد. ابدأ المحادثة مع فريقك من هنا.
+        </div>
+      {% endfor %}
+    </div>
+
+    <form class="team-chat-form" method="post" action="{% if team_chat_role == 'business_owner' %}{% url 'business_owner_chat_send' %}{% else %}{% url 'employee_chat_send' %}{% endif %}">
+      {% csrf_token %}
+      <label class="team-chat-form__label" for="team-chat-body">رسالة جديدة للفريق</label>
+      <textarea id="team-chat-body" name="body" rows="4" maxlength="1000" placeholder="اكتب رسالتك للفريق هنا..." required></textarea>
+      <div class="team-chat-form__actions">
+        <button type="submit">إرسال</button>
+      </div>
+    </form>
+  </div>
+</section>
+{% endblock %}

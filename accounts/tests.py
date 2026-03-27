@@ -10,7 +10,15 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
-from accounts.models import BusinessTenant, EmployeeProfile, JobTitle
+from accounts.models import (
+    BusinessTenant,
+    EmployeeProfile,
+    JobTitle,
+    PrivateChatMessage,
+    PrivateChatThread,
+    TeamChatMessage,
+    TeamChatReadReceipt,
+)
 from certification.models import ScormCertificate
 from training.models import (
     Course,
@@ -211,11 +219,154 @@ class MultiTenantFlowTests(TestCase):
             'business_owner_employees',
             'business_owner_courses',
             'business_owner_checklists',
+            'business_owner_chat',
+            'business_owner_private_chat',
         ):
             response = self.client.get(reverse(route_name))
             self.assertEqual(response.status_code, 200)
         course_content_response = self.client.get(reverse('business_owner_course_content'))
         self.assertRedirects(course_content_response, reverse('business_owner_course_list'), fetch_redirect_response=False)
+
+    def test_owner_can_send_team_chat_message(self):
+        self.client.login(username='owner', password='pass12345')
+
+        response = self.client.post(
+            reverse('business_owner_chat_send'),
+            {'body': 'Please review the opening tasks before 9 AM.'},
+        )
+
+        self.assertRedirects(response, reverse('business_owner_chat'))
+        message = TeamChatMessage.objects.get()
+        self.assertEqual(message.business, self.business)
+        self.assertEqual(message.sender, self.owner)
+        self.assertEqual(message.body, 'Please review the opening tasks before 9 AM.')
+
+    def test_employee_can_view_and_send_team_chat_message(self):
+        employee_user = User.objects.create_user(username='chat_employee', password='pass12345', first_name='Chat')
+        EmployeeProfile.objects.create(user=employee_user, business=self.business, job_title=self.job_title, created_by=self.owner)
+        TeamChatMessage.objects.create(
+            business=self.business,
+            sender=self.owner,
+            body='Morning briefing is pinned here.',
+        )
+
+        self.client.login(username='chat_employee', password='pass12345')
+        page = self.client.get(reverse('employee_chat'))
+        self.assertEqual(page.status_code, 200)
+        self.assertContains(page, 'Morning briefing is pinned here.')
+
+        post_response = self.client.post(
+            reverse('employee_chat_send'),
+            {'body': 'Received. I will handle the prep list.'},
+        )
+
+        self.assertRedirects(post_response, reverse('employee_chat'))
+        self.assertTrue(
+            TeamChatMessage.objects.filter(
+                business=self.business,
+                sender=employee_user,
+                body='Received. I will handle the prep list.',
+            ).exists()
+        )
+
+        private_page = self.client.get(reverse('employee_private_chat'))
+        self.assertEqual(private_page.status_code, 200)
+
+    def test_owner_cannot_use_employee_chat_route(self):
+        self.client.login(username='owner', password='pass12345')
+
+        response = self.client.get(reverse('employee_chat'))
+
+        self.assertRedirects(response, reverse('home'), fetch_redirect_response=False)
+
+    def test_business_owner_with_employee_profile_elsewhere_still_cannot_open_employee_chat(self):
+        other_owner = User.objects.create_user(username='other_owner_chat', password='pass12345')
+        other_business = BusinessTenant.objects.create(owner=other_owner, name='Other Cafe')
+        JobTitle.objects.create(business=other_business, name='Cashier')
+        EmployeeProfile.objects.create(user=self.owner, business=other_business, created_by=other_owner)
+
+        self.client.login(username='owner', password='pass12345')
+        response = self.client.get(reverse('employee_chat'))
+
+        self.assertRedirects(response, reverse('home'), fetch_redirect_response=False)
+
+    def test_chat_unread_badge_appears_for_unread_team_messages(self):
+        employee_user = User.objects.create_user(username='badge_emp', password='pass12345')
+        EmployeeProfile.objects.create(user=employee_user, business=self.business, job_title=self.job_title, created_by=self.owner)
+        team_message = TeamChatMessage.objects.create(
+            business=self.business,
+            sender=employee_user,
+            body='يوجد تحديث جديد في بداية الوردية.',
+        )
+        TeamChatReadReceipt.objects.create(message=team_message, user=employee_user)
+
+        self.client.login(username='owner', password='pass12345')
+        response = self.client.get(reverse('business_owner_dashboard'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'class="nav-badge">1<', html=False)
+
+    def test_team_chat_sender_sees_read_receipt_after_other_user_opens_chat(self):
+        employee_user = User.objects.create_user(username='team_receipt_emp', password='pass12345')
+        EmployeeProfile.objects.create(user=employee_user, business=self.business, job_title=self.job_title, created_by=self.owner)
+
+        self.client.login(username='owner', password='pass12345')
+        send_response = self.client.post(
+            reverse('business_owner_chat_send'),
+            {'body': 'الرجاء تأكيد استلام تعليمات اليوم.'},
+        )
+        self.assertRedirects(send_response, reverse('business_owner_chat'))
+
+        self.client.login(username='team_receipt_emp', password='pass12345')
+        employee_chat = self.client.get(reverse('employee_chat'))
+        self.assertEqual(employee_chat.status_code, 200)
+
+        self.client.login(username='owner', password='pass12345')
+        owner_chat = self.client.get(reverse('business_owner_chat'))
+        self.assertContains(owner_chat, 'تمت القراءة من الجميع')
+
+    def test_private_chat_badge_and_read_receipt_work(self):
+        employee_user = User.objects.create_user(username='private_emp', password='pass12345')
+        employee_profile = EmployeeProfile.objects.create(
+            user=employee_user,
+            business=self.business,
+            job_title=self.job_title,
+            created_by=self.owner,
+        )
+
+        self.client.login(username='owner', password='pass12345')
+        send_response = self.client.post(
+            reverse('business_owner_private_chat_send'),
+            {
+                'recipient_id': employee_user.id,
+                'body': 'تواصل معي بعد إنهاء الطلبات.',
+            },
+        )
+        self.assertRedirects(
+            send_response,
+            f"{reverse('business_owner_chat')}?private_with={employee_user.id}",
+            fetch_redirect_response=False,
+        )
+        thread = PrivateChatThread.objects.get()
+        self.assertTrue(
+            PrivateChatMessage.objects.filter(
+                thread=thread,
+                sender=self.owner,
+                body='تواصل معي بعد إنهاء الطلبات.',
+            ).exists()
+        )
+
+        self.client.login(username='private_emp', password='pass12345')
+        dashboard_response = self.client.get(reverse('employee_dashboard'))
+        self.assertContains(dashboard_response, 'class="nav-badge">1<', html=False)
+
+        private_chat = self.client.get(f"{reverse('employee_chat')}?private_with={self.owner.id}")
+        self.assertEqual(private_chat.status_code, 200)
+        self.assertContains(private_chat, 'تواصل معي بعد إنهاء الطلبات.')
+
+        self.client.login(username='owner', password='pass12345')
+        owner_private_chat = self.client.get(f"{reverse('business_owner_chat')}?private_with={employee_profile.user.id}")
+        self.assertContains(owner_private_chat, 'تمت القراءة')
 
     def test_owner_scorm_library_redirects_home(self):
         self.client.login(username='owner', password='pass12345')

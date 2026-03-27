@@ -135,6 +135,173 @@ class EmployeeProfile(models.Model):
         return f'{self.user} - {self.business.name}'
 
 
+class TeamChatMessage(models.Model):
+    business = models.ForeignKey(
+        BusinessTenant,
+        on_delete=models.CASCADE,
+        related_name='chat_messages',
+        verbose_name='Business',
+    )
+    sender = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='team_chat_messages',
+        verbose_name='Sender',
+    )
+    body = models.TextField(
+        max_length=1000,
+        verbose_name='Message',
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Created at',
+    )
+
+    class Meta:
+        verbose_name = 'Team chat message'
+        verbose_name_plural = 'Team chat messages'
+        ordering = ['created_at', 'id']
+
+    def __str__(self):
+        preview = (self.body or '').strip().replace('\n', ' ')
+        return f'{self.sender} @ {self.business.name}: {preview[:40]}'
+
+
+class TeamChatReadReceipt(models.Model):
+    message = models.ForeignKey(
+        TeamChatMessage,
+        on_delete=models.CASCADE,
+        related_name='read_receipts',
+        verbose_name='Message',
+    )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='team_chat_read_receipts',
+        verbose_name='User',
+    )
+    read_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Read at',
+    )
+
+    class Meta:
+        verbose_name = 'Team chat read receipt'
+        verbose_name_plural = 'Team chat read receipts'
+        ordering = ['read_at', 'id']
+        constraints = [
+            models.UniqueConstraint(fields=['message', 'user'], name='unique_team_chat_receipt_per_user'),
+        ]
+
+    def __str__(self):
+        return f'{self.user} read message {self.message_id}'
+
+
+class PrivateChatThread(models.Model):
+    business = models.ForeignKey(
+        BusinessTenant,
+        on_delete=models.CASCADE,
+        related_name='private_chat_threads',
+        verbose_name='Business',
+    )
+    user_one = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='private_chat_threads_as_user_one',
+        verbose_name='User one',
+    )
+    user_two = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='private_chat_threads_as_user_two',
+        verbose_name='User two',
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Created at',
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        verbose_name='Updated at',
+    )
+
+    class Meta:
+        verbose_name = 'Private chat thread'
+        verbose_name_plural = 'Private chat threads'
+        ordering = ['-updated_at', '-id']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['business', 'user_one', 'user_two'],
+                name='unique_private_thread_per_business_pair',
+            ),
+        ]
+
+    def __str__(self):
+        return f'{self.business.name}: {self.user_one} / {self.user_two}'
+
+
+class PrivateChatMessage(models.Model):
+    thread = models.ForeignKey(
+        PrivateChatThread,
+        on_delete=models.CASCADE,
+        related_name='messages',
+        verbose_name='Thread',
+    )
+    sender = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='private_chat_messages',
+        verbose_name='Sender',
+    )
+    body = models.TextField(
+        max_length=1000,
+        verbose_name='Message',
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Created at',
+    )
+
+    class Meta:
+        verbose_name = 'Private chat message'
+        verbose_name_plural = 'Private chat messages'
+        ordering = ['created_at', 'id']
+
+    def __str__(self):
+        preview = (self.body or '').strip().replace('\n', ' ')
+        return f'{self.sender} -> thread {self.thread_id}: {preview[:40]}'
+
+
+class PrivateChatReadReceipt(models.Model):
+    message = models.ForeignKey(
+        PrivateChatMessage,
+        on_delete=models.CASCADE,
+        related_name='read_receipts',
+        verbose_name='Message',
+    )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='private_chat_read_receipts',
+        verbose_name='User',
+    )
+    read_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Read at',
+    )
+
+    class Meta:
+        verbose_name = 'Private chat read receipt'
+        verbose_name_plural = 'Private chat read receipts'
+        ordering = ['read_at', 'id']
+        constraints = [
+            models.UniqueConstraint(fields=['message', 'user'], name='unique_private_chat_receipt_per_user'),
+        ]
+
+    def __str__(self):
+        return f'{self.user} read private message {self.message_id}'
+
+
 class MobileAuthToken(models.Model):
     user = models.ForeignKey(
         User,
