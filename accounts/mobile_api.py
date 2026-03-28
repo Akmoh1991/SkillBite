@@ -1,9 +1,11 @@
 import json
 from datetime import timedelta
 
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, get_user_model
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
-from django.db.models import Prefetch
+from django.db.models import Prefetch, Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -62,6 +64,7 @@ from .views import (
 
 
 MOBILE_TOKEN_TTL_DAYS = 30
+User = get_user_model()
 
 
 def _json_error(message: str, *, status: int = 400, code: str = 'bad_request') -> JsonResponse:
@@ -289,6 +292,151 @@ def _serialize_private_chat_summary(summary: dict) -> dict:
     }
 
 
+def _serialize_notification_item(*, notification_id: str, kind: str, title: str, body: str, created_at=None, unread_count: int = 0) -> dict:
+    return {
+        'id': notification_id,
+        'kind': kind,
+        'title': title,
+        'body': body,
+        'created_at': created_at.isoformat() if created_at else None,
+        'unread_count': unread_count,
+    }
+
+
+def _mobile_notification_payload(user, *, role: str, business, employee_profile=None) -> dict:
+    notifications: list[dict] = []
+    team_unread_qs = (
+        TeamChatMessage.objects.select_related('sender')
+        .filter(business=business)
+        .exclude(sender=user)
+        .exclude(read_receipts__user=user)
+        .order_by('-created_at', '-id')
+    )
+    team_unread_count = team_unread_qs.count()
+    latest_team_message = team_unread_qs.first()
+    if latest_team_message is not None:
+        notifications.append(
+            _serialize_notification_item(
+                notification_id=f'team-chat-{latest_team_message.id}',
+                kind='team_chat',
+                title='New team message',
+                body=f'{_display_name(latest_team_message.sender)}: {latest_team_message.body[:120]}',
+                created_at=latest_team_message.created_at,
+                unread_count=team_unread_count,
+            )
+        )
+
+    private_unread_qs = (
+        PrivateChatMessage.objects.select_related('sender', 'thread')
+        .filter(
+            Q(thread__business=business),
+            Q(thread__user_one=user) | Q(thread__user_two=user),
+        )
+        .exclude(sender=user)
+        .exclude(read_receipts__user=user)
+        .order_by('-created_at', '-id')
+    )
+    private_unread_count = private_unread_qs.count()
+    latest_private_message = private_unread_qs.first()
+    if latest_private_message is not None:
+        notifications.append(
+            _serialize_notification_item(
+                notification_id=f'private-chat-{latest_private_message.id}',
+                kind='private_chat',
+                title='New private message',
+                body=f'{_display_name(latest_private_message.sender)}: {latest_private_message.body[:120]}',
+                created_at=latest_private_message.created_at,
+                unread_count=private_unread_count,
+            )
+        )
+
+    if role == 'employee' and employee_profile is not None:
+        pending_assignments = [
+            item for item in _visible_employee_course_assignments_queryset(user, business) if item.status != CourseAssignment.Status.COMPLETED
+        ]
+        pending_checklists = [
+            item for item in _assigned_checklists_queryset(employee_profile)
+            if not SOPChecklistCompletion.objects.filter(
+                checklist=item,
+                employee=user,
+                completed_for=timezone.localdate(),
+            ).exists()
+        ]
+        if pending_assignments:
+            latest_assignment = pending_assignments[0]
+            notifications.append(
+                _serialize_notification_item(
+                    notification_id=f'course-{latest_assignment.id}',
+                    kind='course_assignment',
+                    title='Pending course',
+                    body=f'Continue {latest_assignment.course.title}',
+                    created_at=latest_assignment.assigned_at,
+                    unread_count=len(pending_assignments),
+                )
+            )
+        if pending_checklists:
+            latest_checklist = pending_checklists[0]
+            notifications.append(
+                _serialize_notification_item(
+                    notification_id=f'checklist-{latest_checklist.id}',
+                    kind='checklist',
+                    title='Checklist to complete',
+                    body=latest_checklist.title,
+                    created_at=None,
+                    unread_count=len(pending_checklists),
+                )
+            )
+        summary = {
+            'unread_chat_count': team_unread_count + private_unread_count,
+            'pending_course_count': len(pending_assignments),
+            'pending_checklist_count': len(pending_checklists),
+        }
+    else:
+        active_employees = list(
+            EmployeeProfile.objects.select_related('user')
+            .filter(business=business, is_active=True, user__is_active=True)
+            .order_by('-created_at', '-id')
+        )
+        active_courses = list(
+            Course.objects.filter(business=business, is_active=True).order_by('-created_at', '-id')
+        )
+        if active_employees:
+            latest_employee = active_employees[0]
+            notifications.append(
+                _serialize_notification_item(
+                    notification_id=f'employee-{latest_employee.id}',
+                    kind='employee',
+                    title='Active employees',
+                    body=f'{len(active_employees)} active employee accounts in {business.name}',
+                    created_at=latest_employee.created_at,
+                    unread_count=0,
+                )
+            )
+        if active_courses:
+            latest_course = active_courses[0]
+            notifications.append(
+                _serialize_notification_item(
+                    notification_id=f'course-catalog-{latest_course.id}',
+                    kind='course_catalog',
+                    title='Active course catalog',
+                    body=f'{len(active_courses)} active courses available',
+                    created_at=latest_course.created_at,
+                    unread_count=0,
+                )
+            )
+        summary = {
+            'unread_chat_count': team_unread_count + private_unread_count,
+            'active_employee_count': len(active_employees),
+            'active_course_count': len(active_courses),
+        }
+
+    notifications.sort(key=lambda item: item.get('created_at') or '', reverse=True)
+    return {
+        'summary': summary,
+        'notifications': notifications,
+    }
+
+
 def _role_for_user(user) -> str | None:
     if _is_business_owner(user):
         return 'business_owner'
@@ -349,6 +497,51 @@ def mobile_me_view(request):
     employee_profile = _get_employee_profile(user) if role == 'employee' else None
     business = _get_owned_business(user) if role == 'business_owner' else employee_profile.business
     return _json_success({'user': _serialize_user(user, role=role, business=business, employee_profile=employee_profile)})
+
+
+@csrf_exempt
+@require_POST
+def mobile_forgot_password_view(request):
+    payload = _load_json_body(request)
+    username = (payload.get('username') or '').strip()
+    email = (payload.get('email') or '').strip().casefold()
+    new_password = payload.get('new_password') or ''
+    confirm_password = payload.get('confirm_password') or ''
+    if not username or not email or not new_password or not confirm_password:
+        return _json_error('Username, email, and both password fields are required.')
+    if new_password != confirm_password:
+        return _json_error('Passwords do not match.')
+    user = User.objects.filter(username=username, is_active=True).first()
+    if user is None:
+        return _json_error('No active account matches those details.', status=404, code='user_not_found')
+    stored_email = (user.email or '').strip().casefold()
+    if not stored_email:
+        return _json_error('This account does not have a recovery email configured.', status=400, code='missing_recovery_email')
+    if stored_email != email:
+        return _json_error('No active account matches those details.', status=404, code='user_not_found')
+    try:
+        validate_password(new_password, user=user)
+    except ValidationError as error:
+        return _json_error(' '.join(error.messages))
+    user.set_password(new_password)
+    user.save(update_fields=['password'])
+    user.mobile_auth_tokens.filter(revoked_at__isnull=True).update(revoked_at=timezone.now())
+    return _json_success({'message': 'Password updated successfully.'})
+
+
+@require_GET
+def mobile_notifications_api_view(request):
+    auth_token, error_response = _authenticate_mobile_request(request)
+    if error_response:
+        return error_response
+    user = auth_token.user
+    role = _role_for_user(user)
+    if role is None:
+        auth_token.revoke()
+        return _json_error('This account no longer has mobile access.', status=403, code='role_not_supported')
+    employee_profile = _get_employee_profile(user) if role == 'employee' else None
+    business = _get_owned_business(user) if role == 'business_owner' else employee_profile.business
+    return _json_success(_mobile_notification_payload(user, role=role, business=business, employee_profile=employee_profile))
 
 
 @require_GET

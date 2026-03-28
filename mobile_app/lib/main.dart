@@ -5,6 +5,7 @@ import 'dart:io' show Platform;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 import 'package:video_player/video_player.dart';
@@ -19,7 +20,199 @@ const Color _surfaceAlt = Color(0xFFF7F8FB);
 const Color _line = Color(0xFFE6E8EE);
 const Color _warmCard = Color(0xFFF8C46E);
 
+enum AppLanguage { en, ar }
+
+class _AppScope extends InheritedWidget {
+  const _AppScope({
+    required this.language,
+    required this.onLanguageChanged,
+    required super.child,
+  });
+
+  final AppLanguage language;
+  final ValueChanged<AppLanguage> onLanguageChanged;
+
+  static _AppScope of(BuildContext context) {
+    final scope = context.dependOnInheritedWidgetOfExactType<_AppScope>();
+    assert(scope != null, 'App scope is missing.');
+    return scope!;
+  }
+
+  @override
+  bool updateShouldNotify(_AppScope oldWidget) => oldWidget.language != language;
+}
+
+bool _isArabic(BuildContext context) => _AppScope.of(context).language == AppLanguage.ar;
+
+String _tr(BuildContext context, String english) {
+  if (!_isArabic(context)) {
+    return english;
+  }
+  return _arabicStrings[english] ?? english;
+}
+
+const Map<String, String> _arabicStrings = {
+  'Reset Password': 'إعادة تعيين كلمة المرور',
+  'Reset your password using your username and the recovery email saved on your account.': 'أعد تعيين كلمة المرور باستخدام اسم المستخدم والبريد الإلكتروني المسجل في الحساب.',
+  'Username': 'اسم المستخدم',
+  'Recovery email': 'البريد الإلكتروني للاستعادة',
+  'New password': 'كلمة المرور الجديدة',
+  'Confirm password': 'تأكيد كلمة المرور',
+  'Password updated. You can sign in with the new password now.': 'تم تحديث كلمة المرور. يمكنك تسجيل الدخول بكلمة المرور الجديدة الآن.',
+  'Updating...': 'جارٍ التحديث...',
+  'Update Password': 'تحديث كلمة المرور',
+  'Username and password are required.': 'اسم المستخدم وكلمة المرور مطلوبان.',
+  'Sign in to SkillBite': 'تسجيل الدخول إلى SkillBite',
+  'Please enter your information below in order to login to your account': 'يرجى إدخال بياناتك أدناه لتسجيل الدخول إلى حسابك.',
+  'Enter your username': 'أدخل اسم المستخدم',
+  'Password': 'كلمة المرور',
+  'Enter your password': 'أدخل كلمة المرور',
+  'Search here...': 'ابحث هنا...',
+  'Forgot Password?': 'هل نسيت كلمة المرور؟',
+  'Signing in...': 'جارٍ تسجيل الدخول...',
+  'Log In': 'تسجيل الدخول',
+  'Demo Access': 'الوصول التجريبي',
+  'Owner Demo': 'تجربة المالك',
+  'Employee Demo': 'تجربة الموظف',
+  'Language': 'اللغة',
+  'Arabic': 'العربية',
+  'English': 'الإنجليزية',
+  'Home': 'الرئيسية',
+  'Employees': 'الموظفون',
+  'Titles': 'المسميات',
+  'Courses': 'الدورات',
+  'Reports': 'التقارير',
+  'Checklists': 'قوائم التحقق',
+  'Chat': 'المحادثة',
+  'History': 'السجل',
+  'Business Chat': 'محادثة النشاط',
+  'Team Chat': 'محادثة الفريق',
+  'Notifications': 'الإشعارات',
+  'Activity for ': 'النشاط لـ ',
+  'Unread chat': 'المحادثات غير المقروءة',
+  'Pending courses': 'الدورات المعلّقة',
+  'Pending checklists': 'قوائم التحقق المعلّقة',
+  'Active employees': 'الموظفون النشطون',
+  'Active courses': 'الدورات النشطة',
+  'All caught up': 'لا توجد عناصر جديدة',
+  'There are no new notifications right now.': 'لا توجد إشعارات جديدة حالياً.',
+  'new': 'جديد',
+  'Recommendations': 'التوصيات',
+  'No active courses.': 'لا توجد دورات نشطة.',
+  'Trending courses': 'الدورات الرائجة',
+  'View all': 'عرض الكل',
+  'Best of the week': 'الأفضل هذا الأسبوع',
+  'Today checklist': 'قائمة اليوم',
+  'tasks': 'مهام',
+  'No checklists assigned.': 'لا توجد قوائم تحقق مخصصة.',
+  'Completed today': 'تم الإنجاز اليوم',
+  'Pending checklist': 'قائمة تحقق معلّقة',
+  'No courses assigned.': 'لا توجد دورات مخصصة.',
+  'min': 'دقيقة',
+  'Open': 'فتح',
+  'Learning History': 'سجل التعلم',
+  'No completed courses yet.': 'لا توجد دورات مكتملة بعد.',
+  'Details': 'التفاصيل',
+  'About the lesson': 'عن الدرس',
+  'Lesson': 'الدرس',
+  'No mobile content items.': 'لا توجد عناصر محتوى للجوال.',
+  'More content': 'محتوى إضافي',
+  'Continue': 'متابعة',
+  'In progress': 'قيد التقدم',
+  'Completing...': 'جارٍ الإكمال...',
+  'Exam': 'الاختبار',
+  'Course Exam': 'اختبار الدورة',
+  'Pass score ': 'درجة النجاح ',
+  'Question ': 'السؤال ',
+  'Your answer': 'إجابتك',
+  'Submitting...': 'جارٍ الإرسال...',
+  'Submit Exam': 'إرسال الاختبار',
+  'Checklist': 'قائمة التحقق',
+  'Items': 'العناصر',
+  'No checklist items.': 'لا توجد عناصر في القائمة.',
+  'Already Completed': 'تم الإنجاز مسبقاً',
+  'Complete Checklist': 'إكمال قائمة التحقق',
+  'Workspace overview': 'نظرة عامة على مساحة العمل',
+  'Your people': 'فريقك',
+  'No employees yet.': 'لا يوجد موظفون بعد.',
+  'Suggested course pushes': 'الدورات المقترحة',
+  'No assignable courses.': 'لا توجد دورات قابلة للإسناد.',
+  'Deactivate Employee': 'تعطيل الموظف',
+  'Cancel': 'إلغاء',
+  'Deactivate': 'تعطيل',
+  'Create Employee': 'إنشاء موظف',
+  'Full name': 'الاسم الكامل',
+  'Email': 'البريد الإلكتروني',
+  'Job title': 'المسمى الوظيفي',
+  'Saving...': 'جارٍ الحفظ...',
+  'Create': 'إنشاء',
+  'Add': 'إضافة',
+  'Title name': 'اسم المسمى',
+  'Job Titles': 'المسميات الوظيفية',
+  'No job titles created.': 'لم يتم إنشاء مسميات وظيفية بعد.',
+  'active employees': 'موظفون نشطون',
+  'Create Course': 'إنشاء دورة',
+  'Title': 'العنوان',
+  'Description': 'الوصف',
+  'Minutes': 'الدقائق',
+  'First content title': 'عنوان المحتوى الأول',
+  'First content body': 'نص المحتوى الأول',
+  'Assign Course': 'إسناد دورة',
+  'assigned': 'مُسند',
+  'Has exam': 'يوجد اختبار',
+  'No exam': 'لا يوجد اختبار',
+  'Manage Content': 'إدارة المحتوى',
+  'Assign': 'إسناد',
+  'Edit Content': 'تعديل المحتوى',
+  'Add Content': 'إضافة محتوى',
+  'Content type': 'نوع المحتوى',
+  'Text': 'نص',
+  'Link': 'رابط',
+  'Body': 'المحتوى',
+  'Material URL': 'رابط المادة',
+  'Order': 'الترتيب',
+  'Update': 'تحديث',
+  'Delete Content': 'حذف المحتوى',
+  'Delete': 'حذف',
+  'Course Content': 'محتوى الدورة',
+  'Course': 'الدورة',
+  'No content items yet.': 'لا توجد عناصر محتوى بعد.',
+  'Edit': 'تعديل',
+  'Progress': 'التقدم',
+  'Overall completion rate: ': 'معدل الإكمال العام: ',
+  'Create Checklist': 'إنشاء قائمة تحقق',
+  'Frequency': 'التكرار',
+  'Daily': 'يومي',
+  'Weekly': 'أسبوعي',
+  'On demand': 'عند الطلب',
+  'Assign to job title': 'إسناد إلى مسمى وظيفي',
+  'No automatic assignment': 'بدون إسناد تلقائي',
+  'Items, one per line': 'العناصر، كل عنصر في سطر',
+  'Create Checklist Rule': 'إنشاء قاعدة إسناد',
+  'Rule': 'قاعدة',
+  'No checklists created.': 'لم يتم إنشاء قوائم تحقق بعد.',
+  'Assignment Rules': 'قواعد الإسناد',
+  'No checklist rules yet.': 'لا توجد قواعد إسناد بعد.',
+  'Send Team Message': 'إرسال رسالة للفريق',
+  'Message': 'الرسالة',
+  'Sending...': 'جارٍ الإرسال...',
+  'Send': 'إرسال',
+  'Send Private Message': 'إرسال رسالة خاصة',
+  'Need an account? Ask your business owner or administrator.': 'تحتاج إلى حساب؟ اطلبه من مالك النشاط أو المسؤول.',
+  'Recipient': 'المستلم',
+  'Write your message': 'اكتب رسالتك',
+  'Team': 'الفريق',
+  'Private': 'خاص',
+  'Team Messages': 'رسائل الفريق',
+  'No team messages yet.': 'لا توجد رسائل فريق بعد.',
+  'People': 'الأشخاص',
+  'Person': 'الشخص',
+  'No private messages yet.': 'لا توجد رسائل خاصة بعد.',
+  'Loading workspace...': 'جارٍ تحميل مساحة العمل...',
+};
+
 void main() {
+  debugPrint('SkillBite app main() start');
   runApp(const SkillBiteMobileApp());
 }
 
@@ -42,6 +235,7 @@ class _SkillBiteMobileAppState extends State<SkillBiteMobileApp> {
         : const ['http://127.0.0.1:8000/api/mobile/v1'],
   );
   SessionUser? sessionUser;
+  AppLanguage language = AppLanguage.ar;
 
   void _handleLogin(SessionUser user) {
     setState(() {
@@ -59,18 +253,43 @@ class _SkillBiteMobileAppState extends State<SkillBiteMobileApp> {
     });
   }
 
+  void _handleLanguageChanged(AppLanguage nextLanguage) {
+    setState(() {
+      language = nextLanguage;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    debugPrint('SkillBiteMobileApp build language=$language sessionUser=${sessionUser?.username}');
     return MaterialApp(
       title: 'SkillBite Mobile',
       debugShowCheckedModeBanner: false,
       theme: _buildTheme(),
+      locale: Locale(language == AppLanguage.ar ? 'ar' : 'en'),
+      supportedLocales: const [
+        Locale('en'),
+        Locale('ar'),
+      ],
+      localizationsDelegates: [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
       home: sessionUser == null
-          ? LoginScreen(api: api, onLoggedIn: _handleLogin)
-          : RoleShell(
-              api: api,
-              user: sessionUser!,
-              onLogout: _handleLogout,
+          ? _AppScope(
+              language: language,
+              onLanguageChanged: _handleLanguageChanged,
+              child: LoginScreen(api: api, onLoggedIn: _handleLogin),
+            )
+          : _AppScope(
+              language: language,
+              onLanguageChanged: _handleLanguageChanged,
+              child: RoleShell(
+                api: api,
+                user: sessionUser!,
+                onLogout: _handleLogout,
+              ),
             ),
     );
   }
@@ -199,6 +418,20 @@ class MobileApiClient {
     }, includeAuth: false);
     token = payload['token'] as String?;
     return SessionUser.fromJson(payload['user'] as Map<String, dynamic>);
+  }
+
+  Future<void> forgotPassword({
+    required String username,
+    required String email,
+    required String newPassword,
+    required String confirmPassword,
+  }) async {
+    await _postWithFallback('/auth/forgot-password/', {
+      'username': username,
+      'email': email,
+      'new_password': newPassword,
+      'confirm_password': confirmPassword,
+    }, includeAuth: false);
   }
 
   Future<Map<String, dynamic>> get(String path) async {
@@ -375,8 +608,15 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  Future<void> _openForgotPassword() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => ForgotPasswordScreen(api: widget.api)),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    debugPrint('LoginScreen build language=${_AppScope.of(context).language}');
     return Scaffold(
       body: SafeArea(
         child: Center(
@@ -385,58 +625,71 @@ class _LoginScreenState extends State<LoginScreen> {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
               children: [
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Container(
-                    width: 54,
-                    height: 54,
-                    decoration: const BoxDecoration(
-                      color: _surfaceAlt,
-                      shape: BoxShape.circle,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      width: 54,
+                      height: 54,
+                      decoration: const BoxDecoration(
+                        color: _surfaceAlt,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.arrow_back_ios_new_rounded, color: _ink, size: 20),
                     ),
-                    child: const Icon(Icons.arrow_back_ios_new_rounded, color: _ink, size: 20),
-                  ),
+                    FilledButton.tonalIcon(
+                      onPressed: () {
+                        final scope = _AppScope.of(context);
+                        scope.onLanguageChanged(_isArabic(context) ? AppLanguage.en : AppLanguage.ar);
+                      },
+                      icon: const Icon(Icons.language_rounded),
+                      label: Text(_isArabic(context) ? 'English' : 'العربية'),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 32),
                 Text(
-                  'Sign in to SkillBite',
+                  _tr(context, 'Sign in to SkillBite'),
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontSize: 22),
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'Please enter your information below in order to login to your account',
+                  _tr(context, 'Please enter your information below in order to login to your account'),
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: _muted, height: 1.35),
                 ),
                 const SizedBox(height: 28),
-                Text('Email', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 17)),
+                Text(_tr(context, 'Username'), style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 17)),
                 const SizedBox(height: 10),
                 TextField(
                   controller: usernameController,
                   textInputAction: TextInputAction.next,
-                  decoration: const InputDecoration(
-                    hintText: 'exampleemail@gami.com',
-                    prefixIcon: Icon(Icons.mail_outline_rounded),
+                  decoration: InputDecoration(
+                    hintText: _tr(context, 'Enter your username'),
+                    prefixIcon: const Icon(Icons.person_outline_rounded),
                   ),
                 ),
                 const SizedBox(height: 22),
-                Text('Password', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 17)),
+                Text(_tr(context, 'Password'), style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 17)),
                 const SizedBox(height: 10),
                 TextField(
                   controller: passwordController,
                   obscureText: true,
                   onSubmitted: (_) => loading ? null : _submit(),
-                  decoration: const InputDecoration(
-                    hintText: 'Enter your password',
-                    prefixIcon: Icon(Icons.lock_outline_rounded),
-                    suffixIcon: Icon(Icons.visibility_outlined),
+                  decoration: InputDecoration(
+                    hintText: _tr(context, 'Enter your password'),
+                    prefixIcon: const Icon(Icons.lock_outline_rounded),
+                    suffixIcon: const Icon(Icons.visibility_outlined),
                   ),
                 ),
                 const SizedBox(height: 12),
                 Align(
                   alignment: Alignment.centerRight,
-                  child: Text(
-                    'Forgot Password?',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(color: _brandTeal),
+                  child: TextButton(
+                    onPressed: _openForgotPassword,
+                    child: Text(
+                      _tr(context, 'Forgot Password?'),
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(color: _brandTeal),
+                    ),
                   ),
                 ),
                 if (errorText != null) ...[
@@ -446,27 +699,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 24),
                 FilledButton(
                   onPressed: loading ? null : _submit,
-                  child: Text(loading ? 'Signing in...' : 'Log In'),
-                ),
-                const SizedBox(height: 28),
-                Center(
-                  child: Text(
-                    'or Continue with',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w500),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                OutlinedButton.icon(
-                  onPressed: null,
-                  style: OutlinedButton.styleFrom(
-                    minimumSize: const Size.fromHeight(58),
-                    side: const BorderSide(color: _line),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                    foregroundColor: _ink,
-                    textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                  ),
-                  icon: const Text('G', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700)),
-                  label: const Text('Sign Up With Google'),
+                  child: Text(loading ? _tr(context, 'Signing in...') : _tr(context, 'Log In')),
                 ),
                 const SizedBox(height: 28),
                 Card(
@@ -476,14 +709,14 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Demo Access', style: Theme.of(context).textTheme.titleMedium),
+                        Text(_tr(context, 'Demo Access'), style: Theme.of(context).textTheme.titleMedium),
                         const SizedBox(height: 10),
                         Wrap(
                           spacing: 8,
                           runSpacing: 8,
                           children: [
                             _DemoChip(
-                              label: 'Owner Demo',
+                              label: _tr(context, 'Owner Demo'),
                               onTap: () {
                                 usernameController.text = 'demo_owner';
                                 passwordController.text = 'pass12345';
@@ -491,7 +724,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               },
                             ),
                             _DemoChip(
-                              label: 'Employee Demo',
+                              label: _tr(context, 'Employee Demo'),
                               onTap: () {
                                 usernameController.text = 'demo_employee';
                                 passwordController.text = 'pass12345';
@@ -528,6 +761,135 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 }
 
+class ForgotPasswordScreen extends StatefulWidget {
+  const ForgotPasswordScreen({super.key, required this.api});
+
+  final MobileApiClient api;
+
+  @override
+  State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
+}
+
+class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
+  final TextEditingController usernameController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController newPasswordController = TextEditingController();
+  final TextEditingController confirmPasswordController = TextEditingController();
+  bool saving = false;
+  String? errorText;
+  String? successText;
+
+  @override
+  void dispose() {
+    usernameController.dispose();
+    emailController.dispose();
+    newPasswordController.dispose();
+    confirmPasswordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    setState(() {
+      saving = true;
+      errorText = null;
+      successText = null;
+    });
+    try {
+      await widget.api.forgotPassword(
+        username: usernameController.text.trim(),
+        email: emailController.text.trim(),
+        newPassword: newPasswordController.text,
+        confirmPassword: confirmPasswordController.text,
+      );
+      setState(() {
+        successText = 'Password updated. You can sign in with the new password now.';
+      });
+    } catch (error) {
+      setState(() {
+        errorText = error.toString().replaceFirst('Exception: ', '');
+      });
+    } finally {
+      if (mounted) {
+        setState(() => saving = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(_tr(context, 'Reset Password'))),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+        children: [
+          Text(
+            _tr(context, 'Reset your password using your username and the recovery email saved on your account.'),
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: _muted),
+          ),
+          const SizedBox(height: 24),
+          TextField(
+            controller: usernameController,
+            decoration: InputDecoration(
+              labelText: _tr(context, 'Username'),
+              prefixIcon: Icon(Icons.person_outline_rounded),
+            ),
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: emailController,
+            keyboardType: TextInputType.emailAddress,
+            decoration: InputDecoration(
+              labelText: _tr(context, 'Recovery email'),
+              prefixIcon: Icon(Icons.mail_outline_rounded),
+            ),
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: newPasswordController,
+            obscureText: true,
+            decoration: InputDecoration(
+              labelText: _tr(context, 'New password'),
+              prefixIcon: Icon(Icons.lock_outline_rounded),
+            ),
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: confirmPasswordController,
+            obscureText: true,
+            decoration: InputDecoration(
+              labelText: _tr(context, 'Confirm password'),
+              prefixIcon: Icon(Icons.verified_user_outlined),
+            ),
+          ),
+          if (errorText != null) ...[
+            const SizedBox(height: 16),
+            _InlineError(message: errorText!),
+          ],
+          if (successText != null) ...[
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFEAF7F4),
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: Text(
+                _tr(context, successText!),
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(color: _brandTealDark),
+              ),
+            ),
+          ],
+          const SizedBox(height: 24),
+          FilledButton(
+            onPressed: saving ? null : _submit,
+            child: Text(saving ? _tr(context, 'Updating...') : _tr(context, 'Update Password')),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class RoleShell extends StatefulWidget {
   const RoleShell({
     super.key,
@@ -547,6 +909,17 @@ class RoleShell extends StatefulWidget {
 class _RoleShellState extends State<RoleShell> {
   int index = 0;
 
+  Future<void> _openNotifications() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => NotificationsPage(
+          api: widget.api,
+          user: widget.user,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final ownerMode = widget.user.role == 'business_owner';
@@ -561,7 +934,7 @@ class _RoleShellState extends State<RoleShell> {
             ChatPage(
               api: widget.api,
               roleBasePath: '/business-owner',
-              title: 'Business Chat',
+              title: _tr(context, 'Business Chat'),
             ),
           ]
         : [
@@ -572,25 +945,25 @@ class _RoleShellState extends State<RoleShell> {
             ChatPage(
               api: widget.api,
               roleBasePath: '/employee',
-              title: 'Team Chat',
+              title: _tr(context, 'Team Chat'),
             ),
           ];
     final destinations = ownerMode
-        ? const [
-            NavigationDestination(icon: Icon(Icons.home_outlined), label: 'Home'),
-            NavigationDestination(icon: Icon(Icons.group_outlined), label: 'Employees'),
-            NavigationDestination(icon: Icon(Icons.badge_outlined), label: 'Titles'),
-            NavigationDestination(icon: Icon(Icons.menu_book_outlined), label: 'Courses'),
-            NavigationDestination(icon: Icon(Icons.insights_outlined), label: 'Reports'),
-            NavigationDestination(icon: Icon(Icons.checklist_outlined), label: 'Checklists'),
-            NavigationDestination(icon: Icon(Icons.chat_bubble_outline), label: 'Chat'),
+        ? [
+            NavigationDestination(icon: Icon(Icons.home_outlined), label: _tr(context, 'Home')),
+            NavigationDestination(icon: Icon(Icons.group_outlined), label: _tr(context, 'Employees')),
+            NavigationDestination(icon: Icon(Icons.badge_outlined), label: _tr(context, 'Titles')),
+            NavigationDestination(icon: Icon(Icons.menu_book_outlined), label: _tr(context, 'Courses')),
+            NavigationDestination(icon: Icon(Icons.insights_outlined), label: _tr(context, 'Reports')),
+            NavigationDestination(icon: Icon(Icons.checklist_outlined), label: _tr(context, 'Checklists')),
+            NavigationDestination(icon: Icon(Icons.chat_bubble_outline), label: _tr(context, 'Chat')),
           ]
-        : const [
-            NavigationDestination(icon: Icon(Icons.home_outlined), label: 'Home'),
-            NavigationDestination(icon: Icon(Icons.menu_book_outlined), label: 'Courses'),
-            NavigationDestination(icon: Icon(Icons.workspace_premium_outlined), label: 'History'),
-            NavigationDestination(icon: Icon(Icons.checklist_outlined), label: 'Checklists'),
-            NavigationDestination(icon: Icon(Icons.chat_bubble_outline), label: 'Chat'),
+        : [
+            NavigationDestination(icon: Icon(Icons.home_outlined), label: _tr(context, 'Home')),
+            NavigationDestination(icon: Icon(Icons.menu_book_outlined), label: _tr(context, 'Courses')),
+            NavigationDestination(icon: Icon(Icons.workspace_premium_outlined), label: _tr(context, 'History')),
+            NavigationDestination(icon: Icon(Icons.checklist_outlined), label: _tr(context, 'Checklists')),
+            NavigationDestination(icon: Icon(Icons.chat_bubble_outline), label: _tr(context, 'Chat')),
           ];
 
     return Scaffold(
@@ -632,7 +1005,7 @@ class _RoleShellState extends State<RoleShell> {
                 border: Border.all(color: _line),
               ),
               child: IconButton(
-                onPressed: () {},
+                onPressed: _openNotifications,
                 icon: const Icon(Icons.notifications_none_rounded),
               ),
             ),
@@ -659,6 +1032,94 @@ class _RoleShellState extends State<RoleShell> {
             onDestinationSelected: (value) => setState(() => index = value),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class NotificationsPage extends StatelessWidget {
+  const NotificationsPage({
+    super.key,
+    required this.api,
+    required this.user,
+  });
+
+  final MobileApiClient api;
+  final SessionUser user;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(_tr(context, 'Notifications'))),
+      body: ApiFutureBuilder(
+        future: api.get('/notifications/'),
+        builder: (context, payload) {
+          final summary = _asMap(payload['summary']);
+          final notifications = _asList(payload['notifications']);
+          return _PageBody(
+            children: [
+              Text(
+                '${_tr(context, 'Activity for ')}${user.businessName}',
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: _muted),
+              ),
+              const SizedBox(height: 16),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: [
+                  _NotificationSummaryChip(
+                    label: _tr(context, 'Unread chat'),
+                    value: '${summary['unread_chat_count'] ?? 0}',
+                  ),
+                  _NotificationSummaryChip(
+                    label: user.role == 'employee' ? _tr(context, 'Pending courses') : _tr(context, 'Active employees'),
+                    value: user.role == 'employee'
+                        ? '${summary['pending_course_count'] ?? 0}'
+                        : '${summary['active_employee_count'] ?? 0}',
+                  ),
+                  _NotificationSummaryChip(
+                    label: user.role == 'employee' ? _tr(context, 'Pending checklists') : _tr(context, 'Active courses'),
+                    value: user.role == 'employee'
+                        ? '${summary['pending_checklist_count'] ?? 0}'
+                        : '${summary['active_course_count'] ?? 0}',
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              if (notifications.isEmpty)
+                _SectionCard(
+                  title: _tr(context, 'All caught up'),
+                  child: Text(_tr(context, 'There are no new notifications right now.')),
+                )
+              else
+                for (final item in notifications) ...[
+                  _SectionCard(
+                    title: _readString(item, 'title'),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(_readString(item, 'body')),
+                        const SizedBox(height: 10),
+                        Row(
+                          children: [
+                            _StatusChip(
+                              label: _readString(item, 'kind').replaceAll('_', ' '),
+                            ),
+                            const SizedBox(width: 8),
+                            if (_readInt(item, 'unread_count') > 0)
+                              _StatusChip(
+                                label: '${_readInt(item, 'unread_count')} ${_tr(context, 'new')}',
+                              ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                ],
+            ],
+          );
+        },
       ),
     );
   }
@@ -820,7 +1281,7 @@ class _EmployeeCoursesPageState extends State<EmployeeCoursesPage> {
                             );
                             _reload();
                           },
-                          child: const Text('Open'),
+                          child: Text(_tr(context, 'Open')),
                         ),
                       ),
                     ],
@@ -988,7 +1449,7 @@ class _EmployeeCourseDetailScreenState extends State<EmployeeCourseDetailScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Details')),
+      appBar: AppBar(title: Text(_tr(context, 'Details'))),
       body: ApiFutureBuilder(
         future: future,
         builder: (context, payload) {
@@ -1006,7 +1467,7 @@ class _EmployeeCourseDetailScreenState extends State<EmployeeCourseDetailScreen>
               ),
               const SizedBox(height: 16),
               Text(
-                'About the lesson',
+                _tr(context, 'About the lesson'),
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                       fontSize: 18,
                       color: _brandTeal,
@@ -1014,7 +1475,7 @@ class _EmployeeCourseDetailScreenState extends State<EmployeeCourseDetailScreen>
               ),
               const SizedBox(height: 16),
               if (featuredContent.isEmpty)
-                const _SectionCard(title: 'Lesson', child: Text('No mobile content items.'))
+                _SectionCard(title: _tr(context, 'Lesson'), child: Text(_tr(context, 'No mobile content items.')))
               else
                 _LessonMediaCard(
                   title: _readString(course, 'title'),
@@ -1031,7 +1492,7 @@ class _EmployeeCourseDetailScreenState extends State<EmployeeCourseDetailScreen>
               const SizedBox(height: 16),
               if (remainingContent.isNotEmpty) ...[
                 _SectionCard(
-                  title: 'More content',
+                  title: _tr(context, 'More content'),
                   child: Column(
                     children: [
                       for (final item in remainingContent)
@@ -1069,10 +1530,10 @@ class _EmployeeCourseDetailScreenState extends State<EmployeeCourseDetailScreen>
                 ),
                 child: Text(
                   hasExam
-                      ? 'Continue'
+                      ? _tr(context, 'Continue')
                       : submitting
                           ? 'Completing...'
-                          : 'Continue',
+                          : _tr(context, 'Continue'),
                 ),
               ),
             ],
@@ -1147,10 +1608,10 @@ class _CourseVideoScreenState extends State<CourseVideoScreen> {
           : ListView(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
               children: [
-                _LessonProgressHeader(status: 'In progress', progress: 0.26),
+                _LessonProgressHeader(status: _tr(context, 'In progress'), progress: 0.26),
                 const SizedBox(height: 18),
                 Text(
-                  'About the lesson',
+                  _tr(context, 'About the lesson'),
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                         fontSize: 18,
                         color: _brandTeal,
@@ -1246,7 +1707,7 @@ class _CourseVideoScreenState extends State<CourseVideoScreen> {
                 FilledButton(
                   onPressed: () => Navigator.of(context).maybePop(),
                   style: FilledButton.styleFrom(backgroundColor: _brandTeal),
-                  child: const Text('Continue'),
+                  child: Text(_tr(context, 'Continue')),
                 ),
               ],
             ),
@@ -1401,7 +1862,7 @@ class _EmployeeExamScreenState extends State<EmployeeExamScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Exam')),
+      appBar: AppBar(title: Text(_tr(context, 'Exam'))),
       body: ApiFutureBuilder(
         future: future,
         builder: (context, payload) {
@@ -1505,8 +1966,8 @@ class _ExamQuestionCard extends StatelessWidget {
             onChanged: (value) {
               answers[questionKey] = value;
             },
-            decoration: const InputDecoration(
-              labelText: 'Your answer',
+            decoration: InputDecoration(
+              labelText: _tr(context, 'Your answer'),
               alignLabelWithHint: true,
             ),
           ),
@@ -1648,7 +2109,7 @@ class _EmployeeChecklistDetailScreenState extends State<EmployeeChecklistDetailS
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Checklist')),
+      appBar: AppBar(title: Text(_tr(context, 'Checklist'))),
       body: ApiFutureBuilder(
         future: future,
         builder: (context, payload) {
@@ -1791,16 +2252,16 @@ class _OwnerEmployeesPageState extends State<OwnerEmployeesPage> {
     final confirmed = await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('Deactivate Employee'),
+            title: Text(_tr(context, 'Deactivate Employee')),
             content: Text('Disable ${_readString(employee, 'display_name')}?'),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('Cancel'),
+                child: Text(_tr(context, 'Cancel')),
               ),
               FilledButton(
                 onPressed: () => Navigator.of(context).pop(true),
-                child: const Text('Deactivate'),
+                child: Text(_tr(context, 'Deactivate')),
               ),
             ],
           ),
@@ -1855,16 +2316,16 @@ class _OwnerEmployeesPageState extends State<OwnerEmployeesPage> {
             }
 
             return AlertDialog(
-              title: const Text('Create Employee'),
+              title: Text(_tr(context, 'Create Employee')),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    TextField(controller: usernameController, decoration: const InputDecoration(labelText: 'Username')),
-                    TextField(controller: fullNameController, decoration: const InputDecoration(labelText: 'Full name')),
-                    TextField(controller: emailController, decoration: const InputDecoration(labelText: 'Email')),
-                    TextField(controller: passwordController, decoration: const InputDecoration(labelText: 'Password')),
-                    TextField(controller: jobTitleController, decoration: const InputDecoration(labelText: 'Job title')),
+                    TextField(controller: usernameController, decoration: InputDecoration(labelText: _tr(context, 'Username'))),
+                    TextField(controller: fullNameController, decoration: InputDecoration(labelText: _tr(context, 'Full name'))),
+                    TextField(controller: emailController, decoration: InputDecoration(labelText: _tr(context, 'Email'))),
+                    TextField(controller: passwordController, decoration: InputDecoration(labelText: _tr(context, 'Password'))),
+                    TextField(controller: jobTitleController, decoration: InputDecoration(labelText: _tr(context, 'Job title'))),
                     if (errorText != null) ...[
                       const SizedBox(height: 12),
                       Text(errorText!, style: const TextStyle(color: Colors.red)),
@@ -1873,7 +2334,7 @@ class _OwnerEmployeesPageState extends State<OwnerEmployeesPage> {
                 ),
               ),
               actions: [
-                TextButton(onPressed: saving ? null : () => Navigator.of(context).pop(false), child: const Text('Cancel')),
+                TextButton(onPressed: saving ? null : () => Navigator.of(context).pop(false), child: Text(_tr(context, 'Cancel'))),
                 FilledButton(onPressed: saving ? null : submit, child: Text(saving ? 'Saving...' : 'Create')),
               ],
             );
@@ -1900,7 +2361,7 @@ class _OwnerEmployeesPageState extends State<OwnerEmployeesPage> {
               trailing: FilledButton.icon(
                 onPressed: _showCreateEmployeeDialog,
                 icon: const Icon(Icons.add),
-                label: const Text('Add'),
+                label: Text(_tr(context, 'Add')),
               ),
             ),
             const SizedBox(height: 16),
@@ -1921,7 +2382,7 @@ class _OwnerEmployeesPageState extends State<OwnerEmployeesPage> {
                         alignment: Alignment.centerRight,
                         child: FilledButton.tonal(
                           onPressed: () => _deactivateEmployee(_asMap(item)),
-                          child: const Text('Deactivate'),
+                          child: Text(_tr(context, 'Deactivate')),
                         ),
                       ),
                     ],
@@ -1989,13 +2450,13 @@ class _OwnerJobTitlesPageState extends State<OwnerJobTitlesPage> {
             }
 
             return AlertDialog(
-              title: const Text('Create Job Title'),
+              title: Text(_tr(context, 'Create Job Title')),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   TextField(
                     controller: nameController,
-                    decoration: const InputDecoration(labelText: 'Title name'),
+                    decoration: InputDecoration(labelText: _tr(context, 'Title name')),
                   ),
                   if (errorText != null) ...[
                     const SizedBox(height: 12),
@@ -2006,7 +2467,7 @@ class _OwnerJobTitlesPageState extends State<OwnerJobTitlesPage> {
               actions: [
                 TextButton(
                   onPressed: saving ? null : () => Navigator.of(context).pop(false),
-                  child: const Text('Cancel'),
+                  child: Text(_tr(context, 'Cancel')),
                 ),
                 FilledButton(
                   onPressed: saving ? null : submit,
@@ -2037,7 +2498,7 @@ class _OwnerJobTitlesPageState extends State<OwnerJobTitlesPage> {
               trailing: FilledButton.icon(
                 onPressed: _showCreateJobTitleDialog,
                 icon: const Icon(Icons.add),
-                label: const Text('Add'),
+                label: Text(_tr(context, 'Add')),
               ),
             ),
             const SizedBox(height: 16),
@@ -2127,16 +2588,16 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
             }
 
             return AlertDialog(
-              title: const Text('Create Course'),
+              title: Text(_tr(context, 'Create Course')),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    TextField(controller: titleController, decoration: const InputDecoration(labelText: 'Title')),
-                    TextField(controller: descriptionController, decoration: const InputDecoration(labelText: 'Description')),
-                    TextField(controller: minutesController, decoration: const InputDecoration(labelText: 'Minutes')),
-                    TextField(controller: contentTitleController, decoration: const InputDecoration(labelText: 'First content title')),
-                    TextField(controller: contentBodyController, decoration: const InputDecoration(labelText: 'First content body')),
+                    TextField(controller: titleController, decoration: InputDecoration(labelText: _tr(context, 'Title'))),
+                    TextField(controller: descriptionController, decoration: InputDecoration(labelText: _tr(context, 'Description'))),
+                    TextField(controller: minutesController, decoration: InputDecoration(labelText: _tr(context, 'Minutes'))),
+                    TextField(controller: contentTitleController, decoration: InputDecoration(labelText: _tr(context, 'First content title'))),
+                    TextField(controller: contentBodyController, decoration: InputDecoration(labelText: _tr(context, 'First content body'))),
                     if (errorText != null) ...[
                       const SizedBox(height: 12),
                       Text(errorText!, style: const TextStyle(color: Colors.red)),
@@ -2145,7 +2606,7 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
                 ),
               ),
               actions: [
-                TextButton(onPressed: saving ? null : () => Navigator.of(context).pop(false), child: const Text('Cancel')),
+                TextButton(onPressed: saving ? null : () => Navigator.of(context).pop(false), child: Text(_tr(context, 'Cancel'))),
                 FilledButton(onPressed: saving ? null : submit, child: Text(saving ? 'Saving...' : 'Create')),
               ],
             );
@@ -2188,7 +2649,7 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
             }
 
             return AlertDialog(
-              title: const Text('Assign Course'),
+              title: Text(_tr(context, 'Assign Course')),
               content: SizedBox(
                 width: 360,
                 child: SingleChildScrollView(
@@ -2221,7 +2682,7 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
                 ),
               ),
               actions: [
-                TextButton(onPressed: saving ? null : () => Navigator.of(context).pop(false), child: const Text('Cancel')),
+                TextButton(onPressed: saving ? null : () => Navigator.of(context).pop(false), child: Text(_tr(context, 'Cancel'))),
                 FilledButton(onPressed: saving ? null : submit, child: Text(saving ? 'Saving...' : 'Assign')),
               ],
             );
@@ -2257,7 +2718,7 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
               trailing: FilledButton.icon(
                 onPressed: _showCreateCourseDialog,
                 icon: const Icon(Icons.add),
-                label: const Text('Add'),
+                label: Text(_tr(context, 'Add')),
               ),
             ),
             const SizedBox(height: 16),
@@ -2297,14 +2758,14 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
                                 );
                                 _reload();
                               },
-                              child: const Text('Manage Content'),
+                              child: Text(_tr(context, 'Manage Content')),
                             ),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
                             child: FilledButton.tonal(
                               onPressed: () => _showAssignDialog(_readInt(item, 'id'), employees),
-                              child: const Text('Assign'),
+                              child: Text(_tr(context, 'Assign')),
                             ),
                           ),
                         ],
@@ -2393,18 +2854,18 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
             }
 
             return AlertDialog(
-              title: Text(isEditing ? 'Edit Content' : 'Add Content'),
+              title: Text(_tr(context, isEditing ? 'Edit Content' : 'Add Content')),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     DropdownButtonFormField<String>(
                       initialValue: contentType,
-                      decoration: const InputDecoration(labelText: 'Content type'),
-                      items: const [
-                        DropdownMenuItem(value: 'TEXT', child: Text('Text')),
-                        DropdownMenuItem(value: 'MATERIAL', child: Text('Link')),
-                        DropdownMenuItem(value: 'LESSON', child: Text('Lesson')),
+                      decoration: InputDecoration(labelText: _tr(context, 'Content type')),
+                      items: [
+                        DropdownMenuItem(value: 'TEXT', child: Text(_tr(context, 'Text'))),
+                        DropdownMenuItem(value: 'MATERIAL', child: Text(_tr(context, 'Link'))),
+                        DropdownMenuItem(value: 'LESSON', child: Text(_tr(context, 'Lesson'))),
                       ],
                       onChanged: (value) {
                         setInnerState(() {
@@ -2412,15 +2873,15 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
                         });
                       },
                     ),
-                    TextField(controller: titleController, decoration: const InputDecoration(labelText: 'Title')),
+                    TextField(controller: titleController, decoration: InputDecoration(labelText: _tr(context, 'Title'))),
                     TextField(
                       controller: bodyController,
                       minLines: 2,
                       maxLines: 5,
-                      decoration: const InputDecoration(labelText: 'Body'),
+                      decoration: InputDecoration(labelText: _tr(context, 'Body')),
                     ),
-                    TextField(controller: urlController, decoration: const InputDecoration(labelText: 'Material URL')),
-                    TextField(controller: orderController, decoration: const InputDecoration(labelText: 'Order')),
+                    TextField(controller: urlController, decoration: InputDecoration(labelText: _tr(context, 'Material URL'))),
+                    TextField(controller: orderController, decoration: InputDecoration(labelText: _tr(context, 'Order'))),
                     if (errorText != null) ...[
                       const SizedBox(height: 12),
                       Text(errorText!, style: const TextStyle(color: Colors.red)),
@@ -2431,7 +2892,7 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
               actions: [
                 TextButton(
                   onPressed: saving ? null : () => Navigator.of(context).pop(false),
-                  child: const Text('Cancel'),
+                  child: Text(_tr(context, 'Cancel')),
                 ),
                 FilledButton(
                   onPressed: saving ? null : submit,
@@ -2453,11 +2914,11 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
     final confirmed = await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('Delete Content'),
+            title: Text(_tr(context, 'Delete Content')),
             content: Text('Delete "${_readString(item, 'title')}"?'),
             actions: [
-              TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancel')),
-              FilledButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Delete')),
+              TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(_tr(context, 'Cancel'))),
+              FilledButton(onPressed: () => Navigator.of(context).pop(true), child: Text(_tr(context, 'Delete'))),
             ],
           ),
         ) ??
@@ -2477,7 +2938,7 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Course Content')),
+      appBar: AppBar(title: Text(_tr(context, 'Course Content'))),
       body: ApiFutureBuilder(
         future: future,
         builder: (context, payload) {
@@ -2490,7 +2951,7 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
                 trailing: FilledButton.icon(
                   onPressed: () => _showContentDialog(),
                   icon: const Icon(Icons.add),
-                  label: const Text('Add'),
+                  label: Text(_tr(context, 'Add')),
                 ),
               ),
               const SizedBox(height: 16),
@@ -2528,14 +2989,14 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
                             Expanded(
                               child: FilledButton.tonal(
                                 onPressed: () => _showContentDialog(item: _asMap(rawItem)),
-                                child: const Text('Edit'),
+                                child: Text(_tr(context, 'Edit')),
                               ),
                             ),
                             const SizedBox(width: 12),
                             Expanded(
                               child: FilledButton.tonal(
                                 onPressed: () => _deleteContent(_asMap(rawItem)),
-                                child: const Text('Delete'),
+                                child: Text(_tr(context, 'Delete')),
                               ),
                             ),
                           ],
@@ -2656,21 +3117,21 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
             }
 
             return AlertDialog(
-              title: const Text('Create Checklist'),
+              title: Text(_tr(context, 'Create Checklist')),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    TextField(controller: titleController, decoration: const InputDecoration(labelText: 'Title')),
-                    TextField(controller: descriptionController, decoration: const InputDecoration(labelText: 'Description')),
+                    TextField(controller: titleController, decoration: InputDecoration(labelText: _tr(context, 'Title'))),
+                    TextField(controller: descriptionController, decoration: InputDecoration(labelText: _tr(context, 'Description'))),
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
                       initialValue: frequency,
-                      decoration: const InputDecoration(labelText: 'Frequency'),
-                      items: const [
-                        DropdownMenuItem(value: 'DAILY', child: Text('Daily')),
-                        DropdownMenuItem(value: 'WEEKLY', child: Text('Weekly')),
-                        DropdownMenuItem(value: 'ON_DEMAND', child: Text('On demand')),
+                      decoration: InputDecoration(labelText: _tr(context, 'Frequency')),
+                      items: [
+                        DropdownMenuItem(value: 'DAILY', child: Text(_tr(context, 'Daily'))),
+                        DropdownMenuItem(value: 'WEEKLY', child: Text(_tr(context, 'Weekly'))),
+                        DropdownMenuItem(value: 'ON_DEMAND', child: Text(_tr(context, 'On demand'))),
                       ],
                       onChanged: (value) {
                         setInnerState(() {
@@ -2681,9 +3142,9 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
                     const SizedBox(height: 12),
                     DropdownButtonFormField<int?>(
                       initialValue: jobTitleId,
-                      decoration: const InputDecoration(labelText: 'Assign to job title'),
+                      decoration: InputDecoration(labelText: _tr(context, 'Assign to job title')),
                       items: [
-                        const DropdownMenuItem<int?>(value: null, child: Text('No automatic assignment')),
+                        DropdownMenuItem<int?>(value: null, child: Text(_tr(context, 'No automatic assignment'))),
                         for (final rawTitle in jobTitles)
                           DropdownMenuItem<int?>(
                             value: _readInt(rawTitle, 'id'),
@@ -2700,7 +3161,7 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
                       controller: itemsController,
                       minLines: 3,
                       maxLines: 6,
-                      decoration: const InputDecoration(labelText: 'Items, one per line'),
+                      decoration: InputDecoration(labelText: _tr(context, 'Items, one per line')),
                     ),
                     if (errorText != null) ...[
                       const SizedBox(height: 12),
@@ -2710,7 +3171,7 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
                 ),
               ),
               actions: [
-                TextButton(onPressed: saving ? null : () => Navigator.of(context).pop(false), child: const Text('Cancel')),
+                TextButton(onPressed: saving ? null : () => Navigator.of(context).pop(false), child: Text(_tr(context, 'Cancel'))),
                 FilledButton(onPressed: saving ? null : submit, child: Text(saving ? 'Saving...' : 'Create')),
               ],
             );
@@ -2755,13 +3216,13 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
             }
 
             return AlertDialog(
-              title: const Text('Create Checklist Rule'),
+              title: Text(_tr(context, 'Create Checklist Rule')),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   DropdownButtonFormField<int?>(
                     initialValue: selectedJobTitleId,
-                    decoration: const InputDecoration(labelText: 'Job title'),
+                    decoration: InputDecoration(labelText: _tr(context, 'Job title')),
                     items: [
                       for (final rawTitle in jobTitles)
                         DropdownMenuItem<int?>(
@@ -2777,7 +3238,7 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
                   ),
                   DropdownButtonFormField<int?>(
                     initialValue: selectedChecklistId,
-                    decoration: const InputDecoration(labelText: 'Checklist'),
+                    decoration: InputDecoration(labelText: _tr(context, 'Checklist')),
                     items: [
                       for (final rawChecklist in checklists)
                         DropdownMenuItem<int?>(
@@ -2798,7 +3259,7 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
                 ],
               ),
               actions: [
-                TextButton(onPressed: saving ? null : () => Navigator.of(context).pop(false), child: const Text('Cancel')),
+                TextButton(onPressed: saving ? null : () => Navigator.of(context).pop(false), child: Text(_tr(context, 'Cancel'))),
                 FilledButton(onPressed: saving ? null : submit, child: Text(saving ? 'Saving...' : 'Create')),
               ],
             );
@@ -2836,13 +3297,13 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
                   FilledButton.icon(
                     onPressed: () => _showCreateChecklistDialog(jobTitles),
                     icon: const Icon(Icons.add),
-                    label: const Text('Add'),
+                    label: Text(_tr(context, 'Add')),
                   ),
                   FilledButton.tonal(
                     onPressed: checklists.isEmpty || jobTitles.isEmpty
                         ? null
                         : () => _showCreateRuleDialog(checklists, jobTitles),
-                    child: const Text('Rule'),
+                    child: Text(_tr(context, 'Rule')),
                   ),
                 ],
               ),
@@ -2960,7 +3421,7 @@ class _ChatPageState extends State<ChatPage> {
             }
 
             return AlertDialog(
-              title: const Text('Send Team Message'),
+              title: Text(_tr(context, 'Send Team Message')),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -2968,7 +3429,7 @@ class _ChatPageState extends State<ChatPage> {
                     controller: controller,
                     minLines: 3,
                     maxLines: 6,
-                    decoration: const InputDecoration(labelText: 'Message'),
+                    decoration: InputDecoration(labelText: _tr(context, 'Message')),
                   ),
                   if (errorText != null) ...[
                     const SizedBox(height: 12),
@@ -2977,8 +3438,8 @@ class _ChatPageState extends State<ChatPage> {
                 ],
               ),
               actions: [
-                TextButton(onPressed: saving ? null : () => Navigator.of(context).pop(false), child: const Text('Cancel')),
-                FilledButton(onPressed: saving ? null : submit, child: Text(saving ? 'Sending...' : 'Send')),
+                TextButton(onPressed: saving ? null : () => Navigator.of(context).pop(false), child: Text(_tr(context, 'Cancel'))),
+                FilledButton(onPressed: saving ? null : submit, child: Text(saving ? _tr(context, 'Sending...') : _tr(context, 'Send'))),
               ],
             );
           },
@@ -3036,13 +3497,13 @@ class _ChatPageState extends State<ChatPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Send Private Message',
+                        _tr(context, 'Send Private Message'),
                         style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w800),
                       ),
                       const SizedBox(height: 22),
                       DropdownButtonFormField<int?>(
                         initialValue: recipientId,
-                        decoration: const InputDecoration(labelText: 'Recipient'),
+                        decoration: InputDecoration(labelText: _tr(context, 'Recipient')),
                         items: [
                           for (final item in participants)
                             DropdownMenuItem<int?>(
@@ -3065,10 +3526,10 @@ class _ChatPageState extends State<ChatPage> {
                         minLines: 5,
                         maxLines: 7,
                         autofocus: true,
-                        decoration: const InputDecoration(
-                          labelText: 'Message',
+                        decoration: InputDecoration(
+                          labelText: _tr(context, 'Message'),
                           alignLabelWithHint: true,
-                          hintText: 'Write your message',
+                          hintText: _tr(context, 'Write your message'),
                         ),
                       ),
                       if (errorText != null) ...[
@@ -3083,7 +3544,7 @@ class _ChatPageState extends State<ChatPage> {
                         alignment: Alignment.centerRight,
                         child: TextButton(
                           onPressed: saving ? null : () => Navigator.of(context).pop(false),
-                          child: const Text('Cancel'),
+                          child: Text(_tr(context, 'Cancel')),
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -3091,7 +3552,7 @@ class _ChatPageState extends State<ChatPage> {
                         width: double.infinity,
                         child: FilledButton(
                           onPressed: saving ? null : submit,
-                          child: Text(saving ? 'Sending...' : 'Send'),
+                          child: Text(saving ? _tr(context, 'Sending...') : _tr(context, 'Send')),
                         ),
                       ),
                     ],
@@ -3166,7 +3627,7 @@ class _ChatPageState extends State<ChatPage> {
                           color: showPrivate ? Colors.transparent : _surface,
                           borderRadius: BorderRadius.circular(14),
                         ),
-                        child: const Center(child: Text('Team')),
+                        child: Center(child: Text(_tr(context, 'Team'))),
                       ),
                     ),
                   ),
@@ -3179,7 +3640,7 @@ class _ChatPageState extends State<ChatPage> {
                           color: showPrivate ? _surface : Colors.transparent,
                           borderRadius: BorderRadius.circular(14),
                         ),
-                        child: const Center(child: Text('Private')),
+                        child: Center(child: Text(_tr(context, 'Private'))),
                       ),
                     ),
                   ),
@@ -3189,7 +3650,7 @@ class _ChatPageState extends State<ChatPage> {
             const SizedBox(height: 16),
             if (!showPrivate)
               if (teamMessages.isEmpty)
-                const _SectionCard(title: 'Team Messages', child: Text('No team messages yet.'))
+                _SectionCard(title: _tr(context, 'Team Messages'), child: Text(_tr(context, 'No team messages yet.')))
               else
                 for (final item in teamMessages) ...[
                   _ChatMessageRow(
@@ -3208,7 +3669,7 @@ class _ChatPageState extends State<ChatPage> {
                   children: [
                     DropdownButtonFormField<int?>(
                       initialValue: selectedUser.isEmpty ? null : _readInt(selectedUser, 'id'),
-                      decoration: const InputDecoration(labelText: 'Person'),
+                      decoration: InputDecoration(labelText: _tr(context, 'Person')),
                       items: [
                         for (final item in participants)
                           DropdownMenuItem<int?>(
@@ -3246,7 +3707,7 @@ class _ChatPageState extends State<ChatPage> {
               if (privateMessages.isEmpty)
                 _SectionCard(
                   title: selectedUser.isEmpty ? 'Messages' : _readString(selectedUser, 'display_name'),
-                  child: const Text('No private messages yet.'),
+                  child: Text(_tr(context, 'No private messages yet.')),
                 )
               else
                 for (final item in privateMessages) ...[
@@ -3351,13 +3812,13 @@ class _HeroCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(999),
             ),
             child: Text(
-              title,
+              _tr(context, title),
               style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
             ),
           ),
           const SizedBox(height: 16),
           Text(
-            subtitle,
+            _tr(context, subtitle),
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: Colors.white, height: 1.15),
           ),
           const SizedBox(height: 8),
@@ -3419,7 +3880,7 @@ class _MetricCard extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             Text(
-              data.label,
+              _tr(context, data.label),
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: _muted,
                 fontWeight: FontWeight.w600,
@@ -3457,7 +3918,7 @@ class _SectionCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              title,
+              _tr(context, title),
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 color: _ink,
               ),
@@ -3486,7 +3947,7 @@ class _HeaderRow extends StatelessWidget {
       children: [
         Expanded(
           child: Text(
-            title,
+            _tr(context, title),
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
               color: _ink,
               fontSize: 20,
@@ -3500,12 +3961,14 @@ class _HeaderRow extends StatelessWidget {
 }
 
 Widget _sectionLink(String label) {
-  return Text(
-    label,
-    style: const TextStyle(
-      color: _brandTeal,
-      fontWeight: FontWeight.w600,
-      fontSize: 16,
+  return Builder(
+    builder: (context) => Text(
+      _tr(context, label),
+      style: const TextStyle(
+        color: _brandTeal,
+        fontWeight: FontWeight.w600,
+        fontSize: 16,
+      ),
     ),
   );
 }
@@ -3558,7 +4021,7 @@ class _SearchHeroBar extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'Serach here...',
+              _tr(context, 'Search here...'),
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: const Color(0xFFB2B6BE)),
             ),
           ),
@@ -3848,14 +4311,14 @@ class _LessonListCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  title,
+                  _tr(context, title),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 16),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  subtitle,
+                  _tr(context, subtitle),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(color: _muted),
@@ -4005,11 +4468,47 @@ class _StatusChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(
-        label,
+        _tr(context, label),
         style: const TextStyle(
           color: _brandTealDark,
           fontWeight: FontWeight.w700,
         ),
+      ),
+    );
+  }
+}
+
+class _NotificationSummaryChip extends StatelessWidget {
+  const _NotificationSummaryChip({
+    required this.label,
+    required this.value,
+  });
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFEAF7F4),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            value,
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontSize: 20, color: _brandTealDark),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            _tr(context, label),
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: _brandTealDark),
+          ),
+        ],
       ),
     );
   }
@@ -4058,10 +4557,10 @@ class _CourseContentTile extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
+                    Text(_tr(context, title), style: const TextStyle(fontWeight: FontWeight.w700)),
                     const SizedBox(height: 4),
                     Text(
-                      subtitle,
+                      _tr(context, subtitle),
                       style: const TextStyle(color: Color(0xFF61706C)),
                     ),
                   ],
@@ -4087,7 +4586,7 @@ class _DemoChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return ActionChip(
       avatar: const Icon(Icons.bolt_rounded, size: 16),
-      label: Text(label),
+      label: Text(_tr(context, label)),
       onPressed: onTap,
     );
   }
@@ -4113,7 +4612,7 @@ class _InlineError extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              message,
+              _tr(context, message),
               style: const TextStyle(
                 color: Color(0xFFC54C2B),
                 fontWeight: FontWeight.w600,
@@ -4131,17 +4630,17 @@ class _LoadingState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          SizedBox(
+          const SizedBox(
             width: 28,
             height: 28,
             child: CircularProgressIndicator(strokeWidth: 2.6),
           ),
-          SizedBox(height: 14),
-          Text('Loading workspace...'),
+          const SizedBox(height: 14),
+          Text(_tr(context, 'Loading workspace...')),
         ],
       ),
     );
@@ -4177,13 +4676,13 @@ class _ErrorState extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Could not load this screen',
+                    _tr(context, 'Could not load this screen'),
                     style: Theme.of(context).textTheme.titleLarge,
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    message,
+                    _tr(context, message),
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: const Color(0xFF61706C),
                     ),

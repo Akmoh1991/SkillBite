@@ -1700,10 +1700,20 @@ class SeedSuperAdminCommandTests(TestCase):
 
 class MobileApiTests(TestCase):
     def setUp(self):
-        self.owner = User.objects.create_user(username='mobile_owner', password='pass12345', first_name='Owner')
+        self.owner = User.objects.create_user(
+            username='mobile_owner',
+            password='pass12345',
+            first_name='Owner',
+            email='owner@example.com',
+        )
         self.business = BusinessTenant.objects.create(owner=self.owner, name='Mobile Cafe')
         self.job_title = JobTitle.objects.create(business=self.business, name='Cashier')
-        self.employee_user = User.objects.create_user(username='mobile_employee', password='pass12345', first_name='Employee')
+        self.employee_user = User.objects.create_user(
+            username='mobile_employee',
+            password='pass12345',
+            first_name='Employee',
+            email='employee@example.com',
+        )
         self.employee_profile = EmployeeProfile.objects.create(
             user=self.employee_user,
             business=self.business,
@@ -1849,3 +1859,43 @@ class MobileApiTests(TestCase):
         self.assertEqual(response.status_code, 201)
         created_course = Course.objects.get(title='API Course', business=self.business)
         self.assertTrue(CourseContentItem.objects.filter(course=created_course, title='Intro').exists())
+
+    def test_mobile_forgot_password_updates_password_when_email_matches(self):
+        response = self.client.post(
+            reverse('mobile_forgot_password'),
+            data=json.dumps(
+                {
+                    'username': 'mobile_employee',
+                    'email': 'employee@example.com',
+                    'new_password': 'NewStrongPass123!',
+                    'confirm_password': 'NewStrongPass123!',
+                }
+            ),
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, 200)
+        login_response = self.client.post(
+            reverse('mobile_login'),
+            data=json.dumps({'username': 'mobile_employee', 'password': 'NewStrongPass123!', 'device_name': 'test-suite'}),
+            content_type='application/json',
+        )
+        self.assertEqual(login_response.status_code, 200)
+
+    def test_mobile_notifications_returns_summary_and_items(self):
+        TeamChatMessage.objects.create(business=self.business, sender=self.owner, body='Team update for staff')
+        thread = PrivateChatThread.objects.create(
+            business=self.business,
+            user_one=self.owner,
+            user_two=self.employee_user,
+        )
+        PrivateChatMessage.objects.create(thread=thread, sender=self.owner, body='Private follow-up')
+        token = self._mobile_login('mobile_employee', 'pass12345')
+        response = self.client.get(
+            reverse('mobile_notifications'),
+            HTTP_AUTHORIZATION=f'Bearer {token}',
+        )
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertTrue(payload['ok'])
+        self.assertGreaterEqual(payload['summary']['unread_chat_count'], 2)
+        self.assertTrue(any(item['kind'] == 'team_chat' for item in payload['notifications']))
