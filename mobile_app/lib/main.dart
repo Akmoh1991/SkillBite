@@ -637,7 +637,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       child: const Icon(Icons.arrow_back_ios_new_rounded, color: _ink, size: 20),
                     ),
-                    FilledButton.tonalIcon(
+                    TextButton.icon(
                       onPressed: () {
                         final scope = _AppScope.of(context);
                         scope.onLanguageChanged(_isArabic(context) ? AppLanguage.en : AppLanguage.ar);
