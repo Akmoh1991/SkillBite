@@ -3,6 +3,7 @@ from datetime import timedelta
 
 from django.contrib.auth import authenticate
 from django.db import IntegrityError, transaction
+from django.db.models import Prefetch
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -13,17 +14,27 @@ from training.models import (
     Course,
     CourseAssignment,
     CourseContentItem,
+    SOPChecklistAssignmentRule,
     SOPChecklist,
     SOPChecklistCompletion,
     SOPChecklistItem,
     SOPChecklistItemCompletion,
 )
 
-from .forms import CourseForm, SOPChecklistForm
-from .models import EmployeeProfile, JobTitle, MobileAuthToken
+from .forms import CourseContentItemForm, CourseForm, JobTitleForm, SOPChecklistAssignmentRuleForm, SOPChecklistForm
+from .models import (
+    EmployeeProfile,
+    JobTitle,
+    MobileAuthToken,
+    PrivateChatMessage,
+    PrivateChatReadReceipt,
+    TeamChatMessage,
+    TeamChatReadReceipt,
+)
 from .views import (
     AUTO_GRADED_QUESTION_TYPES,
     BusinessOwnerEmployeeCreateForm,
+    _active_chat_participants,
     _accessible_business_courses_queryset,
     _assign_course_to_employee,
     _assigned_checklists_queryset,
@@ -33,11 +44,18 @@ from .views import (
     _ensure_employee_courses_are_backed_by_db,
     _evaluate_employee_exam_submission,
     _exam_questions_for_assignment,
+    _existing_private_chat_thread_for_users,
     _get_employee_profile,
     _get_owned_business,
     _is_business_owner,
     _is_employee,
+    _mark_private_chat_messages_read,
+    _mark_team_chat_messages_read,
+    _private_chat_conversation_summaries,
+    _private_chat_thread_for_users,
+    _private_message_receipt_state,
     _split_full_name,
+    _team_message_receipt_state,
     _visible_course_content_items,
     _visible_employee_course_assignments_queryset,
 )
@@ -174,12 +192,22 @@ def _serialize_checklist(checklist: SOPChecklist, *, completion=None, include_it
 def _serialize_employee_profile(profile: EmployeeProfile) -> dict:
     return {
         'id': profile.id,
+        'user_id': profile.user_id,
         'username': profile.user.username,
         'display_name': _display_name(profile.user),
         'email': profile.user.email or '',
         'job_title': profile.job_title.name if profile.job_title else '',
         'is_active': profile.is_active and profile.user.is_active,
         'created_at': profile.created_at.isoformat(),
+    }
+
+
+def _serialize_job_title(job_title: JobTitle) -> dict:
+    return {
+        'id': job_title.id,
+        'name': job_title.name,
+        'employee_count': job_title.employees.filter(is_active=True, user__is_active=True).count(),
+        'created_at': job_title.created_at.isoformat(),
     }
 
 
@@ -195,6 +223,69 @@ def _serialize_owner_course(course: Course, *, business) -> dict:
         'assignment_total': assignment_total,
         'has_exam': bool(course.exam_template_id),
         'content_items': [_serialize_course_content_item(item) for item in visible_content_items],
+    }
+
+
+def _serialize_checklist_rule(rule: SOPChecklistAssignmentRule) -> dict:
+    return {
+        'id': rule.id,
+        'job_title': {
+            'id': rule.job_title_id,
+            'name': rule.job_title.name,
+        },
+        'checklist': {
+            'id': rule.checklist_id,
+            'title': rule.checklist.title,
+            'frequency': rule.checklist.frequency,
+        },
+        'created_at': rule.created_at.isoformat(),
+    }
+
+
+def _serialize_team_chat_message(message, *, participant_count: int) -> dict:
+    return {
+        'id': message.id,
+        'sender': {
+            'id': message.sender_id,
+            'display_name': _display_name(message.sender),
+            'username': message.sender.username,
+        },
+        'body': message.body,
+        'created_at': message.created_at.isoformat(),
+        'read_receipt': _team_message_receipt_state(message, participant_count),
+    }
+
+
+def _serialize_private_chat_message(message, *, partner_id: int | None) -> dict:
+    return {
+        'id': message.id,
+        'sender': {
+            'id': message.sender_id,
+            'display_name': _display_name(message.sender),
+            'username': message.sender.username,
+        },
+        'body': message.body,
+        'created_at': message.created_at.isoformat(),
+        'read_receipt': _private_message_receipt_state(message, partner_id),
+    }
+
+
+def _serialize_private_chat_summary(summary: dict) -> dict:
+    partner = summary['partner']
+    latest_message = summary.get('latest_message')
+    return {
+        'partner': {
+            'id': partner.id,
+            'display_name': _display_name(partner),
+            'username': partner.username,
+        },
+        'unread_count': summary.get('unread_count', 0),
+        'latest_message': None if latest_message is None else {
+            'id': latest_message.id,
+            'body': latest_message.body,
+            'created_at': latest_message.created_at.isoformat(),
+            'sender_id': latest_message.sender_id,
+        },
     }
 
 
@@ -296,6 +387,22 @@ def employee_courses_api_view(request):
     profile = _get_employee_profile(auth_token.user)
     assignments = list(_visible_employee_course_assignments_queryset(auth_token.user, profile.business))
     return _json_success({'courses': [_serialize_assignment(item) for item in assignments]})
+
+
+@require_GET
+def employee_learning_history_api_view(request):
+    auth_token, error_response = _authenticate_mobile_request(request)
+    if error_response:
+        return error_response
+    if not _is_employee(auth_token.user):
+        return _json_error('Employee access is required.', status=403, code='forbidden')
+    profile = _get_employee_profile(auth_token.user)
+    assignments = [
+        item
+        for item in _visible_employee_course_assignments_queryset(auth_token.user, profile.business)
+        if item.status == CourseAssignment.Status.COMPLETED
+    ]
+    return _json_success({'learning_history': [_serialize_assignment(item) for item in assignments]})
 
 
 @require_GET
@@ -605,6 +712,31 @@ def owner_employees_api_view(request):
 @csrf_exempt
 @require_POST
 @transaction.atomic
+def owner_employee_deactivate_api_view(request, employee_id: int):
+    auth_token, error_response = _authenticate_mobile_request(request)
+    if error_response:
+        return error_response
+    if not _is_business_owner(auth_token.user):
+        return _json_error('Business owner access is required.', status=403, code='forbidden')
+    business = _get_owned_business(auth_token.user)
+    employee = EmployeeProfile.objects.select_related('user', 'job_title').filter(
+        id=employee_id,
+        business=business,
+    ).first()
+    if employee is None:
+        return _json_error('Employee not found.', status=404, code='employee_not_found')
+    if not employee.is_active or not employee.user.is_active:
+        return _json_error('Employee is already inactive.', status=409, code='already_inactive')
+    employee.is_active = False
+    employee.save(update_fields=['is_active'])
+    employee.user.is_active = False
+    employee.user.save(update_fields=['is_active'])
+    return _json_success({'employee': _serialize_employee_profile(employee)})
+
+
+@csrf_exempt
+@require_POST
+@transaction.atomic
 def owner_employee_create_api_view(request):
     auth_token, error_response = _authenticate_mobile_request(request)
     if error_response:
@@ -641,6 +773,44 @@ def owner_employee_create_api_view(request):
         created_by=auth_token.user,
     )
     return _json_success({'employee': _serialize_employee_profile(profile)}, status=201)
+
+
+@require_GET
+def owner_job_titles_api_view(request):
+    auth_token, error_response = _authenticate_mobile_request(request)
+    if error_response:
+        return error_response
+    if not _is_business_owner(auth_token.user):
+        return _json_error('Business owner access is required.', status=403, code='forbidden')
+    business = _get_owned_business(auth_token.user)
+    job_titles = list(
+        JobTitle.objects.filter(business=business)
+        .prefetch_related('employees__user')
+        .order_by('name', 'id')
+    )
+    return _json_success({'job_titles': [_serialize_job_title(item) for item in job_titles]})
+
+
+@csrf_exempt
+@require_POST
+@transaction.atomic
+def owner_job_title_create_api_view(request):
+    auth_token, error_response = _authenticate_mobile_request(request)
+    if error_response:
+        return error_response
+    if not _is_business_owner(auth_token.user):
+        return _json_error('Business owner access is required.', status=403, code='forbidden')
+    business = _get_owned_business(auth_token.user)
+    form = JobTitleForm(_load_json_body(request))
+    if not form.is_valid():
+        return _json_error(form.errors.as_json(), code='validation_error')
+    job_title = form.save(commit=False)
+    job_title.business = business
+    try:
+        job_title.save()
+    except IntegrityError:
+        return _json_error('This job title already exists.', code='validation_error')
+    return _json_success({'job_title': _serialize_job_title(job_title)}, status=201)
 
 
 @require_GET
@@ -715,6 +885,69 @@ def owner_course_detail_api_view(request, course_id: int):
         id=course_id,
     )
     return _json_success({'course': _serialize_owner_course(course, business=business)})
+
+
+@csrf_exempt
+@require_POST
+@transaction.atomic
+def owner_course_content_create_api_view(request, course_id: int):
+    auth_token, error_response = _authenticate_mobile_request(request)
+    if error_response:
+        return error_response
+    if not _is_business_owner(auth_token.user):
+        return _json_error('Business owner access is required.', status=403, code='forbidden')
+    business = _get_owned_business(auth_token.user)
+    course = get_object_or_404(_accessible_business_courses_queryset(business), id=course_id)
+    payload = _load_json_body(request)
+    payload['course'] = course.id
+    form = CourseContentItemForm(payload, business=business)
+    if not form.is_valid():
+        return _json_error(form.errors.as_json(), code='validation_error')
+    content_item = form.save()
+    return _json_success({'content_item': _serialize_course_content_item(content_item)}, status=201)
+
+
+@csrf_exempt
+@require_POST
+@transaction.atomic
+def owner_course_content_update_api_view(request, item_id: int):
+    auth_token, error_response = _authenticate_mobile_request(request)
+    if error_response:
+        return error_response
+    if not _is_business_owner(auth_token.user):
+        return _json_error('Business owner access is required.', status=403, code='forbidden')
+    business = _get_owned_business(auth_token.user)
+    content_item = get_object_or_404(
+        CourseContentItem.objects.select_related('course'),
+        id=item_id,
+        course__business=business,
+    )
+    payload = _load_json_body(request)
+    payload['course'] = content_item.course_id
+    form = CourseContentItemForm(payload, instance=content_item, business=business)
+    if not form.is_valid():
+        return _json_error(form.errors.as_json(), code='validation_error')
+    updated_item = form.save()
+    return _json_success({'content_item': _serialize_course_content_item(updated_item)})
+
+
+@csrf_exempt
+@require_POST
+@transaction.atomic
+def owner_course_content_delete_api_view(request, item_id: int):
+    auth_token, error_response = _authenticate_mobile_request(request)
+    if error_response:
+        return error_response
+    if not _is_business_owner(auth_token.user):
+        return _json_error('Business owner access is required.', status=403, code='forbidden')
+    business = _get_owned_business(auth_token.user)
+    content_item = get_object_or_404(
+        CourseContentItem.objects.select_related('course'),
+        id=item_id,
+        course__business=business,
+    )
+    content_item.delete()
+    return _json_success({'message': 'Content item deleted.'})
 
 
 @csrf_exempt
@@ -828,6 +1061,22 @@ def owner_checklists_api_view(request):
     )
 
 
+@require_GET
+def owner_checklist_rules_api_view(request):
+    auth_token, error_response = _authenticate_mobile_request(request)
+    if error_response:
+        return error_response
+    if not _is_business_owner(auth_token.user):
+        return _json_error('Business owner access is required.', status=403, code='forbidden')
+    business = _get_owned_business(auth_token.user)
+    rules = list(
+        SOPChecklistAssignmentRule.objects.filter(business=business)
+        .select_related('job_title', 'checklist')
+        .order_by('job_title__name', 'checklist__title', 'id')
+    )
+    return _json_success({'rules': [_serialize_checklist_rule(item) for item in rules]})
+
+
 @csrf_exempt
 @require_POST
 @transaction.atomic
@@ -856,6 +1105,19 @@ def owner_checklist_create_api_view(request):
     created_items = []
     for index, item_title in enumerate(form.cleaned_data['item_lines'], start=1):
         created_items.append(SOPChecklistItem.objects.create(checklist=checklist, title=item_title, order=index))
+    job_title_id = (payload.get('job_title') or '')
+    if str(job_title_id).isdigit():
+        job_title = JobTitle.objects.filter(id=int(job_title_id), business=business).first()
+        if job_title is not None:
+            try:
+                SOPChecklistAssignmentRule.objects.create(
+                    business=business,
+                    job_title=job_title,
+                    checklist=checklist,
+                    assigned_by=auth_token.user,
+                )
+            except IntegrityError:
+                pass
     return _json_success(
         {
             'checklist': {
@@ -869,3 +1131,206 @@ def owner_checklist_create_api_view(request):
         },
         status=201,
     )
+
+
+@csrf_exempt
+@require_POST
+@transaction.atomic
+def owner_checklist_rule_create_api_view(request):
+    auth_token, error_response = _authenticate_mobile_request(request)
+    if error_response:
+        return error_response
+    if not _is_business_owner(auth_token.user):
+        return _json_error('Business owner access is required.', status=403, code='forbidden')
+    business = _get_owned_business(auth_token.user)
+    form = SOPChecklistAssignmentRuleForm(_load_json_body(request), business=business)
+    if not form.is_valid():
+        return _json_error(form.errors.as_json(), code='validation_error')
+    rule = form.save(commit=False)
+    rule.business = business
+    rule.assigned_by = auth_token.user
+    try:
+        rule.save()
+    except IntegrityError:
+        return _json_error('This checklist rule already exists.', code='validation_error')
+    return _json_success({'rule': _serialize_checklist_rule(rule)}, status=201)
+
+
+def _mobile_chat_business(user, role: str):
+    if role == 'business_owner':
+        if not _is_business_owner(user):
+            return None, _json_error('Business owner access is required.', status=403, code='forbidden')
+        return _get_owned_business(user), None
+    if role == 'employee':
+        if not _is_employee(user):
+            return None, _json_error('Employee access is required.', status=403, code='forbidden')
+        profile = _get_employee_profile(user)
+        return profile.business, None
+    return None, _json_error('Unsupported role.', status=404, code='unsupported_role')
+
+
+@require_GET
+def mobile_team_chat_api_view(request, role: str):
+    auth_token, error_response = _authenticate_mobile_request(request)
+    if error_response:
+        return error_response
+    business, role_error = _mobile_chat_business(auth_token.user, role)
+    if role_error:
+        return role_error
+    participants = _active_chat_participants(business)
+    participant_ids = [item.id for item in participants]
+    _mark_team_chat_messages_read(business=business, user=auth_token.user)
+    messages = list(
+        TeamChatMessage.objects.filter(business=business, sender__is_active=True)
+        .select_related('sender')
+        .prefetch_related(
+            Prefetch(
+                'read_receipts',
+                queryset=TeamChatReadReceipt.objects.filter(user_id__in=participant_ids),
+                to_attr='prefetched_receipts',
+            )
+        )
+        .order_by('-created_at', '-id')[:50]
+    )
+    messages.reverse()
+    return _json_success(
+        {
+            'participants': [
+                {
+                    'id': participant.id,
+                    'display_name': _display_name(participant),
+                    'username': participant.username,
+                }
+                for participant in participants
+            ],
+            'messages': [_serialize_team_chat_message(item, participant_count=len(participants)) for item in messages],
+        }
+    )
+
+
+@csrf_exempt
+@require_POST
+def mobile_team_chat_send_api_view(request, role: str):
+    auth_token, error_response = _authenticate_mobile_request(request)
+    if error_response:
+        return error_response
+    business, role_error = _mobile_chat_business(auth_token.user, role)
+    if role_error:
+        return role_error
+    payload = _load_json_body(request)
+    body = (payload.get('body') or '').strip()
+    if not body:
+        return _json_error('Message text is required.', code='validation_error')
+    message = TeamChatMessage.objects.create(business=business, sender=auth_token.user, body=body[:1000])
+    TeamChatReadReceipt.objects.get_or_create(message=message, user=auth_token.user)
+    message.prefetched_receipts = [TeamChatReadReceipt(message=message, user=auth_token.user)]
+    return _json_success(
+        {
+            'message': _serialize_team_chat_message(
+                message,
+                participant_count=len(_active_chat_participants(business)),
+            )
+        },
+        status=201,
+    )
+
+
+@require_GET
+def mobile_private_chat_api_view(request, role: str):
+    auth_token, error_response = _authenticate_mobile_request(request)
+    if error_response:
+        return error_response
+    business, role_error = _mobile_chat_business(auth_token.user, role)
+    if role_error:
+        return role_error
+    participants = _active_chat_participants(business)
+    selected_user_id = (request.GET.get('user_id') or '').strip()
+    selected_user = None
+    if selected_user_id.isdigit():
+        selected_user = next(
+            (item for item in participants if item.id == int(selected_user_id) and item.id != auth_token.user.id),
+            None,
+        )
+    if selected_user is None:
+        selected_user = next((item for item in participants if item.id != auth_token.user.id), None)
+    messages = []
+    if selected_user is not None:
+        thread = _existing_private_chat_thread_for_users(
+            business=business,
+            user=auth_token.user,
+            other_user=selected_user,
+        )
+        if thread is not None:
+            _mark_private_chat_messages_read(thread=thread, user=auth_token.user)
+            messages = list(
+                PrivateChatMessage.objects.filter(thread=thread)
+                .select_related('sender')
+                .prefetch_related(
+                    Prefetch(
+                        'read_receipts',
+                        queryset=PrivateChatReadReceipt.objects.filter(
+                            user_id__in=[auth_token.user.id, selected_user.id]
+                        ),
+                        to_attr='prefetched_receipts',
+                    )
+                )
+                .order_by('-created_at', '-id')[:50]
+            )
+            messages.reverse()
+    conversations = _private_chat_conversation_summaries(business=business, user=auth_token.user)
+    return _json_success(
+        {
+            'participants': [
+                {
+                    'id': participant.id,
+                    'display_name': _display_name(participant),
+                    'username': participant.username,
+                }
+                for participant in participants
+                if participant.id != auth_token.user.id
+            ],
+            'conversations': [_serialize_private_chat_summary(item) for item in conversations],
+            'selected_user': None if selected_user is None else {
+                'id': selected_user.id,
+                'display_name': _display_name(selected_user),
+                'username': selected_user.username,
+            },
+            'messages': [
+                _serialize_private_chat_message(item, partner_id=None if selected_user is None else selected_user.id)
+                for item in messages
+            ],
+        }
+    )
+
+
+@csrf_exempt
+@require_POST
+@transaction.atomic
+def mobile_private_chat_send_api_view(request, role: str):
+    auth_token, error_response = _authenticate_mobile_request(request)
+    if error_response:
+        return error_response
+    business, role_error = _mobile_chat_business(auth_token.user, role)
+    if role_error:
+        return role_error
+    payload = _load_json_body(request)
+    recipient_id = payload.get('recipient_id')
+    body = (payload.get('body') or '').strip()
+    if not str(recipient_id).isdigit():
+        return _json_error('Choose a valid recipient.', code='validation_error')
+    participants = _active_chat_participants(business)
+    recipient = next((item for item in participants if item.id == int(recipient_id)), None)
+    if recipient is None or recipient.id == auth_token.user.id:
+        return _json_error('Choose a valid recipient.', code='validation_error')
+    if not body:
+        return _json_error('Message text is required.', code='validation_error')
+    thread = _private_chat_thread_for_users(
+        business=business,
+        user=auth_token.user,
+        other_user=recipient,
+    )
+    message = PrivateChatMessage.objects.create(thread=thread, sender=auth_token.user, body=body[:1000])
+    PrivateChatReadReceipt.objects.get_or_create(message=message, user=auth_token.user)
+    thread.save(update_fields=['updated_at'])
+    message.prefetched_receipts = [PrivateChatReadReceipt(message=message, user=auth_token.user)]
+    return _json_success({'message': _serialize_private_chat_message(message, partner_id=recipient.id)}, status=201)

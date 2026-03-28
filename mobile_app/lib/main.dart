@@ -1,6 +1,7 @@
 // ignore_for_file: deprecated_member_use, use_build_context_synchronously
 
 import 'dart:convert';
+import 'dart:io' show Platform;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -8,6 +9,15 @@ import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 import 'package:video_player/video_player.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+
+const Color _brandTeal = Color(0xFF1F8A7A);
+const Color _brandTealDark = Color(0xFF16695F);
+const Color _ink = Color(0xFF20242F);
+const Color _muted = Color(0xFF8B909A);
+const Color _surface = Color(0xFFFFFFFF);
+const Color _surfaceAlt = Color(0xFFF7F8FB);
+const Color _line = Color(0xFFE6E8EE);
+const Color _warmCard = Color(0xFFF8C46E);
 
 void main() {
   runApp(const SkillBiteMobileApp());
@@ -22,9 +32,14 @@ class SkillBiteMobileApp extends StatefulWidget {
 
 class _SkillBiteMobileAppState extends State<SkillBiteMobileApp> {
   final MobileApiClient api = MobileApiClient(
-    baseUrl: kIsWeb || defaultTargetPlatform == TargetPlatform.android
+    baseUrl: kIsWeb
         ? 'http://127.0.0.1:8000/api/mobile/v1'
-        : 'http://10.0.2.2:8000/api/mobile/v1',
+        : Platform.isAndroid
+        ? 'http://10.0.2.2:8000/api/mobile/v1'
+        : 'http://127.0.0.1:8000/api/mobile/v1',
+    fallbackBaseUrls: kIsWeb || !Platform.isAndroid
+        ? const []
+        : const ['http://127.0.0.1:8000/api/mobile/v1'],
   );
   SessionUser? sessionUser;
 
@@ -62,80 +77,80 @@ class _SkillBiteMobileAppState extends State<SkillBiteMobileApp> {
 }
 
 ThemeData _buildTheme() {
-  const seed = Color(0xFF0F766E);
+  const seed = _brandTeal;
   final scheme = ColorScheme.fromSeed(
     seedColor: seed,
     brightness: Brightness.light,
     primary: seed,
-    secondary: const Color(0xFFE9A33B),
-    surface: Colors.white,
+    secondary: _warmCard,
+    surface: _surface,
   );
   return ThemeData(
     useMaterial3: true,
     colorScheme: scheme,
-    scaffoldBackgroundColor: const Color(0xFFF4F1E8),
+    scaffoldBackgroundColor: _surface,
     textTheme: const TextTheme(
-      headlineLarge: TextStyle(fontSize: 34, fontWeight: FontWeight.w800, letterSpacing: -1.2),
-      headlineMedium: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, letterSpacing: -0.8),
-      headlineSmall: TextStyle(fontSize: 24, fontWeight: FontWeight.w700, letterSpacing: -0.4),
-      titleLarge: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-      titleMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-      bodyLarge: TextStyle(fontSize: 16, height: 1.45),
-      bodyMedium: TextStyle(fontSize: 14, height: 1.45),
-      bodySmall: TextStyle(fontSize: 12, height: 1.4),
+      headlineLarge: TextStyle(fontSize: 34, fontWeight: FontWeight.w800, letterSpacing: -1.4, color: _ink),
+      headlineMedium: TextStyle(fontSize: 30, fontWeight: FontWeight.w800, letterSpacing: -1.0, color: _ink),
+      headlineSmall: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, letterSpacing: -0.7, color: _ink),
+      titleLarge: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: _ink),
+      titleMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: _ink),
+      bodyLarge: TextStyle(fontSize: 16, height: 1.45, color: _ink),
+      bodyMedium: TextStyle(fontSize: 14, height: 1.45, color: _muted),
+      bodySmall: TextStyle(fontSize: 12, height: 1.4, color: _muted),
     ),
     appBarTheme: const AppBarTheme(
       centerTitle: false,
       scrolledUnderElevation: 0,
-      backgroundColor: Colors.transparent,
-      foregroundColor: Color(0xFF11221F),
+      backgroundColor: _surface,
+      foregroundColor: _ink,
       elevation: 0,
       titleTextStyle: TextStyle(
-        color: Color(0xFF11221F),
-        fontSize: 20,
+        color: _ink,
+        fontSize: 18,
         fontWeight: FontWeight.w700,
       ),
     ),
     cardTheme: CardThemeData(
       margin: EdgeInsets.zero,
-      elevation: 0,
-      color: Colors.white,
-      shadowColor: Colors.transparent,
+      elevation: 0.5,
+      color: _surface,
+      shadowColor: const Color(0x14000000),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(26),
-        side: BorderSide(color: const Color(0xFF12312C).withValues(alpha: 0.08)),
+        borderRadius: BorderRadius.circular(24),
+        side: const BorderSide(color: _line),
       ),
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: Colors.white.withValues(alpha: 0.94),
-      labelStyle: const TextStyle(color: Color(0xFF5D6D69)),
-      hintStyle: const TextStyle(color: Color(0xFF90A09C)),
+      fillColor: _surface,
+      labelStyle: const TextStyle(color: _ink, fontWeight: FontWeight.w600),
+      hintStyle: const TextStyle(color: _muted),
       contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(20),
         borderSide: BorderSide.none,
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(18),
-        borderSide: BorderSide(color: const Color(0xFF12312C).withValues(alpha: 0.08)),
+        borderRadius: BorderRadius.circular(20),
+        borderSide: const BorderSide(color: _line),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(20),
         borderSide: const BorderSide(color: seed, width: 1.4),
       ),
     ),
     navigationBarTheme: NavigationBarThemeData(
-      backgroundColor: Colors.white.withValues(alpha: 0.96),
-      indicatorColor: const Color(0xFFD7EFE8),
+      backgroundColor: _surface,
+      indicatorColor: Colors.transparent,
       iconTheme: WidgetStateProperty.resolveWith((states) {
         return IconThemeData(
-          color: states.contains(WidgetState.selected) ? seed : const Color(0xFF71807C),
+          color: states.contains(WidgetState.selected) ? seed : const Color(0xFFC9CDD7),
         );
       }),
       labelTextStyle: WidgetStateProperty.resolveWith((states) {
         return TextStyle(
-          color: states.contains(WidgetState.selected) ? seed : const Color(0xFF71807C),
+          color: states.contains(WidgetState.selected) ? seed : const Color(0xFFC9CDD7),
           fontWeight: states.contains(WidgetState.selected) ? FontWeight.w700 : FontWeight.w500,
         );
       }),
@@ -144,9 +159,9 @@ ThemeData _buildTheme() {
       style: FilledButton.styleFrom(
         backgroundColor: seed,
         foregroundColor: Colors.white,
-        minimumSize: const Size.fromHeight(56),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+        minimumSize: const Size.fromHeight(58),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+        textStyle: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
       ),
     ),
     chipTheme: ChipThemeData(
@@ -154,20 +169,30 @@ ThemeData _buildTheme() {
       selectedColor: const Color(0xFFD7EFE8),
       side: BorderSide.none,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
-      labelStyle: const TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF24403A)),
+      labelStyle: const TextStyle(fontWeight: FontWeight.w600, color: _ink),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
     ),
   );
 }
 
 class MobileApiClient {
-  MobileApiClient({required this.baseUrl});
+  MobileApiClient({
+    required String baseUrl,
+    List<String> fallbackBaseUrls = const [],
+  })  : _baseUrlCandidates = [
+          baseUrl,
+          ...fallbackBaseUrls.where((candidate) => candidate != baseUrl),
+        ],
+        _activeBaseUrl = baseUrl;
 
-  final String baseUrl;
+  final List<String> _baseUrlCandidates;
+  String _activeBaseUrl;
   String? token;
 
+  String get baseUrl => _activeBaseUrl;
+
   Future<SessionUser> login(String username, String password) async {
-    final payload = await post('/auth/login/', {
+    final payload = await _postWithFallback('/auth/login/', {
       'username': username,
       'password': password,
       'device_name': 'flutter-dev',
@@ -177,18 +202,43 @@ class MobileApiClient {
   }
 
   Future<Map<String, dynamic>> get(String path) async {
-    final response = await http.get(Uri.parse('$baseUrl$path'), headers: _headers());
+    final response = await http.get(_uriFor(baseUrl, path), headers: _headers());
     return _parseResponse(response);
   }
 
   Future<Map<String, dynamic>> post(String path, Object body, {bool includeAuth = true}) async {
     final response = await http.post(
-      Uri.parse('$baseUrl$path'),
+      _uriFor(baseUrl, path),
       headers: _headers(includeAuth: includeAuth),
       body: jsonEncode(body),
     );
     return _parseResponse(response);
   }
+
+  Future<Map<String, dynamic>> _postWithFallback(
+    String path,
+    Object body, {
+    bool includeAuth = true,
+  }) async {
+    Object? lastError;
+    for (final candidate in _baseUrlCandidates) {
+      try {
+        final response = await http.post(
+          _uriFor(candidate, path),
+          headers: _headers(includeAuth: includeAuth),
+          body: jsonEncode(body),
+        );
+        final payload = _parseResponse(response);
+        _activeBaseUrl = candidate;
+        return payload;
+      } catch (error) {
+        lastError = error;
+      }
+    }
+    throw lastError ?? Exception('Login failed.');
+  }
+
+  Uri _uriFor(String base, String path) => Uri.parse('$base$path');
 
   Map<String, String> _headers({bool includeAuth = true}) {
     return {
@@ -212,10 +262,18 @@ class MobileApiClient {
 
   Map<String, dynamic> _parseResponse(http.Response response) {
     Map<String, dynamic> payload;
+    final rawBody = utf8.decode(response.bodyBytes, allowMalformed: true).trim();
+    final normalizedBody = rawBody.startsWith('\uFEFF') ? rawBody.substring(1) : rawBody;
     try {
-      payload = jsonDecode(response.body) as Map<String, dynamic>;
+      payload = jsonDecode(normalizedBody) as Map<String, dynamic>;
     } catch (_) {
-      throw Exception('Unexpected server response.');
+      if (normalizedBody.isEmpty) {
+        throw Exception('Empty server response (${response.statusCode}).');
+      }
+      final preview = normalizedBody.length > 180
+          ? '${normalizedBody.substring(0, 180)}...'
+          : normalizedBody;
+      throw Exception('Unexpected server response (${response.statusCode}): $preview');
     }
     if (payload['ok'] == true) {
       return payload;
@@ -320,135 +378,150 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: DecoratedBox(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFFEAF4EF), Color(0xFFF4F1E8)],
-          ),
-        ),
-        child: Stack(
-          children: [
-            const Positioned(
-              top: -120,
-              right: -40,
-              child: _BackdropOrb(size: 260, color: Color(0xFFB9E1D6)),
-            ),
-            const Positioned(
-              top: 140,
-              left: -70,
-              child: _BackdropOrb(size: 180, color: Color(0xFFE8C98E)),
-            ),
-            SafeArea(
-              child: Center(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(24),
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 430),
-                    child: Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(24),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 430),
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+              children: [
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Container(
+                    width: 54,
+                    height: 54,
+                    decoration: const BoxDecoration(
+                      color: _surfaceAlt,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.arrow_back_ios_new_rounded, color: _ink, size: 20),
+                  ),
+                ),
+                const SizedBox(height: 32),
+                Text(
+                  'Sign in to SkillBite',
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontSize: 22),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Please enter your information below in order to login to your account',
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: _muted, height: 1.35),
+                ),
+                const SizedBox(height: 28),
+                Text('Email', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 17)),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: usernameController,
+                  textInputAction: TextInputAction.next,
+                  decoration: const InputDecoration(
+                    hintText: 'exampleemail@gami.com',
+                    prefixIcon: Icon(Icons.mail_outline_rounded),
+                  ),
+                ),
+                const SizedBox(height: 22),
+                Text('Password', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 17)),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: passwordController,
+                  obscureText: true,
+                  onSubmitted: (_) => loading ? null : _submit(),
+                  decoration: const InputDecoration(
+                    hintText: 'Enter your password',
+                    prefixIcon: Icon(Icons.lock_outline_rounded),
+                    suffixIcon: Icon(Icons.visibility_outlined),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    'Forgot Password?',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(color: _brandTeal),
+                  ),
+                ),
+                if (errorText != null) ...[
+                  const SizedBox(height: 16),
+                  _InlineError(message: errorText!),
+                ],
+                const SizedBox(height: 24),
+                FilledButton(
+                  onPressed: loading ? null : _submit,
+                  child: Text(loading ? 'Signing in...' : 'Log In'),
+                ),
+                const SizedBox(height: 28),
+                Center(
+                  child: Text(
+                    'or Continue with',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w500),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                OutlinedButton.icon(
+                  onPressed: null,
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(58),
+                    side: const BorderSide(color: _line),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                    foregroundColor: _ink,
+                    textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  ),
+                  icon: const Text('G', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700)),
+                  label: const Text('Sign Up With Google'),
+                ),
+                const SizedBox(height: 28),
+                Card(
+                  color: _surfaceAlt,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Demo Access', style: Theme.of(context).textTheme.titleMedium),
+                        const SizedBox(height: 10),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
                           children: [
-                            Container(
-                              width: 58,
-                              height: 58,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFD9EEE8),
-                                borderRadius: BorderRadius.circular(18),
-                              ),
-                              child: const Icon(Icons.auto_stories_rounded, size: 28),
+                            _DemoChip(
+                              label: 'Owner Demo',
+                              onTap: () {
+                                usernameController.text = 'demo_owner';
+                                passwordController.text = 'pass12345';
+                                setState(() => errorText = null);
+                              },
                             ),
-                            const SizedBox(height: 18),
-                            Text('SkillBite Mobile', style: Theme.of(context).textTheme.headlineMedium),
-                            const SizedBox(height: 10),
-                            Text(
-                              'Employee and business-owner access through the new mobile API.',
-                              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                color: const Color(0xFF556560),
-                              ),
-                            ),
-                            const SizedBox(height: 18),
-                            Container(
-                              padding: const EdgeInsets.all(14),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFF7F8F4),
-                                borderRadius: BorderRadius.circular(18),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Demo Access',
-                                    style: Theme.of(context).textTheme.titleMedium,
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Wrap(
-                                    spacing: 8,
-                                    runSpacing: 8,
-                                    children: [
-                                      _DemoChip(
-                                        label: 'Owner Demo',
-                                        onTap: () {
-                                          usernameController.text = 'demo_owner';
-                                          passwordController.text = 'pass12345';
-                                          setState(() => errorText = null);
-                                        },
-                                      ),
-                                      _DemoChip(
-                                        label: 'Employee Demo',
-                                        onTap: () {
-                                          usernameController.text = 'demo_employee';
-                                          passwordController.text = 'pass12345';
-                                          setState(() => errorText = null);
-                                        },
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 18),
-                            TextField(
-                              controller: usernameController,
-                              textInputAction: TextInputAction.next,
-                              decoration: const InputDecoration(
-                                labelText: 'Username',
-                                prefixIcon: Icon(Icons.person_outline),
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            TextField(
-                              controller: passwordController,
-                              obscureText: true,
-                              onSubmitted: (_) => loading ? null : _submit(),
-                              decoration: const InputDecoration(
-                                labelText: 'Password',
-                                prefixIcon: Icon(Icons.lock_outline),
-                              ),
-                            ),
-                            if (errorText != null) ...[
-                              const SizedBox(height: 12),
-                              _InlineError(message: errorText!),
-                            ],
-                            const SizedBox(height: 18),
-                            FilledButton.icon(
-                              onPressed: loading ? null : _submit,
-                              icon: Icon(loading ? Icons.hourglass_top_rounded : Icons.arrow_forward_rounded),
-                              label: Text(loading ? 'Signing in...' : 'Sign in'),
+                            _DemoChip(
+                              label: 'Employee Demo',
+                              onTap: () {
+                                usernameController.text = 'demo_employee';
+                                passwordController.text = 'pass12345';
+                                setState(() => errorText = null);
+                              },
                             ),
                           ],
                         ),
-                      ),
+                      ],
                     ),
                   ),
                 ),
-              ),
+                const SizedBox(height: 28),
+                Center(
+                  child: Text.rich(
+                    TextSpan(
+                      text: "Don’t have an account ? ",
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(color: const Color(0xFF25314C)),
+                      children: const [
+                        TextSpan(
+                          text: 'Sign Up',
+                          style: TextStyle(color: _brandTeal, fontWeight: FontWeight.w700),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -481,87 +554,107 @@ class _RoleShellState extends State<RoleShell> {
         ? [
             OwnerDashboardPage(api: widget.api, user: widget.user),
             OwnerEmployeesPage(api: widget.api),
+            OwnerJobTitlesPage(api: widget.api),
             OwnerCoursesPage(api: widget.api),
             OwnerReportsPage(api: widget.api),
             OwnerChecklistsPage(api: widget.api),
+            ChatPage(
+              api: widget.api,
+              roleBasePath: '/business-owner',
+              title: 'Business Chat',
+            ),
           ]
         : [
             EmployeeDashboardPage(api: widget.api, user: widget.user),
             EmployeeCoursesPage(api: widget.api),
+            EmployeeLearningHistoryPage(api: widget.api),
             EmployeeChecklistsPage(api: widget.api),
+            ChatPage(
+              api: widget.api,
+              roleBasePath: '/employee',
+              title: 'Team Chat',
+            ),
           ];
     final destinations = ownerMode
         ? const [
             NavigationDestination(icon: Icon(Icons.home_outlined), label: 'Home'),
             NavigationDestination(icon: Icon(Icons.group_outlined), label: 'Employees'),
+            NavigationDestination(icon: Icon(Icons.badge_outlined), label: 'Titles'),
             NavigationDestination(icon: Icon(Icons.menu_book_outlined), label: 'Courses'),
             NavigationDestination(icon: Icon(Icons.insights_outlined), label: 'Reports'),
             NavigationDestination(icon: Icon(Icons.checklist_outlined), label: 'Checklists'),
+            NavigationDestination(icon: Icon(Icons.chat_bubble_outline), label: 'Chat'),
           ]
         : const [
             NavigationDestination(icon: Icon(Icons.home_outlined), label: 'Home'),
             NavigationDestination(icon: Icon(Icons.menu_book_outlined), label: 'Courses'),
+            NavigationDestination(icon: Icon(Icons.workspace_premium_outlined), label: 'History'),
             NavigationDestination(icon: Icon(Icons.checklist_outlined), label: 'Checklists'),
+            NavigationDestination(icon: Icon(Icons.chat_bubble_outline), label: 'Chat'),
           ];
 
     return Scaffold(
       appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        toolbarHeight: 84,
+        titleSpacing: 24,
+        title: Row(
           children: [
-            Text(widget.user.displayName),
-            Text(
-              ownerMode ? 'Business owner workspace' : 'Employee workspace',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: const Color(0xFF6A7A76),
-                fontWeight: FontWeight.w600,
+            _AvatarBadge(label: widget.user.displayName),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(widget.user.displayName),
+                  Text(
+                    '@${widget.user.username}',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: _muted,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
         ),
         actions: [
-          if (widget.user.businessName.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: Center(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.82),
-                    borderRadius: BorderRadius.circular(999),
-                    border: Border.all(color: const Color(0xFF12312C).withValues(alpha: 0.08)),
-                  ),
-                  child: Text(
-                    widget.user.businessName,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: Container(
+              width: 48,
+              height: 48,
+              margin: const EdgeInsets.symmetric(vertical: 16),
+              decoration: BoxDecoration(
+                color: _surface,
+                shape: BoxShape.circle,
+                border: Border.all(color: _line),
+              ),
+              child: IconButton(
+                onPressed: () {},
+                icon: const Icon(Icons.notifications_none_rounded),
               ),
             ),
+          ),
           IconButton(
             onPressed: () async => widget.onLogout(),
-            icon: const Icon(Icons.logout),
+            icon: const Icon(Icons.logout_rounded),
           ),
         ],
       ),
-      body: DecoratedBox(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFFEAF4EF), Color(0xFFF4F1E8)],
-          ),
-        ),
-        child: IndexedStack(index: index, children: pages),
-      ),
+      body: IndexedStack(index: index, children: pages),
       bottomNavigationBar: SafeArea(
-        minimum: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(26),
+        minimum: const EdgeInsets.fromLTRB(10, 0, 10, 10),
+        child: Container(
+          decoration: const BoxDecoration(
+            color: _surface,
+            border: Border(top: BorderSide(color: _line)),
+          ),
+          padding: const EdgeInsets.only(top: 6),
           child: NavigationBar(
             selectedIndex: index,
+            height: 74,
             destinations: destinations,
             onDestinationSelected: (value) => setState(() => index = value),
           ),
@@ -589,51 +682,64 @@ class EmployeeDashboardPage extends StatelessWidget {
         final dashboard = _asMap(payload['dashboard']);
         final assignments = _asList(dashboard['dashboard_course_assignments']);
         final checklists = _asList(dashboard['assigned_checklists']);
+        final trending = assignments.take(2).toList();
         return _PageBody(
           children: [
-            _HeroCard(
-              title: 'Employee',
-              subtitle: user.businessName,
-              value: user.displayName,
+            const _SearchHeroBar(),
+            const SizedBox(height: 16),
+            _HeaderRow(title: 'Trending courses', trailing: _sectionLink('View all')),
+            const SizedBox(height: 14),
+            SizedBox(
+              height: 286,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: trending.isEmpty ? 2 : trending.length,
+                separatorBuilder: (context, index) => const SizedBox(width: 16),
+                itemBuilder: (context, index) {
+                  final item = trending.isEmpty ? null : _asMap(trending[index]);
+                  final warm = index.isEven;
+                  return _CoursePromoCard(
+                    warm: warm,
+                    tag: 'Trendy',
+                    students: '680 + students',
+                    title: item == null ? 'UX Master\nCourse' : _readPath(item, ['course', 'title']),
+                  );
+                },
+              ),
             ),
             const SizedBox(height: 16),
-            _MetricRow(
-              metrics: [
-                _MetricData('Completed', '${dashboard['completed_course_count'] ?? 0}'),
-                _MetricData('Active Courses', '${dashboard['active_course_count'] ?? 0}'),
-                _MetricData('Checklists', '${dashboard['assigned_checklist_count'] ?? 0}'),
+            _HeaderRow(title: 'Best of the week', trailing: _sectionLink('View all')),
+            const SizedBox(height: 16),
+            if (assignments.isEmpty)
+              const _SectionCard(title: 'Recommendations', child: Text('No active courses.'))
+            else
+              for (final item in assignments.take(4)) ...[
+                _LessonListCard(
+                  title: _readPath(item, ['course', 'title']),
+                  subtitle:
+                      '${_readString(item, 'status_label')}  ·  ${_readPath(item, ['course', 'estimated_minutes'])} lesson min',
+                ),
+                const SizedBox(height: 14),
               ],
+            const SizedBox(height: 10),
+            _HeroCard(
+              title: 'Today checklist',
+              subtitle: user.businessName,
+              value: '${dashboard['assigned_checklist_count'] ?? 0} tasks',
             ),
-            const SizedBox(height: 16),
-            _SectionCard(
-              title: 'Current Courses',
-              child: assignments.isEmpty
-                  ? const Text('No active courses.')
-                  : Column(
-                      children: [
-                        for (final item in assignments)
-                          _SimpleListTile(
-                            title: _readPath(item, ['course', 'title']),
-                            subtitle: _readString(item, 'status_label'),
-                          ),
-                      ],
-                    ),
-            ),
-            const SizedBox(height: 16),
-            _SectionCard(
-              title: 'Today Checklists',
-              child: checklists.isEmpty
-                  ? const Text('No checklists assigned.')
-                  : Column(
-                      children: [
-                        for (final item in checklists)
-                          _SimpleListTile(
-                            title: _readString(item, 'title'),
-                            subtitle: _readBool(item, 'completed_today') ? 'Completed today' : 'Pending',
-                          ),
-                      ],
-                    ),
-            ),
+            const SizedBox(height: 14),
+            if (checklists.isEmpty)
+              const _SectionCard(title: 'Checklists', child: Text('No checklists assigned.'))
+            else
+              for (final item in checklists.take(2)) ...[
+                _LessonListCard(
+                  title: _readString(item, 'title'),
+                  subtitle: _readBool(item, 'completed_today') ? 'Completed today' : 'Pending checklist',
+                  accent: const Color(0xFFFBE2EA),
+                  trailingIcon: Icons.checklist_rounded,
+                ),
+                const SizedBox(height: 14),
+              ],
           ],
         );
       },
@@ -729,6 +835,77 @@ class _EmployeeCoursesPageState extends State<EmployeeCoursesPage> {
   }
 }
 
+class EmployeeLearningHistoryPage extends StatefulWidget {
+  const EmployeeLearningHistoryPage({super.key, required this.api});
+
+  final MobileApiClient api;
+
+  @override
+  State<EmployeeLearningHistoryPage> createState() => _EmployeeLearningHistoryPageState();
+}
+
+class _EmployeeLearningHistoryPageState extends State<EmployeeLearningHistoryPage> {
+  late Future<Map<String, dynamic>> future;
+
+  @override
+  void initState() {
+    super.initState();
+    future = widget.api.get('/employee/learning-history/');
+  }
+
+  void _reload() {
+    setState(() {
+      future = widget.api.get('/employee/learning-history/');
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ApiFutureBuilder(
+      future: future,
+      builder: (context, payload) {
+        final history = _asList(payload['learning_history']);
+        return _PageBody(
+          children: [
+            _HeaderRow(
+              title: 'Learning History',
+              trailing: IconButton(
+                onPressed: _reload,
+                icon: const Icon(Icons.refresh),
+              ),
+            ),
+            const SizedBox(height: 16),
+            if (history.isEmpty)
+              const _SectionCard(title: 'History', child: Text('No completed courses yet.'))
+            else
+              for (final item in history) ...[
+                _SectionCard(
+                  title: _readPath(item, ['course', 'title']),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(_readPath(item, ['course', 'description'])),
+                      const SizedBox(height: 12),
+                      Wrap(
+                        spacing: 12,
+                        runSpacing: 12,
+                        children: [
+                          _StatusChip(label: _readString(item, 'status_label')),
+                          _StatusChip(label: '${_readPath(item, ['course', 'estimated_minutes'])} min'),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+          ],
+        );
+      },
+    );
+  }
+}
+
 class EmployeeCourseDetailScreen extends StatefulWidget {
   const EmployeeCourseDetailScreen({
     super.key,
@@ -811,7 +988,7 @@ class _EmployeeCourseDetailScreenState extends State<EmployeeCourseDetailScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Course')),
+      appBar: AppBar(title: const Text('Details')),
       body: ApiFutureBuilder(
         future: future,
         builder: (context, payload) {
@@ -819,69 +996,83 @@ class _EmployeeCourseDetailScreenState extends State<EmployeeCourseDetailScreen>
           final course = _asMap(assignment['course']);
           final contentItems = _asList(course['content_items']);
           final hasExam = _readBool(course, 'has_exam');
+          final featuredContent = contentItems.isEmpty ? const <dynamic>[] : [contentItems.first];
+          final remainingContent = contentItems.length > 1 ? contentItems.skip(1).toList() : const <dynamic>[];
           return _PageBody(
             children: [
-              _HeroCard(
-                title: _readString(course, 'title'),
-                subtitle: _readString(assignment, 'status_label'),
-                value: '${_readInt(course, 'estimated_minutes')} min',
+              _LessonProgressHeader(
+                status: _readString(assignment, 'status_label'),
+                progress: contentItems.isEmpty ? 0.2 : 0.26,
               ),
               const SizedBox(height: 16),
-              _SectionCard(
-                title: 'Description',
-                child: Text(_readString(course, 'description')),
-              ),
-              const SizedBox(height: 16),
-              _SectionCard(
-                title: 'Content',
-                child: contentItems.isEmpty
-                    ? const Text('No mobile content items.')
-                    : Column(
-                        children: [
-                          for (final item in contentItems)
-                            _CourseContentTile(
-                              title: _readString(item, 'title'),
-                              subtitle: _contentSubtitle(item),
-                              icon: _contentIcon(item),
-                              onTap: () => _openContentItem(_asMap(item)),
-                            ),
-                        ],
-                      ),
-              ),
-              const SizedBox(height: 16),
-              _SectionCard(
-                title: 'Actions',
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: FilledButton(
-                        onPressed: submitting
-                            ? null
-                            : hasExam
-                            ? () async {
-                                final changed = await Navigator.of(context).push<bool>(
-                                  MaterialPageRoute(
-                                    builder: (_) => EmployeeExamScreen(
-                                      api: widget.api,
-                                      assignmentId: widget.assignmentId,
-                                    ),
-                                  ),
-                                );
-                                if (changed == true) {
-                                  _reload();
-                                }
-                              }
-                            : _completeCourse,
-                        child: Text(
-                          hasExam
-                              ? 'Start Exam'
-                              : submitting
-                              ? 'Completing...'
-                              : 'Mark Complete',
-                        ),
-                      ),
+              Text(
+                'About the lesson',
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontSize: 18,
+                      color: _brandTeal,
                     ),
-                  ],
+              ),
+              const SizedBox(height: 16),
+              if (featuredContent.isEmpty)
+                const _SectionCard(title: 'Lesson', child: Text('No mobile content items.'))
+              else
+                _LessonMediaCard(
+                  title: _readString(course, 'title'),
+                  subtitle: _readString(course, 'description').isEmpty
+                      ? _contentSubtitle(featuredContent.first)
+                      : _readString(course, 'description'),
+                  onTap: () => _openContentItem(_asMap(featuredContent.first)),
+                ),
+              const SizedBox(height: 18),
+              Text(
+                _readString(course, 'title'),
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontSize: 18),
+              ),
+              const SizedBox(height: 16),
+              if (remainingContent.isNotEmpty) ...[
+                _SectionCard(
+                  title: 'More content',
+                  child: Column(
+                    children: [
+                      for (final item in remainingContent)
+                        _CourseContentTile(
+                          title: _readString(item, 'title'),
+                          subtitle: _contentSubtitle(item),
+                          icon: _contentIcon(item),
+                          onTap: () => _openContentItem(_asMap(item)),
+                        ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+              ],
+              FilledButton(
+                onPressed: submitting
+                    ? null
+                    : hasExam
+                    ? () async {
+                        final changed = await Navigator.of(context).push<bool>(
+                          MaterialPageRoute(
+                            builder: (_) => EmployeeExamScreen(
+                              api: widget.api,
+                              assignmentId: widget.assignmentId,
+                            ),
+                          ),
+                        );
+                        if (changed == true) {
+                          _reload();
+                        }
+                      }
+                    : _completeCourse,
+                style: FilledButton.styleFrom(
+                  backgroundColor: _brandTeal,
+                ),
+                child: Text(
+                  hasExam
+                      ? 'Continue'
+                      : submitting
+                          ? 'Completing...'
+                          : 'Continue',
                 ),
               ),
             ],
@@ -956,49 +1147,106 @@ class _CourseVideoScreenState extends State<CourseVideoScreen> {
           : ListView(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
               children: [
-                AspectRatio(
-                  aspectRatio: controller!.value.aspectRatio == 0 ? 16 / 9 : controller!.value.aspectRatio,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(24),
-                    child: ColoredBox(
-                      color: Colors.black,
-                      child: VideoPlayer(controller!),
-                    ),
+                _LessonProgressHeader(status: 'In progress', progress: 0.26),
+                const SizedBox(height: 18),
+                Text(
+                  'About the lesson',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        fontSize: 18,
+                        color: _brandTeal,
+                      ),
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(22),
+                    color: _brandTeal,
+                  ),
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: Column(
+                    children: [
+                      AspectRatio(
+                        aspectRatio: controller!.value.aspectRatio == 0 ? 16 / 9 : controller!.value.aspectRatio,
+                        child: ClipRRect(
+                          borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
+                          child: ColoredBox(
+                            color: Colors.black,
+                            child: VideoPlayer(controller!),
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(14, 12, 14, 0),
+                        child: Row(
+                          children: [
+                            IconButton(
+                              onPressed: () {
+                                final isPlaying = controller!.value.isPlaying;
+                                setState(() {
+                                  if (isPlaying) {
+                                    controller!.pause();
+                                  } else {
+                                    controller!.play();
+                                  }
+                                });
+                              },
+                              icon: Icon(
+                                controller!.value.isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                                color: Colors.white,
+                              ),
+                            ),
+                            Expanded(
+                              child: SliderTheme(
+                                data: SliderTheme.of(context).copyWith(
+                                  trackHeight: 4,
+                                  activeTrackColor: Colors.white,
+                                  inactiveTrackColor: Colors.white.withValues(alpha: 0.35),
+                                  thumbColor: Colors.white,
+                                  overlayShape: SliderComponentShape.noOverlay,
+                                ),
+                                child: Slider(
+                                  value: controller!.value.position.inMilliseconds.toDouble().clamp(
+                                        0,
+                                        (controller!.value.duration.inMilliseconds == 0
+                                                ? 1
+                                                : controller!.value.duration.inMilliseconds)
+                                            .toDouble(),
+                                      ),
+                                  max: (controller!.value.duration.inMilliseconds == 0
+                                          ? 1
+                                          : controller!.value.duration.inMilliseconds)
+                                      .toDouble(),
+                                  onChanged: (value) {
+                                    controller!.seekTo(Duration(milliseconds: value.round()));
+                                  },
+                                ),
+                              ),
+                            ),
+                            IconButton(
+                              onPressed: () async {
+                                final uri = Uri.parse(widget.videoUrl);
+                                if (!await launchUrl(uri, mode: LaunchMode.externalApplication) && mounted) {
+                                  _showSnack(context, 'Could not open this video externally.');
+                                }
+                              },
+                              icon: const Icon(Icons.fullscreen_rounded, color: Colors.white),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: FilledButton.tonalIcon(
-                        onPressed: () {
-                          final isPlaying = controller!.value.isPlaying;
-                          setState(() {
-                            if (isPlaying) {
-                              controller!.pause();
-                            } else {
-                              controller!.play();
-                            }
-                          });
-                        },
-                        icon: Icon(controller!.value.isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded),
-                        label: Text(controller!.value.isPlaying ? 'Pause' : 'Play'),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: FilledButton.tonalIcon(
-                        onPressed: () async {
-                          final uri = Uri.parse(widget.videoUrl);
-                          if (!await launchUrl(uri, mode: LaunchMode.externalApplication) && mounted) {
-                            _showSnack(context, 'Could not open this video externally.');
-                          }
-                        },
-                        icon: const Icon(Icons.open_in_new_rounded),
-                        label: const Text('Open Externally'),
-                      ),
-                    ),
-                  ],
+                Text(
+                  widget.title,
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontSize: 18),
+                ),
+                const SizedBox(height: 24),
+                FilledButton(
+                  onPressed: () => Navigator.of(context).maybePop(),
+                  style: FilledButton.styleFrom(backgroundColor: _brandTeal),
+                  child: const Text('Continue'),
                 ),
               ],
             ),
@@ -1460,14 +1708,18 @@ class OwnerDashboardPage extends StatelessWidget {
       future: api.get('/business-owner/dashboard/'),
       builder: (context, payload) {
         final dashboard = _asMap(payload['dashboard']);
+        final employees = _asList(dashboard['employees']);
+        final courses = _asList(dashboard['assignable_courses']);
         return _PageBody(
           children: [
-            _HeroCard(
-              title: 'Business Owner',
-              subtitle: user.businessName,
-              value: user.displayName,
-            ),
+            const _SearchHeroBar(),
             const SizedBox(height: 16),
+            _HeroCard(
+              title: 'Workspace overview',
+              subtitle: user.businessName,
+              value: '${dashboard['employee_total'] ?? 0} team members',
+            ),
+            const SizedBox(height: 18),
             _MetricRow(
               metrics: [
                 _MetricData('Employees', '${dashboard['employee_total'] ?? 0}'),
@@ -1475,6 +1727,35 @@ class OwnerDashboardPage extends StatelessWidget {
                 _MetricData('Checklists', '${dashboard['checklist_total'] ?? 0}'),
               ],
             ),
+            const SizedBox(height: 20),
+            _HeaderRow(title: 'Your people', trailing: _sectionLink('View all')),
+            const SizedBox(height: 14),
+            if (employees.isEmpty)
+              const _SectionCard(title: 'Employees', child: Text('No employees yet.'))
+            else
+              for (final item in employees.take(3)) ...[
+                _LessonListCard(
+                  title: _readString(item, 'display_name'),
+                  subtitle: _readString(item, 'job_title').isEmpty ? _readString(item, 'username') : _readString(item, 'job_title'),
+                  trailingIcon: Icons.person_outline_rounded,
+                ),
+                const SizedBox(height: 14),
+              ],
+            const SizedBox(height: 6),
+            _HeaderRow(title: 'Suggested course pushes', trailing: _sectionLink('View all')),
+            const SizedBox(height: 14),
+            if (courses.isEmpty)
+              const _SectionCard(title: 'Courses', child: Text('No assignable courses.'))
+            else
+              for (final item in courses.take(2)) ...[
+                _CoursePromoCard(
+                  warm: courses.first == item,
+                  tag: 'Workspace',
+                  students: _readString(item, 'business_name'),
+                  title: _readString(item, 'title'),
+                ),
+                const SizedBox(height: 16),
+              ],
           ],
         );
       },
@@ -1504,6 +1785,37 @@ class _OwnerEmployeesPageState extends State<OwnerEmployeesPage> {
     setState(() {
       future = widget.api.get('/business-owner/employees/');
     });
+  }
+
+  Future<void> _deactivateEmployee(Map<String, dynamic> employee) async {
+    final confirmed = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Deactivate Employee'),
+            content: Text('Disable ${_readString(employee, 'display_name')}?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Cancel'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('Deactivate'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+    if (!confirmed) return;
+    try {
+      await widget.api.post('/business-owner/employees/${_readInt(employee, 'id')}/deactivate/', {});
+      if (!mounted) return;
+      _showSnack(context, 'Employee deactivated.');
+      _reload();
+    } catch (error) {
+      if (!mounted) return;
+      _showSnack(context, error.toString().replaceFirst('Exception: ', ''));
+    }
   }
 
   Future<void> _showCreateEmployeeDialog() async {
@@ -1604,8 +1916,138 @@ class _OwnerEmployeesPageState extends State<OwnerEmployeesPage> {
                       Text(_readString(item, 'username')),
                       const SizedBox(height: 8),
                       Text(_readString(item, 'job_title')),
+                      const SizedBox(height: 12),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: FilledButton.tonal(
+                          onPressed: () => _deactivateEmployee(_asMap(item)),
+                          child: const Text('Deactivate'),
+                        ),
+                      ),
                     ],
                   ),
+                ),
+                const SizedBox(height: 16),
+              ],
+          ],
+        );
+      },
+    );
+  }
+}
+
+class OwnerJobTitlesPage extends StatefulWidget {
+  const OwnerJobTitlesPage({super.key, required this.api});
+
+  final MobileApiClient api;
+
+  @override
+  State<OwnerJobTitlesPage> createState() => _OwnerJobTitlesPageState();
+}
+
+class _OwnerJobTitlesPageState extends State<OwnerJobTitlesPage> {
+  late Future<Map<String, dynamic>> future;
+
+  @override
+  void initState() {
+    super.initState();
+    future = widget.api.get('/business-owner/job-titles/');
+  }
+
+  void _reload() {
+    setState(() {
+      future = widget.api.get('/business-owner/job-titles/');
+    });
+  }
+
+  Future<void> _showCreateJobTitleDialog() async {
+    final nameController = TextEditingController();
+    final created = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        bool saving = false;
+        String? errorText;
+        return StatefulBuilder(
+          builder: (context, setInnerState) {
+            Future<void> submit() async {
+              setInnerState(() {
+                saving = true;
+                errorText = null;
+              });
+              try {
+                await widget.api.post('/business-owner/job-titles/create/', {
+                  'name': nameController.text.trim(),
+                });
+                if (!mounted) return;
+                Navigator.of(context).pop(true);
+              } catch (error) {
+                setInnerState(() {
+                  errorText = error.toString().replaceFirst('Exception: ', '');
+                  saving = false;
+                });
+              }
+            }
+
+            return AlertDialog(
+              title: const Text('Create Job Title'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: nameController,
+                    decoration: const InputDecoration(labelText: 'Title name'),
+                  ),
+                  if (errorText != null) ...[
+                    const SizedBox(height: 12),
+                    Text(errorText!, style: const TextStyle(color: Colors.red)),
+                  ],
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: saving ? null : () => Navigator.of(context).pop(false),
+                  child: const Text('Cancel'),
+                ),
+                FilledButton(
+                  onPressed: saving ? null : submit,
+                  child: Text(saving ? 'Saving...' : 'Create'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+    if (created == true) {
+      _showSnack(context, 'Job title created.');
+      _reload();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ApiFutureBuilder(
+      future: future,
+      builder: (context, payload) {
+        final jobTitles = _asList(payload['job_titles']);
+        return _PageBody(
+          children: [
+            _HeaderRow(
+              title: 'Job Titles',
+              trailing: FilledButton.icon(
+                onPressed: _showCreateJobTitleDialog,
+                icon: const Icon(Icons.add),
+                label: const Text('Add'),
+              ),
+            ),
+            const SizedBox(height: 16),
+            if (jobTitles.isEmpty)
+              const _SectionCard(title: 'Job Titles', child: Text('No job titles created.'))
+            else
+              for (final item in jobTitles) ...[
+                _SectionCard(
+                  title: _readString(item, 'name'),
+                  child: Text('${_readInt(item, 'employee_count')} active employees'),
                 ),
                 const SizedBox(height: 16),
               ],
@@ -1840,12 +2282,32 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
                         ],
                       ),
                       const SizedBox(height: 12),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: FilledButton.tonal(
-                          onPressed: () => _showAssignDialog(_readInt(item, 'id'), employees),
-                          child: const Text('Assign to Employees'),
-                        ),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: FilledButton.tonal(
+                              onPressed: () async {
+                                await Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => OwnerCourseDetailScreen(
+                                      api: widget.api,
+                                      courseId: _readInt(item, 'id'),
+                                    ),
+                                  ),
+                                );
+                                _reload();
+                              },
+                              child: const Text('Manage Content'),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: FilledButton.tonal(
+                              onPressed: () => _showAssignDialog(_readInt(item, 'id'), employees),
+                              child: const Text('Assign'),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -1855,6 +2317,238 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
           ],
         );
       },
+    );
+  }
+}
+
+class OwnerCourseDetailScreen extends StatefulWidget {
+  const OwnerCourseDetailScreen({
+    super.key,
+    required this.api,
+    required this.courseId,
+  });
+
+  final MobileApiClient api;
+  final int courseId;
+
+  @override
+  State<OwnerCourseDetailScreen> createState() => _OwnerCourseDetailScreenState();
+}
+
+class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
+  late Future<Map<String, dynamic>> future;
+
+  @override
+  void initState() {
+    super.initState();
+    future = widget.api.get('/business-owner/courses/${widget.courseId}/');
+  }
+
+  void _reload() {
+    setState(() {
+      future = widget.api.get('/business-owner/courses/${widget.courseId}/');
+    });
+  }
+
+  Future<void> _showContentDialog({Map<String, dynamic>? item}) async {
+    final isEditing = item != null;
+    final titleController = TextEditingController(text: isEditing ? _readString(item, 'title') : '');
+    final bodyController = TextEditingController(text: isEditing ? _readString(item, 'body') : '');
+    final urlController = TextEditingController(text: isEditing ? _readString(item, 'material_url') : '');
+    final orderController = TextEditingController(text: isEditing ? '${_readInt(item, 'order')}' : '1');
+    String contentType = isEditing ? _readString(item, 'content_type') : 'TEXT';
+    final changed = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        bool saving = false;
+        String? errorText;
+        return StatefulBuilder(
+          builder: (context, setInnerState) {
+            Future<void> submit() async {
+              setInnerState(() {
+                saving = true;
+                errorText = null;
+              });
+              final payload = {
+                'title': titleController.text.trim(),
+                'body': bodyController.text.trim(),
+                'material_url': urlController.text.trim(),
+                'order': int.tryParse(orderController.text.trim()) ?? 1,
+                'content_type': contentType,
+              };
+              try {
+                if (isEditing) {
+                  await widget.api.post('/business-owner/course-content/${_readInt(item, 'id')}/update/', payload);
+                } else {
+                  await widget.api.post('/business-owner/courses/${widget.courseId}/content/create/', payload);
+                }
+                if (!mounted) return;
+                Navigator.of(context).pop(true);
+              } catch (error) {
+                setInnerState(() {
+                  errorText = error.toString().replaceFirst('Exception: ', '');
+                  saving = false;
+                });
+              }
+            }
+
+            return AlertDialog(
+              title: Text(isEditing ? 'Edit Content' : 'Add Content'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    DropdownButtonFormField<String>(
+                      initialValue: contentType,
+                      decoration: const InputDecoration(labelText: 'Content type'),
+                      items: const [
+                        DropdownMenuItem(value: 'TEXT', child: Text('Text')),
+                        DropdownMenuItem(value: 'MATERIAL', child: Text('Link')),
+                        DropdownMenuItem(value: 'LESSON', child: Text('Lesson')),
+                      ],
+                      onChanged: (value) {
+                        setInnerState(() {
+                          contentType = value ?? 'TEXT';
+                        });
+                      },
+                    ),
+                    TextField(controller: titleController, decoration: const InputDecoration(labelText: 'Title')),
+                    TextField(
+                      controller: bodyController,
+                      minLines: 2,
+                      maxLines: 5,
+                      decoration: const InputDecoration(labelText: 'Body'),
+                    ),
+                    TextField(controller: urlController, decoration: const InputDecoration(labelText: 'Material URL')),
+                    TextField(controller: orderController, decoration: const InputDecoration(labelText: 'Order')),
+                    if (errorText != null) ...[
+                      const SizedBox(height: 12),
+                      Text(errorText!, style: const TextStyle(color: Colors.red)),
+                    ],
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: saving ? null : () => Navigator.of(context).pop(false),
+                  child: const Text('Cancel'),
+                ),
+                FilledButton(
+                  onPressed: saving ? null : submit,
+                  child: Text(saving ? 'Saving...' : isEditing ? 'Update' : 'Create'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+    if (changed == true) {
+      _showSnack(context, isEditing ? 'Content updated.' : 'Content created.');
+      _reload();
+    }
+  }
+
+  Future<void> _deleteContent(Map<String, dynamic> item) async {
+    final confirmed = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Delete Content'),
+            content: Text('Delete "${_readString(item, 'title')}"?'),
+            actions: [
+              TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancel')),
+              FilledButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Delete')),
+            ],
+          ),
+        ) ??
+        false;
+    if (!confirmed) return;
+    try {
+      await widget.api.post('/business-owner/course-content/${_readInt(item, 'id')}/delete/', {});
+      if (!mounted) return;
+      _showSnack(context, 'Content deleted.');
+      _reload();
+    } catch (error) {
+      if (!mounted) return;
+      _showSnack(context, error.toString().replaceFirst('Exception: ', ''));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Course Content')),
+      body: ApiFutureBuilder(
+        future: future,
+        builder: (context, payload) {
+          final course = _asMap(payload['course']);
+          final items = _asList(course['content_items']);
+          return _PageBody(
+            children: [
+              _HeaderRow(
+                title: _readString(course, 'title'),
+                trailing: FilledButton.icon(
+                  onPressed: () => _showContentDialog(),
+                  icon: const Icon(Icons.add),
+                  label: const Text('Add'),
+                ),
+              ),
+              const SizedBox(height: 16),
+              _SectionCard(
+                title: 'Course',
+                child: Text(_readString(course, 'description')),
+              ),
+              const SizedBox(height: 16),
+              if (items.isEmpty)
+                const _SectionCard(title: 'Content', child: Text('No content items yet.'))
+              else
+                for (final rawItem in items) ...[
+                  _SectionCard(
+                    title: _readString(rawItem, 'title'),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (_readString(rawItem, 'body').isNotEmpty) Text(_readString(rawItem, 'body')),
+                        if (_readString(rawItem, 'material_url').isNotEmpty) ...[
+                          const SizedBox(height: 8),
+                          Text(_readString(rawItem, 'material_url')),
+                        ],
+                        const SizedBox(height: 12),
+                        Wrap(
+                          spacing: 12,
+                          runSpacing: 12,
+                          children: [
+                            _StatusChip(label: _readString(rawItem, 'content_type')),
+                            _StatusChip(label: 'Order ${_readInt(rawItem, 'order')}'),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: FilledButton.tonal(
+                                onPressed: () => _showContentDialog(item: _asMap(rawItem)),
+                                child: const Text('Edit'),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: FilledButton.tonal(
+                                onPressed: () => _deleteContent(_asMap(rawItem)),
+                                child: const Text('Delete'),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+            ],
+          );
+        },
+      ),
     );
   }
 }
@@ -1903,25 +2597,30 @@ class OwnerChecklistsPage extends StatefulWidget {
 }
 
 class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
-  late Future<Map<String, dynamic>> future;
+  late Future<Map<String, dynamic>> checklistsFuture;
+  late Future<Map<String, dynamic>> rulesFuture;
+  late Future<Map<String, dynamic>> jobTitlesFuture;
 
   @override
   void initState() {
     super.initState();
-    future = widget.api.get('/business-owner/checklists/');
+    _reload();
   }
 
   void _reload() {
     setState(() {
-      future = widget.api.get('/business-owner/checklists/');
+      checklistsFuture = widget.api.get('/business-owner/checklists/');
+      rulesFuture = widget.api.get('/business-owner/checklist-rules/');
+      jobTitlesFuture = widget.api.get('/business-owner/job-titles/');
     });
   }
 
-  Future<void> _showCreateChecklistDialog() async {
+  Future<void> _showCreateChecklistDialog(List<dynamic> jobTitles) async {
     final titleController = TextEditingController();
     final descriptionController = TextEditingController();
     final itemsController = TextEditingController();
     String frequency = 'DAILY';
+    int? jobTitleId;
     final created = await showDialog<bool>(
       context: context,
       builder: (context) {
@@ -1940,6 +2639,7 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
                   'description': descriptionController.text.trim(),
                   'frequency': frequency,
                   'is_active': true,
+                  if (jobTitleId != null) 'job_title': jobTitleId,
                   'items': [
                     for (final line in itemsController.text.split('\n'))
                       if (line.trim().isNotEmpty) line.trim(),
@@ -1978,6 +2678,24 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
                         });
                       },
                     ),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<int?>(
+                      initialValue: jobTitleId,
+                      decoration: const InputDecoration(labelText: 'Assign to job title'),
+                      items: [
+                        const DropdownMenuItem<int?>(value: null, child: Text('No automatic assignment')),
+                        for (final rawTitle in jobTitles)
+                          DropdownMenuItem<int?>(
+                            value: _readInt(rawTitle, 'id'),
+                            child: Text(_readString(rawTitle, 'name')),
+                          ),
+                      ],
+                      onChanged: (value) {
+                        setInnerState(() {
+                          jobTitleId = value;
+                        });
+                      },
+                    ),
                     TextField(
                       controller: itemsController,
                       minLines: 3,
@@ -2006,20 +2724,127 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
     }
   }
 
+  Future<void> _showCreateRuleDialog(List<dynamic> checklists, List<dynamic> jobTitles) async {
+    int? selectedChecklistId = checklists.isEmpty ? null : _readInt(checklists.first, 'id');
+    int? selectedJobTitleId = jobTitles.isEmpty ? null : _readInt(jobTitles.first, 'id');
+    final created = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        bool saving = false;
+        String? errorText;
+        return StatefulBuilder(
+          builder: (context, setInnerState) {
+            Future<void> submit() async {
+              setInnerState(() {
+                saving = true;
+                errorText = null;
+              });
+              try {
+                await widget.api.post('/business-owner/checklist-rules/create/', {
+                  'job_title': selectedJobTitleId,
+                  'checklist': selectedChecklistId,
+                });
+                if (!mounted) return;
+                Navigator.of(context).pop(true);
+              } catch (error) {
+                setInnerState(() {
+                  errorText = error.toString().replaceFirst('Exception: ', '');
+                  saving = false;
+                });
+              }
+            }
+
+            return AlertDialog(
+              title: const Text('Create Checklist Rule'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  DropdownButtonFormField<int?>(
+                    initialValue: selectedJobTitleId,
+                    decoration: const InputDecoration(labelText: 'Job title'),
+                    items: [
+                      for (final rawTitle in jobTitles)
+                        DropdownMenuItem<int?>(
+                          value: _readInt(rawTitle, 'id'),
+                          child: Text(_readString(rawTitle, 'name')),
+                        ),
+                    ],
+                    onChanged: (value) {
+                      setInnerState(() {
+                        selectedJobTitleId = value;
+                      });
+                    },
+                  ),
+                  DropdownButtonFormField<int?>(
+                    initialValue: selectedChecklistId,
+                    decoration: const InputDecoration(labelText: 'Checklist'),
+                    items: [
+                      for (final rawChecklist in checklists)
+                        DropdownMenuItem<int?>(
+                          value: _readInt(rawChecklist, 'id'),
+                          child: Text(_readString(rawChecklist, 'title')),
+                        ),
+                    ],
+                    onChanged: (value) {
+                      setInnerState(() {
+                        selectedChecklistId = value;
+                      });
+                    },
+                  ),
+                  if (errorText != null) ...[
+                    const SizedBox(height: 12),
+                    Text(errorText!, style: const TextStyle(color: Colors.red)),
+                  ],
+                ],
+              ),
+              actions: [
+                TextButton(onPressed: saving ? null : () => Navigator.of(context).pop(false), child: const Text('Cancel')),
+                FilledButton(onPressed: saving ? null : submit, child: Text(saving ? 'Saving...' : 'Create')),
+              ],
+            );
+          },
+        );
+      },
+    );
+    if (created == true) {
+      _showSnack(context, 'Checklist rule created.');
+      _reload();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return ApiFutureBuilder(
-      future: future,
-      builder: (context, payload) {
-        final checklists = _asList(payload['checklists']);
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: Future.wait([checklistsFuture, rulesFuture, jobTitlesFuture]),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError) {
+          return Center(child: Text(snapshot.error.toString().replaceFirst('Exception: ', '')));
+        }
+        final checklists = _asList(snapshot.data![0]['checklists']);
+        final rules = _asList(snapshot.data![1]['rules']);
+        final jobTitles = _asList(snapshot.data![2]['job_titles']);
         return _PageBody(
           children: [
             _HeaderRow(
               title: 'Checklists',
-              trailing: FilledButton.icon(
-                onPressed: _showCreateChecklistDialog,
-                icon: const Icon(Icons.add),
-                label: const Text('Add'),
+              trailing: Wrap(
+                spacing: 8,
+                children: [
+                  FilledButton.icon(
+                    onPressed: () => _showCreateChecklistDialog(jobTitles),
+                    icon: const Icon(Icons.add),
+                    label: const Text('Add'),
+                  ),
+                  FilledButton.tonal(
+                    onPressed: checklists.isEmpty || jobTitles.isEmpty
+                        ? null
+                        : () => _showCreateRuleDialog(checklists, jobTitles),
+                    child: const Text('Rule'),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 16),
@@ -2046,6 +2871,395 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
                 ),
                 const SizedBox(height: 16),
               ],
+            _SectionCard(
+              title: 'Assignment Rules',
+              child: rules.isEmpty
+                  ? const Text('No checklist rules yet.')
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        for (final item in rules)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 10),
+                            child: Text(
+                              '${_readPath(item, ['job_title', 'name'])} -> ${_readPath(item, ['checklist', 'title'])}',
+                            ),
+                          ),
+                      ],
+                    ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class ChatPage extends StatefulWidget {
+  const ChatPage({
+    super.key,
+    required this.api,
+    required this.roleBasePath,
+    required this.title,
+  });
+
+  final MobileApiClient api;
+  final String roleBasePath;
+  final String title;
+
+  @override
+  State<ChatPage> createState() => _ChatPageState();
+}
+
+class _ChatPageState extends State<ChatPage> {
+  late Future<Map<String, dynamic>> teamFuture;
+  late Future<Map<String, dynamic>> privateFuture;
+  bool showPrivate = false;
+  int? selectedUserId;
+
+  @override
+  void initState() {
+    super.initState();
+    _reload();
+  }
+
+  void _reload() {
+    setState(() {
+      teamFuture = widget.api.get('${widget.roleBasePath}/chat/team/');
+      final suffix = selectedUserId == null ? '' : '?user_id=$selectedUserId';
+      privateFuture = widget.api.get('${widget.roleBasePath}/chat/private/$suffix');
+    });
+  }
+
+  Future<void> _sendTeamMessage() async {
+    final controller = TextEditingController();
+    final sent = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        bool saving = false;
+        String? errorText;
+        return StatefulBuilder(
+          builder: (context, setInnerState) {
+            Future<void> submit() async {
+              setInnerState(() {
+                saving = true;
+                errorText = null;
+              });
+              try {
+                await widget.api.post('${widget.roleBasePath}/chat/team/send/', {
+                  'body': controller.text.trim(),
+                });
+                if (!mounted) return;
+                Navigator.of(context).pop(true);
+              } catch (error) {
+                setInnerState(() {
+                  errorText = error.toString().replaceFirst('Exception: ', '');
+                  saving = false;
+                });
+              }
+            }
+
+            return AlertDialog(
+              title: const Text('Send Team Message'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: controller,
+                    minLines: 3,
+                    maxLines: 6,
+                    decoration: const InputDecoration(labelText: 'Message'),
+                  ),
+                  if (errorText != null) ...[
+                    const SizedBox(height: 12),
+                    Text(errorText!, style: const TextStyle(color: Colors.red)),
+                  ],
+                ],
+              ),
+              actions: [
+                TextButton(onPressed: saving ? null : () => Navigator.of(context).pop(false), child: const Text('Cancel')),
+                FilledButton(onPressed: saving ? null : submit, child: Text(saving ? 'Sending...' : 'Send')),
+              ],
+            );
+          },
+        );
+      },
+    );
+    if (sent == true) {
+      _showSnack(context, 'Message sent.');
+      _reload();
+    }
+  }
+
+  Future<void> _sendPrivateMessage(List<dynamic> participants) async {
+    int? recipientId = selectedUserId ?? (participants.isEmpty ? null : _readInt(participants.first, 'id'));
+    final controller = TextEditingController();
+    final focusNode = FocusNode();
+    final sent = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        bool saving = false;
+        String? errorText;
+        return StatefulBuilder(
+          builder: (context, setInnerState) {
+            Future<void> submit() async {
+              setInnerState(() {
+                saving = true;
+                errorText = null;
+              });
+              try {
+                await widget.api.post('${widget.roleBasePath}/chat/private/send/', {
+                  'recipient_id': recipientId,
+                  'body': controller.text.trim(),
+                });
+                if (!mounted) return;
+                Navigator.of(context).pop(true);
+              } catch (error) {
+                setInnerState(() {
+                  errorText = error.toString().replaceFirst('Exception: ', '');
+                  saving = false;
+                });
+              }
+            }
+
+            return Dialog(
+              backgroundColor: const Color(0xFFF3FBF8),
+              insetPadding: const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
+              child: AnimatedPadding(
+                duration: const Duration(milliseconds: 180),
+                curve: Curves.easeOut,
+                padding: EdgeInsets.fromLTRB(22, 24, 22, MediaQuery.of(context).viewInsets.bottom + 22),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Send Private Message',
+                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w800),
+                      ),
+                      const SizedBox(height: 22),
+                      DropdownButtonFormField<int?>(
+                        initialValue: recipientId,
+                        decoration: const InputDecoration(labelText: 'Recipient'),
+                        items: [
+                          for (final item in participants)
+                            DropdownMenuItem<int?>(
+                              value: _readInt(item, 'id'),
+                              child: Text(_readString(item, 'display_name')),
+                            ),
+                        ],
+                        onChanged: (value) {
+                          setInnerState(() {
+                            recipientId = value;
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 18),
+                      TextField(
+                        controller: controller,
+                        focusNode: focusNode,
+                        keyboardType: TextInputType.multiline,
+                        textInputAction: TextInputAction.newline,
+                        minLines: 5,
+                        maxLines: 7,
+                        autofocus: true,
+                        decoration: const InputDecoration(
+                          labelText: 'Message',
+                          alignLabelWithHint: true,
+                          hintText: 'Write your message',
+                        ),
+                      ),
+                      if (errorText != null) ...[
+                        const SizedBox(height: 12),
+                        Text(
+                          errorText!,
+                          style: const TextStyle(color: Color(0xFFC54C2B), fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                      const SizedBox(height: 18),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          onPressed: saving ? null : () => Navigator.of(context).pop(false),
+                          child: const Text('Cancel'),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton(
+                          onPressed: saving ? null : submit,
+                          child: Text(saving ? 'Sending...' : 'Send'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+    controller.dispose();
+    focusNode.dispose();
+    if (sent == true) {
+      _showSnack(context, 'Private message sent.');
+      _reload();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: Future.wait([teamFuture, privateFuture]),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError) {
+          return Center(child: Text(snapshot.error.toString().replaceFirst('Exception: ', '')));
+        }
+        final teamPayload = snapshot.data![0];
+        final privatePayload = snapshot.data![1];
+        final teamMessages = _asList(teamPayload['messages']);
+        final participants = _asList(privatePayload['participants']);
+        final conversations = _asList(privatePayload['conversations']);
+        final privateMessages = _asList(privatePayload['messages']);
+        final selectedUser = _asMap(privatePayload['selected_user']);
+        return _PageBody(
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: _HeaderRow(title: widget.title),
+                ),
+                Container(
+                  decoration: BoxDecoration(
+                    color: _surfaceAlt,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: IconButton(
+                    onPressed: showPrivate ? () => _sendPrivateMessage(participants) : _sendTeamMessage,
+                    icon: Icon(showPrivate ? Icons.edit_outlined : Icons.send_outlined),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: _surfaceAlt,
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => setState(() => showPrivate = false),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: BoxDecoration(
+                          color: showPrivate ? Colors.transparent : _surface,
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: const Center(child: Text('Team')),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => setState(() => showPrivate = true),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: BoxDecoration(
+                          color: showPrivate ? _surface : Colors.transparent,
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: const Center(child: Text('Private')),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            if (!showPrivate)
+              if (teamMessages.isEmpty)
+                const _SectionCard(title: 'Team Messages', child: Text('No team messages yet.'))
+              else
+                for (final item in teamMessages) ...[
+                  _ChatMessageRow(
+                    name: _readPath(item, ['sender', 'display_name']),
+                    body: _readString(item, 'body'),
+                    meta: _readPath(item, ['read_receipt', 'label']),
+                    own: false,
+                  ),
+                  const SizedBox(height: 14),
+                ]
+            else ...[
+              _SectionCard(
+                title: 'People',
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    DropdownButtonFormField<int?>(
+                      initialValue: selectedUser.isEmpty ? null : _readInt(selectedUser, 'id'),
+                      decoration: const InputDecoration(labelText: 'Person'),
+                      items: [
+                        for (final item in participants)
+                          DropdownMenuItem<int?>(
+                            value: _readInt(item, 'id'),
+                            child: Text(_readString(item, 'display_name')),
+                          ),
+                      ],
+                      onChanged: (value) {
+                        setState(() {
+                          selectedUserId = value;
+                          final suffix = value == null ? '' : '?user_id=$value';
+                          privateFuture = widget.api.get('${widget.roleBasePath}/chat/private/$suffix');
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    if (conversations.isNotEmpty)
+                      for (final item in conversations.take(5))
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: _ConversationRow(
+                            name: _readPath(item, ['partner', 'display_name']),
+                            subtitle: _asMap(item['latest_message']).isEmpty
+                                ? 'No messages yet'
+                                : _readString(_asMap(item['latest_message']), 'body'),
+                            unreadCount: _readInt(item, 'unread_count'),
+                            selected: selectedUser.isNotEmpty &&
+                                _readInt(_asMap(item['partner']), 'id') == _readInt(selectedUser, 'id'),
+                          ),
+                        ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              if (privateMessages.isEmpty)
+                _SectionCard(
+                  title: selectedUser.isEmpty ? 'Messages' : _readString(selectedUser, 'display_name'),
+                  child: const Text('No private messages yet.'),
+                )
+              else
+                for (final item in privateMessages) ...[
+                  _ChatMessageRow(
+                    name: _readPath(item, ['sender', 'display_name']),
+                    body: _readString(item, 'body'),
+                    meta: _readPath(item, ['read_receipt', 'label']),
+                    own: selectedUser.isNotEmpty &&
+                        _readInt(_asMap(item['sender']), 'id') != _readInt(selectedUser, 'id'),
+                  ),
+                  const SizedBox(height: 14),
+                ],
+            ],
           ],
         );
       },
@@ -2095,7 +3309,7 @@ class _PageBody extends StatelessWidget {
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 720),
           child: ListView(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
+            padding: const EdgeInsets.fromLTRB(24, 10, 24, 120),
             children: children,
           ),
         ),
@@ -2118,13 +3332,13 @@ class _HeroCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(22),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(30),
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF0F766E), Color(0xFF184C49)],
+          colors: [_brandTeal, _brandTealDark],
         ),
       ),
       child: Column(
@@ -2133,25 +3347,23 @@ class _HeroCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.14),
+              color: Colors.white.withValues(alpha: 0.16),
               borderRadius: BorderRadius.circular(999),
             ),
-            child: const Text(
-              'SkillBite',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+            child: Text(
+              title,
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
             ),
           ),
           const SizedBox(height: 16),
-          Text(title, style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: Colors.white)),
-          const SizedBox(height: 8),
           Text(
             subtitle,
-            style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w500),
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: Colors.white, height: 1.15),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
           Text(
             value,
-            style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w800),
+            style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w500),
           ),
         ],
       ),
@@ -2193,23 +3405,23 @@ class _MetricCard extends StatelessWidget {
               width: 42,
               height: 42,
               decoration: BoxDecoration(
-                color: const Color(0xFFE4F1EC),
-                borderRadius: BorderRadius.circular(14),
+                color: const Color(0xFFF0F5F7),
+                borderRadius: BorderRadius.circular(16),
               ),
-              child: const Icon(Icons.show_chart_rounded, size: 22),
+              child: const Icon(Icons.show_chart_rounded, size: 22, color: _brandTeal),
             ),
             const SizedBox(height: 18),
             Text(
               data.value,
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                color: const Color(0xFF122421),
+                color: _ink,
               ),
             ),
             const SizedBox(height: 6),
             Text(
               data.label,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: const Color(0xFF5C6B67),
+                color: _muted,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -2240,14 +3452,14 @@ class _SectionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(18),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               title,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: const Color(0xFF122421),
+                color: _ink,
               ),
             ),
             const SizedBox(height: 12),
@@ -2276,11 +3488,504 @@ class _HeaderRow extends StatelessWidget {
           child: Text(
             title,
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              color: const Color(0xFF122421),
+              color: _ink,
+              fontSize: 20,
             ),
           ),
         ),
         if (trailing != null) trailing!,
+      ],
+    );
+  }
+}
+
+Widget _sectionLink(String label) {
+  return Text(
+    label,
+    style: const TextStyle(
+      color: _brandTeal,
+      fontWeight: FontWeight.w600,
+      fontSize: 16,
+    ),
+  );
+}
+
+class _AvatarBadge extends StatelessWidget {
+  const _AvatarBadge({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final initials = label
+        .split(' ')
+        .where((item) => item.trim().isNotEmpty)
+        .take(2)
+        .map((item) => item.trim()[0].toUpperCase())
+        .join();
+    return Container(
+      width: 52,
+      height: 52,
+      decoration: const BoxDecoration(
+        color: _brandTeal,
+        shape: BoxShape.circle,
+      ),
+      child: Center(
+        child: Text(
+          initials.isEmpty ? 'SB' : initials,
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800),
+        ),
+      ),
+    );
+  }
+}
+
+class _SearchHeroBar extends StatelessWidget {
+  const _SearchHeroBar();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+      decoration: BoxDecoration(
+        color: _surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: _line),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.search_rounded, color: _muted, size: 28),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              'Serach here...',
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: const Color(0xFFB2B6BE)),
+            ),
+          ),
+          Container(
+            width: 44,
+            height: 44,
+            decoration: const BoxDecoration(color: _surfaceAlt, shape: BoxShape.circle),
+            child: const Icon(Icons.tune_rounded, color: _ink),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LessonProgressHeader extends StatelessWidget {
+  const _LessonProgressHeader({
+    required this.status,
+    required this.progress,
+  });
+
+  final String status;
+  final double progress;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        const Icon(Icons.close_rounded, size: 28),
+        const SizedBox(width: 12),
+        Expanded(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: LinearProgressIndicator(
+              value: progress.clamp(0, 1),
+              minHeight: 10,
+              backgroundColor: const Color(0xFFF1F3F7),
+              color: _brandTeal,
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        const Icon(Icons.more_vert_rounded),
+      ],
+    );
+  }
+}
+
+class _LessonMediaCard extends StatelessWidget {
+  const _LessonMediaCard({
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(22),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(22),
+          color: _brandTeal,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
+              child: Container(
+                height: 228,
+                color: const Color(0xFFE7F3F0),
+                child: Stack(
+                  children: [
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.ondemand_video_rounded, size: 72, color: Color(0xFF5E6A7D)),
+                            const SizedBox(height: 12),
+                            Text(
+                              title,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.center,
+                              style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 18),
+                            ),
+                            if (subtitle.isNotEmpty) ...[
+                              const SizedBox(height: 6),
+                              Text(
+                                subtitle,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: TextAlign.center,
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(color: _muted),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      top: 14,
+                      right: 14,
+                      child: Container(
+                        width: 48,
+                        height: 48,
+                        decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                        child: const Icon(Icons.bookmark_border_rounded),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              child: Row(
+                children: [
+                  const Icon(Icons.play_arrow_rounded, color: Colors.white),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Container(
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.28),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: FractionallySizedBox(
+                        widthFactor: 0.78,
+                        alignment: Alignment.centerLeft,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  const Icon(Icons.fullscreen_rounded, color: Colors.white),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CoursePromoCard extends StatelessWidget {
+  const _CoursePromoCard({
+    required this.title,
+    required this.tag,
+    required this.students,
+    this.warm = true,
+  });
+
+  final String title;
+  final String tag;
+  final String students;
+  final bool warm;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 248,
+      padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(34),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: warm
+              ? const [Color(0xFFF7C36F), Color(0xFFF9D99E)]
+              : const [Color(0xFF3CA899), Color(0xFF1F8175)],
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: warm ? const Color(0x33FFFFFF) : const Color(0x22000000),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  tag,
+                  style: TextStyle(
+                    color: warm ? const Color(0xFF8D6A17) : Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  students,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(color: warm ? const Color(0xFF9E7B2E) : Colors.white70),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          Text(
+            title,
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  color: warm ? _ink : Colors.white,
+                  fontSize: 24,
+                  height: 1.08,
+                ),
+          ),
+          const Spacer(),
+          Align(
+            alignment: Alignment.bottomRight,
+            child: Container(
+              width: 86,
+              height: 86,
+              decoration: BoxDecoration(
+                color: warm ? const Color(0x33FFFFFF) : const Color(0x26FFFFFF),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                warm ? Icons.draw_rounded : Icons.verified_user_outlined,
+                size: 42,
+                color: warm ? const Color(0xFF7E4E06) : Colors.white,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LessonListCard extends StatelessWidget {
+  const _LessonListCard({
+    required this.title,
+    required this.subtitle,
+    this.accent = const Color(0xFFEAF2FF),
+    this.trailingIcon = Icons.play_arrow_rounded,
+  });
+
+  final String title;
+  final String subtitle;
+  final Color accent;
+  final IconData trailingIcon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: _surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: _line),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 70,
+            height: 70,
+            decoration: BoxDecoration(
+              color: accent,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: const Icon(Icons.auto_stories_rounded, color: _brandTeal),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 16),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(color: _muted),
+                ),
+                const SizedBox(height: 6),
+                const Text('★★★★☆', style: TextStyle(color: Color(0xFFF7A928), letterSpacing: 1.2)),
+              ],
+            ),
+          ),
+          Container(
+            width: 46,
+            height: 46,
+            decoration: const BoxDecoration(
+              color: _brandTeal,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(trailingIcon, color: Colors.white),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ConversationRow extends StatelessWidget {
+  const _ConversationRow({
+    required this.name,
+    required this.subtitle,
+    required this.unreadCount,
+    this.selected = false,
+  });
+
+  final String name;
+  final String subtitle;
+  final int unreadCount;
+  final bool selected;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: selected ? const Color(0xFFF7F9FC) : _surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: _line),
+      ),
+      child: Row(
+        children: [
+          _AvatarBadge(label: name),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(name, style: Theme.of(context).textTheme.titleMedium),
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
+            ),
+          ),
+          if (unreadCount > 0)
+            Container(
+              width: 24,
+              height: 24,
+              decoration: const BoxDecoration(color: _brandTeal, shape: BoxShape.circle),
+              child: Center(
+                child: Text(
+                  '$unreadCount',
+                  style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ChatMessageRow extends StatelessWidget {
+  const _ChatMessageRow({
+    required this.name,
+    required this.body,
+    required this.meta,
+    required this.own,
+  });
+
+  final String name;
+  final String body;
+  final String meta;
+  final bool own;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: own ? MainAxisAlignment.end : MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (!own) ...[
+          _AvatarBadge(label: name),
+          const SizedBox(width: 10),
+        ],
+        Flexible(
+          child: Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: own ? const Color(0xFFEAF7F4) : _surfaceAlt,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: own ? const Color(0xFFD0ECE6) : _line),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (!own) ...[
+                  Text(name, style: const TextStyle(fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 6),
+                ],
+                Text(body),
+                if (meta.isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  Text(meta, style: const TextStyle(color: _muted, fontSize: 12)),
+                ],
+              ],
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -2296,65 +4001,15 @@ class _StatusChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: const Color(0xFFE8F3EF),
+        color: const Color(0xFFF0F5F7),
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(
         label,
         style: const TextStyle(
-          color: Color(0xFF1D4B43),
+          color: _brandTealDark,
           fontWeight: FontWeight.w700,
         ),
-      ),
-    );
-  }
-}
-
-class _SimpleListTile extends StatelessWidget {
-  const _SimpleListTile({
-    required this.title,
-    required this.subtitle,
-  });
-
-  final String title;
-  final String subtitle;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF7F8F4),
-        borderRadius: BorderRadius.circular(18),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 34,
-            height: 34,
-            decoration: BoxDecoration(
-              color: const Color(0xFFDCEDE8),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(Icons.check_circle_outline_rounded, size: 18),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
-                const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  style: const TextStyle(color: Color(0xFF61706C)),
-                ),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -2378,8 +4033,9 @@ class _CourseContentTile extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFFF7F8F4),
-        borderRadius: BorderRadius.circular(20),
+        color: _surface,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: _line),
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(20),
@@ -2414,29 +4070,6 @@ class _CourseContentTile extends StatelessWidget {
               const SizedBox(width: 12),
               const Icon(Icons.chevron_right_rounded),
             ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _BackdropOrb extends StatelessWidget {
-  const _BackdropOrb({required this.size, required this.color});
-
-  final double size;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return IgnorePointer(
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: RadialGradient(
-            colors: [color.withValues(alpha: 0.9), color.withValues(alpha: 0.05)],
           ),
         ),
       ),
