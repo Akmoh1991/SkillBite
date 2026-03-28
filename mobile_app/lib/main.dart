@@ -1,5 +1,6 @@
 // ignore_for_file: deprecated_member_use, use_build_context_synchronously
 
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io' show Platform;
 
@@ -230,9 +231,7 @@ class _SkillBiteMobileAppState extends State<SkillBiteMobileApp> {
         : Platform.isAndroid
         ? 'http://10.0.2.2:8000/api/mobile/v1'
         : 'http://127.0.0.1:8000/api/mobile/v1',
-    fallbackBaseUrls: kIsWeb || !Platform.isAndroid
-        ? const []
-        : const ['http://127.0.0.1:8000/api/mobile/v1'],
+    fallbackBaseUrls: const [],
   );
   SessionUser? sessionUser;
   AppLanguage language = AppLanguage.ar;
@@ -407,6 +406,7 @@ class MobileApiClient {
   final List<String> _baseUrlCandidates;
   String _activeBaseUrl;
   String? token;
+  static const Duration _requestTimeout = Duration(seconds: 8);
 
   String get baseUrl => _activeBaseUrl;
 
@@ -435,16 +435,20 @@ class MobileApiClient {
   }
 
   Future<Map<String, dynamic>> get(String path) async {
-    final response = await http.get(_uriFor(baseUrl, path), headers: _headers());
+    final response = await http
+        .get(_uriFor(baseUrl, path), headers: _headers())
+        .timeout(_requestTimeout);
     return _parseResponse(response);
   }
 
   Future<Map<String, dynamic>> post(String path, Object body, {bool includeAuth = true}) async {
-    final response = await http.post(
-      _uriFor(baseUrl, path),
-      headers: _headers(includeAuth: includeAuth),
-      body: jsonEncode(body),
-    );
+    final response = await http
+        .post(
+          _uriFor(baseUrl, path),
+          headers: _headers(includeAuth: includeAuth),
+          body: jsonEncode(body),
+        )
+        .timeout(_requestTimeout);
     return _parseResponse(response);
   }
 
@@ -457,10 +461,11 @@ class MobileApiClient {
     for (final candidate in _baseUrlCandidates) {
       try {
         final response = await http.post(
-          _uriFor(candidate, path),
-          headers: _headers(includeAuth: includeAuth),
-          body: jsonEncode(body),
-        );
+              _uriFor(candidate, path),
+              headers: _headers(includeAuth: includeAuth),
+              body: jsonEncode(body),
+            )
+            .timeout(_requestTimeout);
         final payload = _parseResponse(response);
         _activeBaseUrl = candidate;
         return payload;
