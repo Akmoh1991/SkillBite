@@ -1,72 +1,27 @@
 // ignore_for_file: deprecated_member_use, use_build_context_synchronously
 
 import 'dart:async';
-import 'dart:convert';
-import 'dart:io' show Platform;
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:video_player/video_player.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
-const Color _brandTeal = Color(0xFF1F8A7A);
-const Color _brandTealDark = Color(0xFF16695F);
-const Color _ink = Color(0xFF20242F);
-const Color _muted = Color(0xFF8B909A);
-const Color _surface = Color(0xFFFFFFFF);
-const Color _surfaceAlt = Color(0xFFF7F8FB);
-const Color _line = Color(0xFFE6E8EE);
-const Color _warmCard = Color(0xFFF8C46E);
-const String _apiBaseUrlDefine = String.fromEnvironment('SKILLBITE_API_BASE_URL');
-const String _apiFallbackUrlsDefine = String.fromEnvironment('SKILLBITE_API_FALLBACK_URLS');
-const String _prefsTokenKey = 'skillbite.token';
-const String _prefsUserKey = 'skillbite.user';
-const String _prefsLanguageKey = 'skillbite.language';
+import 'app/theme/app_colors.dart';
+import 'app/theme/app_theme.dart';
+import 'core/api/mobile_api_client.dart';
+import 'core/session/session_store.dart';
+import 'core/session/session_user.dart';
 
-List<String> _buildApiBaseUrlCandidates() {
-  final candidates = <String>[];
-
-  void addCandidate(String rawUrl) {
-    final normalized = _normalizeApiBaseUrl(rawUrl);
-    if (normalized.isNotEmpty && !candidates.contains(normalized)) {
-      candidates.add(normalized);
-    }
-  }
-
-  addCandidate(_apiBaseUrlDefine);
-  for (final rawUrl in _apiFallbackUrlsDefine.split(',')) {
-    addCandidate(rawUrl);
-  }
-
-  if (kIsWeb) {
-    addCandidate('http://127.0.0.1:8000/api/mobile/v1');
-    addCandidate('http://localhost:8000/api/mobile/v1');
-  } else if (Platform.isAndroid) {
-    addCandidate('http://10.0.2.2:8000/api/mobile/v1');
-    addCandidate('http://10.0.3.2:8000/api/mobile/v1');
-    addCandidate('http://127.0.0.1:8000/api/mobile/v1');
-  } else {
-    addCandidate('http://127.0.0.1:8000/api/mobile/v1');
-    addCandidate('http://localhost:8000/api/mobile/v1');
-  }
-
-  return candidates;
-}
-
-String _normalizeApiBaseUrl(String rawUrl) {
-  final trimmed = rawUrl.trim();
-  if (trimmed.isEmpty) {
-    return '';
-  }
-  final withoutTrailingSlash = trimmed.endsWith('/') ? trimmed.substring(0, trimmed.length - 1) : trimmed;
-  return withoutTrailingSlash.endsWith('/api/mobile/v1')
-      ? withoutTrailingSlash
-      : '$withoutTrailingSlash/api/mobile/v1';
-}
+const Color _brandTeal = AppColors.brandPrimary;
+const Color _brandTealDark = AppColors.brandPrimaryDark;
+const Color _ink = AppColors.ink;
+const Color _muted = AppColors.muted;
+const Color _surface = AppColors.surface;
+const Color _surfaceAlt = AppColors.surfaceAlt;
+const Color _line = AppColors.line;
+const Color _warmCard = AppColors.accentWarm;
 
 enum AppLanguage { en, ar }
 
@@ -301,6 +256,8 @@ class SkillBiteMobileApp extends StatefulWidget {
 }
 
 class _SkillBiteMobileAppState extends State<SkillBiteMobileApp> {
+  static const SessionStore _sessionStore = SessionStore();
+
   late final MobileApiClient api;
   SessionUser? sessionUser;
   AppLanguage language = AppLanguage.ar;
@@ -309,7 +266,7 @@ class _SkillBiteMobileAppState extends State<SkillBiteMobileApp> {
   @override
   void initState() {
     super.initState();
-    final apiBaseUrlCandidates = _buildApiBaseUrlCandidates();
+    final apiBaseUrlCandidates = buildApiBaseUrlCandidates();
     api = MobileApiClient(
       baseUrl: apiBaseUrlCandidates.first,
       fallbackBaseUrls: apiBaseUrlCandidates.skip(1).toList(),
@@ -318,9 +275,9 @@ class _SkillBiteMobileAppState extends State<SkillBiteMobileApp> {
   }
 
   Future<void> _restoreSession() async {
-    final prefs = await SharedPreferences.getInstance();
-    final savedLanguage = prefs.getString(_prefsLanguageKey);
-    final savedToken = prefs.getString(_prefsTokenKey);
+    final restored = await _sessionStore.load();
+    final savedLanguage = restored.languageName;
+    final savedToken = restored.token;
 
     if (savedLanguage == AppLanguage.en.name) {
       language = AppLanguage.en;
@@ -335,8 +292,7 @@ class _SkillBiteMobileAppState extends State<SkillBiteMobileApp> {
         sessionUser = SessionUser.fromJson(_asMap(payload['user']));
       } catch (_) {
         api.token = null;
-        await prefs.remove(_prefsTokenKey);
-        await prefs.remove(_prefsUserKey);
+        await _sessionStore.save(languageName: language.name);
       }
     }
 
@@ -349,15 +305,11 @@ class _SkillBiteMobileAppState extends State<SkillBiteMobileApp> {
   }
 
   Future<void> _persistSession() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_prefsLanguageKey, language.name);
-    if (api.token != null && sessionUser != null) {
-      await prefs.setString(_prefsTokenKey, api.token!);
-      await prefs.setString(_prefsUserKey, jsonEncode(sessionUser!.toJson()));
-    } else {
-      await prefs.remove(_prefsTokenKey);
-      await prefs.remove(_prefsUserKey);
-    }
+    await _sessionStore.save(
+      languageName: language.name,
+      token: api.token,
+      user: sessionUser,
+    );
   }
 
   void _handleLogin(SessionUser user) {
@@ -394,7 +346,7 @@ class _SkillBiteMobileAppState extends State<SkillBiteMobileApp> {
       child: MaterialApp(
         title: 'SkillBite Mobile',
         debugShowCheckedModeBanner: false,
-        theme: _buildTheme(),
+        theme: buildAppTheme(),
         locale: Locale(language == AppLanguage.ar ? 'ar' : 'en'),
         supportedLocales: const [
           Locale('en'),
@@ -419,310 +371,6 @@ class _SkillBiteMobileAppState extends State<SkillBiteMobileApp> {
   }
 }
 
-ThemeData _buildTheme() {
-  const seed = _brandTeal;
-  final scheme = ColorScheme.fromSeed(
-    seedColor: seed,
-    brightness: Brightness.light,
-    primary: seed,
-    secondary: _warmCard,
-    surface: _surface,
-  );
-  return ThemeData(
-    useMaterial3: true,
-    colorScheme: scheme,
-    scaffoldBackgroundColor: _surface,
-    textTheme: const TextTheme(
-      headlineLarge: TextStyle(fontSize: 34, fontWeight: FontWeight.w800, letterSpacing: -1.4, color: _ink),
-      headlineMedium: TextStyle(fontSize: 30, fontWeight: FontWeight.w800, letterSpacing: -1.0, color: _ink),
-      headlineSmall: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, letterSpacing: -0.7, color: _ink),
-      titleLarge: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: _ink),
-      titleMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: _ink),
-      bodyLarge: TextStyle(fontSize: 16, height: 1.45, color: _ink),
-      bodyMedium: TextStyle(fontSize: 14, height: 1.45, color: _muted),
-      bodySmall: TextStyle(fontSize: 12, height: 1.4, color: _muted),
-    ),
-    appBarTheme: const AppBarTheme(
-      centerTitle: false,
-      scrolledUnderElevation: 0,
-      backgroundColor: _surface,
-      foregroundColor: _ink,
-      elevation: 0,
-      titleTextStyle: TextStyle(
-        color: _ink,
-        fontSize: 18,
-        fontWeight: FontWeight.w700,
-      ),
-    ),
-    cardTheme: CardThemeData(
-      margin: EdgeInsets.zero,
-      elevation: 0.5,
-      color: _surface,
-      shadowColor: const Color(0x14000000),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(24),
-        side: const BorderSide(color: _line),
-      ),
-    ),
-    inputDecorationTheme: InputDecorationTheme(
-      filled: true,
-      fillColor: _surface,
-      labelStyle: const TextStyle(color: _ink, fontWeight: FontWeight.w600),
-      hintStyle: const TextStyle(color: _muted),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(20),
-        borderSide: BorderSide.none,
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(20),
-        borderSide: const BorderSide(color: _line),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(20),
-        borderSide: const BorderSide(color: seed, width: 1.4),
-      ),
-    ),
-    navigationBarTheme: NavigationBarThemeData(
-      backgroundColor: _surface,
-      indicatorColor: Colors.transparent,
-      iconTheme: WidgetStateProperty.resolveWith((states) {
-        return IconThemeData(
-          color: states.contains(WidgetState.selected) ? seed : const Color(0xFFC9CDD7),
-        );
-      }),
-      labelTextStyle: WidgetStateProperty.resolveWith((states) {
-        return TextStyle(
-          color: states.contains(WidgetState.selected) ? seed : const Color(0xFFC9CDD7),
-          fontWeight: states.contains(WidgetState.selected) ? FontWeight.w700 : FontWeight.w500,
-        );
-      }),
-    ),
-    filledButtonTheme: FilledButtonThemeData(
-      style: FilledButton.styleFrom(
-        backgroundColor: seed,
-        foregroundColor: Colors.white,
-        minimumSize: const Size.fromHeight(58),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-        textStyle: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
-      ),
-    ),
-    chipTheme: ChipThemeData(
-      backgroundColor: const Color(0xFFF1F6F4),
-      selectedColor: const Color(0xFFD7EFE8),
-      side: BorderSide.none,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
-      labelStyle: const TextStyle(fontWeight: FontWeight.w600, color: _ink),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-    ),
-  );
-}
-
-class MobileApiClient {
-  MobileApiClient({
-    required String baseUrl,
-    List<String> fallbackBaseUrls = const [],
-  })  : _baseUrlCandidates = [
-          baseUrl,
-          ...fallbackBaseUrls.where((candidate) => candidate != baseUrl),
-        ],
-        _activeBaseUrl = baseUrl;
-
-  final List<String> _baseUrlCandidates;
-  String _activeBaseUrl;
-  String? token;
-  static const Duration _requestTimeout = Duration(seconds: 8);
-
-  String get baseUrl => _activeBaseUrl;
-
-  Future<SessionUser> login(String username, String password) async {
-    final payload = await _postWithFallback('/auth/login/', {
-      'username': username,
-      'password': password,
-      'device_name': 'flutter-dev',
-    }, includeAuth: false);
-    token = payload['token'] as String?;
-    return SessionUser.fromJson(payload['user'] as Map<String, dynamic>);
-  }
-
-  Future<SessionUser> register({
-    required String username,
-    required String email,
-    required String fullName,
-    required String fullNameArabic,
-    required String password,
-    required String companyName,
-    required String phoneNumber,
-    required String idNumber,
-    required String region,
-    required String secBusinessLine,
-  }) async {
-    final payload = await _postWithFallback('/auth/register/', {
-      'username': username,
-      'email': email,
-      'full_name_en': fullName,
-      'full_name_ar': fullNameArabic,
-      'password': password,
-      'company_name': companyName,
-      'phone_number': phoneNumber,
-      'id_number': idNumber,
-      'region': region,
-      'sec_business_line': secBusinessLine,
-    }, includeAuth: false);
-    token = payload['token'] as String?;
-    return SessionUser.fromJson(payload['user'] as Map<String, dynamic>);
-  }
-
-  Future<void> forgotPassword({
-    required String username,
-    required String email,
-    required String newPassword,
-    required String confirmPassword,
-  }) async {
-    await _postWithFallback('/auth/forgot-password/', {
-      'username': username,
-      'email': email,
-      'new_password': newPassword,
-      'confirm_password': confirmPassword,
-    }, includeAuth: false);
-  }
-
-  Future<Map<String, dynamic>> get(String path) async {
-    final response = await http
-        .get(_uriFor(baseUrl, path), headers: _headers())
-        .timeout(_requestTimeout);
-    return _parseResponse(response);
-  }
-
-  Future<Map<String, dynamic>> post(String path, Object body, {bool includeAuth = true}) async {
-    final response = await http
-        .post(
-          _uriFor(baseUrl, path),
-          headers: _headers(includeAuth: includeAuth),
-          body: jsonEncode(body),
-        )
-        .timeout(_requestTimeout);
-    return _parseResponse(response);
-  }
-
-  Future<Map<String, dynamic>> _postWithFallback(
-    String path,
-    Object body, {
-    bool includeAuth = true,
-  }) async {
-    Object? lastError;
-    for (final candidate in _baseUrlCandidates) {
-      try {
-        final response = await http.post(
-              _uriFor(candidate, path),
-              headers: _headers(includeAuth: includeAuth),
-              body: jsonEncode(body),
-            )
-            .timeout(_requestTimeout);
-        final payload = _parseResponse(response);
-        _activeBaseUrl = candidate;
-        return payload;
-      } catch (error) {
-        lastError = error;
-      }
-    }
-    throw lastError ?? Exception('Login failed.');
-  }
-
-  Uri _uriFor(String base, String path) => Uri.parse('$base$path');
-
-  Map<String, String> _headers({bool includeAuth = true}) {
-    return {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
-      if (includeAuth && token != null) 'Authorization': 'Bearer $token',
-    };
-  }
-
-  String resolveUrl(String rawUrl) {
-    final trimmed = rawUrl.trim();
-    if (trimmed.isEmpty) {
-      return '';
-    }
-    final parsed = Uri.tryParse(trimmed);
-    if (parsed != null && parsed.hasScheme) {
-      return parsed.toString();
-    }
-    return Uri.parse(baseUrl).resolve(trimmed).toString();
-  }
-
-  Map<String, dynamic> _parseResponse(http.Response response) {
-    Map<String, dynamic> payload;
-    final rawBody = utf8.decode(response.bodyBytes, allowMalformed: true).trim();
-    final normalizedBody = rawBody.startsWith('\uFEFF') ? rawBody.substring(1) : rawBody;
-    try {
-      payload = jsonDecode(normalizedBody) as Map<String, dynamic>;
-    } catch (_) {
-      if (normalizedBody.isEmpty) {
-        throw Exception('Empty server response (${response.statusCode}).');
-      }
-      final preview = normalizedBody.length > 180
-          ? '${normalizedBody.substring(0, 180)}...'
-          : normalizedBody;
-      throw Exception('Unexpected server response (${response.statusCode}): $preview');
-    }
-    if (payload['ok'] == true) {
-      return payload;
-    }
-    if (response.statusCode >= 400 || payload['ok'] != true) {
-      throw Exception(_extractError(payload));
-    }
-    return payload;
-  }
-
-  String _extractError(Map<String, dynamic> payload) {
-    final error = payload['error'];
-    if (error is Map<String, dynamic>) {
-      return (error['message'] ?? 'Request failed').toString();
-    }
-    return 'Request failed';
-  }
-}
-
-class SessionUser {
-  SessionUser({
-    required this.id,
-    required this.username,
-    required this.displayName,
-    required this.role,
-    required this.businessName,
-  });
-
-  final int id;
-  final String username;
-  final String displayName;
-  final String role;
-  final String businessName;
-
-  factory SessionUser.fromJson(Map<String, dynamic> json) {
-    final business = _asMap(json['business']);
-    return SessionUser(
-      id: (json['id'] ?? 0) as int,
-      username: (json['username'] ?? '').toString(),
-      displayName: (json['display_name'] ?? '').toString(),
-      role: (json['role'] ?? '').toString(),
-      businessName: (business['name'] ?? '').toString(),
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'username': username,
-      'display_name': displayName,
-      'role': role,
-      'business': {
-        'name': businessName,
-      },
-    };
-  }
-}
-
 class LoginScreen extends StatefulWidget {
   const LoginScreen({
     super.key,
@@ -741,6 +389,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   bool loading = false;
+  bool passwordObscured = true;
   String? errorText;
 
   @override
@@ -795,152 +444,113 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  Widget _buildNativeView(BuildContext context) {
+    return _AuthScaffold(
+      leading: const _LanguageToggleButton(),
+      trailing: const _AuthOrb(icon: Icons.shield_rounded),
+      title: _tr(context, 'Sign in to SkillBite'),
+      subtitle: _tr(
+        context,
+        'Please enter your information below in order to login to your account',
+      ),
+      footer: Center(
+        child: Wrap(
+          alignment: WrapAlignment.center,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: 6,
+          textDirection: _isArabic(context) ? TextDirection.rtl : TextDirection.ltr,
+          children: [
+            Text(
+              'Need an account?',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                color: const Color(0xFF4A5A6A),
+              ),
+            ),
+            InkWell(
+              onTap: _openRegister,
+              borderRadius: BorderRadius.circular(8),
+              child: const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+                child: Text(
+                  'Sign Up',
+                  style: TextStyle(
+                    color: _brandTeal,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _AuthFieldLabel(label: _tr(context, 'Username')),
+          const SizedBox(height: 10),
+          TextField(
+            controller: usernameController,
+            textInputAction: TextInputAction.next,
+            decoration: InputDecoration(
+              hintText: _tr(context, 'Enter your username'),
+              prefixIcon: const Icon(Icons.person_outline_rounded),
+            ),
+          ),
+          const SizedBox(height: 22),
+          _AuthFieldLabel(label: _tr(context, 'Password')),
+          const SizedBox(height: 10),
+          TextField(
+            controller: passwordController,
+            obscureText: passwordObscured,
+            onSubmitted: (_) => loading ? null : _submit(),
+            decoration: InputDecoration(
+              hintText: _tr(context, 'Enter your password'),
+              prefixIcon: const Icon(Icons.lock_outline_rounded),
+              suffixIcon: IconButton(
+                onPressed: () {
+                  setState(() => passwordObscured = !passwordObscured);
+                },
+                icon: Icon(
+                  passwordObscured
+                      ? Icons.visibility_outlined
+                      : Icons.visibility_off_outlined,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton(
+              onPressed: _openForgotPassword,
+              child: Text(
+                _tr(context, 'Forgot Password?'),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(color: _brandTeal),
+              ),
+            ),
+          ),
+          if (errorText != null) ...[
+            const SizedBox(height: 16),
+            _InlineError(message: errorText!),
+          ],
+          const SizedBox(height: 24),
+          FilledButton(
+            onPressed: loading ? null : _submit,
+            child: Text(
+              loading ? _tr(context, 'Signing in...') : _tr(context, 'Log In'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     debugPrint('LoginScreen build language=${_AppScope.of(context).language}');
-    return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 430),
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    TextButton.icon(
-                      style: TextButton.styleFrom(
-                        foregroundColor: _brandTeal,
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
-                        textStyle: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-                      ),
-                      onPressed: () {
-                        final scope = _AppScope.of(context);
-                        scope.onLanguageChanged(_isArabic(context) ? AppLanguage.en : AppLanguage.ar);
-                      },
-                      icon: const Icon(Icons.language_rounded),
-                      label: Text(_isArabic(context) ? 'English' : 'العربية'),
-                    ),
-                    Container(
-                      width: 54,
-                      height: 54,
-                      decoration: const BoxDecoration(
-                        color: _surfaceAlt,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(Icons.arrow_back_ios_new_rounded, color: _ink, size: 20),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 36),
-                Center(
-                  child: Image.asset(
-                    'assets/SkillBite_logo.png',
-                    width: 190,
-                    fit: BoxFit.contain,
-                  ),
-                ),
-                const SizedBox(height: 24),
-                Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 320),
-                    child: Column(
-                      children: [
-                        Text(
-                          _tr(context, 'Sign in to SkillBite'),
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontSize: 22),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          _tr(context, 'Please enter your information below in order to login to your account'),
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: _muted, height: 1.35),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 22),
-                Text(_tr(context, 'Username'), style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 17)),
-                const SizedBox(height: 10),
-                TextField(
-                  controller: usernameController,
-                  textInputAction: TextInputAction.next,
-                  decoration: InputDecoration(
-                    hintText: _tr(context, 'Enter your username'),
-                    prefixIcon: const Icon(Icons.person_outline_rounded),
-                  ),
-                ),
-                const SizedBox(height: 22),
-                Text(_tr(context, 'Password'), style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 17)),
-                const SizedBox(height: 10),
-                TextField(
-                  controller: passwordController,
-                  obscureText: true,
-                  onSubmitted: (_) => loading ? null : _submit(),
-                  decoration: InputDecoration(
-                    hintText: _tr(context, 'Enter your password'),
-                    prefixIcon: const Icon(Icons.lock_outline_rounded),
-                    suffixIcon: const Icon(Icons.visibility_outlined),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: _openForgotPassword,
-                    child: Text(
-                      _tr(context, 'Forgot Password?'),
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(color: _brandTeal),
-                    ),
-                  ),
-                ),
-                if (errorText != null) ...[
-                  const SizedBox(height: 16),
-                  _InlineError(message: errorText!),
-                ],
-                const SizedBox(height: 24),
-                FilledButton(
-                  onPressed: loading ? null : _submit,
-                  child: Text(loading ? _tr(context, 'Signing in...') : _tr(context, 'Log In')),
-                ),
-                const SizedBox(height: 32),
-                Center(
-                  child: Wrap(
-                    alignment: WrapAlignment.center,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    spacing: 6,
-                    textDirection: _isArabic(context) ? TextDirection.rtl : TextDirection.ltr,
-                    children: [
-                      Text(
-                        _isArabic(context) ? 'ليس لديك حساب؟' : "Don’t have an account?",
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(color: const Color(0xFF25314C)),
-                      ),
-                      InkWell(
-                        onTap: _openRegister,
-                        borderRadius: BorderRadius.circular(8),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
-                          child: Text(
-                            _isArabic(context) ? 'إنشاء حساب' : 'Sign Up',
-                            style: const TextStyle(
-                              color: _brandTeal,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
+    return _buildNativeView(context);
   }
 }
 
@@ -990,6 +600,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   String selectedSecBusinessLine = _secBusinessLines.first;
 
   bool saving = false;
+  bool passwordObscured = true;
   String? errorText;
 
   @override
@@ -1050,7 +661,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 17)),
+        _AuthFieldLabel(label: label),
         const SizedBox(height: 10),
         TextField(
           controller: controller,
@@ -1071,7 +682,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 17)),
+        _AuthFieldLabel(label: label),
         const SizedBox(height: 10),
         DropdownButtonFormField<String>(
           initialValue: value,
@@ -1089,201 +700,172 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 430),
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    InkWell(
-                      onTap: () => Navigator.of(context).pop(),
-                      borderRadius: BorderRadius.circular(999),
-                      child: Container(
-                        width: 54,
-                        height: 54,
-                        decoration: const BoxDecoration(
-                          color: _surfaceAlt,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(Icons.arrow_back_ios_new_rounded, color: _ink, size: 20),
-                      ),
-                    ),
-                    TextButton.icon(
-                      style: TextButton.styleFrom(
-                        foregroundColor: _brandTeal,
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
-                        textStyle: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-                      ),
-                      onPressed: () {
-                        final scope = _AppScope.of(context);
-                        scope.onLanguageChanged(_isArabic(context) ? AppLanguage.en : AppLanguage.ar);
-                      },
-                      icon: const Icon(Icons.language_rounded),
-                      label: Text(_isArabic(context) ? 'English' : 'العربية'),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 28),
-                Center(
-                  child: Image.asset(
-                    'assets/SkillBite_logo.png',
-                    width: 180,
-                    fit: BoxFit.contain,
-                  ),
-                ),
-                const SizedBox(height: 24),
-                Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 330),
-                    child: Column(
-                      children: [
-                        Text(
-                          _tr(context, 'Create Account'),
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontSize: 22),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          _tr(context, 'Create your business owner account to start using SkillBite.'),
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: _muted, height: 1.35),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 22),
-                _buildTextField(
-                  controller: usernameController,
-                  label: _tr(context, 'Username'),
-                  hint: _tr(context, 'Enter your username'),
-                ),
-                const SizedBox(height: 18),
-                _buildTextField(
-                  controller: fullNameController,
-                  label: _tr(context, 'Full Name'),
-                  hint: _tr(context, 'Enter your full name'),
-                ),
-                const SizedBox(height: 18),
-                _buildTextField(
-                  controller: fullNameArabicController,
-                  label: _tr(context, 'Full Name'),
-                  hint: _tr(context, 'Enter your full name'),
-                ),
-                const SizedBox(height: 18),
-                _buildTextField(
-                  controller: emailController,
-                  label: _tr(context, 'Email'),
-                  hint: _tr(context, 'Enter your email'),
-                  keyboardType: TextInputType.emailAddress,
-                ),
-                const SizedBox(height: 18),
-                _buildTextField(
-                  controller: passwordController,
-                  label: _tr(context, 'Password'),
-                  hint: _tr(context, 'Enter your password'),
-                  obscureText: true,
-                ),
-                const SizedBox(height: 18),
-                _buildTextField(
-                  controller: companyNameController,
-                  label: _tr(context, 'Company Name'),
-                  hint: _tr(context, 'Enter your company name'),
-                ),
-                const SizedBox(height: 18),
-                _buildTextField(
-                  controller: phoneNumberController,
-                  label: _tr(context, 'Phone Number'),
-                  hint: _tr(context, 'Enter your phone number'),
-                  keyboardType: TextInputType.phone,
-                ),
-                const SizedBox(height: 18),
-                _buildTextField(
-                  controller: idNumberController,
-                  label: _tr(context, 'ID Number'),
-                  hint: _tr(context, 'Enter your ID number'),
-                  keyboardType: TextInputType.number,
-                ),
-                const SizedBox(height: 18),
-                _buildDropdownField(
-                  label: _tr(context, 'Region'),
-                  value: selectedRegion,
-                  options: _regions,
-                  onChanged: saving
-                      ? null
-                      : (value) {
-                          if (value == null) {
-                            return;
-                          }
-                          setState(() {
-                            selectedRegion = value;
-                          });
-                        },
-                ),
-                const SizedBox(height: 18),
-                _buildDropdownField(
-                  label: _tr(context, 'SEC Business Line'),
-                  value: selectedSecBusinessLine,
-                  options: _secBusinessLines,
-                  onChanged: saving
-                      ? null
-                      : (value) {
-                          if (value == null) {
-                            return;
-                          }
-                          setState(() {
-                            selectedSecBusinessLine = value;
-                          });
-                        },
-                ),
-                if (errorText != null) ...[
-                  const SizedBox(height: 16),
-                  _InlineError(message: errorText!),
-                ],
-                const SizedBox(height: 24),
-                FilledButton(
-                  onPressed: saving ? null : _submit,
-                  child: Text(saving ? _tr(context, 'Creating account...') : _tr(context, 'Create account')),
-                ),
-                const SizedBox(height: 24),
-                Center(
-                  child: Wrap(
-                    alignment: WrapAlignment.center,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    spacing: 6,
-                    textDirection: _isArabic(context) ? TextDirection.rtl : TextDirection.ltr,
-                    children: [
-                      Text(
-                        _tr(context, 'Already have an account?'),
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(color: const Color(0xFF25314C)),
-                      ),
-                      InkWell(
-                        onTap: () => Navigator.of(context).pop(),
-                        borderRadius: BorderRadius.circular(8),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
-                          child: Text(
-                            _tr(context, 'Log In'),
-                            style: const TextStyle(color: _brandTeal, fontWeight: FontWeight.w700),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+  Widget _buildNativeView(BuildContext context) {
+    return _AuthScaffold(
+      leading: _RoundIconButton(
+        icon: Icons.arrow_back_ios_new_rounded,
+        onTap: () => Navigator.of(context).pop(),
+      ),
+      trailing: const _LanguageToggleButton(),
+      title: _tr(context, 'Create Account'),
+      subtitle: _tr(
+        context,
+        'Create your business owner account to start using SkillBite.',
+      ),
+      footer: Center(
+        child: Wrap(
+          alignment: WrapAlignment.center,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: 6,
+          textDirection: _isArabic(context) ? TextDirection.rtl : TextDirection.ltr,
+          children: [
+            Text(
+              _tr(context, 'Already have an account?'),
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                color: const Color(0xFF4A5A6A),
+              ),
             ),
-          ),
+            InkWell(
+              onTap: () => Navigator.of(context).pop(),
+              borderRadius: BorderRadius.circular(8),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+                child: Text(
+                  _tr(context, 'Log In'),
+                  style: const TextStyle(
+                    color: _brandTeal,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
+      child: Column(
+        children: [
+          _buildTextField(
+            controller: usernameController,
+            label: _tr(context, 'Username'),
+            hint: _tr(context, 'Enter your username'),
+          ),
+          const SizedBox(height: 18),
+          _buildTextField(
+            controller: fullNameController,
+            label: _tr(context, 'Full Name'),
+            hint: _tr(context, 'Enter your full name'),
+          ),
+          const SizedBox(height: 18),
+          _buildTextField(
+            controller: fullNameArabicController,
+            label: _tr(context, 'Full Name'),
+            hint: _tr(context, 'Enter your full name'),
+          ),
+          const SizedBox(height: 18),
+          _buildTextField(
+            controller: emailController,
+            label: _tr(context, 'Email'),
+            hint: _tr(context, 'Enter your email'),
+            keyboardType: TextInputType.emailAddress,
+          ),
+          const SizedBox(height: 18),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _AuthFieldLabel(label: _tr(context, 'Password')),
+              const SizedBox(height: 10),
+              TextField(
+                controller: passwordController,
+                obscureText: passwordObscured,
+                decoration: InputDecoration(
+                  hintText: _tr(context, 'Enter your password'),
+                  suffixIcon: IconButton(
+                    onPressed: () {
+                      setState(() => passwordObscured = !passwordObscured);
+                    },
+                    icon: Icon(
+                      passwordObscured
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          _buildTextField(
+            controller: companyNameController,
+            label: _tr(context, 'Company Name'),
+            hint: _tr(context, 'Enter your company name'),
+          ),
+          const SizedBox(height: 18),
+          _buildTextField(
+            controller: phoneNumberController,
+            label: _tr(context, 'Phone Number'),
+            hint: _tr(context, 'Enter your phone number'),
+            keyboardType: TextInputType.phone,
+          ),
+          const SizedBox(height: 18),
+          _buildTextField(
+            controller: idNumberController,
+            label: _tr(context, 'ID Number'),
+            hint: _tr(context, 'Enter your ID number'),
+            keyboardType: TextInputType.number,
+          ),
+          const SizedBox(height: 18),
+          _buildDropdownField(
+            label: _tr(context, 'Region'),
+            value: selectedRegion,
+            options: _regions,
+            onChanged: saving
+                ? null
+                : (value) {
+                    if (value == null) {
+                      return;
+                    }
+                    setState(() {
+                      selectedRegion = value;
+                    });
+                  },
+          ),
+          const SizedBox(height: 18),
+          _buildDropdownField(
+            label: _tr(context, 'SEC Business Line'),
+            value: selectedSecBusinessLine,
+            options: _secBusinessLines,
+            onChanged: saving
+                ? null
+                : (value) {
+                    if (value == null) {
+                      return;
+                    }
+                    setState(() {
+                      selectedSecBusinessLine = value;
+                    });
+                  },
+          ),
+          if (errorText != null) ...[
+            const SizedBox(height: 16),
+            _InlineError(message: errorText!),
+          ],
+          const SizedBox(height: 24),
+          FilledButton(
+            onPressed: saving ? null : _submit,
+            child: Text(
+              saving
+                  ? _tr(context, 'Creating account...')
+                  : _tr(context, 'Create account'),
+            ),
+          ),
+        ],
+      ),
     );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _buildNativeView(context);
   }
 }
 
@@ -1302,6 +884,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final TextEditingController newPasswordController = TextEditingController();
   final TextEditingController confirmPasswordController = TextEditingController();
   bool saving = false;
+  bool newPasswordObscured = true;
+  bool confirmPasswordObscured = true;
   String? errorText;
   String? successText;
 
@@ -1341,50 +925,83 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(_tr(context, 'Reset Password'))),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+  Widget _buildNativeView(BuildContext context) {
+    return _AuthScaffold(
+      leading: _RoundIconButton(
+        icon: Icons.arrow_back_ios_new_rounded,
+        onTap: () => Navigator.of(context).pop(),
+      ),
+      trailing: const _LanguageToggleButton(),
+      title: _tr(context, 'Reset Password'),
+      subtitle: _tr(
+        context,
+        'Reset your password using your username and the recovery email saved on your account.',
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            _tr(context, 'Reset your password using your username and the recovery email saved on your account.'),
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: _muted),
-          ),
-          const SizedBox(height: 24),
+          _AuthFieldLabel(label: _tr(context, 'Username')),
+          const SizedBox(height: 10),
           TextField(
             controller: usernameController,
             decoration: InputDecoration(
-              labelText: _tr(context, 'Username'),
-              prefixIcon: Icon(Icons.person_outline_rounded),
+              hintText: _tr(context, 'Enter your username'),
+              prefixIcon: const Icon(Icons.person_outline_rounded),
             ),
           ),
           const SizedBox(height: 16),
+          _AuthFieldLabel(label: _tr(context, 'Recovery email')),
+          const SizedBox(height: 10),
           TextField(
             controller: emailController,
             keyboardType: TextInputType.emailAddress,
             decoration: InputDecoration(
-              labelText: _tr(context, 'Recovery email'),
-              prefixIcon: Icon(Icons.mail_outline_rounded),
+              hintText: _tr(context, 'Enter your email'),
+              prefixIcon: const Icon(Icons.mail_outline_rounded),
             ),
           ),
           const SizedBox(height: 16),
+          _AuthFieldLabel(label: _tr(context, 'New password')),
+          const SizedBox(height: 10),
           TextField(
             controller: newPasswordController,
-            obscureText: true,
+            obscureText: newPasswordObscured,
             decoration: InputDecoration(
-              labelText: _tr(context, 'New password'),
-              prefixIcon: Icon(Icons.lock_outline_rounded),
+              hintText: _tr(context, 'New password'),
+              prefixIcon: const Icon(Icons.lock_outline_rounded),
+              suffixIcon: IconButton(
+                onPressed: () {
+                  setState(() => newPasswordObscured = !newPasswordObscured);
+                },
+                icon: Icon(
+                  newPasswordObscured
+                      ? Icons.visibility_outlined
+                      : Icons.visibility_off_outlined,
+                ),
+              ),
             ),
           ),
           const SizedBox(height: 16),
+          _AuthFieldLabel(label: _tr(context, 'Confirm password')),
+          const SizedBox(height: 10),
           TextField(
             controller: confirmPasswordController,
-            obscureText: true,
+            obscureText: confirmPasswordObscured,
             decoration: InputDecoration(
-              labelText: _tr(context, 'Confirm password'),
-              prefixIcon: Icon(Icons.verified_user_outlined),
+              hintText: _tr(context, 'Confirm password'),
+              prefixIcon: const Icon(Icons.verified_user_outlined),
+              suffixIcon: IconButton(
+                onPressed: () {
+                  setState(
+                    () => confirmPasswordObscured = !confirmPasswordObscured,
+                  );
+                },
+                icon: Icon(
+                  confirmPasswordObscured
+                      ? Icons.visibility_outlined
+                      : Icons.visibility_off_outlined,
+                ),
+              ),
             ),
           ),
           if (errorText != null) ...[
@@ -1401,17 +1018,252 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               ),
               child: Text(
                 _tr(context, successText!),
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(color: _brandTealDark),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(color: _brandTealDark),
               ),
             ),
           ],
           const SizedBox(height: 24),
           FilledButton(
             onPressed: saving ? null : _submit,
-            child: Text(saving ? _tr(context, 'Updating...') : _tr(context, 'Update Password')),
+            child: Text(
+              saving ? _tr(context, 'Updating...') : _tr(context, 'Update Password'),
+            ),
           ),
         ],
       ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _buildNativeView(context);
+  }
+}
+
+class _AuthScaffold extends StatelessWidget {
+  const _AuthScaffold({
+    required this.leading,
+    required this.trailing,
+    required this.title,
+    required this.subtitle,
+    required this.child,
+    this.footer,
+  });
+
+  final Widget leading;
+  final Widget trailing;
+  final String title;
+  final String subtitle;
+  final Widget child;
+  final Widget? footer;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFFF3FAF7), Color(0xFFF8FBFA)],
+          ),
+        ),
+        child: SafeArea(
+          child: Align(
+            alignment: Alignment.topCenter,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 460),
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(24, 18, 24, 32),
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [leading, trailing],
+                  ),
+                  const SizedBox(height: 24),
+                  Container(
+                    padding: const EdgeInsets.fromLTRB(22, 22, 22, 24),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(32),
+                      gradient: const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [Color(0xFF0F766E), Color(0xFF13A36E)],
+                      ),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x180F172A),
+                          blurRadius: 32,
+                          offset: Offset(0, 14),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.16),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Text(
+                            'SkillBite Mobile',
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                          ),
+                        ),
+                        const SizedBox(height: 18),
+                        Image.asset(
+                          'assets/SkillBite_logo.png',
+                          width: 164,
+                          fit: BoxFit.contain,
+                        ),
+                        const SizedBox(height: 18),
+                        Text(
+                          title,
+                          style: Theme.of(context).textTheme.headlineSmall
+                              ?.copyWith(
+                                color: Colors.white,
+                                fontSize: 26,
+                                height: 1.1,
+                              ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          subtitle,
+                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                            color: Colors.white.withValues(alpha: 0.84),
+                            height: 1.45,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  Container(
+                    padding: const EdgeInsets.fromLTRB(20, 22, 20, 22),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(30),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x120F172A),
+                          blurRadius: 24,
+                          offset: Offset(0, 12),
+                        ),
+                      ],
+                    ),
+                    child: child,
+                  ),
+                  if (footer != null) ...[
+                    const SizedBox(height: 18),
+                    footer!,
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AuthFieldLabel extends StatelessWidget {
+  const _AuthFieldLabel({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      label,
+      style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 16),
+    );
+  }
+}
+
+class _RoundIconButton extends StatelessWidget {
+  const _RoundIconButton({
+    required this.icon,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      shape: const CircleBorder(),
+      child: InkWell(
+        onTap: onTap,
+        customBorder: const CircleBorder(),
+        child: SizedBox(
+          width: 52,
+          height: 52,
+          child: Icon(icon, color: _ink, size: 20),
+        ),
+      ),
+    );
+  }
+}
+
+class _AuthOrb extends StatelessWidget {
+  const _AuthOrb({required this.icon});
+
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 52,
+      height: 52,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF0F766E), Color(0xFF13A36E)],
+        ),
+        shape: BoxShape.circle,
+      ),
+      child: Icon(icon, color: Colors.white.withValues(alpha: 0.96)),
+    );
+  }
+}
+
+class _LanguageToggleButton extends StatelessWidget {
+  const _LanguageToggleButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return TextButton.icon(
+      style: TextButton.styleFrom(
+        foregroundColor: _brandTeal,
+        backgroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        textStyle: Theme.of(
+          context,
+        ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      ),
+      onPressed: () {
+        final scope = _AppScope.of(context);
+        scope.onLanguageChanged(_isArabic(context) ? AppLanguage.en : AppLanguage.ar);
+      },
+      icon: const Icon(Icons.language_rounded),
+      label: Text(_isArabic(context) ? 'English' : _tr(context, 'Arabic')),
     );
   }
 }
@@ -1494,7 +1346,7 @@ class _RoleShellState extends State<RoleShell> {
 
     return Scaffold(
       appBar: AppBar(
-        toolbarHeight: 84,
+        toolbarHeight: 92,
         titleSpacing: 24,
         title: Row(
           children: [
@@ -1507,7 +1359,9 @@ class _RoleShellState extends State<RoleShell> {
                 children: [
                   Text(widget.user.displayName),
                   Text(
-                    '@${widget.user.username}',
+                    widget.user.businessName.isEmpty
+                        ? '@${widget.user.username}'
+                        : widget.user.businessName,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       color: _muted,
                       fontWeight: FontWeight.w500,
@@ -1520,14 +1374,14 @@ class _RoleShellState extends State<RoleShell> {
         ),
         actions: [
           Padding(
-            padding: const EdgeInsets.only(right: 8),
+            padding: const EdgeInsets.only(right: 6),
             child: Container(
-              width: 48,
-              height: 48,
-              margin: const EdgeInsets.symmetric(vertical: 16),
+              width: 46,
+              height: 46,
+              margin: const EdgeInsets.symmetric(vertical: 18),
               decoration: BoxDecoration(
                 color: _surface,
-                shape: BoxShape.circle,
+                borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: _line),
               ),
               child: IconButton(
@@ -1536,9 +1390,22 @@ class _RoleShellState extends State<RoleShell> {
               ),
             ),
           ),
-          IconButton(
-            onPressed: () async => widget.onLogout(),
-            icon: const Icon(Icons.logout_rounded),
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: Container(
+              width: 46,
+              height: 46,
+              margin: const EdgeInsets.symmetric(vertical: 18),
+              decoration: BoxDecoration(
+                color: _surface,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: _line),
+              ),
+              child: IconButton(
+                onPressed: () async => widget.onLogout(),
+                icon: const Icon(Icons.logout_rounded),
+              ),
+            ),
           ),
         ],
       ),
@@ -1546,14 +1413,22 @@ class _RoleShellState extends State<RoleShell> {
       bottomNavigationBar: SafeArea(
         minimum: const EdgeInsets.fromLTRB(10, 0, 10, 10),
         child: Container(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: _surface,
-            border: Border(top: BorderSide(color: _line)),
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(color: _line),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x120F172A),
+                blurRadius: 24,
+                offset: Offset(0, 12),
+              ),
+            ],
           ),
           padding: const EdgeInsets.only(top: 6),
           child: NavigationBar(
             selectedIndex: index,
-            height: 74,
+            height: 76,
             destinations: destinations,
             onDestinationSelected: (value) => setState(() => index = value),
           ),
@@ -1672,6 +1547,97 @@ class EmployeeDashboardPage extends StatelessWidget {
     );
   }
 
+  Future<void> _openChecklist(BuildContext context, int checklistId) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => EmployeeChecklistDetailScreen(
+          api: api,
+          checklistId: checklistId,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNativeView(
+    BuildContext context,
+    Map<String, dynamic> dashboard,
+    List<dynamic> assignments,
+    List<dynamic> checklists,
+  ) {
+    return _PageBody(
+      children: [
+        _DashboardHeroCard(
+          title: _tr(context, 'Workspace overview'),
+          subtitle: user.businessName,
+          value:
+              '${dashboard['active_course_count'] ?? 0} ${_tr(context, 'Pending courses')}',
+          icon: Icons.auto_stories_rounded,
+        ),
+        const SizedBox(height: 18),
+        _DashboardMetricRow(
+          metrics: [
+            _DashboardMetricData(
+              'Pending courses',
+              '${dashboard['active_course_count'] ?? 0}',
+              icon: Icons.menu_book_outlined,
+            ),
+            _DashboardMetricData(
+              'Learning History',
+              '${dashboard['completed_course_count'] ?? 0}',
+              icon: Icons.workspace_premium_outlined,
+            ),
+            _DashboardMetricData(
+              'Checklists',
+              '${dashboard['assigned_checklist_count'] ?? 0}',
+              icon: Icons.checklist_rounded,
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
+        _HeaderRow(title: 'Courses', trailing: _sectionLink('View all')),
+        const SizedBox(height: 16),
+        if (assignments.isEmpty)
+          const _SectionCard(title: 'Courses', child: Text('No active courses.'))
+        else
+          for (final item in assignments.take(3)) ...[
+            _NativeCoursePromoCard(
+              eyebrow: _readString(item, 'status_label'),
+              title: _readPath(item, ['course', 'title']),
+              meta:
+                  '${_readPath(item, ['course', 'estimated_minutes'])} ${_tr(context, 'min')}',
+              supporting: _readString(_asMap(item['course']), 'description'),
+              icon: _readBool(_asMap(item['course']), 'has_exam')
+                  ? Icons.verified_outlined
+                  : Icons.play_circle_outline_rounded,
+              onTap: () => _openAssignmentCourse(context, _readInt(item, 'id')),
+            ),
+            const SizedBox(height: 14),
+          ],
+        const SizedBox(height: 8),
+        _HeaderRow(title: 'Checklists'),
+        const SizedBox(height: 14),
+        if (checklists.isEmpty)
+          const _SectionCard(
+            title: 'Checklists',
+            child: Text('No checklists assigned.'),
+          )
+        else
+          for (final item in checklists.take(3)) ...[
+            _NativeLessonTile(
+              title: _readString(item, 'title'),
+              subtitle: _readBool(item, 'completed_today')
+                  ? 'Completed today'
+                  : 'Pending checklist',
+              accent: const Color(0xFFEAF7F4),
+              trailingIcon: Icons.checklist_rounded,
+              onTap: () => _openChecklist(context, _readInt(item, 'id')),
+            ),
+            const SizedBox(height: 14),
+          ],
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return ApiFutureBuilder(
@@ -1680,67 +1646,7 @@ class EmployeeDashboardPage extends StatelessWidget {
         final dashboard = _asMap(payload['dashboard']);
         final assignments = _asList(dashboard['dashboard_course_assignments']);
         final checklists = _asList(dashboard['assigned_checklists']);
-        final trending = assignments.take(2).toList();
-        return _PageBody(
-          children: [
-            const _SearchHeroBar(),
-            const SizedBox(height: 16),
-            _HeaderRow(title: 'Trending courses', trailing: _sectionLink('View all')),
-            const SizedBox(height: 14),
-            SizedBox(
-              height: 286,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: trending.isEmpty ? 2 : trending.length,
-                separatorBuilder: (context, index) => const SizedBox(width: 16),
-                itemBuilder: (context, index) {
-                  final item = trending.isEmpty ? null : _asMap(trending[index]);
-                  final warm = index.isEven;
-                  return _CoursePromoCard(
-                    warm: warm,
-                    tag: 'Trendy',
-                    students: '680 + students',
-                    title: item == null ? 'UX Master\nCourse' : _readPath(item, ['course', 'title']),
-                    onTap: item == null ? null : () => _openAssignmentCourse(context, _readInt(item, 'id')),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 16),
-            _HeaderRow(title: 'Best of the week', trailing: _sectionLink('View all')),
-            const SizedBox(height: 16),
-            if (assignments.isEmpty)
-              const _SectionCard(title: 'Recommendations', child: Text('No active courses.'))
-            else
-              for (final item in assignments.take(4)) ...[
-                _LessonListCard(
-                  title: _readPath(item, ['course', 'title']),
-                  subtitle:
-                      '${_readString(item, 'status_label')}  ·  ${_readPath(item, ['course', 'estimated_minutes'])} lesson min',
-                ),
-                const SizedBox(height: 14),
-              ],
-            const SizedBox(height: 10),
-            _HeroCard(
-              title: 'Today checklist',
-              subtitle: user.businessName,
-              value: '${dashboard['assigned_checklist_count'] ?? 0} tasks',
-            ),
-            const SizedBox(height: 14),
-            if (checklists.isEmpty)
-              const _SectionCard(title: 'Checklists', child: Text('No checklists assigned.'))
-            else
-              for (final item in checklists.take(2)) ...[
-                _LessonListCard(
-                  title: _readString(item, 'title'),
-                  subtitle: _readBool(item, 'completed_today') ? 'Completed today' : 'Pending checklist',
-                  accent: const Color(0xFFFBE2EA),
-                  trailingIcon: Icons.checklist_rounded,
-                ),
-                const SizedBox(height: 14),
-              ],
-          ],
-        );
+        return _buildNativeView(context, dashboard, assignments, checklists);
       },
     );
   }
@@ -1776,20 +1682,90 @@ class _EmployeeCoursesPageState extends State<EmployeeCoursesPage> {
       future: future,
       builder: (context, payload) {
         final courses = _asList(payload['courses']);
+        final featuredCourse = courses.isEmpty ? null : _asMap(courses.first);
+        final moreCourses = courses.length > 1 ? courses.skip(1).toList() : const <dynamic>[];
+        final activeCourses = courses.where((item) {
+          final status = _readString(item, 'status_label').toLowerCase();
+          return !status.contains('complete');
+        }).length;
+        final totalMinutes = courses.fold<int>(
+          0,
+          (sum, item) => sum + _readInt(_asMap(item['course']), 'estimated_minutes'),
+        );
         return _PageBody(
           children: [
+            _DashboardHeroCard(
+              title: _tr(context, 'Courses'),
+              subtitle: featuredCourse == null
+                  ? 'No assigned courses yet'
+                  : _readPath(featuredCourse, ['course', 'title']),
+              value: featuredCourse == null
+                  ? 'New training will appear here when it is assigned.'
+                  : '$activeCourses in progress - $totalMinutes ${_tr(context, 'min')} total',
+              icon: Icons.auto_stories_rounded,
+            ),
+            const SizedBox(height: 16),
+            _DashboardMetricRow(
+              metrics: [
+                _DashboardMetricData(
+                  'Courses',
+                  '${courses.length}',
+                  icon: Icons.menu_book_rounded,
+                ),
+                _DashboardMetricData(
+                  'Pending courses',
+                  '$activeCourses',
+                  icon: Icons.timelapse_rounded,
+                ),
+                _DashboardMetricData(
+                  'Learning time',
+                  '$totalMinutes ${_tr(context, 'min')}',
+                  icon: Icons.schedule_rounded,
+                ),
+              ],
+            ),
+            if (featuredCourse != null) ...[
+              const SizedBox(height: 20),
+              _NativeCoursePromoCard(
+                eyebrow: _readString(featuredCourse, 'status_label').isEmpty
+                    ? 'Course'
+                    : _readString(featuredCourse, 'status_label'),
+                title: _readPath(featuredCourse, ['course', 'title']),
+                meta:
+                    '${_readInt(_asMap(featuredCourse['course']), 'estimated_minutes')} ${_tr(context, 'min')}',
+                supporting: _readPath(featuredCourse, ['course', 'description']),
+                icon: Icons.play_circle_outline_rounded,
+                onTap: () async {
+                  await Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => EmployeeCourseDetailScreen(
+                        api: widget.api,
+                        assignmentId: _readInt(featuredCourse, 'id'),
+                      ),
+                    ),
+                  );
+                  _reload();
+                },
+              ),
+            ],
+            const SizedBox(height: 20),
             _HeaderRow(
-              title: 'Courses',
-              trailing: IconButton(
-                onPressed: _reload,
-                icon: const Icon(Icons.refresh),
+              title: featuredCourse == null ? 'Assigned courses' : 'More courses',
+              trailing: _RoundIconButton(
+                icon: Icons.refresh_rounded,
+                onTap: _reload,
               ),
             ),
             const SizedBox(height: 16),
             if (courses.isEmpty)
               const _SectionCard(title: 'Courses', child: Text('No courses assigned.'))
+            else if (moreCourses.isEmpty)
+              const _SectionCard(
+                title: 'Courses',
+                child: Text('No additional courses right now.'),
+              )
             else
-              for (final item in courses) ...[
+              for (final item in moreCourses) ...[
                 _LibraryCourseCard(
                   imageUrl: _readPath(item, ['course', 'card_image_url']),
                   title: _readPath(item, ['course', 'title']),
@@ -1981,22 +1957,40 @@ class _EmployeeCourseDetailScreenState extends State<EmployeeCourseDetailScreen>
           final course = _asMap(assignment['course']);
           final contentItems = _asList(course['content_items']);
           final hasExam = _readBool(course, 'has_exam');
+          final courseDescription = _readString(course, 'description');
+          final statusLabel = _readString(assignment, 'status_label').isEmpty
+              ? _tr(context, 'In progress')
+              : _readString(assignment, 'status_label');
           final featuredContent = contentItems.isEmpty ? const <dynamic>[] : [contentItems.first];
           final remainingContent = contentItems.length > 1 ? contentItems.skip(1).toList() : const <dynamic>[];
           return _PageBody(
             children: [
-              _LessonProgressHeader(
-                status: _readString(assignment, 'status_label'),
-                progress: contentItems.isEmpty ? 0.2 : 0.26,
+              _DashboardHeroCard(
+                title: statusLabel,
+                subtitle: _readString(course, 'title'),
+                value:
+                    '${contentItems.length} ${_tr(context, 'Items')} - ${_readInt(course, 'estimated_minutes')} ${_tr(context, 'min')}',
+                icon: hasExam
+                    ? Icons.quiz_rounded
+                    : Icons.play_circle_outline_rounded,
               ),
               const SizedBox(height: 16),
-              Text(
-                _tr(context, 'About the lesson'),
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontSize: 18,
-                      color: _brandTeal,
-                    ),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  _StatusChip(label: statusLabel),
+                  _StatusChip(label: '${contentItems.length} ${_tr(context, 'Items')}'),
+                  if (hasExam) _StatusChip(label: _tr(context, 'Exam')),
+                ],
               ),
+              if (courseDescription.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                _SectionCard(
+                  title: 'Course',
+                  child: Text(courseDescription),
+                ),
+              ],
               const SizedBox(height: 16),
               if (featuredContent.isEmpty)
                 _SectionCard(title: _tr(context, 'Lesson'), child: Text(_tr(context, 'No mobile content items.')))
@@ -2030,6 +2024,15 @@ class _EmployeeCourseDetailScreenState extends State<EmployeeCourseDetailScreen>
                   ),
                 ),
                 const SizedBox(height: 24),
+              ],
+              if (hasExam) ...[
+                _SectionCard(
+                  title: _tr(context, 'Exam'),
+                  child: const Text(
+                    'Review the lesson content, then continue to the exam when you are ready.',
+                  ),
+                ),
+                const SizedBox(height: 16),
               ],
               FilledButton(
                 onPressed: submitting
@@ -2530,13 +2533,46 @@ class _EmployeeChecklistsPageState extends State<EmployeeChecklistsPage> {
       future: future,
       builder: (context, payload) {
         final checklists = _asList(payload['checklists']);
+        final completedToday = checklists.where((item) => _readBool(item, 'completed_today')).length;
+        final pendingCount = checklists.length - completedToday;
         return _PageBody(
           children: [
+            _DashboardHeroCard(
+              title: _tr(context, 'Checklists'),
+              subtitle: completedToday == 0
+                  ? 'Stay on top of your operational routines'
+                  : '$completedToday ${_tr(context, 'Completed today')}',
+              value: pendingCount == 0
+                  ? 'All checklist work is up to date.'
+                  : '$pendingCount ${_tr(context, 'Pending checklists')}',
+              icon: Icons.checklist_rounded,
+            ),
+            const SizedBox(height: 16),
+            _DashboardMetricRow(
+              metrics: [
+                _DashboardMetricData(
+                  'Checklists',
+                  '${checklists.length}',
+                  icon: Icons.fact_check_outlined,
+                ),
+                _DashboardMetricData(
+                  'Completed today',
+                  '$completedToday',
+                  icon: Icons.task_alt_rounded,
+                ),
+                _DashboardMetricData(
+                  'Pending checklists',
+                  '$pendingCount',
+                  icon: Icons.pending_actions_rounded,
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
             _HeaderRow(
-              title: 'Checklists',
-              trailing: IconButton(
-                onPressed: _reload,
-                icon: const Icon(Icons.refresh),
+              title: 'Assigned checklists',
+              trailing: _RoundIconButton(
+                icon: Icons.refresh_rounded,
+                onTap: _reload,
               ),
             ),
             const SizedBox(height: 16),
@@ -2544,36 +2580,28 @@ class _EmployeeChecklistsPageState extends State<EmployeeChecklistsPage> {
               const _SectionCard(title: 'Checklists', child: Text('No checklists assigned.'))
             else
               for (final item in checklists) ...[
-                _SectionCard(
+                _NativeLessonTile(
                   title: _readString(item, 'title'),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(_readString(item, 'description')),
-                      const SizedBox(height: 12),
-                      _StatusChip(
-                        label: _readBool(item, 'completed_today') ? 'Completed today' : 'Pending',
-                      ),
-                      const SizedBox(height: 12),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: FilledButton.tonal(
-                          onPressed: () async {
-                            await Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => EmployeeChecklistDetailScreen(
-                                  api: widget.api,
-                                  checklistId: _readInt(item, 'id'),
-                                ),
-                              ),
-                            );
-                            _reload();
-                          },
-                          child: const Text('Open'),
+                  subtitle: _readBool(item, 'completed_today')
+                      ? 'Completed today'
+                      : 'Pending checklist',
+                  accent: _readBool(item, 'completed_today')
+                      ? const Color(0xFFEAF7F4)
+                      : const Color(0xFFFFF1E7),
+                  trailingIcon: _readBool(item, 'completed_today')
+                      ? Icons.task_alt_rounded
+                      : Icons.checklist_rounded,
+                  onTap: () async {
+                    await Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => EmployeeChecklistDetailScreen(
+                          api: widget.api,
+                          checklistId: _readInt(item, 'id'),
                         ),
                       ),
-                    ],
-                  ),
+                    );
+                    _reload();
+                  },
                 ),
                 const SizedBox(height: 16),
               ],
@@ -2640,13 +2668,39 @@ class _EmployeeChecklistDetailScreenState extends State<EmployeeChecklistDetailS
           final checklist = _asMap(payload['checklist']);
           final items = _asList(checklist['items']);
           final completed = _readBool(checklist, 'completed_today');
+          final description = _readString(checklist, 'description');
+          final frequency = _readString(checklist, 'frequency');
           return _PageBody(
             children: [
-              _HeroCard(
-                title: _readString(checklist, 'title'),
-                subtitle: _readString(checklist, 'frequency'),
-                value: completed ? 'Done' : 'Open',
+              _DashboardHeroCard(
+                title: frequency.isEmpty ? _tr(context, 'Checklist') : frequency,
+                subtitle: _readString(checklist, 'title'),
+                value: completed
+                    ? _tr(context, 'Completed today')
+                    : '${items.length} items to review',
+                icon: Icons.fact_check_rounded,
               ),
+              const SizedBox(height: 16),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  _StatusChip(
+                    label: completed
+                        ? 'Completed today'
+                        : 'Pending checklist',
+                  ),
+                  _StatusChip(label: '${items.length} ${_tr(context, 'Items')}'),
+                  if (frequency.isNotEmpty) _StatusChip(label: frequency),
+                ],
+              ),
+              if (description.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                _SectionCard(
+                  title: _tr(context, 'Checklist'),
+                  child: Text(description),
+                ),
+              ],
               const SizedBox(height: 16),
               _SectionCard(
                 title: 'Items',
@@ -2654,12 +2708,11 @@ class _EmployeeChecklistDetailScreenState extends State<EmployeeChecklistDetailS
                     ? const Text('No checklist items.')
                     : Column(
                         children: [
-                          for (final item in items)
-                            CheckboxListTile(
-                              value: true,
-                              onChanged: null,
-                              contentPadding: EdgeInsets.zero,
-                              title: Text(_readString(item, 'title')),
+                          for (var index = 0; index < items.length; index++)
+                            _ChecklistItemTile(
+                              index: index + 1,
+                              title: _readString(_asMap(items[index]), 'title'),
+                              completed: completed,
                             ),
                         ],
                       ),
@@ -2687,6 +2740,81 @@ class OwnerDashboardPage extends StatelessWidget {
   final MobileApiClient api;
   final SessionUser user;
 
+  Widget _buildNativeView(
+    BuildContext context,
+    Map<String, dynamic> dashboard,
+    List<dynamic> employees,
+    List<dynamic> courses,
+  ) {
+    return _PageBody(
+      children: [
+        _DashboardHeroCard(
+          title: _tr(context, 'Workspace overview'),
+          subtitle: user.businessName,
+          value: '${dashboard['employee_total'] ?? 0} ${_tr(context, 'Employees')}',
+          icon: Icons.apartment_rounded,
+        ),
+        const SizedBox(height: 18),
+        _DashboardMetricRow(
+          metrics: [
+            _DashboardMetricData(
+              'Employees',
+              '${dashboard['employee_total'] ?? 0}',
+              icon: Icons.group_outlined,
+            ),
+            _DashboardMetricData(
+              'Courses',
+              '${dashboard['course_total'] ?? 0}',
+              icon: Icons.menu_book_outlined,
+            ),
+            _DashboardMetricData(
+              'Checklists',
+              '${dashboard['checklist_total'] ?? 0}',
+              icon: Icons.checklist_rounded,
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
+        _HeaderRow(title: 'Your people', trailing: _sectionLink('View all')),
+        const SizedBox(height: 14),
+        if (employees.isEmpty)
+          const _SectionCard(title: 'Employees', child: Text('No employees yet.'))
+        else
+          for (final item in employees.take(3)) ...[
+            _NativeLessonTile(
+              title: _readString(item, 'display_name'),
+              subtitle: _readString(item, 'job_title').isEmpty
+                  ? _readString(item, 'username')
+                  : _readString(item, 'job_title'),
+              accent: const Color(0xFFEFF5FF),
+              trailingIcon: Icons.person_outline_rounded,
+            ),
+            const SizedBox(height: 14),
+          ],
+        const SizedBox(height: 6),
+        _HeaderRow(title: 'Courses', trailing: _sectionLink('View all')),
+        const SizedBox(height: 14),
+        if (courses.isEmpty)
+          const _SectionCard(title: 'Courses', child: Text('No assignable courses.'))
+        else
+          for (final item in courses.take(3)) ...[
+            _NativeCoursePromoCard(
+              eyebrow: _readString(item, 'business_name').isEmpty
+                  ? 'Shared'
+                  : 'Workspace',
+              title: _readString(item, 'title'),
+              meta: _readString(item, 'business_name').isEmpty
+                  ? user.businessName
+                  : _readString(item, 'business_name'),
+              supporting: _tr(context, 'Suggested course pushes'),
+              icon: Icons.auto_awesome_motion_rounded,
+            ),
+            const SizedBox(height: 14),
+          ],
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return ApiFutureBuilder(
@@ -2695,54 +2823,7 @@ class OwnerDashboardPage extends StatelessWidget {
         final dashboard = _asMap(payload['dashboard']);
         final employees = _asList(dashboard['employees']);
         final courses = _asList(dashboard['assignable_courses']);
-        return _PageBody(
-          children: [
-            const _SearchHeroBar(),
-            const SizedBox(height: 16),
-            _HeroCard(
-              title: 'Workspace overview',
-              subtitle: user.businessName,
-              value: '${dashboard['employee_total'] ?? 0} team members',
-            ),
-            const SizedBox(height: 18),
-            _MetricRow(
-              metrics: [
-                _MetricData('Employees', '${dashboard['employee_total'] ?? 0}'),
-                _MetricData('Courses', '${dashboard['course_total'] ?? 0}'),
-                _MetricData('Checklists', '${dashboard['checklist_total'] ?? 0}'),
-              ],
-            ),
-            const SizedBox(height: 20),
-            _HeaderRow(title: 'Your people', trailing: _sectionLink('View all')),
-            const SizedBox(height: 14),
-            if (employees.isEmpty)
-              const _SectionCard(title: 'Employees', child: Text('No employees yet.'))
-            else
-              for (final item in employees.take(3)) ...[
-                _LessonListCard(
-                  title: _readString(item, 'display_name'),
-                  subtitle: _readString(item, 'job_title').isEmpty ? _readString(item, 'username') : _readString(item, 'job_title'),
-                  trailingIcon: Icons.person_outline_rounded,
-                ),
-                const SizedBox(height: 14),
-              ],
-            const SizedBox(height: 6),
-            _HeaderRow(title: 'Suggested course pushes', trailing: _sectionLink('View all')),
-            const SizedBox(height: 14),
-            if (courses.isEmpty)
-              const _SectionCard(title: 'Courses', child: Text('No assignable courses.'))
-            else
-              for (final item in courses.take(2)) ...[
-                _CoursePromoCard(
-                  warm: courses.first == item,
-                  tag: 'Workspace',
-                  students: _readString(item, 'business_name'),
-                  title: _readString(item, 'title'),
-                ),
-                const SizedBox(height: 16),
-              ],
-          ],
-        );
+        return _buildNativeView(context, dashboard, employees, courses);
       },
     );
   }
@@ -3227,10 +3308,49 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
         final courses = _asList(payload['courses']);
         final ownedCourses = _asList(payload['owned_courses']);
         final employees = _asList(payload['employees']);
+        final visibleCourseTotal = summary['visible_course_total'] ?? courses.length;
+        final ownedCourseTotal = summary['owned_course_total'] ?? ownedCourses.length;
+        final companyCourses = [
+          for (final item in courses)
+            if (_readBool(item, 'is_owned_by_business')) item,
+        ];
+        final sharedCourses = [
+          for (final item in courses)
+            if (!_readBool(item, 'is_owned_by_business')) item,
+        ];
         return _PageBody(
           children: [
+            _DashboardHeroCard(
+              title: _tr(context, 'Courses'),
+              subtitle: ownedCourseTotal == 0
+                  ? 'Build your first company course'
+                  : 'Manage your learning catalog',
+              value: '$ownedCourseTotal owned - $visibleCourseTotal visible',
+              icon: Icons.library_books_rounded,
+            ),
+            const SizedBox(height: 16),
+            _DashboardMetricRow(
+              metrics: [
+                _DashboardMetricData(
+                  'Courses',
+                  '$visibleCourseTotal',
+                  icon: Icons.menu_book_rounded,
+                ),
+                _DashboardMetricData(
+                  'Employees',
+                  '${employees.length}',
+                  icon: Icons.groups_rounded,
+                ),
+                _DashboardMetricData(
+                  'Titles',
+                  '$ownedCourseTotal',
+                  icon: Icons.edit_note_rounded,
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
             _HeaderRow(
-              title: 'Courses',
+              title: 'Your courses',
               trailing: FilledButton.icon(
                 onPressed: _showCreateCourseDialog,
                 icon: const Icon(Icons.add),
@@ -3238,18 +3358,13 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
               ),
             ),
             const SizedBox(height: 16),
-            _MetricRow(
-              metrics: [
-                _MetricData('Courses', '${summary['visible_course_total'] ?? courses.length}'),
-                _MetricData('Assigned', '${employees.length}'),
-                _MetricData('Titles', '${summary['owned_course_total'] ?? ownedCourses.length}'),
-              ],
-            ),
-            const SizedBox(height: 16),
-            if (courses.isEmpty)
-              const _SectionCard(title: 'Courses', child: Text('No courses available.'))
+            if (companyCourses.isEmpty)
+              const _SectionCard(
+                title: 'Courses',
+                child: Text('No company-created courses yet.'),
+              )
             else
-              for (final item in courses) ...[
+              for (final item in companyCourses) ...[
                 _LibraryCourseCard(
                   imageUrl: _readString(item, 'card_image_url'),
                   title: _readString(item, 'title'),
@@ -3257,7 +3372,7 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
                   label: _readString(item, 'card_label'),
                   minutesLabel: '${_readInt(item, 'estimated_minutes')} ${_tr(context, 'min')}',
                   contentCountLabel: '${_readInt(item, 'content_item_total')} ${_tr(context, 'Items')}',
-                  tagLabel: _readBool(item, 'is_owned_by_business') ? 'Owned' : 'Shared',
+                  tagLabel: 'Owned',
                   footnote: _readString(item, 'business_name').isEmpty
                       ? 'دورة مركزية من المشرف العام'
                       : _readString(item, 'business_name'),
@@ -3278,6 +3393,42 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
                 ),
                 const SizedBox(height: 16),
               ],
+            if (sharedCourses.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              const _HeaderRow(title: 'Shared library'),
+              const SizedBox(height: 16),
+              for (final item in sharedCourses) ...[
+                _LibraryCourseCard(
+                  imageUrl: _readString(item, 'card_image_url'),
+                  title: _readString(item, 'title'),
+                  description: _readString(item, 'description'),
+                  label: _readString(item, 'card_label'),
+                  minutesLabel: '${_readInt(item, 'estimated_minutes')} ${_tr(context, 'min')}',
+                  contentCountLabel: '${_readInt(item, 'content_item_total')} ${_tr(context, 'Items')}',
+                  tagLabel: 'Shared',
+                  footnote: _readString(item, 'business_name').isEmpty
+                      ? 'Central course library'
+                      : _readString(item, 'business_name'),
+                  ctaLabel: _tr(context, 'Manage Content'),
+                  onTap: () async {
+                    await Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => OwnerCourseDetailScreen(
+                          api: widget.api,
+                          courseId: _readInt(item, 'id'),
+                        ),
+                      ),
+                    );
+                    _reload();
+                  },
+                  secondaryActionLabel: _tr(context, 'Assign'),
+                  onSecondaryTap: employees.isEmpty
+                      ? null
+                      : () => _showAssignDialog(_readInt(item, 'id'), employees),
+                ),
+                const SizedBox(height: 16),
+              ],
+            ],
           ],
         );
       },
@@ -4268,14 +4419,344 @@ class _PageBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: Align(
-        alignment: Alignment.topCenter,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 720),
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(24, 10, 24, 120),
-            children: children,
+      child: DecoratedBox(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFFF7FBF9), Color(0xFFF2F7F5)],
           ),
+        ),
+        child: Align(
+          alignment: Alignment.topCenter,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 720),
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 120),
+              children: children,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DashboardHeroCard extends StatelessWidget {
+  const _DashboardHeroCard({
+    required this.title,
+    required this.subtitle,
+    required this.value,
+    required this.icon,
+  });
+
+  final String title;
+  final String subtitle;
+  final String value;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(30),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [_brandTeal, Color(0xFF13A36E)],
+        ),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x180F172A),
+            blurRadius: 28,
+            offset: Offset(0, 14),
+          ),
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.18),
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: Icon(icon, color: Colors.white),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: Colors.white.withValues(alpha: 0.86),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  subtitle,
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    color: Colors.white,
+                    height: 1.1,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  value,
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: Colors.white.withValues(alpha: 0.82),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DashboardMetricRow extends StatelessWidget {
+  const _DashboardMetricRow({required this.metrics});
+
+  final List<_DashboardMetricData> metrics;
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 12,
+      runSpacing: 12,
+      children: [
+        for (final metric in metrics)
+          SizedBox(width: 210, child: _DashboardMetricCard(data: metric)),
+      ],
+    );
+  }
+}
+
+class _DashboardMetricCard extends StatelessWidget {
+  const _DashboardMetricCard({required this.data});
+
+  final _DashboardMetricData data;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: _line),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: const Color(0xFFEAF7F4),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Icon(data.icon, size: 22, color: _brandTeal),
+          ),
+          const SizedBox(height: 16),
+          Text(data.value, style: Theme.of(context).textTheme.headlineSmall),
+          const SizedBox(height: 6),
+          Text(
+            _tr(context, data.label),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DashboardMetricData {
+  const _DashboardMetricData(this.label, this.value, {required this.icon});
+
+  final String label;
+  final String value;
+  final IconData icon;
+}
+
+class _NativeCoursePromoCard extends StatelessWidget {
+  const _NativeCoursePromoCard({
+    required this.eyebrow,
+    required this.title,
+    required this.meta,
+    required this.icon,
+    this.supporting = '',
+    this.onTap,
+  });
+
+  final String eyebrow;
+  final String title;
+  final String meta;
+  final String supporting;
+  final IconData icon;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(28),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(28),
+        onTap: onTap,
+        child: Ink(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(color: _line),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x100F172A),
+                blurRadius: 18,
+                offset: Offset(0, 10),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 7,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEAF7F4),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      _tr(context, eyebrow),
+                      style: const TextStyle(
+                        color: _brandTealDark,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    _tr(context, meta),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: _muted,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+              Text(
+                _tr(context, title),
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontSize: 22,
+                  height: 1.12,
+                ),
+              ),
+              if (supporting.trim().isNotEmpty) ...[
+                const SizedBox(height: 10),
+                Text(
+                  _tr(context, supporting),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ],
+              const SizedBox(height: 18),
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEAF7F4),
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Icon(icon, color: _brandTeal),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _NativeLessonTile extends StatelessWidget {
+  const _NativeLessonTile({
+    required this.title,
+    required this.subtitle,
+    required this.trailingIcon,
+    this.accent = const Color(0xFFEAF2FF),
+    this.onTap,
+  });
+
+  final String title;
+  final String subtitle;
+  final IconData trailingIcon;
+  final Color accent;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(24),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: _line),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 68,
+              height: 68,
+              decoration: BoxDecoration(
+                color: accent,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Icon(trailingIcon, color: _brandTeal),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _tr(context, title),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(
+                      context,
+                    ).textTheme.titleLarge?.copyWith(fontSize: 16),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    _tr(context, subtitle),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 10),
+            const Icon(Icons.chevron_right_rounded, color: _muted),
+          ],
         ),
       ),
     );
@@ -5082,7 +5563,22 @@ class _LessonListCard extends StatelessWidget {
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(color: _muted),
                 ),
                 const SizedBox(height: 6),
-                const Text('★★★★☆', style: TextStyle(color: Color(0xFFF7A928), letterSpacing: 1.2)),
+                Row(
+                  children: List<Widget>.generate(
+                    4,
+                    (index) => const Icon(
+                      Icons.star_rounded,
+                      size: 14,
+                      color: Color(0xFFF7A928),
+                    ),
+                  )..add(
+                      const Icon(
+                        Icons.star_half_rounded,
+                        size: 14,
+                        color: Color(0xFFF7A928),
+                      ),
+                    ),
+                ),
               ],
             ),
           ),
@@ -5231,6 +5727,70 @@ class _StatusChip extends StatelessWidget {
           color: _brandTealDark,
           fontWeight: FontWeight.w700,
         ),
+      ),
+    );
+  }
+}
+
+class _ChecklistItemTile extends StatelessWidget {
+  const _ChecklistItemTile({
+    required this.index,
+    required this.title,
+    required this.completed,
+  });
+
+  final int index;
+  final String title;
+  final bool completed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: completed ? const Color(0xFFEAF7F4) : const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: completed ? const Color(0xFFD2EBE4) : _line,
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: completed ? _brandTeal : Colors.white,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Center(
+              child: completed
+                  ? const Icon(
+                      Icons.check_rounded,
+                      size: 18,
+                      color: Colors.white,
+                    )
+                  : Text(
+                      '$index',
+                      style: const TextStyle(
+                        color: _brandTealDark,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              _tr(context, title),
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                height: 1.35,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
