@@ -261,35 +261,31 @@ class _SkillBiteMobileAppState extends State<SkillBiteMobileApp> {
   @override
   Widget build(BuildContext context) {
     debugPrint('SkillBiteMobileApp build language=$language sessionUser=${sessionUser?.username}');
-    return MaterialApp(
-      title: 'SkillBite Mobile',
-      debugShowCheckedModeBanner: false,
-      theme: _buildTheme(),
-      locale: Locale(language == AppLanguage.ar ? 'ar' : 'en'),
-      supportedLocales: const [
-        Locale('en'),
-        Locale('ar'),
-      ],
-      localizationsDelegates: [
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      home: sessionUser == null
-          ? _AppScope(
-              language: language,
-              onLanguageChanged: _handleLanguageChanged,
-              child: LoginScreen(api: api, onLoggedIn: _handleLogin),
-            )
-          : _AppScope(
-              language: language,
-              onLanguageChanged: _handleLanguageChanged,
-              child: RoleShell(
+    return _AppScope(
+      language: language,
+      onLanguageChanged: _handleLanguageChanged,
+      child: MaterialApp(
+        title: 'SkillBite Mobile',
+        debugShowCheckedModeBanner: false,
+        theme: _buildTheme(),
+        locale: Locale(language == AppLanguage.ar ? 'ar' : 'en'),
+        supportedLocales: const [
+          Locale('en'),
+          Locale('ar'),
+        ],
+        localizationsDelegates: [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        home: sessionUser == null
+            ? LoginScreen(api: api, onLoggedIn: _handleLogin)
+            : RoleShell(
                 api: api,
                 user: sessionUser!,
                 onLogout: _handleLogout,
               ),
-            ),
+      ),
     );
   }
 }
