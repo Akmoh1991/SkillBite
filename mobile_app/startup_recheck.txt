@@ -1,0 +1,80 @@
+Launching lib\main.dart on sdk gphone64 x86 64 in profile mode...
+Running Gradle task 'assembleProfile'...                        
+
+C:\Users\Abdul\SkillBite\mobile_app\android>if "Windows_NT" == "Windows_NT" setlocal
+
+C:\Users\Abdul\SkillBite\mobile_app\android>set DEFAULT_JVM_OPTS= 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>set DIRNAME=C:\Users\Abdul\SkillBite\mobile_app\android\ 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>if "C:\Users\Abdul\SkillBite\mobile_app\android\" == "" set DIRNAME=. 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>set APP_BASE_NAME=gradlew 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>set APP_HOME=C:\Users\Abdul\SkillBite\mobile_app\android\ 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>if defined JAVA_HOME goto findJavaFromJavaHome 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>set JAVA_HOME=C:\Program Files\Android\Android Studio\jbr 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>set JAVA_EXE=C:\Program Files\Android\Android Studio\jbr/bin/java.exe 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>if exist "C:\Program Files\Android\Android Studio\jbr/bin/java.exe" goto init 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>if not "Windows_NT" == "Windows_NT" goto win9xME_args 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>if "@eval[2+2]" == "4" goto 4NT_args 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>set CMD_LINE_ARGS= 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>set _SKIP=2 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>if "x-q" == "x" goto execute 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>set CMD_LINE_ARGS=-q -Ptarget-platform=android-x64 -Ptarget=C:\Users\Abdul\SkillBite\mobile_app\lib\main.dart -Pbase-application-name=android.app.Application -Pdart-defines=RkxVVFRFUl9WRVJTSU9OPTMuMzguMw==,RkxVVFRFUl9DSEFOTkVMPXN0YWJsZQ==,RkxVVFRFUl9HSVRfVVJMPWh0dHBzOi8vZ2l0aHViLmNvbS9mbHV0dGVyL2ZsdXR0ZXIuZ2l0,RkxVVFRFUl9GUkFNRVdPUktfUkVWSVNJT049MTkwNzRkMTJmNw==,RkxVVFRFUl9FTkdJTkVfUkVWSVNJT049MTNlNjU4NzI1ZA==,RkxVVFRFUl9EQVJUX1ZFUlNJT049My4xMC4x -Pdart-obfuscation=false -Ptrack-widget-creation=true -Ptree-shake-icons=false -Pfilesystem-scheme=org-dartlang-root assembleProfile 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>goto execute 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>set CLASSPATH=C:\Users\Abdul\SkillBite\mobile_app\android\\gradle\wrapper\gradle-wrapper.jar 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>"C:\Program Files\Android\Android Studio\jbr/bin/java.exe"    "-Dorg.gradle.appname=gradlew" -classpath "C:\Users\Abdul\SkillBite\mobile_app\android\\gradle\wrapper\gradle-wrapper.jar" org.gradle.wrapper.GradleWrapperMain -q -Ptarget-platform=android-x64 -Ptarget=C:\Users\Abdul\SkillBite\mobile_app\lib\main.dart -Pbase-application-name=android.app.Application -Pdart-defines=RkxVVFRFUl9WRVJTSU9OPTMuMzguMw==,RkxVVFRFUl9DSEFOTkVMPXN0YWJsZQ==,RkxVVFRFUl9HSVRfVVJMPWh0dHBzOi8vZ2l0aHViLmNvbS9mbHV0dGVyL2ZsdXR0ZXIuZ2l0,RkxVVFRFUl9GUkFNRVdPUktfUkVWSVNJT049MTkwNzRkMTJmNw==,RkxVVFRFUl9FTkdJTkVfUkVWSVNJT049MTNlNjU4NzI1ZA==,RkxVVFRFUl9EQVJUX1ZFUlNJT049My4xMC4x -Pdart-obfuscation=false -Ptrack-widget-creation=true -Ptree-shake-icons=false -Pfilesystem-scheme=org-dartlang-root assembleProfile 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>if "0" == "0" goto mainEnd 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>if "Windows_NT" == "Windows_NT" endlocal
+Running Gradle task 'assembleProfile'...                          113.2s
+√ Built build\app\outputs\flutter-apk\app-profile.apk (41.1MB)
+Installing build\app\outputs\flutter-apk\app-profile.apk...         5.5s
+I/flutter (13044): [IMPORTANT:flutter/shell/common/shell.cc(527)] [Action Required]: Impeller opt-out deprecated.
+I/flutter (13044):     The application opted out of Impeller by either using the
+I/flutter (13044):     `--no-enable-impeller` flag or the
+I/flutter (13044):     `io.flutter.embedding.android.EnableImpeller` `AndroidManifest.xml` entry.
+I/flutter (13044):     These options are going to go away in an upcoming Flutter release. Remove
+I/flutter (13044):     the explicit opt-out. If you need to opt-out, please report a bug describing
+I/flutter (13044):     the issue.
+I/flutter (13044): 
+I/flutter (13044):     https://github.com/flutter/flutter/issues/new?template=02_bug.yml
+I/flutter (13044): 
+I/flutter (13044): SkillBite app main() start
+I/flutter (13044): SkillBiteMobileApp build language=AppLanguage.ar sessionUser=null
+
+Flutter run key commands.
+h List all available interactive commands.
+c Clear the screen
+q Quit (terminate the application on the device).
+
+A Dart VM Service on sdk gphone64 x86 64 is available at: http://127.0.0.1:60113/edjvfFW5R6w=/
+The Flutter DevTools debugger and profiler on sdk gphone64 x86 64 is available at: http://127.0.0.1:60113/edjvfFW5R6w=/devtools/?uri=ws://127.0.0.1:60113/edjvfFW5R6w=/ws
+W/HWUI    (13044): Failed to choose config with EGL_SWAP_BEHAVIOR_PRESERVED, retrying without...
+W/HWUI    (13044): Failed to initialize 101010-2 format, error = EGL_SUCCESS
+I/Gralloc4(13044): mapper 4.x is not supported
+I/flutter (13044): SkillBiteMobileApp build language=AppLanguage.ar sessionUser=nader1
+I/Choreographer(13044): Skipped 67 frames!  The application may be doing too much work on its main thread.
+I/flutter (13044): SkillBiteMobileApp build language=AppLanguage.ar sessionUser=nader1
+D/ProfileInstaller(13044): Installing profile for com.example.skillbite_mobile
+D/EGL_emulation(13044): app_time_stats: avg=213.27ms min=22.81ms max=669.85ms count=6
+I/killbite_mobile(13044): Compiler allocated 5174KB to compile void android.view.ViewRootImpl.performTraversals()
+D/VRI[MainActivity](13044): visibilityChanged oldVisibility=true newVisibility=false
+D/EGL_emulation(13044): app_time_stats: avg=864.65ms min=128.89ms max=1600.41ms count=2
+D/EGL_emulation(13044): app_time_stats: avg=1403.02ms min=1403.02ms max=1403.02ms count=1
+Lost connection to device.

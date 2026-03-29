@@ -1,0 +1,90 @@
+Launching lib\main.dart on sdk gphone64 x86 64 in debug mode...
+Running Gradle task 'assembleDebug'...                          
+
+C:\Users\Abdul\SkillBite\mobile_app\android>if "Windows_NT" == "Windows_NT" setlocal
+
+C:\Users\Abdul\SkillBite\mobile_app\android>set DEFAULT_JVM_OPTS= 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>set DIRNAME=C:\Users\Abdul\SkillBite\mobile_app\android\ 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>if "C:\Users\Abdul\SkillBite\mobile_app\android\" == "" set DIRNAME=. 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>set APP_BASE_NAME=gradlew 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>set APP_HOME=C:\Users\Abdul\SkillBite\mobile_app\android\ 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>if defined JAVA_HOME goto findJavaFromJavaHome 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>set JAVA_HOME=C:\Program Files\Android\Android Studio\jbr 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>set JAVA_EXE=C:\Program Files\Android\Android Studio\jbr/bin/java.exe 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>if exist "C:\Program Files\Android\Android Studio\jbr/bin/java.exe" goto init 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>if not "Windows_NT" == "Windows_NT" goto win9xME_args 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>if "@eval[2+2]" == "4" goto 4NT_args 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>set CMD_LINE_ARGS= 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>set _SKIP=2 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>if "x-q" == "x" goto execute 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>set CMD_LINE_ARGS=-q -Ptarget-platform=android-x64 -Ptarget=C:\Users\Abdul\SkillBite\mobile_app\lib\main.dart -Pbase-application-name=android.app.Application -Pdart-defines=RkxVVFRFUl9WRVJTSU9OPTMuMzguMw==,RkxVVFRFUl9DSEFOTkVMPXN0YWJsZQ==,RkxVVFRFUl9HSVRfVVJMPWh0dHBzOi8vZ2l0aHViLmNvbS9mbHV0dGVyL2ZsdXR0ZXIuZ2l0,RkxVVFRFUl9GUkFNRVdPUktfUkVWSVNJT049MTkwNzRkMTJmNw==,RkxVVFRFUl9FTkdJTkVfUkVWSVNJT049MTNlNjU4NzI1ZA==,RkxVVFRFUl9EQVJUX1ZFUlNJT049My4xMC4x -Pdart-obfuscation=false -Ptrack-widget-creation=true -Ptree-shake-icons=false -Pfilesystem-scheme=org-dartlang-root assembleDebug 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>goto execute 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>set CLASSPATH=C:\Users\Abdul\SkillBite\mobile_app\android\\gradle\wrapper\gradle-wrapper.jar 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>"C:\Program Files\Android\Android Studio\jbr/bin/java.exe"    "-Dorg.gradle.appname=gradlew" -classpath "C:\Users\Abdul\SkillBite\mobile_app\android\\gradle\wrapper\gradle-wrapper.jar" org.gradle.wrapper.GradleWrapperMain -q -Ptarget-platform=android-x64 -Ptarget=C:\Users\Abdul\SkillBite\mobile_app\lib\main.dart -Pbase-application-name=android.app.Application -Pdart-defines=RkxVVFRFUl9WRVJTSU9OPTMuMzguMw==,RkxVVFRFUl9DSEFOTkVMPXN0YWJsZQ==,RkxVVFRFUl9HSVRfVVJMPWh0dHBzOi8vZ2l0aHViLmNvbS9mbHV0dGVyL2ZsdXR0ZXIuZ2l0,RkxVVFRFUl9GUkFNRVdPUktfUkVWSVNJT049MTkwNzRkMTJmNw==,RkxVVFRFUl9FTkdJTkVfUkVWSVNJT049MTNlNjU4NzI1ZA==,RkxVVFRFUl9EQVJUX1ZFUlNJT049My4xMC4x -Pdart-obfuscation=false -Ptrack-widget-creation=true -Ptree-shake-icons=false -Pfilesystem-scheme=org-dartlang-root assembleDebug 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>if "0" == "0" goto mainEnd 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>if "Windows_NT" == "Windows_NT" endlocal
+Running Gradle task 'assembleDebug'...                             36.4s
+√ Built build\app\outputs\flutter-apk\app-debug.apk
+Installing build\app\outputs\flutter-apk\app-debug.apk...           4.3s
+D/FlutterJNI(12446): Beginning load of flutter...
+D/FlutterJNI(12446): flutter (null) was loaded normally!
+I/flutter (12446): [IMPORTANT:flutter/shell/common/shell.cc(527)] [Action Required]: Impeller opt-out deprecated.
+I/flutter (12446):     The application opted out of Impeller by either using the
+I/flutter (12446):     `--no-enable-impeller` flag or the
+I/flutter (12446):     `io.flutter.embedding.android.EnableImpeller` `AndroidManifest.xml` entry.
+I/flutter (12446):     These options are going to go away in an upcoming Flutter release. Remove
+I/flutter (12446):     the explicit opt-out. If you need to opt-out, please report a bug describing
+I/flutter (12446):     the issue.
+I/flutter (12446): 
+I/flutter (12446):     https://github.com/flutter/flutter/issues/new?template=02_bug.yml
+I/flutter (12446): 
+I/flutter (12446): SkillBite app main() start
+Syncing files to device sdk gphone64 x86 64...                  
+I/flutter (12446): SkillBiteMobileApp build language=AppLanguage.ar sessionUser=null
+Syncing files to device sdk gphone64 x86 64...                   1,459ms
+
+Flutter run key commands.
+r Hot reload. 
+R Hot restart.
+h List all available interactive commands.
+d Detach (terminate "flutter run" but leave application running).
+c Clear the screen
+q Quit (terminate the application on the device).
+
+A Dart VM Service on sdk gphone64 x86 64 is available at: http://127.0.0.1:59566/pjJaup3ZcWQ=/
+The Flutter DevTools debugger and profiler on sdk gphone64 x86 64 is available at: http://127.0.0.1:59566/pjJaup3ZcWQ=/devtools/?uri=ws://127.0.0.1:59566/pjJaup3ZcWQ=/ws
+I/Choreographer(12446): Skipped 253 frames!  The application may be doing too much work on its main thread.
+I/killbite_mobile(12446): Compiler allocated 5174KB to compile void android.view.ViewRootImpl.performTraversals()
+I/WindowExtensionsImpl(12446): Initializing Window Extensions, vendor API level=6, activity embedding enabled=true
+W/HWUI    (12446): Failed to choose config with EGL_SWAP_BEHAVIOR_PRESERVED, retrying without...
+W/HWUI    (12446): Failed to initialize 101010-2 format, error = EGL_SUCCESS
+I/killbite_mobile(12446): Compiler allocated 5417KB to compile void android.view.ViewRootImpl.performTraversals()
+I/Gralloc4(12446): mapper 4.x is not supported
+I/flutter (12446): SkillBiteMobileApp build language=AppLanguage.ar sessionUser=nader1
+D/ProfileInstaller(12446): Installing profile for com.example.skillbite_mobile
+I/Choreographer(12446): Skipped 199 frames!  The application may be doing too much work on its main thread.
+I/HWUI    (12446): Davey! duration=3466ms; Flags=1, FrameTimelineVsyncId=147272, IntendedVsync=11771697045942, Vsync=11775013712476, InputEventId=0, HandleInputStart=11775024364900, AnimationStart=11775024506700, PerformTraversalsStart=11775025197400, DrawStart=11775049319400, FrameDeadline=11771713712608, FrameInterval=11775022141700, FrameStartTime=16666666, SyncQueued=11775052955000, SyncStart=11775054588300, IssueDrawCommandsStart=11775056661600, SwapBuffers=11775088367700, FrameCompleted=11775165335000, DequeueBufferDuration=73814000, QueueBufferDuration=793300, GpuCompleted=11775100609800, SwapBuffersCompleted=11775165335000, DisplayPresentTime=0, CommandSubmissionCompleted=11775088367700, 
+D/EGL_emulation(12446): app_time_stats: avg=629.32ms min=36.03ms max=1780.88ms count=3
+D/EGL_emulation(12446): app_time_stats: avg=353.71ms min=26.02ms max=915.65ms count=3
+D/EGL_emulation(12446): app_time_stats: avg=25725.38ms min=25725.38ms max=25725.38ms count=1
+D/EGL_emulation(12446): app_time_stats: avg=14872.36ms min=1517.89ms max=28226.82ms count=2
+Lost connection to device.

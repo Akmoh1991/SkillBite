@@ -1,0 +1,77 @@
+Launching lib\main.dart on sdk gphone64 x86 64 in debug mode...
+Running Gradle task 'assembleDebug'...                          
+
+C:\Users\Abdul\SkillBite\mobile_app\android>if "Windows_NT" == "Windows_NT" setlocal
+
+C:\Users\Abdul\SkillBite\mobile_app\android>set DEFAULT_JVM_OPTS= 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>set DIRNAME=C:\Users\Abdul\SkillBite\mobile_app\android\ 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>if "C:\Users\Abdul\SkillBite\mobile_app\android\" == "" set DIRNAME=. 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>set APP_BASE_NAME=gradlew 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>set APP_HOME=C:\Users\Abdul\SkillBite\mobile_app\android\ 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>if defined JAVA_HOME goto findJavaFromJavaHome 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>set JAVA_HOME=C:\Program Files\Android\Android Studio\jbr 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>set JAVA_EXE=C:\Program Files\Android\Android Studio\jbr/bin/java.exe 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>if exist "C:\Program Files\Android\Android Studio\jbr/bin/java.exe" goto init 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>if not "Windows_NT" == "Windows_NT" goto win9xME_args 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>if "@eval[2+2]" == "4" goto 4NT_args 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>set CMD_LINE_ARGS= 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>set _SKIP=2 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>if "x-q" == "x" goto execute 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>set CMD_LINE_ARGS=-q -Ptarget-platform=android-x64 -Ptarget=C:\Users\Abdul\SkillBite\mobile_app\lib\main.dart -Pbase-application-name=android.app.Application -Pdart-defines=RkxVVFRFUl9WRVJTSU9OPTMuMzguMw==,RkxVVFRFUl9DSEFOTkVMPXN0YWJsZQ==,RkxVVFRFUl9HSVRfVVJMPWh0dHBzOi8vZ2l0aHViLmNvbS9mbHV0dGVyL2ZsdXR0ZXIuZ2l0,RkxVVFRFUl9GUkFNRVdPUktfUkVWSVNJT049MTkwNzRkMTJmNw==,RkxVVFRFUl9FTkdJTkVfUkVWSVNJT049MTNlNjU4NzI1ZA==,RkxVVFRFUl9EQVJUX1ZFUlNJT049My4xMC4x -Pdart-obfuscation=false -Ptrack-widget-creation=true -Ptree-shake-icons=false -Pfilesystem-scheme=org-dartlang-root assembleDebug 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>goto execute 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>set CLASSPATH=C:\Users\Abdul\SkillBite\mobile_app\android\\gradle\wrapper\gradle-wrapper.jar 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>"C:\Program Files\Android\Android Studio\jbr/bin/java.exe"    "-Dorg.gradle.appname=gradlew" -classpath "C:\Users\Abdul\SkillBite\mobile_app\android\\gradle\wrapper\gradle-wrapper.jar" org.gradle.wrapper.GradleWrapperMain -q -Ptarget-platform=android-x64 -Ptarget=C:\Users\Abdul\SkillBite\mobile_app\lib\main.dart -Pbase-application-name=android.app.Application -Pdart-defines=RkxVVFRFUl9WRVJTSU9OPTMuMzguMw==,RkxVVFRFUl9DSEFOTkVMPXN0YWJsZQ==,RkxVVFRFUl9HSVRfVVJMPWh0dHBzOi8vZ2l0aHViLmNvbS9mbHV0dGVyL2ZsdXR0ZXIuZ2l0,RkxVVFRFUl9GUkFNRVdPUktfUkVWSVNJT049MTkwNzRkMTJmNw==,RkxVVFRFUl9FTkdJTkVfUkVWSVNJT049MTNlNjU4NzI1ZA==,RkxVVFRFUl9EQVJUX1ZFUlNJT049My4xMC4x -Pdart-obfuscation=false -Ptrack-widget-creation=true -Ptree-shake-icons=false -Pfilesystem-scheme=org-dartlang-root assembleDebug 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>if "0" == "0" goto mainEnd 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>if "Windows_NT" == "Windows_NT" endlocal
+Running Gradle task 'assembleDebug'...                             19.6s
+√ Built build\app\outputs\flutter-apk\app-debug.apk
+Installing build\app\outputs\flutter-apk\app-debug.apk...           6.2s
+D/FlutterJNI( 9744): Beginning load of flutter...
+D/FlutterJNI( 9744): flutter (null) was loaded normally!
+I/flutter ( 9744): [IMPORTANT:flutter/shell/platform/android/android_context_gl_impeller.cc(104)] Using the Impeller rendering backend (OpenGLES).
+I/flutter ( 9744): SkillBite app main() start
+I/flutter ( 9744): SkillBiteMobileApp build language=AppLanguage.ar sessionUser=null
+Syncing files to device sdk gphone64 x86 64...                   1,109ms
+
+Flutter run key commands.
+r Hot reload. 
+R Hot restart.
+h List all available interactive commands.
+d Detach (terminate "flutter run" but leave application running).
+c Clear the screen
+q Quit (terminate the application on the device).
+
+A Dart VM Service on sdk gphone64 x86 64 is available at: http://127.0.0.1:57735/aR5iE4P5VJc=/
+I/Choreographer( 9744): Skipped 409 frames!  The application may be doing too much work on its main thread.
+I/WindowExtensionsImpl( 9744): Initializing Window Extensions, vendor API level=6, activity embedding enabled=true
+I/killbite_mobile( 9744): Compiler allocated 5174KB to compile void android.view.ViewRootImpl.performTraversals()
+W/HWUI    ( 9744): Failed to choose config with EGL_SWAP_BEHAVIOR_PRESERVED, retrying without...
+W/HWUI    ( 9744): Failed to initialize 101010-2 format, error = EGL_SUCCESS
+I/Gralloc4( 9744): mapper 4.x is not supported
+I/killbite_mobile( 9744): Compiler allocated 5417KB to compile void android.view.ViewRootImpl.performTraversals()
+I/flutter ( 9744): SkillBiteMobileApp build language=AppLanguage.ar sessionUser=nader1
+D/ProfileInstaller( 9744): Installing profile for com.example.skillbite_mobile
+I/Choreographer( 9744): Skipped 273 frames!  The application may be doing too much work on its main thread.
+I/HWUI    ( 9744): Davey! duration=4687ms; Flags=1, FrameTimelineVsyncId=105074, IntendedVsync=9261630479678, Vsync=9266180479496, InputEventId=0, HandleInputStart=9266185439000, AnimationStart=9266185510700, PerformTraversalsStart=9266185597200, DrawStart=9266211653500, FrameDeadline=9261647146344, FrameInterval=9266184101800, FrameStartTime=16666666, SyncQueued=9266214274500, SyncStart=9266217685000, IssueDrawCommandsStart=9266219618000, SwapBuffers=9266250044500, FrameCompleted=9266321629000, DequeueBufferDuration=63347500, QueueBufferDuration=580900, GpuCompleted=9266265265400, SwapBuffersCompleted=9266321629000, DisplayPresentTime=72904454231359566, CommandSubmissionCompleted=9266250044500, 
+D/EGL_emulation( 9744): app_time_stats: avg=552.57ms min=65.62ms max=1482.25ms count=3
+D/EGL_emulation( 9744): app_time_stats: avg=348.25ms min=41.21ms max=883.11ms count=3
+Lost connection to device.

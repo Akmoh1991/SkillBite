@@ -1,0 +1,295 @@
+Launching lib\main.dart on sdk gphone64 x86 64 in debug mode...
+Running Gradle task 'assembleDebug'...                          
+
+C:\Users\Abdul\SkillBite\mobile_app\android>if "Windows_NT" == "Windows_NT" setlocal
+
+C:\Users\Abdul\SkillBite\mobile_app\android>set DEFAULT_JVM_OPTS= 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>set DIRNAME=C:\Users\Abdul\SkillBite\mobile_app\android\ 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>if "C:\Users\Abdul\SkillBite\mobile_app\android\" == "" set DIRNAME=. 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>set APP_BASE_NAME=gradlew 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>set APP_HOME=C:\Users\Abdul\SkillBite\mobile_app\android\ 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>if defined JAVA_HOME goto findJavaFromJavaHome 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>set JAVA_HOME=C:\Program Files\Android\Android Studio\jbr 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>set JAVA_EXE=C:\Program Files\Android\Android Studio\jbr/bin/java.exe 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>if exist "C:\Program Files\Android\Android Studio\jbr/bin/java.exe" goto init 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>if not "Windows_NT" == "Windows_NT" goto win9xME_args 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>if "@eval[2+2]" == "4" goto 4NT_args 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>set CMD_LINE_ARGS= 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>set _SKIP=2 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>if "x-q" == "x" goto execute 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>set CMD_LINE_ARGS=-q -Ptarget-platform=android-x64 -Ptarget=C:\Users\Abdul\SkillBite\mobile_app\lib\main.dart -Pbase-application-name=android.app.Application -Pdart-defines=RkxVVFRFUl9WRVJTSU9OPTMuMzguMw==,RkxVVFRFUl9DSEFOTkVMPXN0YWJsZQ==,RkxVVFRFUl9HSVRfVVJMPWh0dHBzOi8vZ2l0aHViLmNvbS9mbHV0dGVyL2ZsdXR0ZXIuZ2l0,RkxVVFRFUl9GUkFNRVdPUktfUkVWSVNJT049MTkwNzRkMTJmNw==,RkxVVFRFUl9FTkdJTkVfUkVWSVNJT049MTNlNjU4NzI1ZA==,RkxVVFRFUl9EQVJUX1ZFUlNJT049My4xMC4x -Pdart-obfuscation=false -Ptrack-widget-creation=true -Ptree-shake-icons=false -Pfilesystem-scheme=org-dartlang-root assembleDebug 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>goto execute 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>set CLASSPATH=C:\Users\Abdul\SkillBite\mobile_app\android\\gradle\wrapper\gradle-wrapper.jar 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>"C:\Program Files\Android\Android Studio\jbr/bin/java.exe"    "-Dorg.gradle.appname=gradlew" -classpath "C:\Users\Abdul\SkillBite\mobile_app\android\\gradle\wrapper\gradle-wrapper.jar" org.gradle.wrapper.GradleWrapperMain -q -Ptarget-platform=android-x64 -Ptarget=C:\Users\Abdul\SkillBite\mobile_app\lib\main.dart -Pbase-application-name=android.app.Application -Pdart-defines=RkxVVFRFUl9WRVJTSU9OPTMuMzguMw==,RkxVVFRFUl9DSEFOTkVMPXN0YWJsZQ==,RkxVVFRFUl9HSVRfVVJMPWh0dHBzOi8vZ2l0aHViLmNvbS9mbHV0dGVyL2ZsdXR0ZXIuZ2l0,RkxVVFRFUl9GUkFNRVdPUktfUkVWSVNJT049MTkwNzRkMTJmNw==,RkxVVFRFUl9FTkdJTkVfUkVWSVNJT049MTNlNjU4NzI1ZA==,RkxVVFRFUl9EQVJUX1ZFUlNJT049My4xMC4x -Pdart-obfuscation=false -Ptrack-widget-creation=true -Ptree-shake-icons=false -Pfilesystem-scheme=org-dartlang-root assembleDebug 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>if "0" == "0" goto mainEnd 
+
+C:\Users\Abdul\SkillBite\mobile_app\android>if "Windows_NT" == "Windows_NT" endlocal
+Running Gradle task 'assembleDebug'...                             21.6s
+√ Built build\app\outputs\flutter-apk\app-debug.apk
+Installing build\app\outputs\flutter-apk\app-debug.apk...           5.7s
+D/FlutterJNI(10227): Beginning load of flutter...
+D/FlutterJNI(10227): flutter (null) was loaded normally!
+I/flutter (10227): [IMPORTANT:flutter/shell/platform/android/android_context_gl_impeller.cc(104)] Using the Impeller rendering backend (OpenGLES).
+I/flutter (10227): SkillBite app main() start
+Syncing files to device sdk gphone64 x86 64...                  
+I/flutter (10227): SkillBiteMobileApp build language=AppLanguage.ar sessionUser=null
+Syncing files to device sdk gphone64 x86 64...                     999ms
+
+Flutter run key commands.
+r Hot reload. 
+R Hot restart.
+h List all available interactive commands.
+d Detach (terminate "flutter run" but leave application running).
+c Clear the screen
+q Quit (terminate the application on the device).
+
+A Dart VM Service on sdk gphone64 x86 64 is available at: http://127.0.0.1:58198/T6KgaICdMAQ=/
+The Flutter DevTools debugger and profiler on sdk gphone64 x86 64 is available at: http://127.0.0.1:58198/T6KgaICdMAQ=/devtools/?uri=ws://127.0.0.1:58198/T6KgaICdMAQ=/ws
+I/Choreographer(10227): Skipped 300 frames!  The application may be doing too much work on its main thread.
+I/killbite_mobile(10227): Compiler allocated 5174KB to compile void android.view.ViewRootImpl.performTraversals()
+I/WindowExtensionsImpl(10227): Initializing Window Extensions, vendor API level=6, activity embedding enabled=true
+W/HWUI    (10227): Failed to choose config with EGL_SWAP_BEHAVIOR_PRESERVED, retrying without...
+W/HWUI    (10227): Failed to initialize 101010-2 format, error = EGL_SUCCESS
+I/killbite_mobile(10227): Compiler allocated 5417KB to compile void android.view.ViewRootImpl.performTraversals()
+I/Gralloc4(10227): mapper 4.x is not supported
+I/flutter (10227): SkillBiteMobileApp build language=AppLanguage.ar sessionUser=nader1
+D/ProfileInstaller(10227): Installing profile for com.example.skillbite_mobile
+I/Choreographer(10227): Skipped 262 frames!  The application may be doing too much work on its main thread.
+D/EGL_emulation(10227): app_time_stats: avg=805.89ms min=28.53ms max=1583.25ms count=2
+D/EGL_emulation(10227): app_time_stats: avg=1255.77ms min=44.08ms max=2467.45ms count=2
+D/EGL_emulation(10227): app_time_stats: avg=30031.74ms min=30031.74ms max=30031.74ms count=1
+D/EGL_emulation(10227): app_time_stats: avg=1349.97ms min=1349.97ms max=1349.97ms count=1
+D/EGL_emulation(10227): app_time_stats: avg=17703.83ms min=1480.02ms max=33927.64ms count=2
+
+══╡ EXCEPTION CAUGHT BY RENDERING LIBRARY ╞═════════════════════════════════════════════════════════
+The following assertion was thrown during performLayout():
+BoxConstraints forces an infinite width.
+These invalid constraints were provided to RenderPhysicalShape's layout() function by the following
+function, which probably computed the invalid constraints in question:
+  RenderConstrainedBox.performLayout (package:flutter/src/rendering/proxy_box.dart:293:14)
+The offending constraints were:
+  BoxConstraints(w=Infinity, 56.0<=h<=Infinity)
+
+The relevant error-causing widget was:
+  FilledButton
+  FilledButton:file:///C:/Users/Abdul/SkillBite/mobile_app/lib/features/owner/owner_admin_flow.dart:1503:13
+
+When the exception was thrown, this was the stack:
+#0      BoxConstraints.debugAssertIsValid.<anonymous closure>.throwError (package:flutter/src/rendering/box.dart:549:9)
+#1      BoxConstraints.debugAssertIsValid.<anonymous closure> (package:flutter/src/rendering/box.dart:611:11)
+#2      BoxConstraints.debugAssertIsValid (package:flutter/src/rendering/box.dart:619:6)
+#3      RenderObject.layout (package:flutter/src/rendering/object.dart:2675:19)
+#4      RenderConstrainedBox.performLayout (package:flutter/src/rendering/proxy_box.dart:293:14)
+#5      RenderObject.layout (package:flutter/src/rendering/object.dart:2775:7)
+#6      ChildLayoutHelper.layoutChild (package:flutter/src/rendering/layout_helper.dart:62:11)
+#7      _RenderInputPadding._computeSize (package:flutter/src/material/button_style_button.dart:698:41)
+#8      _RenderInputPadding.performLayout (package:flutter/src/material/button_style_button.dart:728:12)
+#9      RenderObject.layout (package:flutter/src/rendering/object.dart:2775:7)
+#10     RenderProxyBoxMixin.performLayout (package:flutter/src/rendering/proxy_box.dart:115:18)
+#11     RenderObject.layout (package:flutter/src/rendering/object.dart:2775:7)
+#12     ChildLayoutHelper.layoutChild (package:flutter/src/rendering/layout_helper.dart:62:11)
+#13     RenderFlex._computeSizes (package:flutter/src/rendering/flex.dart:1161:28)
+#14     RenderFlex.performLayout (package:flutter/src/rendering/flex.dart:1257:32)
+#15     RenderObject.layout (package:flutter/src/rendering/object.dart:2775:7)
+#16     ChildLayoutHelper.layoutChild (package:flutter/src/rendering/layout_helper.dart:62:11)
+#17     RenderFlex._computeSizes (package:flutter/src/rendering/flex.dart:1161:28)
+#18     RenderFlex.performLayout (package:flutter/src/rendering/flex.dart:1257:32)
+#19     RenderObject.layout (package:flutter/src/rendering/object.dart:2775:7)
+#20     RenderConstrainedBox.performLayout (package:flutter/src/rendering/proxy_box.dart:293:14)
+#21     RenderObject.layout (package:flutter/src/rendering/object.dart:2775:7)
+#22     RenderPositionedBox.performLayout (package:flutter/src/rendering/shifted_box.dart:465:14)
+#23     RenderObject.layout (package:flutter/src/rendering/object.dart:2775:7)
+#24     RenderProxyBoxMixin.performLayout (package:flutter/src/rendering/proxy_box.dart:115:18)
+#25     RenderObject.layout (package:flutter/src/rendering/object.dart:2775:7)
+#26     RenderProxyBoxMixin.performLayout (package:flutter/src/rendering/proxy_box.dart:115:18)
+#27     RenderObject.layout (package:flutter/src/rendering/object.dart:2775:7)
+#28     RenderSliverList.performLayout (package:flutter/src/rendering/sliver_list.dart:213:28)
+#29     RenderObject.layout (package:flutter/src/rendering/object.dart:2775:7)
+#30     RenderSliverEdgeInsetsPadding.performLayout (package:flutter/src/rendering/sliver_padding.dart:133:12)
+#31     RenderSliverPadding.performLayout (package:flutter/src/rendering/sliver_padding.dart:371:11)
+#32     RenderObject.layout (package:flutter/src/rendering/object.dart:2775:7)
+#33     RenderViewportBase.layoutChildSequence (package:flutter/src/rendering/viewport.dart:673:13)
+#34     RenderViewport._attemptLayout (package:flutter/src/rendering/viewport.dart:1684:12)
+#35     RenderViewport.performLayout (package:flutter/src/rendering/viewport.dart:1575:20)
+#36     RenderObject.layout (package:flutter/src/rendering/object.dart:2775:7)
+#37     RenderProxyBoxMixin.performLayout (package:flutter/src/rendering/proxy_box.dart:115:18)
+#38     RenderObject.layout (package:flutter/src/rendering/object.dart:2775:7)
+#39     RenderProxyBoxMixin.performLayout (package:flutter/src/rendering/proxy_box.dart:115:18)
+#40     RenderObject.layout (package:flutter/src/rendering/object.dart:2775:7)
+#41     RenderProxyBoxMixin.performLayout (package:flutter/src/rendering/proxy_box.dart:115:18)
+#42     RenderObject.layout (package:flutter/src/rendering/object.dart:2775:7)
+#43     RenderProxyBoxMixin.performLayout (package:flutter/src/rendering/proxy_box.dart:115:18)
+#44     RenderObject.layout (package:flutter/src/rendering/object.dart:2775:7)
+#45     RenderProxyBoxMixin.performLayout (package:flutter/src/rendering/proxy_box.dart:115:18)
+#46     RenderObject.layout (package:flutter/src/rendering/object.dart:2775:7)
+#47     RenderProxyBoxMixin.performLayout (package:flutter/src/rendering/proxy_box.dart:115:18)
+#48     RenderObject.layout (package:flutter/src/rendering/object.dart:2775:7)
+#49     RenderProxyBoxMixin.performLayout (package:flutter/src/rendering/proxy_box.dart:115:18)
+#50     RenderCustomPaint.performLayout (package:flutter/src/rendering/custom_paint.dart:574:11)
+#51     RenderObject.layout (package:flutter/src/rendering/object.dart:2775:7)
+#52     RenderProxyBoxMixin.performLayout (package:flutter/src/rendering/proxy_box.dart:115:18)
+#53     RenderObject.layout (package:flutter/src/rendering/object.dart:2775:7)
+#54     RenderProxyBoxMixin.performLayout (package:flutter/src/rendering/proxy_box.dart:115:18)
+#55     _RenderCustomClip.performLayout (package:flutter/src/rendering/proxy_box.dart:1481:11)
+#56     RenderObject.layout (package:flutter/src/rendering/object.dart:2775:7)
+#57     RenderPadding.performLayout (package:flutter/src/rendering/shifted_box.dart:243:12)
+#58     RenderObject.layout (package:flutter/src/rendering/object.dart:2775:7)
+#59     RenderProxyBoxMixin.performLayout (package:flutter/src/rendering/proxy_box.dart:115:18)
+#60     RenderObject.layout (package:flutter/src/rendering/object.dart:2775:7)
+#61     MultiChildLayoutDelegate.layoutChild (package:flutter/src/rendering/custom_layout.dart:180:12)
+#62     _ScaffoldLayout.performLayout (package:flutter/src/material/scaffold.dart:1112:7)
+#63     MultiChildLayoutDelegate._callPerformLayout (package:flutter/src/rendering/custom_layout.dart:249:7)
+#64     RenderCustomMultiChildLayoutBox.performLayout (package:flutter/src/rendering/custom_layout.dart:420:14)
+#65     RenderObject.layout (package:flutter/src/rendering/object.dart:2775:7)
+#66     RenderProxyBoxMixin.performLayout (package:flutter/src/rendering/proxy_box.dart:115:18)
+#67     RenderObject.layout (package:flutter/src/rendering/object.dart:2775:7)
+#68     RenderProxyBoxMixin.performLayout (package:flutter/src/rendering/proxy_box.dart:115:18)
+#69     _RenderCustomClip.performLayout (package:flutter/src/rendering/proxy_box.dart:1481:11)
+#70     RenderObject.layout (package:flutter/src/rendering/object.dart:2775:7)
+#71     RenderProxyBoxMixin.performLayout (package:flutter/src/rendering/proxy_box.dart:115:18)
+#72     RenderObject.layout (package:flutter/src/rendering/object.dart:2775:7)
+#73     RenderProxyBoxMixin.performLayout (package:flutter/src/rendering/proxy_box.dart:115:18)
+#74     RenderObject.layout (package:flutter/src/rendering/object.dart:2775:7)
+#75     RenderProxyBoxMixin.performLayout (package:flutter/src/rendering/proxy_box.dart:115:18)
+#76     RenderObject.layout (package:flutter/src/rendering/object.dart:2775:7)
+#77     RenderProxyBoxMixin.performLayout (package:flutter/src/rendering/proxy_box.dart:115:18)
+#78     RenderObject.layout (package:flutter/src/rendering/object.dart:2775:7)
+#79     RenderProxyBoxMixin.performLayout (package:flutter/src/rendering/proxy_box.dart:115:18)
+#80     RenderObject.layout (package:flutter/src/rendering/object.dart:2775:7)
+#81     RenderProxyBoxMixin.performLayout (package:flutter/src/rendering/proxy_box.dart:115:18)
+#82     RenderObject.layout (package:flutter/src/rendering/object.dart:2775:7)
+#83     RenderProxyBoxMixin.performLayout (package:flutter/src/rendering/proxy_box.dart:115:18)
+#84     RenderObject.layout (package:flutter/src/rendering/object.dart:2775:7)
+#85     RenderProxyBoxMixin.performLayout (package:flutter/src/rendering/proxy_box.dart:115:18)
+#86     RenderObject.layout (package:flutter/src/rendering/object.dart:2775:7)
+#87     RenderProxyBoxMixin.performLayout (package:flutter/src/rendering/proxy_box.dart:115:18)
+#88     RenderObject.layout (package:flutter/src/rendering/object.dart:2775:7)
+#89     RenderProxyBoxMixin.performLayout (package:flutter/src/rendering/proxy_box.dart:115:18)
+#90     RenderObject.layout (package:flutter/src/rendering/object.dart:2775:7)
+#91     RenderProxyBoxMixin.performLayout (package:flutter/src/rendering/proxy_box.dart:115:18)
+#92     RenderObject.layout (package:flutter/src/rendering/object.dart:2775:7)
+#93     RenderProxyBoxMixin.performLayout (package:flutter/src/rendering/proxy_box.dart:115:18)
+#94     RenderObject.layout (package:flutter/src/rendering/object.dart:2775:7)
+#95     RenderProxyBoxMixin.performLayout (package:flutter/src/rendering/proxy_box.dart:115:18)
+#96     RenderObject.layout (package:flutter/src/rendering/object.dart:2775:7)
+#97     RenderProxyBoxMixin.performLayout (package:flutter/src/rendering/proxy_box.dart:115:18)
+#98     RenderObject.layout (package:flutter/src/rendering/object.dart:2775:7)
+#99     RenderProxyBoxMixin.performLayout (package:flutter/src/rendering/proxy_box.dart:115:18)
+#100    RenderObject.layout (package:flutter/src/rendering/object.dart:2775:7)
+#101    RenderOffstage.performLayout (package:flutter/src/rendering/proxy_box.dart:3846:14)
+#102    RenderObject.layout (package:flutter/src/rendering/object.dart:2775:7)
+#103    RenderProxyBoxMixin.performLayout (package:flutter/src/rendering/proxy_box.dart:115:18)
+#104    RenderObject.layout (package:flutter/src/rendering/object.dart:2775:7)
+#105    _RenderTheaterMixin.layoutChild (package:flutter/src/widgets/overlay.dart:1084:13)
+#106    _RenderTheater.performLayout (package:flutter/src/widgets/overlay.dart:1429:9)
+#107    RenderObject._layoutWithoutResize (package:flutter/src/rendering/object.dart:2623:7)
+#108    PipelineOwner.flushLayout (package:flutter/src/rendering/object.dart:1170:18)
+#109    PipelineOwner.flushLayout (package:flutter/src/rendering/object.dart:1183:15)
+#110    RendererBinding.drawFrame (package:flutter/src/rendering/binding.dart:629:23)
+#111    WidgetsBinding.drawFrame (package:flutter/src/widgets/binding.dart:1264:13)
+#112    RendererBinding._handlePersistentFrameCallback (package:flutter/src/rendering/binding.dart:495:5)
+#113    SchedulerBinding._invokeFrameCallback (package:flutter/src/scheduler/binding.dart:1434:15)
+#114    SchedulerBinding.handleDrawFrame (package:flutter/src/scheduler/binding.dart:1347:9)
+#115    SchedulerBinding._handleDrawFrame (package:flutter/src/scheduler/binding.dart:1200:5)
+#116    _invoke (dart:ui/hooks.dart:356:13)
+#117    PlatformDispatcher._drawFrame (dart:ui/platform_dispatcher.dart:444:5)
+#118    _drawFrame (dart:ui/hooks.dart:328:31)
+
+The following RenderObject was being processed when the exception was fired: RenderConstrainedBox#7689e relayoutBoundary=up11 NEEDS-LAYOUT NEEDS-PAINT NEEDS-COMPOSITING-BITS-UPDATE:
+  creator: ConstrainedBox ← _InputPadding ← Semantics ← FilledButton ← Row ← Column ← ConstrainedBox ←
+    Center ← RepaintBoundary ← IndexedSemantics ← _SelectionKeepAlive ←
+    NotificationListener<KeepAliveNotification> ← ⋯
+  parentData: offset=Offset(0.0, 0.0) (can use size)
+  constraints: BoxConstraints(unconstrained)
+  size: MISSING
+  additionalConstraints: BoxConstraints(w=Infinity, 56.0<=h<=Infinity)
+This RenderObject had the following descendants (showing up to depth 5):
+    child: RenderPhysicalShape#44849 NEEDS-LAYOUT NEEDS-PAINT NEEDS-COMPOSITING-BITS-UPDATE
+      child: RenderCustomPaint#a5cc5 NEEDS-LAYOUT NEEDS-PAINT NEEDS-COMPOSITING-BITS-UPDATE
+        child: _RenderInkFeatures#ab04a NEEDS-LAYOUT NEEDS-PAINT NEEDS-COMPOSITING-BITS-UPDATE
+          child: RenderSemanticsAnnotations#1cf2a NEEDS-LAYOUT NEEDS-PAINT NEEDS-COMPOSITING-BITS-UPDATE
+            child: RenderMouseRegion#e7077 NEEDS-LAYOUT NEEDS-PAINT NEEDS-COMPOSITING-BITS-UPDATE
+════════════════════════════════════════════════════════════════════════════════════════════════════
+
+Another exception was thrown: RenderBox was not laid out: RenderConstrainedBox#7689e relayoutBoundary=up11 NEEDS-PAINT NEEDS-COMPOSITING-BITS-UPDATE
+Another exception was thrown: RenderBox was not laid out: _RenderInputPadding#5fb09 relayoutBoundary=up10 NEEDS-PAINT NEEDS-COMPOSITING-BITS-UPDATE
+Another exception was thrown: RenderBox was not laid out: RenderSemanticsAnnotations#dd80f relayoutBoundary=up9 NEEDS-PAINT NEEDS-COMPOSITING-BITS-UPDATE
+Another exception was thrown: RenderBox was not laid out: RenderFlex#2beef relayoutBoundary=up8 NEEDS-PAINT NEEDS-COMPOSITING-BITS-UPDATE
+Another exception was thrown: RenderBox was not laid out: RenderFlex#7a28f relayoutBoundary=up7 NEEDS-PAINT NEEDS-COMPOSITING-BITS-UPDATE
+Another exception was thrown: RenderBox was not laid out: RenderConstrainedBox#6c094 relayoutBoundary=up6 NEEDS-PAINT NEEDS-COMPOSITING-BITS-UPDATE
+Another exception was thrown: RenderBox was not laid out: RenderPositionedBox#511f9 relayoutBoundary=up5 NEEDS-PAINT NEEDS-COMPOSITING-BITS-UPDATE
+Another exception was thrown: RenderBox was not laid out: RenderRepaintBoundary#a068b relayoutBoundary=up4 NEEDS-PAINT NEEDS-COMPOSITING-BITS-UPDATE
+Another exception was thrown: 'package:flutter/src/rendering/sliver_multi_box_adaptor.dart': Failed assertion: line 638 pos 12: 'child.hasSize': is not true.
+Another exception was thrown: Null check operator used on a null value
+Another exception was thrown: Null check operator used on a null value
+D/EGL_emulation(10227): app_time_stats: avg=1313.20ms min=163.36ms max=2463.04ms count=2
+W/WindowOnBackDispatcher(10227): OnBackInvokedCallback is not enabled for the application.
+W/WindowOnBackDispatcher(10227): Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+Another exception was thrown: Null check operator used on a null value
+Another exception was thrown: RenderBox was not laid out: RenderFlex#2beef relayoutBoundary=up8 NEEDS-PAINT
+Another exception was thrown: RenderBox was not laid out: RenderFlex#7a28f relayoutBoundary=up7 NEEDS-PAINT NEEDS-COMPOSITING-BITS-UPDATE
+Another exception was thrown: RenderBox was not laid out: RenderConstrainedBox#6c094 relayoutBoundary=up6 NEEDS-PAINT NEEDS-COMPOSITING-BITS-UPDATE
+Another exception was thrown: RenderBox was not laid out: RenderPositionedBox#511f9 relayoutBoundary=up5 NEEDS-PAINT NEEDS-COMPOSITING-BITS-UPDATE
+Another exception was thrown: RenderBox was not laid out: RenderRepaintBoundary#a068b relayoutBoundary=up4 NEEDS-PAINT
+Another exception was thrown: 'package:flutter/src/rendering/sliver_multi_box_adaptor.dart': Failed assertion: line 638 pos 12: 'child.hasSize': is not true.
+Another exception was thrown: Null check operator used on a null value
+Another exception was thrown: Null check operator used on a null value
+Another exception was thrown: Null check operator used on a null value
+D/EGL_emulation(10227): app_time_stats: avg=6951.44ms min=6951.44ms max=6951.44ms count=1
+D/EGL_emulation(10227): app_time_stats: avg=1497.03ms min=177.50ms max=3544.10ms count=3
+Another exception was thrown: Null check operator used on a null value
+D/EGL_emulation(10227): app_time_stats: avg=1005.16ms min=1005.16ms max=1005.16ms count=1
+Another exception was thrown: 'package:flutter/src/rendering/object.dart': Failed assertion: line 5466 pos 14: '!semantics.parentDataDirty': is not true.
+D/EGL_emulation(10227): app_time_stats: avg=1091.01ms min=1091.01ms max=1091.01ms count=1
+D/EGL_emulation(10227): app_time_stats: avg=529.81ms min=62.29ms max=997.33ms count=2
+Another exception was thrown: BoxConstraints forces an infinite width.
+Another exception was thrown: RenderBox was not laid out: RenderConstrainedBox#3965d relayoutBoundary=up11 NEEDS-PAINT NEEDS-COMPOSITING-BITS-UPDATE
+Another exception was thrown: RenderBox was not laid out: _RenderInputPadding#c9a77 relayoutBoundary=up10 NEEDS-PAINT NEEDS-COMPOSITING-BITS-UPDATE
+Another exception was thrown: RenderBox was not laid out: RenderSemanticsAnnotations#f6d8e relayoutBoundary=up9 NEEDS-PAINT NEEDS-COMPOSITING-BITS-UPDATE
+Another exception was thrown: RenderBox was not laid out: RenderFlex#2667a relayoutBoundary=up8 NEEDS-PAINT NEEDS-COMPOSITING-BITS-UPDATE
+Another exception was thrown: RenderBox was not laid out: RenderFlex#24875 relayoutBoundary=up7 NEEDS-PAINT NEEDS-COMPOSITING-BITS-UPDATE
+Another exception was thrown: RenderBox was not laid out: RenderConstrainedBox#666f1 relayoutBoundary=up6 NEEDS-PAINT NEEDS-COMPOSITING-BITS-UPDATE
+Another exception was thrown: RenderBox was not laid out: RenderPositionedBox#56aa9 relayoutBoundary=up5 NEEDS-PAINT NEEDS-COMPOSITING-BITS-UPDATE
+Another exception was thrown: RenderBox was not laid out: RenderRepaintBoundary#7cace relayoutBoundary=up4 NEEDS-PAINT NEEDS-COMPOSITING-BITS-UPDATE
+Another exception was thrown: 'package:flutter/src/rendering/sliver_multi_box_adaptor.dart': Failed assertion: line 638 pos 12: 'child.hasSize': is not true.
+Another exception was thrown: Null check operator used on a null value
+Another exception was thrown: Null check operator used on a null value
+W/WindowOnBackDispatcher(10227): OnBackInvokedCallback is not enabled for the application.
+W/WindowOnBackDispatcher(10227): Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+D/EGL_emulation(10227): app_time_stats: avg=324.56ms min=15.08ms max=2155.31ms count=8
+Another exception was thrown: Null check operator used on a null value
+Another exception was thrown: RenderBox was not laid out: RenderFlex#2667a relayoutBoundary=up8 NEEDS-PAINT
+Another exception was thrown: RenderBox was not laid out: RenderFlex#24875 relayoutBoundary=up7 NEEDS-PAINT NEEDS-COMPOSITING-BITS-UPDATE
+Another exception was thrown: RenderBox was not laid out: RenderConstrainedBox#666f1 relayoutBoundary=up6 NEEDS-PAINT NEEDS-COMPOSITING-BITS-UPDATE
+Another exception was thrown: RenderBox was not laid out: RenderPositionedBox#56aa9 relayoutBoundary=up5 NEEDS-PAINT NEEDS-COMPOSITING-BITS-UPDATE
+Another exception was thrown: RenderBox was not laid out: RenderRepaintBoundary#7cace relayoutBoundary=up4 NEEDS-PAINT
+Another exception was thrown: 'package:flutter/src/rendering/sliver_multi_box_adaptor.dart': Failed assertion: line 638 pos 12: 'child.hasSize': is not true.
+Another exception was thrown: Null check operator used on a null value
+Another exception was thrown: Null check operator used on a null value
+Another exception was thrown: Null check operator used on a null value
+D/EGL_emulation(10227): app_time_stats: avg=242.86ms min=12.74ms max=1212.41ms count=8
+D/EGL_emulation(10227): app_time_stats: avg=8720.94ms min=8720.94ms max=8720.94ms count=1
+D/EGL_emulation(10227): app_time_stats: avg=778.46ms min=35.91ms max=2822.46ms count=4
+Another exception was thrown: Null check operator used on a null value
+D/EGL_emulation(10227): app_time_stats: avg=1086.80ms min=1086.80ms max=1086.80ms count=1
+Another exception was thrown: 'package:flutter/src/rendering/object.dart': Failed assertion: line 5466 pos 14: '!semantics.parentDataDirty': is not true.
+D/EGL_emulation(10227): app_time_stats: avg=1174.01ms min=1174.01ms max=1174.01ms count=1
+Lost connection to device.

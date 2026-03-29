@@ -1,3 +1,7 @@
+param(
+    [switch]$DebugMode
+)
+
 $ErrorActionPreference = 'Stop'
 
 $repoRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -41,7 +45,19 @@ try {
 if (-not $backendRunning) {
     $backendCommand = "cd '$repoRoot'; .\venv\Scripts\Activate.ps1; python manage.py runserver 0.0.0.0:8000"
     Start-Process powershell -ArgumentList @('-NoExit', '-Command', $backendCommand) | Out-Null
-    Start-Sleep -Seconds 3
+    $deadline = (Get-Date).AddSeconds(30)
+
+    do {
+        Start-Sleep -Seconds 1
+        try {
+            $response = Invoke-WebRequest -Uri 'http://127.0.0.1:8000/' -UseBasicParsing -TimeoutSec 2
+            if ($response.StatusCode -ge 200 -and $response.StatusCode -lt 500) {
+                $backendRunning = $true
+            }
+        } catch {
+            $backendRunning = $false
+        }
+    } while (-not $backendRunning -and (Get-Date) -lt $deadline)
 }
 
 & $adb start-server | Out-Null
@@ -77,4 +93,15 @@ if (-not $device) {
 }
 
 Set-Location $mobileApp
-flutter run -d $device
+
+$flutterArgs = @('run', '-d', $device)
+
+if ($device -like 'emulator-*') {
+    $flutterArgs += '--no-enable-impeller'
+
+    if (-not $DebugMode) {
+        $flutterArgs += '--profile'
+    }
+}
+
+flutter @flutterArgs

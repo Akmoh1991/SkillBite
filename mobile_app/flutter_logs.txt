@@ -1,0 +1,43 @@
+Showing sdk gphone64 x86 64 logs:
+D/FlutterJNI( 9744): Beginning load of flutter...
+D/FlutterJNI( 9744): flutter (null) was loaded normally!
+I/flutter ( 9744): [IMPORTANT:flutter/shell/platform/android/android_context_gl_impeller.cc(104)] Using the Impeller rendering backend (OpenGLES).
+I/flutter ( 9744): The Dart VM service is listening on http://127.0.0.1:35843/__K4t_zLcvQ=/
+I/flutter ( 9744): SkillBite app main() start
+I/flutter ( 9744): SkillBiteMobileApp build language=AppLanguage.ar sessionUser=null
+I/flutter ( 9744): SkillBiteMobileApp build language=AppLanguage.ar sessionUser=nader1
+D/FlutterJNI( 9961): Beginning load of flutter...
+D/FlutterJNI( 9961): flutter (null) was loaded normally!
+I/flutter ( 9961): The Dart VM service is listening on http://127.0.0.1:34137/0KrDGz7FfcA=/
+I/flutter ( 9961): [IMPORTANT:flutter/shell/platform/android/android_context_gl_impeller.cc(104)] Using the Impeller rendering backend (OpenGLES).
+I/flutter ( 9961): SkillBite app main() start
+I/flutter ( 9961): SkillBiteMobileApp build language=AppLanguage.ar sessionUser=null
+I/flutter ( 9961): SkillBiteMobileApp build language=AppLanguage.ar sessionUser=nader1
+D/FlutterJNI(10091): Beginning load of flutter...
+D/FlutterJNI(10091): flutter (null) was loaded normally!
+I/flutter (10091): [IMPORTANT:flutter/shell/platform/android/android_context_gl_impeller.cc(104)] Using the Impeller rendering backend (OpenGLES).
+I/flutter (10091): The Dart VM service is listening on http://127.0.0.1:42725/m7pRDUU1lyc=/
+I/flutter (10091): SkillBite app main() start
+I/flutter (10091): SkillBiteMobileApp build language=AppLanguage.ar sessionUser=null
+I/flutter (10091): SkillBiteMobileApp build language=AppLanguage.ar sessionUser=nader1
+D/FlutterJNI(10227): Beginning load of flutter...
+D/FlutterJNI(10227): flutter (null) was loaded normally!
+I/flutter (10227): [IMPORTANT:flutter/shell/platform/android/android_context_gl_impeller.cc(104)] Using the Impeller rendering backend (OpenGLES).
+I/flutter (10227): The Dart VM service is listening on http://127.0.0.1:44633/h6ivS0xmhfY=/
+I/flutter (10227): SkillBite app main() start
+I/flutter (10227): SkillBiteMobileApp build language=AppLanguage.ar sessionUser=null
+I/flutter (10227): SkillBiteMobileApp build language=AppLanguage.ar sessionUser=nader1
+D/FlutterJNI(10541): Beginning load of flutter...
+D/FlutterJNI(10541): flutter (null) was loaded normally!
+I/flutter (10541): [IMPORTANT:flutter/shell/platform/android/android_context_gl_impeller.cc(104)] Using the Impeller rendering backend (OpenGLES).
+I/flutter (10541): The Dart VM service is listening on http://127.0.0.1:43417/BgYIIU7bm4s=/
+I/flutter (10541): SkillBite app main() start
+I/flutter (10541): SkillBiteMobileApp build language=AppLanguage.ar sessionUser=null
+I/flutter (10541): SkillBiteMobileApp build language=AppLanguage.ar sessionUser=nader1
+D/FlutterJNI(10743): Beginning load of flutter...
+D/FlutterJNI(10743): flutter (null) was loaded normally!
+I/flutter (10743): [IMPORTANT:flutter/shell/platform/android/android_context_gl_impeller.cc(104)] Using the Impeller rendering backend (OpenGLES).
+I/flutter (10743): The Dart VM service is listening on http://127.0.0.1:45385/cqzVOgvHHxM=/
+I/flutter (10743): SkillBite app main() start
+I/flutter (10743): SkillBiteMobileApp build language=AppLanguage.ar sessionUser=null
+I/flutter (10743): SkillBiteMobileApp build language=AppLanguage.ar sessionUser=nader1

@@ -946,11 +946,15 @@ def owner_dashboard_api_view(request):
                 'employees': [_serialize_employee_profile(item) for item in context['employees']],
                 'assignable_courses': [
                     {
-                        'id': course.id,
-                        'title': course.title,
-                        'business_name': course.business.name if course.business else '',
+                        'id': normalized_course.id,
+                        'title': normalized_course.title,
+                        'description': normalized_course.description,
+                        'business_name': normalized_course.business.name if normalized_course.business else '',
+                        'card_image_url': getattr(normalized_course, 'card_image_url', ''),
+                        'card_label': getattr(normalized_course, 'card_label', ''),
                     }
                     for course in context['assignable_courses']
+                    for normalized_course in [_course_card_defaults(course)]
                 ],
             }
         }

@@ -283,6 +283,7 @@ class _SkillBiteMobileAppState extends State<SkillBiteMobileApp> {
     final restored = await _sessionStore.load();
     final savedLanguage = restored.languageName;
     final savedToken = restored.token;
+    final cachedUser = restored.user;
 
     if (savedLanguage == AppLanguage.en.name) {
       language = AppLanguage.en;
@@ -290,11 +291,33 @@ class _SkillBiteMobileAppState extends State<SkillBiteMobileApp> {
       language = AppLanguage.ar;
     }
 
+    if (!mounted) {
+      return;
+    }
+
     if (savedToken != null) {
       api.token = savedToken;
+
+      if (cachedUser != null) {
+        setState(() {
+          sessionUser = cachedUser;
+          restoringSession = false;
+        });
+        unawaited(_refreshSession());
+        return;
+      }
+
       try {
         final payload = await api.get('/auth/me/');
-        sessionUser = SessionUser.fromJson(_asMap(payload['user']));
+        if (!mounted) {
+          return;
+        }
+        setState(() {
+          sessionUser = SessionUser.fromJson(_asMap(payload['user']));
+          restoringSession = false;
+        });
+        unawaited(_persistSession());
+        return;
       } catch (_) {
         api.token = null;
         await _sessionStore.save(languageName: language.name);
@@ -307,6 +330,33 @@ class _SkillBiteMobileAppState extends State<SkillBiteMobileApp> {
     setState(() {
       restoringSession = false;
     });
+  }
+
+  Future<void> _refreshSession() async {
+    if (api.token == null) {
+      return;
+    }
+
+    try {
+      final payload = await api.get('/auth/me/');
+      final refreshedUser = SessionUser.fromJson(_asMap(payload['user']));
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        sessionUser = refreshedUser;
+      });
+      await _persistSession();
+    } catch (_) {
+      api.token = null;
+      await _sessionStore.save(languageName: language.name);
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        sessionUser = null;
+      });
+    }
   }
 
   Future<void> _persistSession() async {
@@ -1414,7 +1464,10 @@ class _RoleShellState extends State<RoleShell> {
           ),
         ],
       ),
-      body: IndexedStack(index: index, children: pages),
+      body: KeyedSubtree(
+        key: ValueKey('${widget.user.role}-$index'),
+        child: pages[index],
+      ),
       bottomNavigationBar: SafeArea(
         minimum: const EdgeInsets.fromLTRB(10, 0, 10, 10),
         child: Container(
@@ -1611,6 +1664,7 @@ class EmployeeDashboardPage extends StatelessWidget {
               meta:
                   '${_readPath(item, ['course', 'estimated_minutes'])} ${_tr(context, 'min')}',
               supporting: _readString(_asMap(item['course']), 'description'),
+              imageUrl: api.resolveUrl(_readPath(item, ['course', 'card_image_url'])),
               icon: _readBool(_asMap(item['course']), 'has_exam')
                   ? Icons.verified_outlined
                   : Icons.play_circle_outline_rounded,
@@ -1739,6 +1793,9 @@ class _EmployeeCoursesPageState extends State<EmployeeCoursesPage> {
                 meta:
                     '${_readInt(_asMap(featuredCourse['course']), 'estimated_minutes')} ${_tr(context, 'min')}',
                 supporting: _readPath(featuredCourse, ['course', 'description']),
+                imageUrl: widget.api.resolveUrl(
+                  _readPath(featuredCourse, ['course', 'card_image_url']),
+                ),
                 icon: Icons.play_circle_outline_rounded,
                 onTap: () async {
                   await Navigator.of(context).push(
@@ -1772,7 +1829,9 @@ class _EmployeeCoursesPageState extends State<EmployeeCoursesPage> {
             else
               for (final item in moreCourses) ...[
                 _LibraryCourseCard(
-                  imageUrl: _readPath(item, ['course', 'card_image_url']),
+                  imageUrl: widget.api.resolveUrl(
+                    _readPath(item, ['course', 'card_image_url']),
+                  ),
                   title: _readPath(item, ['course', 'title']),
                   description: _readPath(item, ['course', 'description']),
                   label: _readPath(item, ['course', 'card_label']),
@@ -2848,24 +2907,30 @@ class _PageBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: DecoratedBox(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFFF7FBF9), Color(0xFFF2F7F5)],
-          ),
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFFF7FBF9), Color(0xFFF2F7F5)],
         ),
-        child: Align(
-          alignment: Alignment.topCenter,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 720),
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(24, 16, 24, 120),
-              children: children,
+      ),
+      child: SafeArea(
+        top: false,
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(24, 16, 24, 120),
+          children: [
+            Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 720),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  mainAxisSize: MainAxisSize.min,
+                  children: children,
+                ),
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );
@@ -2958,13 +3023,20 @@ class _DashboardMetricRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Wrap(
-      spacing: 12,
-      runSpacing: 12,
-      children: [
-        for (final metric in metrics)
-          SizedBox(width: 210, child: _DashboardMetricCard(data: metric)),
-      ],
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      clipBehavior: Clip.none,
+      child: Row(
+        children: [
+          for (var i = 0; i < metrics.length; i++) ...[
+            SizedBox(
+              width: 188,
+              child: _DashboardMetricCard(data: metrics[i]),
+            ),
+            if (i < metrics.length - 1) const SizedBox(width: 12),
+          ],
+        ],
+      ),
     );
   }
 }
@@ -3018,6 +3090,60 @@ class _DashboardMetricData {
   final IconData icon;
 }
 
+class _OptimizedCourseCardImage extends StatelessWidget {
+  const _OptimizedCourseCardImage({
+    required this.imageUrl,
+    required this.title,
+    this.aspectRatio = 1.85,
+    this.borderRadius = 22,
+  });
+
+  final String imageUrl;
+  final String title;
+  final double aspectRatio;
+  final double borderRadius;
+
+  @override
+  Widget build(BuildContext context) {
+    final trimmedImageUrl = imageUrl.trim();
+    final hasImage =
+        trimmedImageUrl.isNotEmpty && (Uri.tryParse(trimmedImageUrl)?.hasScheme ?? false);
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(borderRadius),
+      child: AspectRatio(
+        aspectRatio: aspectRatio,
+        child: !hasImage
+            ? _LibraryCourseFallbackArt(title: title)
+            : LayoutBuilder(
+                builder: (context, constraints) {
+                  final dpr = MediaQuery.devicePixelRatioOf(context);
+                  final width = constraints.hasBoundedWidth && constraints.maxWidth.isFinite
+                      ? constraints.maxWidth
+                      : MediaQuery.sizeOf(context).width;
+                  final targetWidth = (width * dpr).clamp(320.0, 1280.0).round();
+
+                  return Image.network(
+                    trimmedImageUrl,
+                    fit: BoxFit.cover,
+                    cacheWidth: targetWidth,
+                    filterQuality: FilterQuality.low,
+                    frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
+                      if (wasSynchronouslyLoaded || frame != null) {
+                        return child;
+                      }
+                      return _LibraryCourseFallbackArt(title: title);
+                    },
+                    errorBuilder: (context, error, stackTrace) =>
+                        _LibraryCourseFallbackArt(title: title),
+                  );
+                },
+              ),
+      ),
+    );
+  }
+}
+
 class _NativeCoursePromoCard extends StatelessWidget {
   const _NativeCoursePromoCard({
     required this.eyebrow,
@@ -3025,6 +3151,7 @@ class _NativeCoursePromoCard extends StatelessWidget {
     required this.meta,
     required this.icon,
     this.supporting = '',
+    this.imageUrl = '',
     this.onTap,
   });
 
@@ -3033,6 +3160,7 @@ class _NativeCoursePromoCard extends StatelessWidget {
   final String meta;
   final String supporting;
   final IconData icon;
+  final String imageUrl;
   final VoidCallback? onTap;
 
   @override
@@ -3059,6 +3187,13 @@ class _NativeCoursePromoCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              _OptimizedCourseCardImage(
+                imageUrl: imageUrl,
+                title: title,
+                aspectRatio: 1.7,
+                borderRadius: 22,
+              ),
+              const SizedBox(height: 18),
               Row(
                 children: [
                   Container(
@@ -3306,14 +3441,24 @@ class _HeaderRow extends StatelessWidget {
   }
 }
 
-Widget _sectionLink(String label) {
+Widget _sectionLink(String label, {VoidCallback? onTap}) {
   return Builder(
-    builder: (context) => Text(
-      _tr(context, label),
-      style: const TextStyle(
-        color: _brandTeal,
-        fontWeight: FontWeight.w600,
-        fontSize: 16,
+    builder: (context) => Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(999),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+          child: Text(
+            _tr(context, label),
+            style: const TextStyle(
+              color: _brandTeal,
+              fontWeight: FontWeight.w600,
+              fontSize: 16,
+            ),
+          ),
+        ),
       ),
     ),
   );
@@ -3503,10 +3648,7 @@ class _LibraryCourseCard extends StatelessWidget {
     required this.contentCountLabel,
     required this.ctaLabel,
     required this.onTap,
-    this.tagLabel,
     this.footnote,
-    this.secondaryActionLabel,
-    this.onSecondaryTap,
   });
 
   final String imageUrl;
@@ -3517,24 +3659,16 @@ class _LibraryCourseCard extends StatelessWidget {
   final String contentCountLabel;
   final String ctaLabel;
   final VoidCallback onTap;
-  final String? tagLabel;
   final String? footnote;
-  final String? secondaryActionLabel;
-  final VoidCallback? onSecondaryTap;
 
   @override
   Widget build(BuildContext context) {
-    final image = imageUrl.trim();
     final safeTitle = title.trim().isEmpty ? 'Course' : title;
     final safeDescription = description.trim().isEmpty
         ? 'Practical course content with clear guidance and structured steps.'
         : description.trim();
     final safeLabel = label.trim().isEmpty ? 'Course' : label.trim();
-    final safeTagLabel = (tagLabel ?? '').trim();
     final safeFootnote = (footnote ?? '').trim();
-    final safeSecondaryActionLabel = (secondaryActionLabel ?? '').trim();
-    final canLoadNetworkImage =
-        image.isNotEmpty && (Uri.tryParse(image)?.hasScheme ?? false);
 
     return Container(
       decoration: BoxDecoration(
@@ -3554,18 +3688,11 @@ class _LibraryCourseCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(24),
-              child: AspectRatio(
-                aspectRatio: 1.85,
-                child: !canLoadNetworkImage
-                    ? _LibraryCourseFallbackArt(title: safeTitle)
-                    : Image.network(
-                        image,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => _LibraryCourseFallbackArt(title: safeTitle),
-                      ),
-              ),
+            _OptimizedCourseCardImage(
+              imageUrl: imageUrl,
+              title: safeTitle,
+              aspectRatio: 1.85,
+              borderRadius: 24,
             ),
             const SizedBox(height: 20),
             Text(
@@ -3601,15 +3728,13 @@ class _LibraryCourseCard extends StatelessWidget {
                 _LibraryMetaItem(icon: Icons.blur_circular_rounded, label: _tr(context, safeLabel)),
               ],
             ),
-            if (safeTagLabel.isNotEmpty || safeFootnote.isNotEmpty) ...[
+            if (safeFootnote.isNotEmpty) ...[
               const SizedBox(height: 10),
               Wrap(
                 alignment: WrapAlignment.center,
                 spacing: 8,
                 runSpacing: 8,
                 children: [
-                  if (safeTagLabel.isNotEmpty)
-                    _LibraryMetaItem(icon: Icons.sell_outlined, label: _tr(context, safeTagLabel)),
                   if (safeFootnote.isNotEmpty)
                     _LibraryMetaItem(icon: Icons.loyalty_outlined, label: _tr(context, safeFootnote)),
                 ],
@@ -3630,17 +3755,6 @@ class _LibraryCourseCard extends StatelessWidget {
               onPressed: onTap,
               child: Text(ctaLabel),
             ),
-            if (safeSecondaryActionLabel.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              FilledButton.tonal(
-                style: FilledButton.styleFrom(
-                  minimumSize: const Size.fromHeight(54),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
-                ),
-                onPressed: onSecondaryTap,
-                child: Text(safeSecondaryActionLabel),
-              ),
-            ],
           ],
         ),
       ),
