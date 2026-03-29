@@ -76,7 +76,7 @@ const Map<String, String> _arabicStrings = {
   'Owner Demo': 'تجربة المالك',
   'Employee Demo': 'تجربة الموظف',
   'Create Account': 'إنشاء حساب',
-  'Create your business owner account to start using SkillBite.': 'أنشئ حساب مالك النشاط لبدء استخدام SkillBite.',
+  'Create your business owner account to start using SkillBite.': 'أنشئ حساب لبدء استخدام SkillBite',
   'Full Name': 'الاسم الكامل',
   'Enter your full name': 'أدخل اسمك الكامل',
   'Email': 'البريد الإلكتروني',
