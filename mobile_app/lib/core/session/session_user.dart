@@ -26,7 +26,7 @@ class SessionUser {
   factory SessionUser.fromJson(Map<String, dynamic> json) {
     final business = _asMap(json['business']);
     return SessionUser(
-      id: (json['id'] ?? 0) as int,
+      id: _asInt(json['id']),
       username: (json['username'] ?? '').toString(),
       displayName: (json['display_name'] ?? '').toString(),
       role: (json['role'] ?? '').toString(),
@@ -45,4 +45,11 @@ class SessionUser {
       },
     };
   }
+}
+
+int _asInt(Object? value) {
+  if (value is int) {
+    return value;
+  }
+  return int.tryParse(value?.toString() ?? '') ?? 0;
 }

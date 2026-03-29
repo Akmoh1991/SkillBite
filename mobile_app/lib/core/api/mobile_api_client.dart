@@ -136,10 +136,15 @@ class MobileApiClient {
   }
 
   Future<Map<String, dynamic>> get(String path) async {
-    final response = await http
-        .get(_uriFor(baseUrl, path), headers: _headers())
-        .timeout(_requestTimeout);
-    return _parseResponse(response);
+    return _sendWithFallback(
+      (candidate) async {
+        final response = await http
+            .get(_uriFor(candidate, path), headers: _headers())
+            .timeout(_requestTimeout);
+        return _parseResponse(response);
+      },
+      failureMessage: 'Request failed.',
+    );
   }
 
   Future<Map<String, dynamic>> post(
@@ -147,24 +152,8 @@ class MobileApiClient {
     Object body, {
     bool includeAuth = true,
   }) async {
-    final response = await http
-        .post(
-          _uriFor(baseUrl, path),
-          headers: _headers(includeAuth: includeAuth),
-          body: jsonEncode(body),
-        )
-        .timeout(_requestTimeout);
-    return _parseResponse(response);
-  }
-
-  Future<Map<String, dynamic>> _postWithFallback(
-    String path,
-    Object body, {
-    bool includeAuth = true,
-  }) async {
-    Object? lastError;
-    for (final candidate in _baseUrlCandidates) {
-      try {
+    return _sendWithFallback(
+      (candidate) async {
         final response = await http
             .post(
               _uriFor(candidate, path),
@@ -172,14 +161,56 @@ class MobileApiClient {
               body: jsonEncode(body),
             )
             .timeout(_requestTimeout);
-        final payload = _parseResponse(response);
+        return _parseResponse(response);
+      },
+      failureMessage: 'Request failed.',
+    );
+  }
+
+  Future<Map<String, dynamic>> _postWithFallback(
+    String path,
+    Object body, {
+    bool includeAuth = true,
+  }) async {
+    return _sendWithFallback(
+      (candidate) async {
+        final response = await http
+            .post(
+              _uriFor(candidate, path),
+              headers: _headers(includeAuth: includeAuth),
+              body: jsonEncode(body),
+            )
+            .timeout(_requestTimeout);
+        return _parseResponse(response);
+      },
+      failureMessage: 'Login failed.',
+    );
+  }
+
+  Iterable<String> _orderedBaseUrlCandidates() sync* {
+    yield _activeBaseUrl;
+    for (final candidate in _baseUrlCandidates) {
+      if (candidate != _activeBaseUrl) {
+        yield candidate;
+      }
+    }
+  }
+
+  Future<Map<String, dynamic>> _sendWithFallback(
+    Future<Map<String, dynamic>> Function(String baseUrl) request, {
+    required String failureMessage,
+  }) async {
+    Object? lastError;
+    for (final candidate in _orderedBaseUrlCandidates()) {
+      try {
+        final payload = await request(candidate);
         _activeBaseUrl = candidate;
         return payload;
       } catch (error) {
         lastError = error;
       }
     }
-    throw lastError ?? Exception('Login failed.');
+    throw lastError ?? Exception(failureMessage);
   }
 
   Uri _uriFor(String base, String path) => Uri.parse('$base$path');
