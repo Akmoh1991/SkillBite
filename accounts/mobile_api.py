@@ -25,6 +25,7 @@ from training.models import (
 
 from .forms import CourseContentItemForm, CourseForm, JobTitleForm, SOPChecklistAssignmentRuleForm, SOPChecklistForm
 from .models import (
+    BusinessTenant,
     EmployeeProfile,
     JobTitle,
     MobileAuthToken,
