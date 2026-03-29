@@ -63,8 +63,8 @@ const Map<String, String> _arabicStrings = {
   'Updating...': 'جارٍ التحديث...',
   'Update Password': 'تحديث كلمة المرور',
   'Username and password are required.': 'اسم المستخدم وكلمة المرور مطلوبان.',
-  'Sign in to SkillBite': 'تسجيل الدخول إلى SkillBite',
-  'Please enter your information below in order to login to your account': 'يرجى إدخال بياناتك أدناه لتسجيل الدخول إلى حسابك.',
+  'Sign in to SkillBite': 'تسجيل الدخول',
+  'Please enter your information below in order to login to your account': 'يرجى إدخال بياناتك أدناه لتسجيل الدخول إلى حسابك',
   'Enter your username': 'أدخل اسم المستخدم',
   'Password': 'كلمة المرور',
   'Enter your password': 'أدخل كلمة المرور',
@@ -75,6 +75,36 @@ const Map<String, String> _arabicStrings = {
   'Demo Access': 'الوصول التجريبي',
   'Owner Demo': 'تجربة المالك',
   'Employee Demo': 'تجربة الموظف',
+  'Create Account': 'إنشاء حساب',
+  'Create your business owner account to start using SkillBite.': 'أنشئ حساب مالك النشاط لبدء استخدام SkillBite.',
+  'Full Name': 'الاسم الكامل',
+  'Enter your full name': 'أدخل اسمك الكامل',
+  'Email': 'البريد الإلكتروني',
+  'Enter your email': 'أدخل بريدك الإلكتروني',
+  'Company Name': 'اسم الشركة',
+  'Enter your company name': 'أدخل اسم الشركة',
+  'Phone Number': 'رقم الجوال',
+  'Enter your phone number': 'أدخل رقم الجوال',
+  'ID Number': 'رقم الهوية',
+  'Enter your ID number': 'أدخل رقم الهوية',
+  'Region': 'المنطقة',
+  'SEC Business Line': 'قطاع أعمال SEC',
+  'Create account': 'إنشاء حساب',
+  'Creating account...': 'جارٍ إنشاء الحساب...',
+  'Already have an account?': 'لديك حساب بالفعل؟',
+  'Eastern region': 'المنطقة الشرقية',
+  'Central region': 'المنطقة الوسطى',
+  'Western region': 'المنطقة الغربية',
+  'Northern region': 'المنطقة الشمالية',
+  'Southern region': 'المنطقة الجنوبية',
+  'Distribution Contractors': 'مقاولو التوزيع',
+  'National Grid Contractors': 'مقاولو الشبكة الوطنية',
+  'Projects Contractors': 'مقاولو المشاريع',
+  'Generation Contractors': 'مقاولو التوليد',
+  'Dawiyat Contractors': 'مقاولو ضوئيات',
+  'HSSE Contractors': 'مقاولو الصحة والسلامة والبيئة',
+  'Material Sector': 'قطاع المواد',
+  'Facilities Sector': 'قطاع المرافق',
   'Language': 'اللغة',
   'Arabic': 'العربية',
   'English': 'الإنجليزية',
@@ -143,7 +173,6 @@ const Map<String, String> _arabicStrings = {
   'Deactivate': 'تعطيل',
   'Create Employee': 'إنشاء موظف',
   'Full name': 'الاسم الكامل',
-  'Email': 'البريد الإلكتروني',
   'Job title': 'المسمى الوظيفي',
   'Saving...': 'جارٍ الحفظ...',
   'Create': 'إنشاء',
@@ -416,6 +445,33 @@ class MobileApiClient {
     return SessionUser.fromJson(payload['user'] as Map<String, dynamic>);
   }
 
+  Future<SessionUser> register({
+    required String username,
+    required String email,
+    required String fullName,
+    required String password,
+    required String companyName,
+    required String phoneNumber,
+    required String idNumber,
+    required String region,
+    required String secBusinessLine,
+  }) async {
+    final payload = await _postWithFallback('/auth/register/', {
+      'username': username,
+      'email': email,
+      'full_name_en': fullName,
+      'full_name_ar': fullName,
+      'password': password,
+      'company_name': companyName,
+      'phone_number': phoneNumber,
+      'id_number': idNumber,
+      'region': region,
+      'sec_business_line': secBusinessLine,
+    }, includeAuth: false);
+    token = payload['token'] as String?;
+    return SessionUser.fromJson(payload['user'] as Map<String, dynamic>);
+  }
+
   Future<void> forgotPassword({
     required String username,
     required String email,
@@ -615,6 +671,17 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  Future<void> _openRegister() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => RegisterScreen(
+          api: widget.api,
+          onRegistered: widget.onLoggedIn,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     debugPrint('LoginScreen build language=${_AppScope.of(context).language}');
@@ -629,6 +696,19 @@ class _LoginScreenState extends State<LoginScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
+                    TextButton.icon(
+                      style: TextButton.styleFrom(
+                        foregroundColor: _brandTeal,
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+                        textStyle: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                      ),
+                      onPressed: () {
+                        final scope = _AppScope.of(context);
+                        scope.onLanguageChanged(_isArabic(context) ? AppLanguage.en : AppLanguage.ar);
+                      },
+                      icon: const Icon(Icons.language_rounded),
+                      label: Text(_isArabic(context) ? 'English' : 'العربية'),
+                    ),
                     Container(
                       width: 54,
                       height: 54,
@@ -638,27 +718,38 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       child: const Icon(Icons.arrow_back_ios_new_rounded, color: _ink, size: 20),
                     ),
-                    TextButton.icon(
-                      onPressed: () {
-                        final scope = _AppScope.of(context);
-                        scope.onLanguageChanged(_isArabic(context) ? AppLanguage.en : AppLanguage.ar);
-                      },
-                      icon: const Icon(Icons.language_rounded),
-                      label: Text(_isArabic(context) ? 'English' : 'العربية'),
-                    ),
                   ],
                 ),
-                const SizedBox(height: 32),
-                Text(
-                  _tr(context, 'Sign in to SkillBite'),
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontSize: 22),
+                const SizedBox(height: 36),
+                Center(
+                  child: Image.asset(
+                    '../static/media/SkillBite_logo.png',
+                    width: 190,
+                    fit: BoxFit.contain,
+                  ),
                 ),
-                const SizedBox(height: 12),
-                Text(
-                  _tr(context, 'Please enter your information below in order to login to your account'),
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: _muted, height: 1.35),
+                const SizedBox(height: 24),
+                Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 320),
+                    child: Column(
+                      children: [
+                        Text(
+                          _tr(context, 'Sign in to SkillBite'),
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontSize: 22),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          _tr(context, 'Please enter your information below in order to login to your account'),
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: _muted, height: 1.35),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-                const SizedBox(height: 28),
+                const SizedBox(height: 22),
                 Text(_tr(context, 'Username'), style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 17)),
                 const SizedBox(height: 10),
                 TextField(
@@ -702,55 +793,295 @@ class _LoginScreenState extends State<LoginScreen> {
                   onPressed: loading ? null : _submit,
                   child: Text(loading ? _tr(context, 'Signing in...') : _tr(context, 'Log In')),
                 ),
+                const SizedBox(height: 32),
+                Center(
+                  child: Wrap(
+                    alignment: WrapAlignment.center,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: 6,
+                    textDirection: _isArabic(context) ? TextDirection.rtl : TextDirection.ltr,
+                    children: [
+                      Text(
+                        _isArabic(context) ? 'ليس لديك حساب؟' : "Don’t have an account?",
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(color: const Color(0xFF25314C)),
+                      ),
+                      InkWell(
+                        onTap: _openRegister,
+                        borderRadius: BorderRadius.circular(8),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+                          child: Text(
+                            _isArabic(context) ? 'إنشاء حساب' : 'Sign Up',
+                            style: const TextStyle(
+                              color: _brandTeal,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class RegisterScreen extends StatefulWidget {
+  const RegisterScreen({
+    super.key,
+    required this.api,
+    required this.onRegistered,
+  });
+
+  final MobileApiClient api;
+  final ValueChanged<SessionUser> onRegistered;
+
+  @override
+  State<RegisterScreen> createState() => _RegisterScreenState();
+}
+
+class _RegisterScreenState extends State<RegisterScreen> {
+  static const List<String> _regions = [
+    'Eastern region',
+    'Central region',
+    'Western region',
+    'Northern region',
+    'Southern region',
+  ];
+
+  static const List<String> _secBusinessLines = [
+    'Distribution Contractors',
+    'National Grid Contractors',
+    'Projects Contractors',
+    'Generation Contractors',
+    'Dawiyat Contractors',
+    'HSSE Contractors',
+    'Material Sector',
+    'Facilities Sector',
+  ];
+
+  final TextEditingController usernameController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController fullNameController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController companyNameController = TextEditingController();
+  final TextEditingController phoneNumberController = TextEditingController();
+
+  bool saving = false;
+  String? errorText;
+
+  @override
+  void dispose() {
+    usernameController.dispose();
+    emailController.dispose();
+    fullNameController.dispose();
+    passwordController.dispose();
+    companyNameController.dispose();
+    phoneNumberController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    setState(() {
+      saving = true;
+      errorText = null;
+    });
+    try {
+      final user = await widget.api.register(
+        username: usernameController.text.trim(),
+        email: emailController.text.trim(),
+        fullName: fullNameController.text.trim(),
+        password: passwordController.text,
+        companyName: companyNameController.text.trim(),
+        phoneNumber: phoneNumberController.text.trim(),
+        idNumber: '1000000000',
+        region: _regions.first,
+        secBusinessLine: _secBusinessLines.first,
+      );
+      widget.onRegistered(user);
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+    } catch (error) {
+      if (mounted) {
+        setState(() => errorText = error.toString().replaceFirst('Exception: ', ''));
+      }
+    } finally {
+      if (mounted) {
+        setState(() => saving = false);
+      }
+    }
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    TextInputType? keyboardType,
+    bool obscureText = false,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 17)),
+        const SizedBox(height: 10),
+        TextField(
+          controller: controller,
+          keyboardType: keyboardType,
+          obscureText: obscureText,
+          decoration: InputDecoration(hintText: hint),
+        ),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 430),
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    InkWell(
+                      onTap: () => Navigator.of(context).pop(),
+                      borderRadius: BorderRadius.circular(999),
+                      child: Container(
+                        width: 54,
+                        height: 54,
+                        decoration: const BoxDecoration(
+                          color: _surfaceAlt,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.arrow_back_ios_new_rounded, color: _ink, size: 20),
+                      ),
+                    ),
+                    TextButton.icon(
+                      style: TextButton.styleFrom(
+                        foregroundColor: _brandTeal,
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+                        textStyle: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                      ),
+                      onPressed: () {
+                        final scope = _AppScope.of(context);
+                        scope.onLanguageChanged(_isArabic(context) ? AppLanguage.en : AppLanguage.ar);
+                      },
+                      icon: const Icon(Icons.language_rounded),
+                      label: Text(_isArabic(context) ? 'English' : 'العربية'),
+                    ),
+                  ],
+                ),
                 const SizedBox(height: 28),
-                Card(
-                  color: _surfaceAlt,
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
+                Center(
+                  child: Image.asset(
+                    '../static/media/SkillBite_logo.png',
+                    width: 180,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 330),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(_tr(context, 'Demo Access'), style: Theme.of(context).textTheme.titleMedium),
-                        const SizedBox(height: 10),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: [
-                            _DemoChip(
-                              label: _tr(context, 'Owner Demo'),
-                              onTap: () {
-                                usernameController.text = 'demo_owner';
-                                passwordController.text = 'pass12345';
-                                setState(() => errorText = null);
-                              },
-                            ),
-                            _DemoChip(
-                              label: _tr(context, 'Employee Demo'),
-                              onTap: () {
-                                usernameController.text = 'demo_employee';
-                                passwordController.text = 'pass12345';
-                                setState(() => errorText = null);
-                              },
-                            ),
-                          ],
+                        Text(
+                          _tr(context, 'Create Account'),
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontSize: 22),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          _tr(context, 'Create your business owner account to start using SkillBite.'),
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: _muted, height: 1.35),
                         ),
                       ],
                     ),
                   ),
                 ),
-                const SizedBox(height: 28),
+                const SizedBox(height: 22),
+                _buildTextField(
+                  controller: usernameController,
+                  label: _tr(context, 'Username'),
+                  hint: _tr(context, 'Enter your username'),
+                ),
+                const SizedBox(height: 18),
+                _buildTextField(
+                  controller: fullNameController,
+                  label: _tr(context, 'Full Name'),
+                  hint: _tr(context, 'Enter your full name'),
+                ),
+                const SizedBox(height: 18),
+                _buildTextField(
+                  controller: emailController,
+                  label: _tr(context, 'Email'),
+                  hint: _tr(context, 'Enter your email'),
+                  keyboardType: TextInputType.emailAddress,
+                ),
+                const SizedBox(height: 18),
+                _buildTextField(
+                  controller: passwordController,
+                  label: _tr(context, 'Password'),
+                  hint: _tr(context, 'Enter your password'),
+                  obscureText: true,
+                ),
+                const SizedBox(height: 18),
+                _buildTextField(
+                  controller: companyNameController,
+                  label: _tr(context, 'Company Name'),
+                  hint: _tr(context, 'Enter your company name'),
+                ),
+                const SizedBox(height: 18),
+                _buildTextField(
+                  controller: phoneNumberController,
+                  label: _tr(context, 'Phone Number'),
+                  hint: _tr(context, 'Enter your phone number'),
+                  keyboardType: TextInputType.phone,
+                ),
+                if (errorText != null) ...[
+                  const SizedBox(height: 16),
+                  _InlineError(message: errorText!),
+                ],
+                const SizedBox(height: 24),
+                FilledButton(
+                  onPressed: saving ? null : _submit,
+                  child: Text(saving ? _tr(context, 'Creating account...') : _tr(context, 'Create account')),
+                ),
+                const SizedBox(height: 24),
                 Center(
-                  child: Text.rich(
-                    TextSpan(
-                      text: "Don’t have an account ? ",
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(color: const Color(0xFF25314C)),
-                      children: const [
-                        TextSpan(
-                          text: 'Sign Up',
-                          style: TextStyle(color: _brandTeal, fontWeight: FontWeight.w700),
+                  child: Wrap(
+                    alignment: WrapAlignment.center,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: 6,
+                    textDirection: _isArabic(context) ? TextDirection.rtl : TextDirection.ltr,
+                    children: [
+                      Text(
+                        _tr(context, 'Already have an account?'),
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(color: const Color(0xFF25314C)),
+                      ),
+                      InkWell(
+                        onTap: () => Navigator.of(context).pop(),
+                        borderRadius: BorderRadius.circular(8),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+                          child: Text(
+                            _tr(context, 'Log In'),
+                            style: const TextStyle(color: _brandTeal, fontWeight: FontWeight.w700),
+                          ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ],

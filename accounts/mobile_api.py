@@ -36,6 +36,7 @@ from .models import (
 from .views import (
     AUTO_GRADED_QUESTION_TYPES,
     BusinessOwnerEmployeeCreateForm,
+    PublicRegisterForm,
     _active_chat_participants,
     _accessible_business_courses_queryset,
     _assign_course_to_employee,
@@ -76,6 +77,13 @@ def _json_success(data: dict | None = None, *, status: int = 200) -> JsonRespons
     if data:
         payload.update(data)
     return JsonResponse(payload, status=status)
+
+
+def _first_form_error(form) -> str:
+    for field_errors in form.errors.values():
+        if field_errors:
+            return field_errors[0]
+    return 'Check the submitted information.'
 
 
 def _load_json_body(request) -> dict:
@@ -471,6 +479,56 @@ def mobile_login_view(request):
             'expires_at': token.expires_at.isoformat() if token.expires_at else None,
             'user': _serialize_user(user, role=role, business=business, employee_profile=employee_profile),
         }
+    )
+
+
+@csrf_exempt
+@require_POST
+@transaction.atomic
+def mobile_register_view(request):
+    payload = _load_json_body(request)
+    form_data = {
+        'username': (payload.get('username') or '').strip(),
+        'email': (payload.get('email') or '').strip(),
+        'full_name_en': (payload.get('full_name_en') or '').strip(),
+        'full_name_ar': (payload.get('full_name_ar') or '').strip(),
+        'password': payload.get('password') or '',
+        'role': 'business_owner',
+        'company_name': (payload.get('company_name') or '').strip(),
+        'sec_business_line': (payload.get('sec_business_line') or '').strip(),
+        'phone_number': (payload.get('phone_number') or '').strip(),
+        'id_number': (payload.get('id_number') or '').strip(),
+        'region': (payload.get('region') or '').strip(),
+    }
+    form = PublicRegisterForm(form_data, initial={'role': 'business_owner'})
+    if not form.is_valid():
+        return _json_error(_first_form_error(form), code='validation_error')
+    username = form.cleaned_data['username']
+    if User.objects.filter(username=username).exists():
+        return _json_error('Username is already in use.', code='validation_error')
+    user = User.objects.create_user(username=username, password=form.cleaned_data['password'])
+    user.email = (form.cleaned_data.get('email') or '').strip()
+    user.first_name = (form.cleaned_data.get('full_name_en') or '').strip()
+    user.last_name = (form.cleaned_data.get('full_name_ar') or '').strip()
+    user.save(update_fields=['email', 'first_name', 'last_name'])
+    business, _ = BusinessTenant.objects.get_or_create(
+        owner=user,
+        defaults={
+            'name': (form.cleaned_data.get('company_name') or '').strip() or user.username,
+            'industry': 'Food & Beverage',
+        },
+    )
+    expires_at = timezone.now() + timedelta(days=MOBILE_TOKEN_TTL_DAYS)
+    token, raw_token = MobileAuthToken.issue(user=user, label='flutter-mobile', expires_at=expires_at)
+    return _json_success(
+        {
+            'message': 'Account created successfully.',
+            'token': raw_token,
+            'token_type': 'Bearer',
+            'expires_at': token.expires_at.isoformat() if token.expires_at else None,
+            'user': _serialize_user(user, role='business_owner', business=business),
+        },
+        status=201,
     )
 
 

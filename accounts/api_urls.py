@@ -13,6 +13,7 @@ from .mobile_api import (
     employee_learning_history_api_view,
     mobile_forgot_password_view,
     mobile_login_view,
+    mobile_register_view,
     mobile_notifications_api_view,
     mobile_logout_view,
     mobile_me_view,
@@ -42,6 +43,7 @@ from .mobile_api import (
 
 
 urlpatterns = [
+    path('auth/register/', mobile_register_view, name='mobile_register'),
     path('auth/login/', mobile_login_view, name='mobile_login'),
     path('auth/logout/', mobile_logout_view, name='mobile_logout'),
     path('auth/me/', mobile_me_view, name='mobile_me'),
