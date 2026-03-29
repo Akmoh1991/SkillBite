@@ -1136,6 +1136,17 @@ class EmployeeDashboardPage extends StatelessWidget {
   final MobileApiClient api;
   final SessionUser user;
 
+  Future<void> _openAssignmentCourse(BuildContext context, int assignmentId) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => EmployeeCourseDetailScreen(
+          api: api,
+          assignmentId: assignmentId,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return ApiFutureBuilder(
@@ -1165,6 +1176,7 @@ class EmployeeDashboardPage extends StatelessWidget {
                     tag: 'Trendy',
                     students: '680 + students',
                     title: item == null ? 'UX Master\nCourse' : _readPath(item, ['course', 'title']),
+                    onTap: item == null ? null : () => _openAssignmentCourse(context, _readInt(item, 'id')),
                   );
                 },
               ),
@@ -4188,86 +4200,95 @@ class _CoursePromoCard extends StatelessWidget {
     required this.tag,
     required this.students,
     this.warm = true,
+    this.onTap,
   });
 
   final String title;
   final String tag;
   final String students;
   final bool warm;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 248,
-      padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
-      decoration: BoxDecoration(
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
         borderRadius: BorderRadius.circular(34),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: warm
-              ? const [Color(0xFFF7C36F), Color(0xFFF9D99E)]
-              : const [Color(0xFF3CA899), Color(0xFF1F8175)],
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+        onTap: onTap,
+        child: Container(
+          width: 248,
+          padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(34),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: warm
+                  ? const [Color(0xFFF7C36F), Color(0xFFF9D99E)]
+                  : const [Color(0xFF3CA899), Color(0xFF1F8175)],
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: warm ? const Color(0x33FFFFFF) : const Color(0x22000000),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  tag,
-                  style: TextStyle(
-                    color: warm ? const Color(0xFF8D6A17) : Colors.white,
-                    fontWeight: FontWeight.w600,
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: warm ? const Color(0x33FFFFFF) : const Color(0x22000000),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      tag,
+                      style: TextStyle(
+                        color: warm ? const Color(0xFF8D6A17) : Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
-                ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      students,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(color: warm ? const Color(0xFF9E7B2E) : Colors.white70),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  students,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(color: warm ? const Color(0xFF9E7B2E) : Colors.white70),
+              const SizedBox(height: 24),
+              Text(
+                title,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      color: warm ? _ink : Colors.white,
+                      fontSize: 24,
+                      height: 1.08,
+                    ),
+              ),
+              const Spacer(),
+              Align(
+                alignment: Alignment.bottomRight,
+                child: Container(
+                  width: 86,
+                  height: 86,
+                  decoration: BoxDecoration(
+                    color: warm ? const Color(0x33FFFFFF) : const Color(0x26FFFFFF),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    warm ? Icons.draw_rounded : Icons.verified_user_outlined,
+                    size: 42,
+                    color: warm ? const Color(0xFF7E4E06) : Colors.white,
+                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 24),
-          Text(
-            title,
-            maxLines: 3,
-            overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  color: warm ? _ink : Colors.white,
-                  fontSize: 24,
-                  height: 1.08,
-                ),
-          ),
-          const Spacer(),
-          Align(
-            alignment: Alignment.bottomRight,
-            child: Container(
-              width: 86,
-              height: 86,
-              decoration: BoxDecoration(
-                color: warm ? const Color(0x33FFFFFF) : const Color(0x26FFFFFF),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                warm ? Icons.draw_rounded : Icons.verified_user_outlined,
-                size: 42,
-                color: warm ? const Color(0xFF7E4E06) : Colors.white,
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
