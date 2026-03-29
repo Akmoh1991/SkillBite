@@ -8,6 +8,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:video_player/video_player.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -20,6 +21,52 @@ const Color _surface = Color(0xFFFFFFFF);
 const Color _surfaceAlt = Color(0xFFF7F8FB);
 const Color _line = Color(0xFFE6E8EE);
 const Color _warmCard = Color(0xFFF8C46E);
+const String _apiBaseUrlDefine = String.fromEnvironment('SKILLBITE_API_BASE_URL');
+const String _apiFallbackUrlsDefine = String.fromEnvironment('SKILLBITE_API_FALLBACK_URLS');
+const String _prefsTokenKey = 'skillbite.token';
+const String _prefsUserKey = 'skillbite.user';
+const String _prefsLanguageKey = 'skillbite.language';
+
+List<String> _buildApiBaseUrlCandidates() {
+  final candidates = <String>[];
+
+  void addCandidate(String rawUrl) {
+    final normalized = _normalizeApiBaseUrl(rawUrl);
+    if (normalized.isNotEmpty && !candidates.contains(normalized)) {
+      candidates.add(normalized);
+    }
+  }
+
+  addCandidate(_apiBaseUrlDefine);
+  for (final rawUrl in _apiFallbackUrlsDefine.split(',')) {
+    addCandidate(rawUrl);
+  }
+
+  if (kIsWeb) {
+    addCandidate('http://127.0.0.1:8000/api/mobile/v1');
+    addCandidate('http://localhost:8000/api/mobile/v1');
+  } else if (Platform.isAndroid) {
+    addCandidate('http://10.0.2.2:8000/api/mobile/v1');
+    addCandidate('http://10.0.3.2:8000/api/mobile/v1');
+    addCandidate('http://127.0.0.1:8000/api/mobile/v1');
+  } else {
+    addCandidate('http://127.0.0.1:8000/api/mobile/v1');
+    addCandidate('http://localhost:8000/api/mobile/v1');
+  }
+
+  return candidates;
+}
+
+String _normalizeApiBaseUrl(String rawUrl) {
+  final trimmed = rawUrl.trim();
+  if (trimmed.isEmpty) {
+    return '';
+  }
+  final withoutTrailingSlash = trimmed.endsWith('/') ? trimmed.substring(0, trimmed.length - 1) : trimmed;
+  return withoutTrailingSlash.endsWith('/api/mobile/v1')
+      ? withoutTrailingSlash
+      : '$withoutTrailingSlash/api/mobile/v1';
+}
 
 enum AppLanguage { en, ar }
 
@@ -254,21 +301,70 @@ class SkillBiteMobileApp extends StatefulWidget {
 }
 
 class _SkillBiteMobileAppState extends State<SkillBiteMobileApp> {
-  final MobileApiClient api = MobileApiClient(
-    baseUrl: kIsWeb
-        ? 'http://127.0.0.1:8000/api/mobile/v1'
-        : Platform.isAndroid
-        ? 'http://10.0.2.2:8000/api/mobile/v1'
-        : 'http://127.0.0.1:8000/api/mobile/v1',
-    fallbackBaseUrls: const [],
-  );
+  late final MobileApiClient api;
   SessionUser? sessionUser;
   AppLanguage language = AppLanguage.ar;
+  bool restoringSession = true;
+
+  @override
+  void initState() {
+    super.initState();
+    final apiBaseUrlCandidates = _buildApiBaseUrlCandidates();
+    api = MobileApiClient(
+      baseUrl: apiBaseUrlCandidates.first,
+      fallbackBaseUrls: apiBaseUrlCandidates.skip(1).toList(),
+    );
+    unawaited(_restoreSession());
+  }
+
+  Future<void> _restoreSession() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedLanguage = prefs.getString(_prefsLanguageKey);
+    final savedToken = prefs.getString(_prefsTokenKey);
+
+    if (savedLanguage == AppLanguage.en.name) {
+      language = AppLanguage.en;
+    } else if (savedLanguage == AppLanguage.ar.name) {
+      language = AppLanguage.ar;
+    }
+
+    if (savedToken != null) {
+      api.token = savedToken;
+      try {
+        final payload = await api.get('/auth/me/');
+        sessionUser = SessionUser.fromJson(_asMap(payload['user']));
+      } catch (_) {
+        api.token = null;
+        await prefs.remove(_prefsTokenKey);
+        await prefs.remove(_prefsUserKey);
+      }
+    }
+
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      restoringSession = false;
+    });
+  }
+
+  Future<void> _persistSession() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_prefsLanguageKey, language.name);
+    if (api.token != null && sessionUser != null) {
+      await prefs.setString(_prefsTokenKey, api.token!);
+      await prefs.setString(_prefsUserKey, jsonEncode(sessionUser!.toJson()));
+    } else {
+      await prefs.remove(_prefsTokenKey);
+      await prefs.remove(_prefsUserKey);
+    }
+  }
 
   void _handleLogin(SessionUser user) {
     setState(() {
       sessionUser = user;
     });
+    unawaited(_persistSession());
   }
 
   Future<void> _handleLogout() async {
@@ -279,12 +375,14 @@ class _SkillBiteMobileAppState extends State<SkillBiteMobileApp> {
       api.token = null;
       sessionUser = null;
     });
+    await _persistSession();
   }
 
   void _handleLanguageChanged(AppLanguage nextLanguage) {
     setState(() {
       language = nextLanguage;
     });
+    unawaited(_persistSession());
   }
 
   @override
@@ -307,7 +405,9 @@ class _SkillBiteMobileAppState extends State<SkillBiteMobileApp> {
           GlobalWidgetsLocalizations.delegate,
           GlobalCupertinoLocalizations.delegate,
         ],
-        home: sessionUser == null
+        home: restoringSession
+            ? const _LoadingState()
+            : sessionUser == null
             ? LoginScreen(api: api, onLoggedIn: _handleLogin)
             : RoleShell(
                 api: api,
@@ -449,6 +549,7 @@ class MobileApiClient {
     required String username,
     required String email,
     required String fullName,
+    required String fullNameArabic,
     required String password,
     required String companyName,
     required String phoneNumber,
@@ -460,7 +561,7 @@ class MobileApiClient {
       'username': username,
       'email': email,
       'full_name_en': fullName,
-      'full_name_ar': fullName,
+      'full_name_ar': fullNameArabic,
       'password': password,
       'company_name': companyName,
       'phone_number': phoneNumber,
@@ -607,6 +708,18 @@ class SessionUser {
       role: (json['role'] ?? '').toString(),
       businessName: (business['name'] ?? '').toString(),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'username': username,
+      'display_name': displayName,
+      'role': role,
+      'business': {
+        'name': businessName,
+      },
+    };
   }
 }
 
@@ -868,9 +981,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController fullNameController = TextEditingController();
+  final TextEditingController fullNameArabicController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController companyNameController = TextEditingController();
   final TextEditingController phoneNumberController = TextEditingController();
+  final TextEditingController idNumberController = TextEditingController();
+  String selectedRegion = _regions.first;
+  String selectedSecBusinessLine = _secBusinessLines.first;
 
   bool saving = false;
   String? errorText;
@@ -880,9 +997,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
     usernameController.dispose();
     emailController.dispose();
     fullNameController.dispose();
+    fullNameArabicController.dispose();
     passwordController.dispose();
     companyNameController.dispose();
     phoneNumberController.dispose();
+    idNumberController.dispose();
     super.dispose();
   }
 
@@ -896,12 +1015,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
         username: usernameController.text.trim(),
         email: emailController.text.trim(),
         fullName: fullNameController.text.trim(),
+        fullNameArabic: fullNameArabicController.text.trim().isEmpty
+            ? fullNameController.text.trim()
+            : fullNameArabicController.text.trim(),
         password: passwordController.text,
         companyName: companyNameController.text.trim(),
         phoneNumber: phoneNumberController.text.trim(),
-        idNumber: '1000000000',
-        region: _regions.first,
-        secBusinessLine: _secBusinessLines.first,
+        idNumber: idNumberController.text.trim(),
+        region: selectedRegion,
+        secBusinessLine: selectedSecBusinessLine,
       );
       widget.onRegistered(user);
       if (mounted) {
@@ -935,6 +1057,33 @@ class _RegisterScreenState extends State<RegisterScreen> {
           keyboardType: keyboardType,
           obscureText: obscureText,
           decoration: InputDecoration(hintText: hint),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDropdownField({
+    required String label,
+    required String value,
+    required List<String> options,
+    required ValueChanged<String?>? onChanged,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 17)),
+        const SizedBox(height: 10),
+        DropdownButtonFormField<String>(
+          initialValue: value,
+          items: [
+            for (final option in options)
+              DropdownMenuItem<String>(
+                value: option,
+                child: Text(_tr(context, option)),
+              ),
+          ],
+          onChanged: onChanged,
+          decoration: const InputDecoration(),
         ),
       ],
     );
@@ -1024,6 +1173,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 18),
                 _buildTextField(
+                  controller: fullNameArabicController,
+                  label: _tr(context, 'Full Name'),
+                  hint: _tr(context, 'Enter your full name'),
+                ),
+                const SizedBox(height: 18),
+                _buildTextField(
                   controller: emailController,
                   label: _tr(context, 'Email'),
                   hint: _tr(context, 'Enter your email'),
@@ -1048,6 +1203,45 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   label: _tr(context, 'Phone Number'),
                   hint: _tr(context, 'Enter your phone number'),
                   keyboardType: TextInputType.phone,
+                ),
+                const SizedBox(height: 18),
+                _buildTextField(
+                  controller: idNumberController,
+                  label: _tr(context, 'ID Number'),
+                  hint: _tr(context, 'Enter your ID number'),
+                  keyboardType: TextInputType.number,
+                ),
+                const SizedBox(height: 18),
+                _buildDropdownField(
+                  label: _tr(context, 'Region'),
+                  value: selectedRegion,
+                  options: _regions,
+                  onChanged: saving
+                      ? null
+                      : (value) {
+                          if (value == null) {
+                            return;
+                          }
+                          setState(() {
+                            selectedRegion = value;
+                          });
+                        },
+                ),
+                const SizedBox(height: 18),
+                _buildDropdownField(
+                  label: _tr(context, 'SEC Business Line'),
+                  value: selectedSecBusinessLine,
+                  options: _secBusinessLines,
+                  onChanged: saving
+                      ? null
+                      : (value) {
+                          if (value == null) {
+                            return;
+                          }
+                          setState(() {
+                            selectedSecBusinessLine = value;
+                          });
+                        },
                 ),
                 if (errorText != null) ...[
                   const SizedBox(height: 16),
@@ -1596,40 +1790,26 @@ class _EmployeeCoursesPageState extends State<EmployeeCoursesPage> {
               const _SectionCard(title: 'Courses', child: Text('No courses assigned.'))
             else
               for (final item in courses) ...[
-                _SectionCard(
+                _LibraryCourseCard(
+                  imageUrl: _readPath(item, ['course', 'card_image_url']),
                   title: _readPath(item, ['course', 'title']),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(_readPath(item, ['course', 'description'])),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          _StatusChip(label: _readString(item, 'status_label')),
-                          const SizedBox(width: 12),
-                          Text('${_readPath(item, ['course', 'estimated_minutes'])} min'),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: FilledButton.tonal(
-                          onPressed: () async {
-                            await Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => EmployeeCourseDetailScreen(
-                                  api: widget.api,
-                                  assignmentId: _readInt(item, 'id'),
-                                ),
-                              ),
-                            );
-                            _reload();
-                          },
-                          child: Text(_tr(context, 'Open')),
+                  description: _readPath(item, ['course', 'description']),
+                  label: _readPath(item, ['course', 'card_label']),
+                  minutesLabel: '${_readPath(item, ['course', 'estimated_minutes'])} ${_tr(context, 'min')}',
+                  contentCountLabel: '${_readPath(item, ['course', 'content_item_total'])} ${_tr(context, 'Items')}',
+                  footnote: _readString(item, 'status_label'),
+                  ctaLabel: _tr(context, 'Open'),
+                  onTap: () async {
+                    await Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => EmployeeCourseDetailScreen(
+                          api: widget.api,
+                          assignmentId: _readInt(item, 'id'),
                         ),
                       ),
-                    ],
-                  ),
+                    );
+                    _reload();
+                  },
                 ),
                 const SizedBox(height: 16),
               ],
@@ -2873,8 +3053,7 @@ class OwnerCoursesPage extends StatefulWidget {
 }
 
 class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
-  late Future<Map<String, dynamic>> coursesFuture;
-  late Future<Map<String, dynamic>> employeesFuture;
+  late Future<Map<String, dynamic>> future;
 
   @override
   void initState() {
@@ -2884,8 +3063,7 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
 
   void _reload() {
     setState(() {
-      coursesFuture = widget.api.get('/business-owner/courses/');
-      employeesFuture = widget.api.get('/business-owner/employees/');
+      future = widget.api.get('/business-owner/courses/');
     });
   }
 
@@ -3042,19 +3220,13 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<Map<String, dynamic>>>(
-      future: Future.wait([coursesFuture, employeesFuture]),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState != ConnectionState.done) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        if (snapshot.hasError) {
-          return Center(child: Text(snapshot.error.toString().replaceFirst('Exception: ', '')));
-        }
-        final coursesPayload = snapshot.data![0];
-        final employeesPayload = snapshot.data![1];
-        final courses = _asList(coursesPayload['courses']);
-        final employees = _asList(employeesPayload['employees']);
+    return ApiFutureBuilder(
+      future: future,
+      builder: (context, payload) {
+        final summary = _asMap(payload['summary']);
+        final courses = _asList(payload['courses']);
+        final ownedCourses = _asList(payload['owned_courses']);
+        final employees = _asList(payload['employees']);
         return _PageBody(
           children: [
             _HeaderRow(
@@ -3066,56 +3238,43 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
               ),
             ),
             const SizedBox(height: 16),
+            _MetricRow(
+              metrics: [
+                _MetricData('Courses', '${summary['visible_course_total'] ?? courses.length}'),
+                _MetricData('Assigned', '${employees.length}'),
+                _MetricData('Titles', '${summary['owned_course_total'] ?? ownedCourses.length}'),
+              ],
+            ),
+            const SizedBox(height: 16),
             if (courses.isEmpty)
               const _SectionCard(title: 'Courses', child: Text('No courses available.'))
             else
               for (final item in courses) ...[
-                _SectionCard(
+                _LibraryCourseCard(
+                  imageUrl: _readString(item, 'card_image_url'),
                   title: _readString(item, 'title'),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(_readString(item, 'description')),
-                      const SizedBox(height: 12),
-                      Wrap(
-                        spacing: 12,
-                        runSpacing: 12,
-                        children: [
-                          _StatusChip(label: '${_readInt(item, 'assignment_total')} assigned'),
-                          _StatusChip(label: '${_readInt(item, 'estimated_minutes')} min'),
-                          _StatusChip(label: _readBool(item, 'has_exam') ? 'Has exam' : 'No exam'),
-                        ],
+                  description: _readString(item, 'description'),
+                  label: _readString(item, 'card_label'),
+                  minutesLabel: '${_readInt(item, 'estimated_minutes')} ${_tr(context, 'min')}',
+                  contentCountLabel: '${_readInt(item, 'content_item_total')} ${_tr(context, 'Items')}',
+                  tagLabel: _readBool(item, 'is_owned_by_business') ? 'Owned' : 'Shared',
+                  footnote: _readString(item, 'business_name').isEmpty
+                      ? 'دورة مركزية من المشرف العام'
+                      : _readString(item, 'business_name'),
+                  ctaLabel: _tr(context, 'Manage Content'),
+                  onTap: () async {
+                    await Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => OwnerCourseDetailScreen(
+                          api: widget.api,
+                          courseId: _readInt(item, 'id'),
+                        ),
                       ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: FilledButton.tonal(
-                              onPressed: () async {
-                                await Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (_) => OwnerCourseDetailScreen(
-                                      api: widget.api,
-                                      courseId: _readInt(item, 'id'),
-                                    ),
-                                  ),
-                                );
-                                _reload();
-                              },
-                              child: Text(_tr(context, 'Manage Content')),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: FilledButton.tonal(
-                              onPressed: () => _showAssignDialog(_readInt(item, 'id'), employees),
-                              child: Text(_tr(context, 'Assign')),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                    );
+                    _reload();
+                  },
+                  secondaryActionLabel: _tr(context, 'Assign'),
+                  onSecondaryTap: employees.isEmpty ? null : () => _showAssignDialog(_readInt(item, 'id'), employees),
                 ),
                 const SizedBox(height: 16),
               ],
@@ -4520,6 +4679,252 @@ class _LessonMediaCard extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _LibraryCourseCard extends StatelessWidget {
+  const _LibraryCourseCard({
+    required this.imageUrl,
+    required this.title,
+    required this.description,
+    required this.label,
+    required this.minutesLabel,
+    required this.contentCountLabel,
+    required this.ctaLabel,
+    required this.onTap,
+    this.tagLabel,
+    this.footnote,
+    this.secondaryActionLabel,
+    this.onSecondaryTap,
+  });
+
+  final String imageUrl;
+  final String title;
+  final String description;
+  final String label;
+  final String minutesLabel;
+  final String contentCountLabel;
+  final String ctaLabel;
+  final VoidCallback onTap;
+  final String? tagLabel;
+  final String? footnote;
+  final String? secondaryActionLabel;
+  final VoidCallback? onSecondaryTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final image = imageUrl.trim();
+    final safeTitle = title.trim().isEmpty ? 'Course' : title;
+    final safeDescription = description.trim().isEmpty
+        ? 'Practical course content with clear guidance and structured steps.'
+        : description.trim();
+    final safeLabel = label.trim().isEmpty ? 'Course' : label.trim();
+    final safeTagLabel = (tagLabel ?? '').trim();
+    final safeFootnote = (footnote ?? '').trim();
+    final safeSecondaryActionLabel = (secondaryActionLabel ?? '').trim();
+    final canLoadNetworkImage =
+        image.isNotEmpty && (Uri.tryParse(image)?.hasScheme ?? false);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: _surface,
+        borderRadius: BorderRadius.circular(30),
+        border: Border.all(color: const Color(0xFFDCE4EF)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x120F172A),
+            blurRadius: 24,
+            offset: Offset(0, 12),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(24),
+              child: AspectRatio(
+                aspectRatio: 1.85,
+                child: !canLoadNetworkImage
+                    ? _LibraryCourseFallbackArt(title: safeTitle)
+                    : Image.network(
+                        image,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => _LibraryCourseFallbackArt(title: safeTitle),
+                      ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              _tr(context, safeTitle),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    color: _brandTealDark,
+                    fontSize: 24,
+                    fontWeight: FontWeight.w800,
+                  ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              _tr(context, safeDescription),
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: const Color(0xFF7B879B),
+                    height: 1.5,
+                  ),
+            ),
+            const SizedBox(height: 18),
+            Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 16,
+              runSpacing: 12,
+              children: [
+                _LibraryMetaItem(icon: Icons.grid_view_rounded, label: _tr(context, contentCountLabel)),
+                _LibraryMetaItem(icon: Icons.schedule_outlined, label: _tr(context, minutesLabel)),
+                _LibraryMetaItem(icon: Icons.blur_circular_rounded, label: _tr(context, safeLabel)),
+              ],
+            ),
+            if (safeTagLabel.isNotEmpty || safeFootnote.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              Wrap(
+                alignment: WrapAlignment.center,
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  if (safeTagLabel.isNotEmpty)
+                    _LibraryMetaItem(icon: Icons.sell_outlined, label: _tr(context, safeTagLabel)),
+                  if (safeFootnote.isNotEmpty)
+                    _LibraryMetaItem(icon: Icons.loyalty_outlined, label: _tr(context, safeFootnote)),
+                ],
+              ),
+            ],
+            const SizedBox(height: 22),
+            FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: const Color(0xFFE7FBF2),
+                foregroundColor: _brandTealDark,
+                minimumSize: const Size.fromHeight(64),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(999),
+                  side: const BorderSide(color: Color(0xFF7AF0C0), width: 1.4),
+                ),
+                textStyle: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+              ),
+              onPressed: onTap,
+              child: Text(ctaLabel),
+            ),
+            if (safeSecondaryActionLabel.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              FilledButton.tonal(
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size.fromHeight(54),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+                ),
+                onPressed: onSecondaryTap,
+                child: Text(safeSecondaryActionLabel),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _LibraryMetaItem extends StatelessWidget {
+  const _LibraryMetaItem({
+    required this.icon,
+    required this.label,
+  });
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 18, color: const Color(0xFF95A1B2)),
+        const SizedBox(width: 6),
+        Text(
+          label,
+          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                color: const Color(0xFF7B879B),
+                fontWeight: FontWeight.w600,
+              ),
+        ),
+      ],
+    );
+  }
+}
+
+class _LibraryCourseFallbackArt extends StatelessWidget {
+  const _LibraryCourseFallbackArt({required this.title});
+
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFFCADFD9), Color(0xFF8FA9A3), Color(0xFF4C5D5A)],
+        ),
+      ),
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          Positioned(
+            top: -30,
+            right: -10,
+            child: Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.16),
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: -24,
+            left: -18,
+            child: Container(
+              width: 140,
+              height: 140,
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.10),
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Text(
+                _tr(context, title),
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                    ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

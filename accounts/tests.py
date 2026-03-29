@@ -1860,6 +1860,48 @@ class MobileApiTests(TestCase):
         created_course = Course.objects.get(title='API Course', business=self.business)
         self.assertTrue(CourseContentItem.objects.filter(course=created_course, title='Intro').exists())
 
+    def test_owner_mobile_courses_matches_visible_web_catalog(self):
+        shared_course = Course.objects.create(
+            business=None,
+            title='Shared Safety',
+            estimated_minutes=18,
+            created_by=self.owner,
+        )
+        CourseBusinessAssignment.objects.create(
+            course=shared_course,
+            business=self.business,
+            assigned_by=self.owner,
+        )
+        token = self._mobile_login('mobile_owner', 'pass12345')
+
+        courses_response = self.client.get(
+            reverse('mobile_owner_courses'),
+            HTTP_AUTHORIZATION=f'Bearer {token}',
+        )
+        self.assertEqual(courses_response.status_code, 200)
+        courses_payload = courses_response.json()
+        self.assertTrue(courses_payload['ok'])
+        self.assertGreaterEqual(courses_payload['summary']['visible_course_total'], 2)
+        self.assertEqual(courses_payload['summary']['owned_course_total'], 1)
+        self.assertEqual(len(courses_payload['employees']), 1)
+        self.assertTrue(any(item['title'] == 'Shared Safety' for item in courses_payload['courses']))
+        self.assertTrue(any(item['title'] == 'Mobile Basics' for item in courses_payload['owned_courses']))
+
+        dashboard_response = self.client.get(
+            reverse('mobile_owner_dashboard'),
+            HTTP_AUTHORIZATION=f'Bearer {token}',
+        )
+        self.assertEqual(dashboard_response.status_code, 200)
+        dashboard_payload = dashboard_response.json()
+        self.assertEqual(
+            dashboard_payload['dashboard']['course_total'],
+            courses_payload['summary']['visible_course_total'],
+        )
+        self.assertEqual(
+            dashboard_payload['dashboard']['owned_course_total'],
+            courses_payload['summary']['owned_course_total'],
+        )
+
     def test_mobile_forgot_password_updates_password_when_email_matches(self):
         response = self.client.post(
             reverse('mobile_forgot_password'),

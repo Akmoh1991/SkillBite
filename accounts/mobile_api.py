@@ -43,6 +43,7 @@ from .views import (
     _assign_course_to_employee,
     _assigned_checklists_queryset,
     _business_owner_dashboard_context,
+    _course_card_defaults,
     _display_name,
     _employee_dashboard_context,
     _ensure_employee_courses_are_backed_by_db,
@@ -156,7 +157,7 @@ def _serialize_course_content_item(item: CourseContentItem) -> dict:
 
 
 def _serialize_assignment(assignment: CourseAssignment, *, include_content: bool = False) -> dict:
-    course = assignment.course
+    course = _course_card_defaults(assignment.course)
     content_items = _visible_course_content_items(course.content_items.all()) if include_content else []
     return {
         'id': assignment.id,
@@ -170,6 +171,9 @@ def _serialize_assignment(assignment: CourseAssignment, *, include_content: bool
             'description': course.description,
             'estimated_minutes': course.estimated_minutes,
             'has_exam': bool(course.exam_template_id),
+            'card_image_url': getattr(course, 'card_image_url', ''),
+            'card_label': getattr(course, 'card_label', ''),
+            'content_item_total': course.content_items.count(),
             'content_items': [_serialize_course_content_item(item) for item in content_items],
         },
     }
@@ -224,6 +228,7 @@ def _serialize_job_title(job_title: JobTitle) -> dict:
 
 
 def _serialize_owner_course(course: Course, *, business) -> dict:
+    course = _course_card_defaults(course)
     assignment_total = CourseAssignment.objects.filter(business=business, course=course).count()
     visible_content_items = _visible_course_content_items(course.content_items.all())
     return {
@@ -234,6 +239,11 @@ def _serialize_owner_course(course: Course, *, business) -> dict:
         'is_active': course.is_active,
         'assignment_total': assignment_total,
         'has_exam': bool(course.exam_template_id),
+        'business_name': course.business.name if course.business else '',
+        'is_owned_by_business': course.business_id == business.id,
+        'card_image_url': getattr(course, 'card_image_url', ''),
+        'card_label': getattr(course, 'card_label', ''),
+        'content_item_total': course.content_items.count(),
         'content_items': [_serialize_course_content_item(item) for item in visible_content_items],
     }
 
@@ -924,12 +934,14 @@ def owner_dashboard_api_view(request):
         return _json_error('Business owner access is required.', status=403, code='forbidden')
     request.user = auth_token.user
     context = _business_owner_dashboard_context(request)
+    visible_courses = context['assignable_courses']
     return _json_success(
         {
             'dashboard': {
                 'business': _serialize_business(context['business']),
                 'employee_total': len(context['employees']),
-                'course_total': len(context['courses']),
+                'course_total': len(visible_courses),
+                'owned_course_total': len(context['courses']),
                 'checklist_total': len(context['checklists']),
                 'employees': [_serialize_employee_profile(item) for item in context['employees']],
                 'assignable_courses': [
@@ -1074,14 +1086,35 @@ def owner_courses_api_view(request):
         return _json_error('Business owner access is required.', status=403, code='forbidden')
     business = _get_owned_business(auth_token.user)
     _ensure_employee_courses_are_backed_by_db(business)
-    courses = list(
+    visible_courses = list(
         _accessible_business_courses_queryset(business)
         .select_related('business')
         .prefetch_related('content_items')
         .filter(is_active=True)
+        .order_by('business__name', 'title', 'id')
+    )
+    owned_courses = list(
+        Course.objects.filter(business=business, is_active=True)
+        .prefetch_related('content_items')
         .order_by('title', 'id')
     )
-    return _json_success({'courses': [_serialize_owner_course(item, business=business) for item in courses]})
+    employees = list(
+        EmployeeProfile.objects.select_related('user', 'job_title')
+        .filter(business=business, is_active=True, user__is_active=True)
+        .order_by('user__first_name', 'user__last_name', 'user__username', 'id')
+    )
+    return _json_success(
+        {
+            'courses': [_serialize_owner_course(item, business=business) for item in visible_courses],
+            'owned_courses': [_serialize_owner_course(item, business=business) for item in owned_courses],
+            'employees': [_serialize_employee_profile(item) for item in employees],
+            'summary': {
+                'visible_course_total': len(visible_courses),
+                'owned_course_total': len(owned_courses),
+                'employee_total': len(employees),
+            },
+        }
+    )
 
 
 @csrf_exempt
