@@ -723,7 +723,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 36),
                 Center(
                   child: Image.asset(
-                    '../static/media/SkillBite_logo.png',
+                    'assets/SkillBite_logo.png',
                     width: 190,
                     fit: BoxFit.contain,
                   ),
@@ -984,7 +984,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 28),
                 Center(
                   child: Image.asset(
-                    '../static/media/SkillBite_logo.png',
+                    'assets/SkillBite_logo.png',
                     width: 180,
                     fit: BoxFit.contain,
                   ),
