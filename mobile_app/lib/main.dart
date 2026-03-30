@@ -1709,6 +1709,8 @@ class EmployeeDashboardPage extends StatelessWidget {
       children: [
         _HeaderRow(
           title: 'Courses',
+          titleColor: _brandTealDark,
+          titleFontSize: 26,
           trailing: _sectionLink(
             'View all',
             onTap: () => _openCoursesPage(context),
@@ -1738,7 +1740,11 @@ class EmployeeDashboardPage extends StatelessWidget {
             const SizedBox(height: 14),
           ],
         const SizedBox(height: 8),
-        _HeaderRow(title: 'Checklists'),
+        const _HeaderRow(
+          title: 'Checklists',
+          titleColor: _brandTealDark,
+          titleFontSize: 26,
+        ),
         const SizedBox(height: 14),
         if (checklists.isEmpty)
           const _SectionCard(
@@ -3761,10 +3767,14 @@ class _HeaderRow extends StatelessWidget {
   const _HeaderRow({
     required this.title,
     this.trailing,
+    this.titleColor = _ink,
+    this.titleFontSize = 20,
   });
 
   final String title;
   final Widget? trailing;
+  final Color titleColor;
+  final double titleFontSize;
 
   @override
   Widget build(BuildContext context) {
@@ -3774,8 +3784,8 @@ class _HeaderRow extends StatelessWidget {
           child: Text(
             _tr(context, title),
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  color: _ink,
-                  fontSize: 20,
+                  color: titleColor,
+                  fontSize: titleFontSize,
                 ),
           ),
         ),
