@@ -2683,7 +2683,7 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
                             _ChecklistItemTile(
                               index: checklistItems.indexOf(checklistItem) + 1,
                               title: _readString(checklistItem, 'title'),
-                              completed: false,
+                              checked: false,
                             ),
                           if (checklistItems.length > 3)
                             Padding(

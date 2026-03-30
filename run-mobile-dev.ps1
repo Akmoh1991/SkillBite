@@ -31,9 +31,34 @@ $env:ANDROID_SDK_ROOT = $sdk
 $env:ANDROID_HOME = $sdk
 $env:ANDROID_USER_HOME = Join-Path $env:USERPROFILE '.android'
 $env:JAVA_HOME = $java
+
+$gradleHomeCandidates = @(
+    $(if ($env:USERPROFILE) { Join-Path $env:USERPROFILE '.gradle' }),
+    (Join-Path $repoRoot '.gradle')
+) | Where-Object { $_ }
+
+$gradleUserHome = $null
+foreach ($candidate in $gradleHomeCandidates) {
+    try {
+        New-Item -ItemType Directory -Force -Path $candidate | Out-Null
+        $probe = Join-Path $candidate '.write-test'
+        Set-Content -LiteralPath $probe -Value '' -NoNewline
+        Remove-Item -LiteralPath $probe -Force
+        $gradleUserHome = $candidate
+        break
+    } catch {
+        continue
+    }
+}
+
+if (-not $gradleUserHome) {
+    throw 'No writable Gradle cache directory was found.'
+}
+
+$env:GRADLE_USER_HOME = $gradleUserHome
 $env:Path = "$java\bin;$sdk\platform-tools;$sdk\emulator;$env:Path"
 
-New-Item -ItemType Directory -Force $env:ANDROID_USER_HOME | Out-Null
+New-Item -ItemType Directory -Force -Path $env:ANDROID_USER_HOME | Out-Null
 
 $backendRunning = $false
 try {

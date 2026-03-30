@@ -3004,6 +3004,7 @@ class _EmployeeChecklistDetailScreenState
     extends State<EmployeeChecklistDetailScreen> {
   late Future<Map<String, dynamic>> future;
   bool submitting = false;
+  final Set<int> selectedItemIds = <int>{};
 
   @override
   void initState() {
@@ -3016,12 +3017,15 @@ class _EmployeeChecklistDetailScreenState
     try {
       await widget.api
           .post('/employee/checklists/${widget.checklistId}/complete/', {
-        'item_ids': [for (final item in items) _readInt(item, 'id')],
+        'item_ids': selectedItemIds.toList(growable: false),
         'notes': '',
       });
       if (!mounted) return;
       _showSnack(context, 'Checklist completed.');
       setState(() {
+        selectedItemIds
+          ..clear()
+          ..addAll([for (final item in items) _readInt(item, 'id')]);
         future = widget.api.get('/employee/checklists/${widget.checklistId}/');
       });
     } catch (error) {
@@ -3037,47 +3041,51 @@ class _EmployeeChecklistDetailScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(_tr(context, 'Checklist'))),
+      appBar: AppBar(
+        toolbarHeight: 84,
+        titleSpacing: 20,
+        title: Text(
+          _tr(context, 'Checklist'),
+          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                color: _brandTealDark,
+                fontSize: 26,
+              ),
+        ),
+      ),
       body: ApiFutureBuilder(
         future: future,
         builder: (context, payload) {
           final checklist = _asMap(payload['checklist']);
           final items = _asList(checklist['items']);
           final completed = _readBool(checklist, 'completed_today');
-          final description = _readString(checklist, 'description');
           final frequency = _readString(checklist, 'frequency');
+          final checklistTitle = _readString(checklist, 'title');
+          final itemCountLabel = '${items.length} ${_tr(context, 'Items')}';
+          final selectedCount =
+              completed ? items.length : selectedItemIds.length;
+          final allItemsSelected =
+              completed || selectedItemIds.length == items.length;
+          final canSubmit =
+              !completed && !submitting && items.isNotEmpty && allItemsSelected;
           return _PageBody(
             children: [
-              _DashboardHeroCard(
-                title:
-                    frequency.isEmpty ? _tr(context, 'Checklist') : frequency,
-                subtitle: _readString(checklist, 'title'),
-                value: completed
-                    ? _tr(context, 'Completed today')
-                    : '${items.length} items to review',
-                icon: Icons.fact_check_rounded,
+              _HeaderRow(
+                title: checklistTitle.isEmpty ? 'Checklist' : checklistTitle,
+                titleColor: _brandTealDark,
+                titleFontSize: 26,
               ),
-              const SizedBox(height: 16),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  _StatusChip(
-                    label: completed ? 'Completed today' : 'Pending checklist',
-                  ),
-                  _StatusChip(
-                      label: '${items.length} ${_tr(context, 'Items')}'),
-                  if (frequency.isNotEmpty) _StatusChip(label: frequency),
-                ],
+              const SizedBox(height: 6),
+              Text(
+                [
+                  if (frequency.isNotEmpty) _tr(context, frequency),
+                  itemCountLabel,
+                ].join('  |  '),
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: _muted,
+                      fontWeight: FontWeight.w600,
+                    ),
               ),
-              if (description.isNotEmpty) ...[
-                const SizedBox(height: 16),
-                _SectionCard(
-                  title: _tr(context, 'Checklist'),
-                  child: Text(description),
-                ),
-              ],
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
               _SectionCard(
                 title: 'Items',
                 child: items.isEmpty
@@ -3088,21 +3096,36 @@ class _EmployeeChecklistDetailScreenState
                             _ChecklistItemTile(
                               index: index + 1,
                               title: _readString(_asMap(items[index]), 'title'),
-                              completed: completed,
+                              checked: completed ||
+                                  selectedItemIds.contains(
+                                    _readInt(_asMap(items[index]), 'id'),
+                                  ),
+                              enabled: !completed && !submitting,
+                              onTap: completed || submitting
+                                  ? null
+                                  : () {
+                                      final itemId =
+                                          _readInt(_asMap(items[index]), 'id');
+                                      setState(() {
+                                        if (!selectedItemIds.add(itemId)) {
+                                          selectedItemIds.remove(itemId);
+                                        }
+                                      });
+                                    },
                             ),
                         ],
                       ),
               ),
               const SizedBox(height: 16),
               FilledButton(
-                onPressed: completed || submitting
-                    ? null
-                    : () => _completeChecklist(items),
+                onPressed: canSubmit ? () => _completeChecklist(items) : null,
                 child: Text(completed
                     ? 'Already Completed'
                     : submitting
                         ? 'Submitting...'
-                        : 'Complete Checklist'),
+                        : selectedCount == items.length
+                            ? 'Complete Checklist'
+                            : 'Check All Items'),
               ),
             ],
           );
@@ -4475,61 +4498,79 @@ class _ChecklistItemTile extends StatelessWidget {
   const _ChecklistItemTile({
     required this.index,
     required this.title,
-    required this.completed,
+    required this.checked,
+    this.enabled = true,
+    this.onTap,
   });
 
   final int index;
   final String title;
-  final bool completed;
+  final bool checked;
+  final bool enabled;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: completed ? const Color(0xFFEAF7F4) : const Color(0xFFF8FAFC),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: enabled ? onTap : null,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: completed ? const Color(0xFFD2EBE4) : _line,
-        ),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 34,
-            height: 34,
-            decoration: BoxDecoration(
-              color: completed ? _brandTeal : Colors.white,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Center(
-              child: completed
-                  ? const Icon(
-                      Icons.check_rounded,
-                      size: 18,
-                      color: Colors.white,
-                    )
-                  : Text(
-                      '$index',
-                      style: const TextStyle(
-                        color: _brandTealDark,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: checked ? const Color(0xFFEAF7F4) : const Color(0xFFF8FAFC),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: checked ? const Color(0xFFD2EBE4) : _line,
             ),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              _tr(context, title),
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    height: 1.35,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: checked ? _brandTeal : Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: checked ? _brandTeal : const Color(0xFFD6DEE8),
+                    width: 1.4,
                   ),
-            ),
+                ),
+                child: Center(
+                  child: checked
+                      ? const Icon(
+                          Icons.check_rounded,
+                          size: 20,
+                          color: Colors.white,
+                        )
+                      : Text(
+                          '$index',
+                          style: const TextStyle(
+                            color: _brandTealDark,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  _tr(context, title),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        height: 1.35,
+                        decoration:
+                            checked ? TextDecoration.lineThrough : null,
+                        color: enabled || checked ? null : _muted,
+                      ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
