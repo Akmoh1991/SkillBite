@@ -1,21 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:skillbite_mobile/app/theme/app_colors.dart';
+import 'package:skillbite_mobile/app/localization/app_localizations.dart';
+import 'package:skillbite_mobile/app/theme/app_theme_tokens.dart';
+import 'package:skillbite_mobile/core/utils/utils.dart';
 
-const Color courseBrandTeal = AppColors.brandPrimary;
-const Color courseBrandTealDark = AppColors.brandPrimaryDark;
-const Color courseInk = AppColors.ink;
-const Color courseMuted = AppColors.muted;
-const Color courseLine = AppColors.line;
+const Color courseBrandTeal = brandTeal;
+const Color courseBrandTealDark = brandTealDark;
+const Color courseInk = inkColor;
+const Color courseMuted = mutedColor;
+const Color courseLine = lineColor;
 
-bool courseIsArabic(BuildContext context) =>
-    Localizations.localeOf(context).languageCode == 'ar';
+bool courseIsArabic(BuildContext context) => isArabic(context);
 
-String courseTr(BuildContext context, String english) {
-  if (!courseIsArabic(context)) {
-    return english;
-  }
-  return _courseArabicStrings[english] ?? english;
-}
+String courseTr(BuildContext context, String english) => tr(context, english);
 
 const Map<String, String> _courseArabicStrings = {
   'Courses': 'الدورات',
@@ -74,45 +70,27 @@ const Map<String, String> _courseArabicStrings = {
 };
 
 Map<String, dynamic> courseAsMap(Object? value) {
-  if (value is Map<String, dynamic>) {
-    return value;
-  }
-  if (value is Map) {
-    return value.map((key, item) => MapEntry(key.toString(), item));
-  }
-  return const {};
+  return asMap(value);
 }
 
 List<dynamic> courseAsList(Object? value) {
-  return value is List ? value : const [];
+  return asList(value);
 }
 
 String courseReadString(dynamic source, String key) {
-  return (courseAsMap(source)[key] ?? '').toString();
+  return readString(source, key);
 }
 
 int courseReadInt(dynamic source, String key) {
-  final value = courseAsMap(source)[key];
-  if (value is int) {
-    return value;
-  }
-  return int.tryParse(value?.toString() ?? '') ?? 0;
+  return readInt(source, key);
 }
 
 bool courseReadBool(dynamic source, String key) {
-  final value = courseAsMap(source)[key];
-  if (value is bool) {
-    return value;
-  }
-  return value?.toString().toLowerCase() == 'true';
+  return readBool(source, key);
 }
 
 String courseReadPath(dynamic source, List<String> path) {
-  dynamic current = source;
-  for (final segment in path) {
-    current = courseAsMap(current)[segment];
-  }
-  return (current ?? '').toString();
+  return readPath(source, path);
 }
 
 String courseContentSubtitle(dynamic item) {
@@ -148,8 +126,7 @@ IconData courseContentIcon(dynamic item) {
 }
 
 void courseShowSnack(BuildContext context, String message) {
-  ScaffoldMessenger.of(context)
-      .showSnackBar(SnackBar(content: Text(courseTr(context, message))));
+  showSnack(context, message);
 }
 
 class CourseApiFutureBuilder extends StatelessWidget {

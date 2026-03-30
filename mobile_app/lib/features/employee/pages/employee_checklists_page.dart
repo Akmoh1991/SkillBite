@@ -1,6 +1,9 @@
-// ignore_for_file: use_build_context_synchronously
-
-part of '../../../main.dart';
+import 'package:flutter/material.dart';
+import 'package:skillbite_mobile/app/localization/app_localizations.dart';
+import 'package:skillbite_mobile/app/theme/app_theme_tokens.dart';
+import 'package:skillbite_mobile/app/widgets/widgets.dart';
+import 'package:skillbite_mobile/core/api/mobile_api_client.dart';
+import 'package:skillbite_mobile/core/utils/utils.dart';
 
 class EmployeeChecklistsPage extends StatefulWidget {
   const EmployeeChecklistsPage({super.key, required this.api});
@@ -31,40 +34,39 @@ class _EmployeeChecklistsPageState extends State<EmployeeChecklistsPage> {
     return ApiFutureBuilder(
       future: future,
       builder: (context, payload) {
-        final checklists = _asList(payload['checklists']);
-        final completedToday = checklists
-            .where((item) => _readBool(item, 'completed_today'))
-            .length;
+        final checklists = asList(payload['checklists']);
+        final completedToday =
+            checklists.where((item) => readBool(item, 'completed_today')).length;
         final pendingCount = checklists.length - completedToday;
-        return _PageSliverBody(
+        return AppPageSliverBody(
           slivers: [
-            _PageSliverSection(
+            AppPageSliverSection(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _HeaderRow(
+                  AppHeaderRow(
                     title: 'Checklists',
-                    titleColor: _brandTealDark,
+                    titleColor: brandTealDark,
                     titleFontSize: 26,
-                    trailing: _RoundIconButton(
+                    trailing: AppRoundIconButton(
                       icon: Icons.refresh_rounded,
                       onTap: _reload,
                     ),
                   ),
                   const SizedBox(height: 18),
-                  _DashboardMetricRow(
+                  AppDashboardMetricRow(
                     metrics: [
-                      _DashboardMetricData(
+                      AppDashboardMetricData(
                         'Checklists',
                         '${checklists.length}',
                         icon: Icons.fact_check_outlined,
                       ),
-                      _DashboardMetricData(
+                      AppDashboardMetricData(
                         'Completed today',
                         '$completedToday',
                         icon: Icons.task_alt_rounded,
                       ),
-                      _DashboardMetricData(
+                      AppDashboardMetricData(
                         'Pending checklists',
                         '$pendingCount',
                         icon: Icons.pending_actions_rounded,
@@ -76,29 +78,29 @@ class _EmployeeChecklistsPageState extends State<EmployeeChecklistsPage> {
               ),
             ),
             if (checklists.isEmpty)
-              const _PageSliverSection(
+              const AppPageSliverSection(
                 padding: EdgeInsets.fromLTRB(24, 0, 24, 120),
-                child: _SectionCard(
+                child: AppSectionCard(
                   title: 'Checklists',
                   child: Text('No checklists assigned.'),
                 ),
               )
             else
-              _PageSliverList(
+              AppPageSliverList(
                 itemCount: checklists.length,
                 itemBuilder: (context, index) {
                   final item = checklists[index];
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 16),
-                    child: _NativeLessonTile(
-                      title: _readString(item, 'title'),
-                      subtitle: _readBool(item, 'completed_today')
+                    child: AppLessonTile(
+                      title: readString(item, 'title'),
+                      subtitle: readBool(item, 'completed_today')
                           ? 'Completed today'
                           : 'Pending checklist',
-                      accent: _readBool(item, 'completed_today')
+                      accent: readBool(item, 'completed_today')
                           ? const Color(0xFFEAF7F4)
                           : const Color(0xFFFFF1E7),
-                      trailingIcon: _readBool(item, 'completed_today')
+                      trailingIcon: readBool(item, 'completed_today')
                           ? Icons.task_alt_rounded
                           : Icons.checklist_rounded,
                       onTap: () async {
@@ -106,7 +108,7 @@ class _EmployeeChecklistsPageState extends State<EmployeeChecklistsPage> {
                           MaterialPageRoute(
                             builder: (_) => EmployeeChecklistDetailScreen(
                               api: widget.api,
-                              checklistId: _readInt(item, 'id'),
+                              checklistId: readInt(item, 'id'),
                             ),
                           ),
                         );
@@ -153,22 +155,21 @@ class _EmployeeChecklistDetailScreenState
   Future<void> _completeChecklist(List<dynamic> items) async {
     setState(() => submitting = true);
     try {
-      await widget.api
-          .post('/employee/checklists/${widget.checklistId}/complete/', {
+      await widget.api.post('/employee/checklists/${widget.checklistId}/complete/', {
         'item_ids': selectedItemIds.toList(growable: false),
         'notes': '',
       });
       if (!mounted) return;
-      _showSnack(context, 'Checklist completed.');
+      showSnack(context, 'Checklist completed.');
       setState(() {
         selectedItemIds
           ..clear()
-          ..addAll([for (final item in items) _readInt(item, 'id')]);
+          ..addAll([for (final item in items) readInt(item, 'id')]);
         future = widget.api.get('/employee/checklists/${widget.checklistId}/');
       });
     } catch (error) {
       if (!mounted) return;
-      _showSnack(context, error.toString().replaceFirst('Exception: ', ''));
+      showSnack(context, error.toString().replaceFirst('Exception: ', ''));
     } finally {
       if (mounted) {
         setState(() => submitting = false);
@@ -183,9 +184,9 @@ class _EmployeeChecklistDetailScreenState
         toolbarHeight: 84,
         titleSpacing: 20,
         title: Text(
-          _tr(context, 'Checklist'),
+          tr(context, 'Checklist'),
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                color: _brandTealDark,
+                color: brandTealDark,
                 fontSize: 26,
               ),
         ),
@@ -193,38 +194,37 @@ class _EmployeeChecklistDetailScreenState
       body: ApiFutureBuilder(
         future: future,
         builder: (context, payload) {
-          final checklist = _asMap(payload['checklist']);
-          final items = _asList(checklist['items']);
-          final completed = _readBool(checklist, 'completed_today');
-          final frequency = _readString(checklist, 'frequency');
-          final checklistTitle = _readString(checklist, 'title');
-          final itemCountLabel = '${items.length} ${_tr(context, 'Items')}';
-          final selectedCount =
-              completed ? items.length : selectedItemIds.length;
+          final checklist = asMap(payload['checklist']);
+          final items = asList(checklist['items']);
+          final completed = readBool(checklist, 'completed_today');
+          final frequency = readString(checklist, 'frequency');
+          final checklistTitle = readString(checklist, 'title');
+          final itemCountLabel = '${items.length} ${tr(context, 'Items')}';
+          final selectedCount = completed ? items.length : selectedItemIds.length;
           final allItemsSelected =
               completed || selectedItemIds.length == items.length;
           final canSubmit =
               !completed && !submitting && items.isNotEmpty && allItemsSelected;
-          return _PageBody(
+          return AppPageBody(
             children: [
-              _HeaderRow(
+              AppHeaderRow(
                 title: checklistTitle.isEmpty ? 'Checklist' : checklistTitle,
-                titleColor: _brandTealDark,
+                titleColor: brandTealDark,
                 titleFontSize: 26,
               ),
               const SizedBox(height: 6),
               Text(
                 [
-                  if (frequency.isNotEmpty) _tr(context, frequency),
+                  if (frequency.isNotEmpty) tr(context, frequency),
                   itemCountLabel,
                 ].join('  |  '),
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: _muted,
+                      color: mutedColor,
                       fontWeight: FontWeight.w600,
                     ),
               ),
               const SizedBox(height: 20),
-              _SectionCard(
+              AppSectionCard(
                 title: 'Items',
                 child: items.isEmpty
                     ? const Text('No checklist items.')
@@ -233,17 +233,17 @@ class _EmployeeChecklistDetailScreenState
                           for (var index = 0; index < items.length; index++)
                             _ChecklistItemTile(
                               index: index + 1,
-                              title: _readString(_asMap(items[index]), 'title'),
+                              title: readString(asMap(items[index]), 'title'),
                               checked: completed ||
                                   selectedItemIds.contains(
-                                    _readInt(_asMap(items[index]), 'id'),
+                                    readInt(asMap(items[index]), 'id'),
                                   ),
                               enabled: !completed && !submitting,
                               onTap: completed || submitting
                                   ? null
                                   : () {
                                       final itemId =
-                                          _readInt(_asMap(items[index]), 'id');
+                                          readInt(asMap(items[index]), 'id');
                                       setState(() {
                                         if (!selectedItemIds.add(itemId)) {
                                           selectedItemIds.remove(itemId);
@@ -304,7 +304,7 @@ class _ChecklistItemTile extends StatelessWidget {
             color: checked ? const Color(0xFFEAF7F4) : const Color(0xFFF8FAFC),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: checked ? const Color(0xFFD2EBE4) : _line,
+              color: checked ? const Color(0xFFD2EBE4) : lineColor,
             ),
           ),
           child: Row(
@@ -314,10 +314,10 @@ class _ChecklistItemTile extends StatelessWidget {
                 width: 38,
                 height: 38,
                 decoration: BoxDecoration(
-                  color: checked ? _brandTeal : Colors.white,
+                  color: checked ? brandTeal : Colors.white,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: checked ? _brandTeal : const Color(0xFFD6DEE8),
+                    color: checked ? brandTeal : const Color(0xFFD6DEE8),
                     width: 1.4,
                   ),
                 ),
@@ -331,7 +331,7 @@ class _ChecklistItemTile extends StatelessWidget {
                       : Text(
                           '$index',
                           style: const TextStyle(
-                            color: _brandTealDark,
+                            color: brandTealDark,
                             fontWeight: FontWeight.w800,
                           ),
                         ),
@@ -340,12 +340,12 @@ class _ChecklistItemTile extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  _tr(context, title),
+                  tr(context, title),
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         height: 1.35,
                         decoration:
                             checked ? TextDecoration.lineThrough : null,
-                        color: enabled || checked ? null : _muted,
+                        color: enabled || checked ? null : mutedColor,
                       ),
                 ),
               ),

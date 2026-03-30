@@ -1,6 +1,35 @@
 // ignore_for_file: use_build_context_synchronously
 
-part of '../../../main.dart';
+import 'package:flutter/material.dart';
+import 'package:skillbite_mobile/app/localization/app_localizations.dart';
+import 'package:skillbite_mobile/app/theme/app_theme_tokens.dart';
+import 'package:skillbite_mobile/app/widgets/widgets.dart';
+import 'package:skillbite_mobile/core/api/mobile_api_client.dart';
+import 'package:skillbite_mobile/core/utils/utils.dart';
+
+String _tr(BuildContext context, String english) => tr(context, english);
+List<dynamic> _asList(Object? value) => asList(value);
+String _readString(dynamic source, String key) => readString(source, key);
+int _readInt(dynamic source, String key) => readInt(source, key);
+String _readPath(dynamic source, List<String> path) => readPath(source, path);
+void _showSnack(BuildContext context, String message) =>
+    showSnack(context, message);
+
+const _brandTealDark = brandTealDark;
+
+typedef _DashboardMetricRow = AppDashboardMetricRow;
+typedef _DashboardMetricData = AppDashboardMetricData;
+typedef _HeaderRow = AppHeaderRow;
+typedef _HeaderActionButton = AppHeaderActionButton;
+typedef _HeaderTonalButton = AppHeaderTonalButton;
+typedef _ManagementRecordCard = AppManagementRecordCard;
+typedef _RuleAssignmentTile = AppRuleAssignmentTile;
+typedef _SectionCard = AppSectionCard;
+typedef _LoadingState = AppLoadingState;
+typedef _ErrorState = AppErrorState;
+typedef _PageSliverBody = AppPageSliverBody;
+typedef _PageSliverSection = AppPageSliverSection;
+typedef _PageSliverList = AppPageSliverList;
 
 class OwnerChecklistsPage extends StatefulWidget {
   const OwnerChecklistsPage({super.key, required this.api});

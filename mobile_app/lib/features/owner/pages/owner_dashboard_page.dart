@@ -1,6 +1,15 @@
 // ignore_for_file: use_build_context_synchronously
 
-part of '../../../main.dart';
+import 'package:flutter/material.dart';
+import 'package:skillbite_mobile/app/localization/app_localizations.dart';
+import 'package:skillbite_mobile/app/theme/app_theme_tokens.dart';
+import 'package:skillbite_mobile/app/widgets/widgets.dart';
+import 'package:skillbite_mobile/core/api/mobile_api_client.dart';
+import 'package:skillbite_mobile/core/session/session_user.dart';
+import 'package:skillbite_mobile/core/utils/utils.dart';
+import 'package:skillbite_mobile/features/owner/pages/owner_course_detail_screen.dart';
+import 'package:skillbite_mobile/features/owner/pages/owner_courses_page.dart';
+import 'package:skillbite_mobile/features/owner/pages/owner_employees_page.dart';
 
 class OwnerDashboardPage extends StatelessWidget {
   const OwnerDashboardPage({
@@ -36,7 +45,7 @@ class OwnerDashboardPage extends StatelessWidget {
       MaterialPageRoute(
         builder: (_) => OwnerCourseDetailScreen(
           api: api,
-          courseId: _readInt(course, 'id'),
+          courseId: readInt(course, 'id'),
           initialCourse: course,
         ),
       ),
@@ -49,27 +58,27 @@ class OwnerDashboardPage extends StatelessWidget {
     List<dynamic> employees,
     List<dynamic> courses,
   ) {
-    return _PageBody(
+    return AppPageBody(
       children: [
-        const _HeaderRow(
+        const AppHeaderRow(
           title: 'Workspace overview',
-          titleColor: _brandTealDark,
+          titleColor: brandTealDark,
           titleFontSize: 26,
         ),
         const SizedBox(height: 18),
-        _DashboardMetricRow(
+        AppDashboardMetricRow(
           metrics: [
-            _DashboardMetricData(
+            AppDashboardMetricData(
               'Employees',
               '${dashboard['employee_total'] ?? 0}',
               icon: Icons.group_outlined,
             ),
-            _DashboardMetricData(
+            AppDashboardMetricData(
               'Courses',
               '${dashboard['course_total'] ?? 0}',
               icon: Icons.menu_book_outlined,
             ),
-            _DashboardMetricData(
+            AppDashboardMetricData(
               'Checklists',
               '${dashboard['checklist_total'] ?? 0}',
               icon: Icons.checklist_rounded,
@@ -77,57 +86,61 @@ class OwnerDashboardPage extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 20),
-        _HeaderRow(
+        AppHeaderRow(
           title: 'Your people',
-          trailing: _sectionLink(
-            'View all',
+          trailing: AppSectionLink(
+            label: 'View all',
             onTap: () => _openEmployeesPage(context),
           ),
         ),
         const SizedBox(height: 14),
         if (employees.isEmpty)
-          const _SectionCard(
-              title: 'Employees', child: Text('No employees yet.'))
+          const AppSectionCard(
+            title: 'Employees',
+            child: Text('No employees yet.'),
+          )
         else
           for (final item in employees.take(3)) ...[
-            _NativeLessonTile(
-              title: _readString(item, 'display_name'),
-              subtitle: _readString(item, 'job_title').isEmpty
-                  ? _readString(item, 'username')
-                  : _readString(item, 'job_title'),
+            AppLessonTile(
+              title: readString(item, 'display_name'),
+              subtitle: readString(item, 'job_title').isEmpty
+                  ? readString(item, 'username')
+                  : readString(item, 'job_title'),
               accent: const Color(0xFFEFF5FF),
               trailingIcon: Icons.person_outline_rounded,
             ),
             const SizedBox(height: 14),
           ],
         const SizedBox(height: 6),
-        _HeaderRow(
+        AppHeaderRow(
           title: 'Courses',
-          trailing: _sectionLink(
-            'View all',
+          trailing: AppSectionLink(
+            label: 'View all',
             onTap: () => _openCoursesPage(context),
           ),
         ),
         const SizedBox(height: 14),
         if (courses.isEmpty)
-          const _SectionCard(
-              title: 'Courses', child: Text('No assignable courses.'))
+          const AppSectionCard(
+            title: 'Courses',
+            child: Text('No assignable courses.'),
+          )
         else
           for (final item in courses.take(3)) ...[
-            _NativeCoursePromoCard(
-              eyebrow: _readString(item, 'business_name').isEmpty
+            AppCoursePromoCard(
+              eyebrow: readString(item, 'business_name').isEmpty
                   ? 'Shared'
                   : 'Workspace',
-              title: _readString(item, 'title'),
-              meta: _readString(item, 'business_name').isEmpty
+              title: readString(item, 'title'),
+              meta: readString(item, 'business_name').isEmpty
                   ? user.businessName
-                  : _readString(item, 'business_name'),
-              supporting: _readString(item, 'description').isEmpty
-                  ? _tr(context, 'Suggested course pushes')
-                  : _readString(item, 'description'),
-              imageUrl: api.resolveUrl(_readString(item, 'card_image_url')),
+                  : readString(item, 'business_name'),
+              supporting: readString(item, 'description').isEmpty
+                  ? tr(context, 'Suggested course pushes')
+                  : readString(item, 'description'),
+              imageUrl: api.resolveUrl(readString(item, 'card_image_url')),
               icon: Icons.auto_awesome_motion_rounded,
-              onTap: () => _openCourse(context, _asMap(item)),
+              onTap: () => _openCourse(context, asMap(item)),
             ),
             const SizedBox(height: 14),
           ],
@@ -140,9 +153,9 @@ class OwnerDashboardPage extends StatelessWidget {
     return ApiFutureBuilder(
       future: api.get('/business-owner/dashboard/'),
       builder: (context, payload) {
-        final dashboard = _asMap(payload['dashboard']);
-        final employees = _asList(dashboard['employees']);
-        final courses = _asList(dashboard['assignable_courses']);
+        final dashboard = asMap(payload['dashboard']);
+        final employees = asList(dashboard['employees']);
+        final courses = asList(dashboard['assignable_courses']);
         return _buildNativeView(context, dashboard, employees, courses);
       },
     );

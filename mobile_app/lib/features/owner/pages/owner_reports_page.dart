@@ -1,6 +1,25 @@
 // ignore_for_file: use_build_context_synchronously
 
-part of '../../../main.dart';
+import 'package:flutter/material.dart';
+import 'package:skillbite_mobile/app/localization/app_localizations.dart';
+import 'package:skillbite_mobile/app/theme/app_theme_tokens.dart';
+import 'package:skillbite_mobile/app/widgets/widgets.dart';
+import 'package:skillbite_mobile/core/api/mobile_api_client.dart';
+import 'package:skillbite_mobile/core/utils/utils.dart';
+
+String _tr(BuildContext context, String english) => tr(context, english);
+Map<String, dynamic> _asMap(Object? value) => asMap(value);
+int _readInt(dynamic source, String key) => readInt(source, key);
+
+const _brandTeal = brandTeal;
+const _brandTealDark = brandTealDark;
+const _line = lineColor;
+
+typedef _PageBody = AppPageBody;
+typedef _HeaderRow = AppHeaderRow;
+typedef _DashboardMetricRow = AppDashboardMetricRow;
+typedef _DashboardMetricData = AppDashboardMetricData;
+typedef _StatusChip = AppStatusChip;
 
 class OwnerReportsPage extends StatelessWidget {
   const OwnerReportsPage({super.key, required this.api});

@@ -1,12 +1,4 @@
-Map<String, dynamic> _asMap(Object? value) {
-  if (value is Map<String, dynamic>) {
-    return value;
-  }
-  if (value is Map) {
-    return value.map((key, item) => MapEntry(key.toString(), item));
-  }
-  return const {};
-}
+import 'package:skillbite_mobile/core/utils/data_helpers.dart';
 
 class SessionUser {
   SessionUser({
@@ -24,7 +16,7 @@ class SessionUser {
   final String businessName;
 
   factory SessionUser.fromJson(Map<String, dynamic> json) {
-    final business = _asMap(json['business']);
+    final business = asMap(json['business']);
     return SessionUser(
       id: _asInt(json['id']),
       username: (json['username'] ?? '').toString(),

@@ -1,0 +1,222 @@
+import 'package:flutter/material.dart';
+import 'package:skillbite_mobile/app/localization/app_localizations.dart';
+import 'package:skillbite_mobile/app/theme/app_theme_tokens.dart';
+import 'package:skillbite_mobile/app/widgets/widgets.dart';
+import 'package:skillbite_mobile/core/api/mobile_api_client.dart';
+import 'package:skillbite_mobile/core/session/session_user.dart';
+import 'package:skillbite_mobile/features/auth/pages/forgot_password_screen.dart';
+import 'package:skillbite_mobile/features/auth/pages/register_screen.dart';
+import 'package:skillbite_mobile/features/auth/widgets/auth_widgets.dart';
+
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({
+    super.key,
+    required this.api,
+    required this.onLoggedIn,
+  });
+
+  final MobileApiClient api;
+  final ValueChanged<SessionUser> onLoggedIn;
+
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final TextEditingController usernameController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  bool loading = false;
+  bool passwordObscured = true;
+  String? errorText;
+
+  @override
+  void dispose() {
+    usernameController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    final username = usernameController.text.trim();
+    final password = passwordController.text;
+    if (username.isEmpty || password.isEmpty) {
+      setState(() => errorText = 'Username and password are required.');
+      return;
+    }
+    setState(() {
+      loading = true;
+      errorText = null;
+    });
+    try {
+      final user = await widget.api.login(username, password);
+      widget.onLoggedIn(user);
+    } catch (error) {
+      setState(() {
+        errorText = error.toString().replaceFirst('Exception: ', '');
+      });
+    } finally {
+      if (mounted) {
+        setState(() => loading = false);
+      }
+    }
+  }
+
+  Future<void> _openForgotPassword() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => ForgotPasswordScreen(api: widget.api)),
+    );
+  }
+
+  Future<void> _openRegister() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => RegisterScreen(
+          api: widget.api,
+          onRegistered: widget.onLoggedIn,
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AuthScaffold(
+      leading: const LanguageToggleButton(),
+      trailing: const AuthOrb(icon: Icons.shield_rounded),
+      title: tr(context, 'Sign in to SkillBite'),
+      subtitle: tr(
+        context,
+        'Please enter your information below in order to login to your account',
+      ),
+      footer: Center(
+        child: Wrap(
+          alignment: WrapAlignment.center,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: 6,
+          textDirection: isArabic(context) ? TextDirection.rtl : TextDirection.ltr,
+          children: [
+            Text(
+              'Need an account?',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: const Color(0xFF4A5A6A),
+                  ),
+            ),
+            TextButton(
+              onPressed: _openRegister,
+              child: Text(
+                tr(context, 'Create Account'),
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: brandTeal,
+                    ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          AuthFieldLabel(label: tr(context, 'Username')),
+          const SizedBox(height: 10),
+          TextField(
+            controller: usernameController,
+            decoration: InputDecoration(
+              hintText: tr(context, 'Enter your username'),
+              prefixIcon: const Icon(Icons.person_outline_rounded),
+            ),
+          ),
+          const SizedBox(height: 16),
+          AuthFieldLabel(label: tr(context, 'Password')),
+          const SizedBox(height: 10),
+          TextField(
+            controller: passwordController,
+            obscureText: passwordObscured,
+            decoration: InputDecoration(
+              hintText: tr(context, 'Enter your password'),
+              prefixIcon: const Icon(Icons.lock_outline_rounded),
+              suffixIcon: IconButton(
+                onPressed: () {
+                  setState(() => passwordObscured = !passwordObscured);
+                },
+                icon: Icon(
+                  passwordObscured
+                      ? Icons.visibility_outlined
+                      : Icons.visibility_off_outlined,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Align(
+            alignment: AlignmentDirectional.centerEnd,
+            child: TextButton(
+              onPressed: _openForgotPassword,
+              child: Text(
+                tr(context, 'Forgot Password?'),
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: brandTeal,
+                    ),
+              ),
+            ),
+          ),
+          if (errorText != null) ...[
+            const SizedBox(height: 8),
+            AppInlineError(message: errorText!),
+          ],
+          const SizedBox(height: 16),
+          FilledButton(
+            onPressed: loading ? null : _submit,
+            child: Text(
+              loading ? tr(context, 'Signing in...') : tr(context, 'Log In'),
+            ),
+          ),
+          const SizedBox(height: 18),
+          FilledButton.tonal(
+            onPressed: () async {
+              final demoRole = await showModalBottomSheet<String>(
+                context: context,
+                showDragHandle: true,
+                builder: (sheetContext) => SafeArea(
+                  child: ListView(
+                    shrinkWrap: true,
+                    children: [
+                      ListTile(
+                        leading: const Icon(Icons.storefront_outlined),
+                        title: Text(tr(sheetContext, 'Owner Demo')),
+                        onTap: () => Navigator.of(sheetContext).pop('owner'),
+                      ),
+                      ListTile(
+                        leading: const Icon(Icons.badge_outlined),
+                        title: Text(tr(sheetContext, 'Employee Demo')),
+                        onTap: () => Navigator.of(sheetContext).pop('employee'),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+              if (demoRole == null || !mounted) return;
+              setState(() {
+                loading = true;
+                errorText = null;
+              });
+              try {
+                final user = await widget.api.loginDemo(demoRole);
+                widget.onLoggedIn(user);
+              } catch (error) {
+                if (!mounted) return;
+                setState(() {
+                  errorText = error.toString().replaceFirst('Exception: ', '');
+                });
+              } finally {
+                if (mounted) {
+                  setState(() => loading = false);
+                }
+              }
+            },
+            child: Text(tr(context, 'Demo Access')),
+          ),
+        ],
+      ),
+    );
+  }
+}
