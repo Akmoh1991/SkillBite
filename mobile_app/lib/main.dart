@@ -3515,15 +3515,9 @@ class _NativeCoursePromoCard extends StatelessWidget {
         child: Ink(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
+            color: Colors.white,
             borderRadius: BorderRadius.circular(28),
             border: Border.all(color: _line),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x100F172A),
-                blurRadius: 18,
-                offset: Offset(0, 10),
-              ),
-            ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -4098,17 +4092,11 @@ class _CompactCourseListCard extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(26),
         onTap: onTap,
-        child: Container(
+        child: Ink(
           decoration: BoxDecoration(
+            color: Colors.white,
             borderRadius: BorderRadius.circular(26),
             border: Border.all(color: _line),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x100F172A),
-                blurRadius: 20,
-                offset: Offset(0, 10),
-              ),
-            ],
           ),
           padding: const EdgeInsets.all(16),
           child: Row(
