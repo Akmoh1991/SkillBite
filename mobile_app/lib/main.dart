@@ -1444,18 +1444,22 @@ class _RoleShellState extends State<RoleShell> {
 
     return Scaffold(
       appBar: AppBar(
-        toolbarHeight: 92,
-        titleSpacing: 24,
+        toolbarHeight: 84,
+        titleSpacing: 20,
         title: Row(
           children: [
-            _AvatarBadge(label: widget.user.displayName),
-            const SizedBox(width: 14),
+            _AvatarBadge(label: widget.user.displayName, size: 46),
+            const SizedBox(width: 12),
             Expanded(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(widget.user.displayName),
+                  Text(
+                    widget.user.displayName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                   Text(
                     widget.user.businessName.isEmpty
                         ? '@${widget.user.username}'
@@ -1463,7 +1467,10 @@ class _RoleShellState extends State<RoleShell> {
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           color: _muted,
                           fontWeight: FontWeight.w500,
+                          fontSize: 15,
                         ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
@@ -1474,12 +1481,12 @@ class _RoleShellState extends State<RoleShell> {
           Padding(
             padding: const EdgeInsets.only(right: 6),
             child: Container(
-              width: 46,
-              height: 46,
-              margin: const EdgeInsets.symmetric(vertical: 18),
+              width: 44,
+              height: 44,
+              margin: const EdgeInsets.symmetric(vertical: 14),
               decoration: BoxDecoration(
                 color: _surface,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(15),
                 border: Border.all(color: _line),
               ),
               child: IconButton(
@@ -1491,12 +1498,12 @@ class _RoleShellState extends State<RoleShell> {
           Padding(
             padding: const EdgeInsets.only(right: 12),
             child: Container(
-              width: 46,
-              height: 46,
-              margin: const EdgeInsets.symmetric(vertical: 18),
+              width: 44,
+              height: 44,
+              margin: const EdgeInsets.symmetric(vertical: 14),
               decoration: BoxDecoration(
                 color: _surface,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(15),
                 border: Border.all(color: _line),
               ),
               child: IconButton(
@@ -1526,10 +1533,10 @@ class _RoleShellState extends State<RoleShell> {
               ),
             ],
           ),
-          padding: const EdgeInsets.only(top: 6),
+          padding: const EdgeInsets.only(top: 4),
           child: NavigationBar(
             selectedIndex: index,
-            height: 76,
+            height: 72,
             destinations: destinations,
             onDestinationSelected: (value) => setState(() => index = value),
           ),
@@ -1700,34 +1707,6 @@ class EmployeeDashboardPage extends StatelessWidget {
   ) {
     return _PageBody(
       children: [
-        _DashboardHeroCard(
-          title: _tr(context, 'Workspace overview'),
-          subtitle: user.businessName,
-          value:
-              '${dashboard['active_course_count'] ?? 0} ${_tr(context, 'Pending courses')}',
-          icon: Icons.auto_stories_rounded,
-        ),
-        const SizedBox(height: 18),
-        _DashboardMetricRow(
-          metrics: [
-            _DashboardMetricData(
-              'Pending courses',
-              '${dashboard['active_course_count'] ?? 0}',
-              icon: Icons.menu_book_outlined,
-            ),
-            _DashboardMetricData(
-              'Learning History',
-              '${dashboard['completed_course_count'] ?? 0}',
-              icon: Icons.workspace_premium_outlined,
-            ),
-            _DashboardMetricData(
-              'Checklists',
-              '${dashboard['assigned_checklist_count'] ?? 0}',
-              icon: Icons.checklist_rounded,
-            ),
-          ],
-        ),
-        const SizedBox(height: 20),
         _HeaderRow(
           title: 'Courses',
           trailing: _sectionLink(
@@ -3285,7 +3264,7 @@ class _PageSliverList extends StatelessWidget {
 class _DashboardHeroCard extends StatelessWidget {
   const _DashboardHeroCard({
     required this.title,
-    required this.subtitle,
+    this.subtitle = '',
     required this.value,
     required this.icon,
   });
@@ -3297,10 +3276,11 @@ class _DashboardHeroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hasSubtitle = subtitle.trim().isNotEmpty;
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(30),
+        borderRadius: BorderRadius.circular(28),
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -3315,41 +3295,48 @@ class _DashboardHeroCard extends StatelessWidget {
         ],
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
-            width: 52,
-            height: 52,
+            width: 48,
+            height: 48,
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.18),
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(16),
             ),
             child: Icon(icon, color: Colors.white),
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   title,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         color: Colors.white.withValues(alpha: 0.86),
+                        fontSize: 15,
                       ),
                 ),
-                const SizedBox(height: 6),
-                Text(
-                  subtitle,
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        color: Colors.white,
-                        height: 1.1,
-                      ),
-                ),
-                const SizedBox(height: 10),
+                if (hasSubtitle) ...[
+                  const SizedBox(height: 6),
+                  Text(
+                    subtitle,
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          color: Colors.white,
+                          height: 1.08,
+                          fontSize: 22,
+                        ),
+                  ),
+                  const SizedBox(height: 8),
+                ] else
+                  const SizedBox(height: 8),
                 Text(
                   value,
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                         color: Colors.white.withValues(alpha: 0.82),
+                        height: 1.25,
                       ),
                 ),
               ],
@@ -3394,32 +3381,36 @@ class _DashboardMetricCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(18),
+      height: 154,
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(22),
         border: Border.all(color: _line),
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 42,
-            height: 42,
+            width: 40,
+            height: 40,
             decoration: BoxDecoration(
               color: const Color(0xFFEAF7F4),
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(14),
             ),
             child: Icon(data.icon, size: 22, color: _brandTeal),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           Text(data.value, style: Theme.of(context).textTheme.headlineSmall),
-          const SizedBox(height: 6),
+          const SizedBox(height: 4),
           Text(
             _tr(context, data.label),
             style: Theme.of(
               context,
             ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
@@ -3874,9 +3865,13 @@ class _HeaderTonalButton extends StatelessWidget {
 }
 
 class _AvatarBadge extends StatelessWidget {
-  const _AvatarBadge({required this.label});
+  const _AvatarBadge({
+    required this.label,
+    this.size = 52,
+  });
 
   final String label;
+  final double size;
 
   @override
   Widget build(BuildContext context) {
@@ -3887,8 +3882,8 @@ class _AvatarBadge extends StatelessWidget {
         .map((item) => item.trim()[0].toUpperCase())
         .join();
     return Container(
-      width: 52,
-      height: 52,
+      width: size,
+      height: size,
       decoration: const BoxDecoration(
         color: _brandTeal,
         shape: BoxShape.circle,
@@ -3896,8 +3891,11 @@ class _AvatarBadge extends StatelessWidget {
       child: Center(
         child: Text(
           initials.isEmpty ? 'SB' : initials,
-          style:
-              const TextStyle(color: Colors.white, fontWeight: FontWeight.w800),
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w800,
+            fontSize: size * 0.34,
+          ),
         ),
       ),
     );

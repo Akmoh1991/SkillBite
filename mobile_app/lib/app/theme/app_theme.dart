@@ -125,14 +125,14 @@ ThemeData buildAppTheme() {
         return IconThemeData(
           color: states.contains(WidgetState.selected)
               ? AppColors.brandPrimary
-              : const Color(0xFFC9CDD7),
+              : const Color(0xFF9EABB8),
         );
       }),
       labelTextStyle: WidgetStateProperty.resolveWith((states) {
         return TextStyle(
           color: states.contains(WidgetState.selected)
               ? AppColors.brandPrimary
-              : const Color(0xFFC9CDD7),
+              : const Color(0xFF9EABB8),
           fontWeight: states.contains(WidgetState.selected)
               ? FontWeight.w700
               : FontWeight.w500,
