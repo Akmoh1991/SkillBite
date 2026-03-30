@@ -4,17 +4,24 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:video_player/video_player.dart';
-import 'package:webview_flutter/webview_flutter.dart';
 
 import 'app/theme/app_colors.dart';
 import 'app/theme/app_theme.dart';
 import 'core/api/mobile_api_client.dart';
 import 'core/session/session_store.dart';
 import 'core/session/session_user.dart';
+import 'features/employee/courses/pages/employee_course_detail_screen.dart';
+import 'features/employee/courses/pages/employee_courses_page.dart';
+import 'features/employee/courses/pages/employee_learning_history_page.dart';
 
-part 'features/owner/owner_admin_flow.dart';
+part 'features/employee/pages/employee_dashboard_page.dart';
+part 'features/owner/pages/owner_dashboard_page.dart';
+part 'features/owner/pages/owner_employees_page.dart';
+part 'features/owner/pages/owner_job_titles_page.dart';
+part 'features/owner/pages/owner_courses_page.dart';
+part 'features/owner/pages/owner_course_detail_screen.dart';
+part 'features/owner/pages/owner_reports_page.dart';
+part 'features/owner/pages/owner_checklists_page.dart';
 part 'features/chat/chat_page.dart';
 
 const Color _brandTeal = AppColors.brandPrimary;
@@ -1639,1222 +1646,6 @@ class NotificationsPage extends StatelessWidget {
   }
 }
 
-class EmployeeDashboardPage extends StatelessWidget {
-  const EmployeeDashboardPage({
-    super.key,
-    required this.api,
-    required this.user,
-  });
-
-  final MobileApiClient api;
-  final SessionUser user;
-
-  Future<void> _openAssignmentCourse(
-      BuildContext context, int assignmentId) async {
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => EmployeeCourseDetailScreen(
-          api: api,
-          assignmentId: assignmentId,
-        ),
-      ),
-    );
-  }
-
-  Future<void> _openChecklist(BuildContext context, int checklistId) async {
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => EmployeeChecklistDetailScreen(
-          api: api,
-          checklistId: checklistId,
-        ),
-      ),
-    );
-  }
-
-  Future<void> _openCoursesPage(BuildContext context) async {
-    await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => EmployeeCoursesPage(api: api)),
-    );
-  }
-
-  Widget _buildNativeView(
-    BuildContext context,
-    Map<String, dynamic> dashboard,
-    List<dynamic> assignments,
-    List<dynamic> checklists,
-  ) {
-    final visibleAssignments = assignments.take(3).toList(growable: false);
-    final visibleChecklists = checklists.take(3).toList(growable: false);
-    return _PageBody(
-      bottomPadding: 24,
-      children: [
-        _HeaderRow(
-          title: 'Courses',
-          titleColor: _brandTealDark,
-          titleFontSize: 26,
-          trailing: _sectionLink(
-            'View all',
-            onTap: () => _openCoursesPage(context),
-          ),
-        ),
-        const SizedBox(height: 16),
-        if (assignments.isEmpty)
-          const _SectionCard(
-              title: 'Courses', child: Text('No active courses.'))
-        else
-          for (var index = 0; index < visibleAssignments.length; index++) ...[
-            _NativeCoursePromoCard(
-              eyebrow: _readString(visibleAssignments[index], 'status_label'),
-              title: _readPath(visibleAssignments[index], ['course', 'title']),
-              meta: '${_readPath(visibleAssignments[index], [
-                    'course',
-                    'estimated_minutes'
-                  ])} ${_tr(context, 'min')}',
-              supporting: _readString(
-                _asMap(visibleAssignments[index]['course']),
-                'description',
-              ),
-              imageUrl: api.resolveUrl(
-                _readPath(
-                    visibleAssignments[index], ['course', 'card_image_url']),
-              ),
-              onTap: () => _openAssignmentCourse(
-                context,
-                _readInt(visibleAssignments[index], 'id'),
-              ),
-            ),
-            if (index < visibleAssignments.length - 1)
-              const SizedBox(height: 14),
-          ],
-        const SizedBox(height: 8),
-        const _HeaderRow(
-          title: 'Checklists',
-          titleColor: _brandTealDark,
-          titleFontSize: 26,
-        ),
-        const SizedBox(height: 14),
-        if (checklists.isEmpty)
-          const _SectionCard(
-            title: 'Checklists',
-            child: Text('No checklists assigned.'),
-          )
-        else
-          for (var index = 0; index < visibleChecklists.length; index++) ...[
-            _NativeLessonTile(
-              title: _readString(visibleChecklists[index], 'title'),
-              subtitle: _readBool(visibleChecklists[index], 'completed_today')
-                  ? 'Completed today'
-                  : 'Pending checklist',
-              accent: const Color(0xFFEAF7F4),
-              trailingIcon: Icons.checklist_rounded,
-              onTap: () => _openChecklist(
-                context,
-                _readInt(visibleChecklists[index], 'id'),
-              ),
-            ),
-            if (index < visibleChecklists.length - 1)
-              const SizedBox(height: 14),
-          ],
-      ],
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return ApiFutureBuilder(
-      future: api.get('/employee/dashboard/'),
-      builder: (context, payload) {
-        final dashboard = _asMap(payload['dashboard']);
-        final assignments = _asList(dashboard['dashboard_course_assignments']);
-        final checklists = _asList(dashboard['assigned_checklists']);
-        return _buildNativeView(context, dashboard, assignments, checklists);
-      },
-    );
-  }
-}
-
-class EmployeeCoursesPage extends StatefulWidget {
-  const EmployeeCoursesPage({super.key, required this.api});
-
-  final MobileApiClient api;
-
-  @override
-  State<EmployeeCoursesPage> createState() => _EmployeeCoursesPageState();
-}
-
-class _EmployeeCoursesPageState extends State<EmployeeCoursesPage> {
-  late Future<Map<String, dynamic>> future;
-
-  @override
-  void initState() {
-    super.initState();
-    future = widget.api.get('/employee/courses/');
-  }
-
-  void _reload() {
-    setState(() {
-      future = widget.api.get('/employee/courses/');
-    });
-  }
-
-  Future<void> _openAssignment(int assignmentId) async {
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => EmployeeCourseDetailScreen(
-          api: widget.api,
-          assignmentId: assignmentId,
-        ),
-      ),
-    );
-    if (mounted) {
-      _reload();
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return ApiFutureBuilder(
-      future: future,
-      builder: (context, payload) {
-        final courses = _asList(payload['courses']);
-        final featuredCourse = courses.isEmpty ? null : _asMap(courses.first);
-        final moreCourses =
-            courses.length > 1 ? courses.skip(1).toList() : const <dynamic>[];
-        final activeCourses = courses.where((item) {
-          final status = _readString(item, 'status_label').toLowerCase();
-          return !status.contains('complete');
-        }).length;
-        final totalMinutes = courses.fold<int>(
-          0,
-          (sum, item) =>
-              sum + _readInt(_asMap(item['course']), 'estimated_minutes'),
-        );
-        return _PageSliverBody(
-          slivers: [
-            _PageSliverSection(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _DashboardHeroCard(
-                    title: _tr(context, 'Courses'),
-                    subtitle: featuredCourse == null
-                        ? 'No assigned courses yet'
-                        : _readPath(featuredCourse, ['course', 'title']),
-                    value: featuredCourse == null
-                        ? 'New training will appear here when it is assigned.'
-                        : '$activeCourses in progress - $totalMinutes ${_tr(context, 'min')} total',
-                    icon: Icons.auto_stories_rounded,
-                  ),
-                  const SizedBox(height: 16),
-                  _DashboardMetricRow(
-                    metrics: [
-                      _DashboardMetricData(
-                        'Courses',
-                        '${courses.length}',
-                        icon: Icons.menu_book_rounded,
-                      ),
-                      _DashboardMetricData(
-                        'Pending courses',
-                        '$activeCourses',
-                        icon: Icons.timelapse_rounded,
-                      ),
-                      _DashboardMetricData(
-                        'Learning time',
-                        '$totalMinutes ${_tr(context, 'min')}',
-                        icon: Icons.schedule_rounded,
-                      ),
-                    ],
-                  ),
-                  if (featuredCourse != null) ...[
-                    const SizedBox(height: 20),
-                    _NativeCoursePromoCard(
-                      eyebrow:
-                          _readString(featuredCourse, 'status_label').isEmpty
-                              ? 'Course'
-                              : _readString(featuredCourse, 'status_label'),
-                      title: _readPath(featuredCourse, ['course', 'title']),
-                      meta:
-                          '${_readInt(_asMap(featuredCourse['course']), 'estimated_minutes')} ${_tr(context, 'min')}',
-                      supporting:
-                          _readPath(featuredCourse, ['course', 'description']),
-                      imageUrl: widget.api.resolveUrl(
-                        _readPath(featuredCourse, ['course', 'card_image_url']),
-                      ),
-                      icon: Icons.play_circle_outline_rounded,
-                      onTap: () =>
-                          _openAssignment(_readInt(featuredCourse, 'id')),
-                    ),
-                  ],
-                  const SizedBox(height: 20),
-                  _HeaderRow(
-                    title: featuredCourse == null
-                        ? 'Assigned courses'
-                        : 'More courses',
-                    trailing: _RoundIconButton(
-                      icon: Icons.refresh_rounded,
-                      onTap: _reload,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                ],
-              ),
-            ),
-            if (courses.isEmpty)
-              const _PageSliverSection(
-                padding: EdgeInsets.fromLTRB(24, 0, 24, 120),
-                child: _SectionCard(
-                  title: 'Courses',
-                  child: Text('No courses assigned.'),
-                ),
-              )
-            else if (moreCourses.isEmpty)
-              const _PageSliverSection(
-                padding: EdgeInsets.fromLTRB(24, 0, 24, 120),
-                child: _SectionCard(
-                  title: 'Courses',
-                  child: Text('No additional courses right now.'),
-                ),
-              )
-            else
-              _PageSliverList(
-                itemCount: moreCourses.length,
-                itemBuilder: (context, index) {
-                  final item = _asMap(moreCourses[index]);
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 16),
-                    child: _CompactCourseListCard(
-                      imageUrl: widget.api.resolveUrl(
-                        _readPath(item, ['course', 'card_image_url']),
-                      ),
-                      eyebrow: _readString(item, 'status_label'),
-                      title: _readPath(item, ['course', 'title']),
-                      description: _readPath(item, ['course', 'description']),
-                      metadata: [
-                        '${_readPath(item, [
-                              'course',
-                              'estimated_minutes'
-                            ])} ${_tr(context, 'min')}',
-                        '${_readPath(item, [
-                              'course',
-                              'content_item_total'
-                            ])} ${_tr(context, 'Items')}',
-                        _readPath(item, ['course', 'card_label']),
-                      ],
-                      onTap: () => _openAssignment(_readInt(item, 'id')),
-                    ),
-                  );
-                },
-              ),
-          ],
-        );
-      },
-    );
-  }
-}
-
-class EmployeeLearningHistoryPage extends StatefulWidget {
-  const EmployeeLearningHistoryPage({super.key, required this.api});
-
-  final MobileApiClient api;
-
-  @override
-  State<EmployeeLearningHistoryPage> createState() =>
-      _EmployeeLearningHistoryPageState();
-}
-
-class _EmployeeLearningHistoryPageState
-    extends State<EmployeeLearningHistoryPage> {
-  late Future<Map<String, dynamic>> future;
-
-  @override
-  void initState() {
-    super.initState();
-    future = widget.api.get('/employee/learning-history/');
-  }
-
-  void _reload() {
-    setState(() {
-      future = widget.api.get('/employee/learning-history/');
-    });
-  }
-
-  Future<void> _openAssignment(int assignmentId) async {
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => EmployeeCourseDetailScreen(
-          api: widget.api,
-          assignmentId: assignmentId,
-        ),
-      ),
-    );
-    if (mounted) {
-      _reload();
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return ApiFutureBuilder(
-      future: future,
-      builder: (context, payload) {
-        final history = _asList(payload['learning_history']);
-        final totalMinutes = history.fold<int>(
-          0,
-          (sum, item) =>
-              sum + _readInt(_asMap(item['course']), 'estimated_minutes'),
-        );
-        return _PageSliverBody(
-          slivers: [
-            _PageSliverSection(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _DashboardHeroCard(
-                    title: 'Learning History',
-                    subtitle: history.isEmpty
-                        ? 'Your completed learning will appear here'
-                        : '${history.length} completed courses',
-                    value: history.isEmpty
-                        ? 'Finished training stays easy to revisit.'
-                        : '$totalMinutes ${_tr(context, 'min')} completed',
-                    icon: Icons.workspace_premium_rounded,
-                  ),
-                  const SizedBox(height: 16),
-                  _DashboardMetricRow(
-                    metrics: [
-                      _DashboardMetricData(
-                        'Completed',
-                        '${history.length}',
-                        icon: Icons.task_alt_rounded,
-                      ),
-                      _DashboardMetricData(
-                        'Minutes',
-                        '$totalMinutes',
-                        icon: Icons.schedule_rounded,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  _HeaderRow(
-                    title: 'Learning History',
-                    trailing: _RoundIconButton(
-                      icon: Icons.refresh_rounded,
-                      onTap: _reload,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                ],
-              ),
-            ),
-            if (history.isEmpty)
-              const _PageSliverSection(
-                padding: EdgeInsets.fromLTRB(24, 0, 24, 120),
-                child: _SectionCard(
-                  title: 'History',
-                  child: Text('No completed courses yet.'),
-                ),
-              )
-            else
-              _PageSliverList(
-                itemCount: history.length,
-                itemBuilder: (context, index) {
-                  final item = _asMap(history[index]);
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 16),
-                    child: _CompactCourseListCard(
-                      imageUrl: widget.api.resolveUrl(
-                        _readPath(item, ['course', 'card_image_url']),
-                      ),
-                      eyebrow: _readString(item, 'status_label'),
-                      title: _readPath(item, ['course', 'title']),
-                      description: _readPath(item, ['course', 'description']),
-                      metadata: [
-                        '${_readPath(item, [
-                              'course',
-                              'estimated_minutes'
-                            ])} ${_tr(context, 'min')}',
-                        '${_readPath(item, [
-                              'course',
-                              'content_item_total'
-                            ])} ${_tr(context, 'Items')}',
-                      ],
-                      onTap: () => _openAssignment(_readInt(item, 'id')),
-                    ),
-                  );
-                },
-              ),
-          ],
-        );
-      },
-    );
-  }
-}
-
-class EmployeeCourseDetailScreen extends StatefulWidget {
-  const EmployeeCourseDetailScreen({
-    super.key,
-    required this.api,
-    required this.assignmentId,
-  });
-
-  final MobileApiClient api;
-  final int assignmentId;
-
-  @override
-  State<EmployeeCourseDetailScreen> createState() =>
-      _EmployeeCourseDetailScreenState();
-}
-
-class _EmployeeCourseDetailScreenState
-    extends State<EmployeeCourseDetailScreen> {
-  late Future<Map<String, dynamic>> future;
-  bool submitting = false;
-
-  @override
-  void initState() {
-    super.initState();
-    future = widget.api.get('/employee/courses/${widget.assignmentId}/');
-  }
-
-  void _reload() {
-    setState(() {
-      future = widget.api.get('/employee/courses/${widget.assignmentId}/');
-    });
-  }
-
-  Future<void> _openContentItem(Map<String, dynamic> item) async {
-    final title = _readString(item, 'title');
-    final videoUrl = widget.api.resolveUrl(_readString(item, 'video_url'));
-    final pdfUrl = widget.api.resolveUrl(_readString(item, 'pdf_url'));
-    final materialUrl =
-        widget.api.resolveUrl(_readString(item, 'material_url'));
-    if (videoUrl.isNotEmpty) {
-      await Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => CourseVideoScreen(title: title, videoUrl: videoUrl),
-        ),
-      );
-      return;
-    }
-    final browserUrl = pdfUrl.isNotEmpty ? pdfUrl : materialUrl;
-    if (browserUrl.isEmpty) {
-      _showSnack(
-        context,
-        _readString(item, 'body').isNotEmpty
-            ? _readString(item, 'body')
-            : 'No content URL available.',
-      );
-      return;
-    }
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => CourseWebContentScreen(
-          title: title,
-          url: browserUrl,
-          isPdf: pdfUrl.isNotEmpty,
-        ),
-      ),
-    );
-  }
-
-  Future<void> _completeCourse() async {
-    setState(() => submitting = true);
-    try {
-      await widget.api
-          .post('/employee/courses/${widget.assignmentId}/complete/', {});
-      if (!mounted) return;
-      _showSnack(context, 'Course completed.');
-      _reload();
-    } catch (error) {
-      if (!mounted) return;
-      _showSnack(context, error.toString().replaceFirst('Exception: ', ''));
-    } finally {
-      if (mounted) {
-        setState(() => submitting = false);
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(_tr(context, 'Details'))),
-      body: ApiFutureBuilder(
-        future: future,
-        builder: (context, payload) {
-          final assignment = _asMap(payload['course_assignment']);
-          final course = _asMap(assignment['course']);
-          final contentItems = _asList(course['content_items']);
-          final hasExam = _readBool(course, 'has_exam');
-          final courseDescription = _readString(course, 'description');
-          final statusLabel = _readString(assignment, 'status_label').isEmpty
-              ? _tr(context, 'In progress')
-              : _readString(assignment, 'status_label');
-          final featuredContent =
-              contentItems.isEmpty ? const <dynamic>[] : [contentItems.first];
-          final remainingContent = contentItems.length > 1
-              ? contentItems.skip(1).toList()
-              : const <dynamic>[];
-          return _PageBody(
-            children: [
-              _DashboardHeroCard(
-                title: statusLabel,
-                subtitle: _readString(course, 'title'),
-                value:
-                    '${contentItems.length} ${_tr(context, 'Items')} - ${_readInt(course, 'estimated_minutes')} ${_tr(context, 'min')}',
-                icon: hasExam
-                    ? Icons.quiz_rounded
-                    : Icons.play_circle_outline_rounded,
-              ),
-              const SizedBox(height: 16),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  _StatusChip(label: statusLabel),
-                  _StatusChip(
-                      label: '${contentItems.length} ${_tr(context, 'Items')}'),
-                  if (hasExam) _StatusChip(label: _tr(context, 'Exam')),
-                ],
-              ),
-              if (courseDescription.isNotEmpty) ...[
-                const SizedBox(height: 16),
-                _SectionCard(
-                  title: 'Course',
-                  child: Text(courseDescription),
-                ),
-              ],
-              const SizedBox(height: 16),
-              if (featuredContent.isEmpty)
-                _SectionCard(
-                    title: _tr(context, 'Lesson'),
-                    child: Text(_tr(context, 'No mobile content items.')))
-              else
-                _LessonMediaCard(
-                  title: _readString(course, 'title'),
-                  subtitle: _readString(course, 'description').isEmpty
-                      ? _contentSubtitle(featuredContent.first)
-                      : _readString(course, 'description'),
-                  onTap: () => _openContentItem(_asMap(featuredContent.first)),
-                ),
-              const SizedBox(height: 18),
-              Text(
-                _readString(course, 'title'),
-                style: Theme.of(context)
-                    .textTheme
-                    .headlineSmall
-                    ?.copyWith(fontSize: 18),
-              ),
-              const SizedBox(height: 16),
-              if (remainingContent.isNotEmpty) ...[
-                _SectionCard(
-                  title: _tr(context, 'More content'),
-                  child: Column(
-                    children: [
-                      for (final item in remainingContent)
-                        _CourseContentTile(
-                          title: _readString(item, 'title'),
-                          subtitle: _contentSubtitle(item),
-                          icon: _contentIcon(item),
-                          onTap: () => _openContentItem(_asMap(item)),
-                        ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 24),
-              ],
-              if (hasExam) ...[
-                _SectionCard(
-                  title: _tr(context, 'Exam'),
-                  child: const Text(
-                    'Review the lesson content, then continue to the exam when you are ready.',
-                  ),
-                ),
-                const SizedBox(height: 16),
-              ],
-              FilledButton(
-                onPressed: submitting
-                    ? null
-                    : hasExam
-                        ? () async {
-                            final changed =
-                                await Navigator.of(context).push<bool>(
-                              MaterialPageRoute(
-                                builder: (_) => EmployeeExamScreen(
-                                  api: widget.api,
-                                  assignmentId: widget.assignmentId,
-                                ),
-                              ),
-                            );
-                            if (changed == true) {
-                              _reload();
-                            }
-                          }
-                        : _completeCourse,
-                style: FilledButton.styleFrom(
-                  backgroundColor: _brandTeal,
-                ),
-                child: Text(
-                  hasExam
-                      ? _tr(context, 'Continue')
-                      : submitting
-                          ? 'Completing...'
-                          : _tr(context, 'Continue'),
-                ),
-              ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-}
-
-class CourseVideoScreen extends StatefulWidget {
-  const CourseVideoScreen({
-    super.key,
-    required this.title,
-    required this.videoUrl,
-  });
-
-  final String title;
-  final String videoUrl;
-
-  @override
-  State<CourseVideoScreen> createState() => _CourseVideoScreenState();
-}
-
-class _CourseVideoScreenState extends State<CourseVideoScreen> {
-  VideoPlayerController? controller;
-  String? errorText;
-
-  @override
-  void initState() {
-    super.initState();
-    _initialize();
-  }
-
-  Future<void> _initialize() async {
-    try {
-      final nextController =
-          VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl));
-      await nextController.initialize();
-      await nextController.setLooping(false);
-      await nextController.play();
-      if (!mounted) {
-        await nextController.dispose();
-        return;
-      }
-      setState(() {
-        controller = nextController;
-      });
-    } catch (_) {
-      if (!mounted) return;
-      setState(() {
-        errorText = 'Could not load this video.';
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    controller?.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(widget.title)),
-      body: controller == null
-          ? Center(
-              child: errorText == null
-                  ? const _LoadingState()
-                  : _ErrorState(message: errorText!),
-            )
-          : ListView(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-              children: [
-                _LessonProgressHeader(
-                    status: _tr(context, 'In progress'), progress: 0.26),
-                const SizedBox(height: 18),
-                Text(
-                  _tr(context, 'About the lesson'),
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontSize: 18,
-                        color: _brandTeal,
-                      ),
-                ),
-                const SizedBox(height: 12),
-                Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(22),
-                    color: _brandTeal,
-                  ),
-                  padding: const EdgeInsets.only(bottom: 10),
-                  child: Column(
-                    children: [
-                      AspectRatio(
-                        aspectRatio: controller!.value.aspectRatio == 0
-                            ? 16 / 9
-                            : controller!.value.aspectRatio,
-                        child: ClipRRect(
-                          borderRadius: const BorderRadius.vertical(
-                              top: Radius.circular(22)),
-                          child: ColoredBox(
-                            color: Colors.black,
-                            child: VideoPlayer(controller!),
-                          ),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(14, 12, 14, 0),
-                        child: Row(
-                          children: [
-                            IconButton(
-                              onPressed: () {
-                                final isPlaying = controller!.value.isPlaying;
-                                setState(() {
-                                  if (isPlaying) {
-                                    controller!.pause();
-                                  } else {
-                                    controller!.play();
-                                  }
-                                });
-                              },
-                              icon: Icon(
-                                controller!.value.isPlaying
-                                    ? Icons.pause_rounded
-                                    : Icons.play_arrow_rounded,
-                                color: Colors.white,
-                              ),
-                            ),
-                            Expanded(
-                              child: SliderTheme(
-                                data: SliderTheme.of(context).copyWith(
-                                  trackHeight: 4,
-                                  activeTrackColor: Colors.white,
-                                  inactiveTrackColor:
-                                      Colors.white.withValues(alpha: 0.35),
-                                  thumbColor: Colors.white,
-                                  overlayShape: SliderComponentShape.noOverlay,
-                                ),
-                                child: Slider(
-                                  value: controller!
-                                      .value.position.inMilliseconds
-                                      .toDouble()
-                                      .clamp(
-                                        0,
-                                        (controller!.value.duration
-                                                        .inMilliseconds ==
-                                                    0
-                                                ? 1
-                                                : controller!.value.duration
-                                                    .inMilliseconds)
-                                            .toDouble(),
-                                      ),
-                                  max: (controller!.value.duration
-                                                  .inMilliseconds ==
-                                              0
-                                          ? 1
-                                          : controller!
-                                              .value.duration.inMilliseconds)
-                                      .toDouble(),
-                                  onChanged: (value) {
-                                    controller!.seekTo(
-                                        Duration(milliseconds: value.round()));
-                                  },
-                                ),
-                              ),
-                            ),
-                            IconButton(
-                              onPressed: () async {
-                                final uri = Uri.parse(widget.videoUrl);
-                                if (!await launchUrl(uri,
-                                        mode: LaunchMode.externalApplication) &&
-                                    mounted) {
-                                  _showSnack(context,
-                                      'Could not open this video externally.');
-                                }
-                              },
-                              icon: const Icon(Icons.fullscreen_rounded,
-                                  color: Colors.white),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  widget.title,
-                  style: Theme.of(context)
-                      .textTheme
-                      .headlineSmall
-                      ?.copyWith(fontSize: 18),
-                ),
-                const SizedBox(height: 24),
-                FilledButton(
-                  onPressed: () => Navigator.of(context).maybePop(),
-                  style: FilledButton.styleFrom(backgroundColor: _brandTeal),
-                  child: Text(_tr(context, 'Continue')),
-                ),
-              ],
-            ),
-    );
-  }
-}
-
-class CourseWebContentScreen extends StatefulWidget {
-  const CourseWebContentScreen({
-    super.key,
-    required this.title,
-    required this.url,
-    required this.isPdf,
-  });
-
-  final String title;
-  final String url;
-  final bool isPdf;
-
-  @override
-  State<CourseWebContentScreen> createState() => _CourseWebContentScreenState();
-}
-
-class _CourseWebContentScreenState extends State<CourseWebContentScreen> {
-  late final WebViewController controller;
-  bool loading = true;
-  String? errorText;
-
-  @override
-  void initState() {
-    super.initState();
-    controller = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setNavigationDelegate(
-        NavigationDelegate(
-          onPageFinished: (_) {
-            if (mounted) {
-              setState(() {
-                loading = false;
-                errorText = null;
-              });
-            }
-          },
-          onWebResourceError: (error) {
-            if (!mounted) return;
-            setState(() {
-              loading = false;
-              errorText = error.description.isEmpty
-                  ? 'Could not load this file.'
-                  : error.description;
-            });
-          },
-        ),
-      )
-      ..loadRequest(Uri.parse(widget.url));
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-        actions: [
-          IconButton(
-            onPressed: () async {
-              final uri = Uri.parse(widget.url);
-              if (!await launchUrl(uri, mode: LaunchMode.externalApplication) &&
-                  mounted) {
-                _showSnack(context, 'Could not open this file externally.');
-              }
-            },
-            icon: const Icon(Icons.open_in_new_rounded),
-          ),
-        ],
-      ),
-      body: Stack(
-        children: [
-          WebViewWidget(controller: controller),
-          if (loading)
-            const Positioned.fill(
-              child: ColoredBox(
-                color: Color(0xCCFFFFFF),
-                child: _LoadingState(),
-              ),
-            ),
-          if (errorText != null)
-            Positioned.fill(
-              child: ColoredBox(
-                color: const Color(0xF7F7FAFC),
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 420),
-                      child: Card(
-                        child: Padding(
-                          padding: const EdgeInsets.all(20),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(
-                                Icons.link_off_rounded,
-                                size: 36,
-                                color: Color(0xFFC54C2B),
-                              ),
-                              const SizedBox(height: 14),
-                              Text(
-                                _tr(context, 'Could not load this screen'),
-                                style: Theme.of(context).textTheme.titleLarge,
-                                textAlign: TextAlign.center,
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                errorText!,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyMedium
-                                    ?.copyWith(
-                                      color: const Color(0xFF61706C),
-                                    ),
-                                textAlign: TextAlign.center,
-                              ),
-                              const SizedBox(height: 18),
-                              SizedBox(
-                                width: double.infinity,
-                                child: FilledButton.tonal(
-                                  onPressed: () {
-                                    setState(() {
-                                      loading = true;
-                                      errorText = null;
-                                    });
-                                    controller
-                                        .loadRequest(Uri.parse(widget.url));
-                                  },
-                                  child: Text(_tr(context, 'Try again')),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          if (widget.isPdf)
-            Positioned(
-              left: 16,
-              right: 16,
-              bottom: 16,
-              child: Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(14),
-                  child: Text(
-                    'If this PDF does not preview properly inside the app, use the open button in the top bar.',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-class EmployeeExamScreen extends StatefulWidget {
-  const EmployeeExamScreen({
-    super.key,
-    required this.api,
-    required this.assignmentId,
-  });
-
-  final MobileApiClient api;
-  final int assignmentId;
-
-  @override
-  State<EmployeeExamScreen> createState() => _EmployeeExamScreenState();
-}
-
-class _EmployeeExamScreenState extends State<EmployeeExamScreen> {
-  late Future<Map<String, dynamic>> future;
-  bool submitting = false;
-  final Map<String, dynamic> answers = {};
-  final Map<int, TextEditingController> textControllers = {};
-
-  @override
-  void initState() {
-    super.initState();
-    future = widget.api
-        .post('/employee/courses/${widget.assignmentId}/exam/start/', {});
-  }
-
-  @override
-  void dispose() {
-    for (final controller in textControllers.values) {
-      controller.dispose();
-    }
-    super.dispose();
-  }
-
-  TextEditingController _controllerForQuestion(int questionId) {
-    return textControllers.putIfAbsent(questionId, TextEditingController.new);
-  }
-
-  Future<void> _submit(Map<String, dynamic> exam) async {
-    setState(() => submitting = true);
-    try {
-      final result = await widget.api
-          .post('/employee/courses/${widget.assignmentId}/exam/submit/', {
-        'attempt_token': _readString(exam, 'attempt_token'),
-        'answers': answers,
-      });
-      if (!mounted) return;
-      final payload = _asMap(result['result']);
-      final passed = _readBool(payload, 'passed');
-      _showSnack(
-        context,
-        passed
-            ? 'Exam passed with ${_readInt(payload, 'score_percent')}%.'
-            : 'Exam submitted: ${_readInt(payload, 'score_percent')}%.',
-      );
-      Navigator.of(context).pop(passed);
-    } catch (error) {
-      if (!mounted) return;
-      _showSnack(context, error.toString().replaceFirst('Exception: ', ''));
-    } finally {
-      if (mounted) {
-        setState(() => submitting = false);
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(_tr(context, 'Exam'))),
-      body: ApiFutureBuilder(
-        future: future,
-        builder: (context, payload) {
-          final exam = _asMap(payload['exam']);
-          final questions = _asList(exam['questions']);
-          return _PageBody(
-            children: [
-              _HeroCard(
-                title: 'Course Exam',
-                subtitle:
-                    'Pass score ${_readInt(exam, 'passing_score_percent')}%',
-                value: '${_readInt(exam, 'duration_minutes')} min',
-              ),
-              const SizedBox(height: 16),
-              for (final rawQuestion in questions) ...[
-                _SectionCard(
-                  title: 'Question ${_readInt(rawQuestion, 'order')}',
-                  child: _ExamQuestionCard(
-                    question: _asMap(rawQuestion),
-                    answers: answers,
-                    controller:
-                        _controllerForQuestion(_readInt(rawQuestion, 'id')),
-                    onChanged: () => setState(() {}),
-                  ),
-                ),
-                const SizedBox(height: 16),
-              ],
-              FilledButton(
-                onPressed: submitting ? null : () => _submit(exam),
-                child: Text(submitting ? 'Submitting...' : 'Submit Exam'),
-              ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-}
-
-class _ExamQuestionCard extends StatelessWidget {
-  const _ExamQuestionCard({
-    required this.question,
-    required this.answers,
-    required this.controller,
-    required this.onChanged,
-  });
-
-  final Map<String, dynamic> question;
-  final Map<String, dynamic> answers;
-  final TextEditingController controller;
-  final VoidCallback onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final questionId = _readInt(question, 'id');
-    final questionKey = questionId.toString();
-    final questionType = _readString(question, 'question_type');
-    final options = _asList(question['options']);
-    final answer = answers[questionKey];
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          _readString(question, 'question_text'),
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
-        const SizedBox(height: 12),
-        if (questionType == 'MCQ_SINGLE' || questionType == 'TRUE_FALSE')
-          for (final option in options)
-            RadioListTile<String>(
-              value: _readInt(option, 'id').toString(),
-              groupValue: answer?.toString(),
-              contentPadding: EdgeInsets.zero,
-              title: Text(_readString(option, 'text')),
-              onChanged: (value) {
-                answers[questionKey] = value ?? '';
-                onChanged();
-              },
-            ),
-        if (questionType == 'MCQ_MULTI')
-          for (final option in options)
-            CheckboxListTile(
-              value: (answer is List ? answer : const [])
-                  .contains(_readInt(option, 'id').toString()),
-              contentPadding: EdgeInsets.zero,
-              title: Text(_readString(option, 'text')),
-              onChanged: (checked) {
-                final values = List<String>.from(
-                    answer is List ? answer : const <String>[]);
-                final optionId = _readInt(option, 'id').toString();
-                if (checked == true) {
-                  if (!values.contains(optionId)) values.add(optionId);
-                } else {
-                  values.remove(optionId);
-                }
-                answers[questionKey] = values;
-                onChanged();
-              },
-            ),
-        if (questionType == 'SHORT_ANSWER' || questionType == 'ESSAY')
-          TextField(
-            controller: controller,
-            minLines: questionType == 'ESSAY' ? 4 : 2,
-            maxLines: questionType == 'ESSAY' ? 8 : 3,
-            onChanged: (value) {
-              answers[questionKey] = value;
-            },
-            decoration: InputDecoration(
-              labelText: _tr(context, 'Your answer'),
-              alignLabelWithHint: true,
-            ),
-          ),
-      ],
-    );
-  }
-}
-
 class EmployeeChecklistsPage extends StatefulWidget {
   const EmployeeChecklistsPage({super.key, required this.api});
 
@@ -2895,17 +1686,16 @@ class _EmployeeChecklistsPageState extends State<EmployeeChecklistsPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _DashboardHeroCard(
-                    title: _tr(context, 'Checklists'),
-                    subtitle: completedToday == 0
-                        ? 'Stay on top of your operational routines'
-                        : '$completedToday ${_tr(context, 'Completed today')}',
-                    value: pendingCount == 0
-                        ? 'All checklist work is up to date.'
-                        : '$pendingCount ${_tr(context, 'Pending checklists')}',
-                    icon: Icons.checklist_rounded,
+                  _HeaderRow(
+                    title: 'Checklists',
+                    titleColor: _brandTealDark,
+                    titleFontSize: 26,
+                    trailing: _RoundIconButton(
+                      icon: Icons.refresh_rounded,
+                      onTap: _reload,
+                    ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 18),
                   _DashboardMetricRow(
                     metrics: [
                       _DashboardMetricData(
@@ -2924,14 +1714,6 @@ class _EmployeeChecklistsPageState extends State<EmployeeChecklistsPage> {
                         icon: Icons.pending_actions_rounded,
                       ),
                     ],
-                  ),
-                  const SizedBox(height: 20),
-                  _HeaderRow(
-                    title: 'Assigned checklists',
-                    trailing: _RoundIconButton(
-                      icon: Icons.refresh_rounded,
-                      onTap: _reload,
-                    ),
                   ),
                   const SizedBox(height: 16),
                 ],
@@ -3004,6 +1786,7 @@ class _EmployeeChecklistDetailScreenState
     extends State<EmployeeChecklistDetailScreen> {
   late Future<Map<String, dynamic>> future;
   bool submitting = false;
+  final Set<int> selectedItemIds = <int>{};
 
   @override
   void initState() {
@@ -3016,12 +1799,15 @@ class _EmployeeChecklistDetailScreenState
     try {
       await widget.api
           .post('/employee/checklists/${widget.checklistId}/complete/', {
-        'item_ids': [for (final item in items) _readInt(item, 'id')],
+        'item_ids': selectedItemIds.toList(growable: false),
         'notes': '',
       });
       if (!mounted) return;
       _showSnack(context, 'Checklist completed.');
       setState(() {
+        selectedItemIds
+          ..clear()
+          ..addAll([for (final item in items) _readInt(item, 'id')]);
         future = widget.api.get('/employee/checklists/${widget.checklistId}/');
       });
     } catch (error) {
@@ -3037,47 +1823,51 @@ class _EmployeeChecklistDetailScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(_tr(context, 'Checklist'))),
+      appBar: AppBar(
+        toolbarHeight: 84,
+        titleSpacing: 20,
+        title: Text(
+          _tr(context, 'Checklist'),
+          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                color: _brandTealDark,
+                fontSize: 26,
+              ),
+        ),
+      ),
       body: ApiFutureBuilder(
         future: future,
         builder: (context, payload) {
           final checklist = _asMap(payload['checklist']);
           final items = _asList(checklist['items']);
           final completed = _readBool(checklist, 'completed_today');
-          final description = _readString(checklist, 'description');
           final frequency = _readString(checklist, 'frequency');
+          final checklistTitle = _readString(checklist, 'title');
+          final itemCountLabel = '${items.length} ${_tr(context, 'Items')}';
+          final selectedCount =
+              completed ? items.length : selectedItemIds.length;
+          final allItemsSelected =
+              completed || selectedItemIds.length == items.length;
+          final canSubmit =
+              !completed && !submitting && items.isNotEmpty && allItemsSelected;
           return _PageBody(
             children: [
-              _DashboardHeroCard(
-                title:
-                    frequency.isEmpty ? _tr(context, 'Checklist') : frequency,
-                subtitle: _readString(checklist, 'title'),
-                value: completed
-                    ? _tr(context, 'Completed today')
-                    : '${items.length} items to review',
-                icon: Icons.fact_check_rounded,
+              _HeaderRow(
+                title: checklistTitle.isEmpty ? 'Checklist' : checklistTitle,
+                titleColor: _brandTealDark,
+                titleFontSize: 26,
               ),
-              const SizedBox(height: 16),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  _StatusChip(
-                    label: completed ? 'Completed today' : 'Pending checklist',
-                  ),
-                  _StatusChip(
-                      label: '${items.length} ${_tr(context, 'Items')}'),
-                  if (frequency.isNotEmpty) _StatusChip(label: frequency),
-                ],
+              const SizedBox(height: 6),
+              Text(
+                [
+                  if (frequency.isNotEmpty) _tr(context, frequency),
+                  itemCountLabel,
+                ].join('  |  '),
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: _muted,
+                      fontWeight: FontWeight.w600,
+                    ),
               ),
-              if (description.isNotEmpty) ...[
-                const SizedBox(height: 16),
-                _SectionCard(
-                  title: _tr(context, 'Checklist'),
-                  child: Text(description),
-                ),
-              ],
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
               _SectionCard(
                 title: 'Items',
                 child: items.isEmpty
@@ -3088,21 +1878,36 @@ class _EmployeeChecklistDetailScreenState
                             _ChecklistItemTile(
                               index: index + 1,
                               title: _readString(_asMap(items[index]), 'title'),
-                              completed: completed,
+                              checked: completed ||
+                                  selectedItemIds.contains(
+                                    _readInt(_asMap(items[index]), 'id'),
+                                  ),
+                              enabled: !completed && !submitting,
+                              onTap: completed || submitting
+                                  ? null
+                                  : () {
+                                      final itemId =
+                                          _readInt(_asMap(items[index]), 'id');
+                                      setState(() {
+                                        if (!selectedItemIds.add(itemId)) {
+                                          selectedItemIds.remove(itemId);
+                                        }
+                                      });
+                                    },
                             ),
                         ],
                       ),
               ),
               const SizedBox(height: 16),
               FilledButton(
-                onPressed: completed || submitting
-                    ? null
-                    : () => _completeChecklist(items),
+                onPressed: canSubmit ? () => _completeChecklist(items) : null,
                 child: Text(completed
                     ? 'Already Completed'
                     : submitting
                         ? 'Submitting...'
-                        : 'Complete Checklist'),
+                        : selectedCount == items.length
+                            ? 'Complete Checklist'
+                            : 'Check All Items'),
               ),
             ],
           );
@@ -3258,93 +2063,6 @@ class _PageSliverList extends StatelessWidget {
             ),
           );
         }, childCount: itemCount),
-      ),
-    );
-  }
-}
-
-class _DashboardHeroCard extends StatelessWidget {
-  const _DashboardHeroCard({
-    required this.title,
-    this.subtitle = '',
-    required this.value,
-    required this.icon,
-  });
-
-  final String title;
-  final String subtitle;
-  final String value;
-  final IconData icon;
-
-  @override
-  Widget build(BuildContext context) {
-    final hasSubtitle = subtitle.trim().isNotEmpty;
-    return Container(
-      padding: const EdgeInsets.all(22),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(28),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [_brandTeal, Color(0xFF13A36E)],
-        ),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x180F172A),
-            blurRadius: 28,
-            offset: Offset(0, 14),
-          ),
-        ],
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.18),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Icon(icon, color: Colors.white),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: Colors.white.withValues(alpha: 0.86),
-                        fontSize: 15,
-                      ),
-                ),
-                if (hasSubtitle) ...[
-                  const SizedBox(height: 6),
-                  Text(
-                    subtitle,
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          color: Colors.white,
-                          height: 1.08,
-                          fontSize: 22,
-                        ),
-                  ),
-                  const SizedBox(height: 8),
-                ] else
-                  const SizedBox(height: 8),
-                Text(
-                  value,
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: Colors.white.withValues(alpha: 0.82),
-                        height: 1.25,
-                      ),
-                ),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -3665,64 +2383,6 @@ class _NativeLessonTile extends StatelessWidget {
   }
 }
 
-class _HeroCard extends StatelessWidget {
-  const _HeroCard({
-    required this.title,
-    required this.subtitle,
-    required this.value,
-  });
-
-  final String title;
-  final String subtitle;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(30),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [_brandTeal, _brandTealDark],
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.16),
-              borderRadius: BorderRadius.circular(999),
-            ),
-            child: Text(
-              _tr(context, title),
-              style: const TextStyle(
-                  color: Colors.white, fontWeight: FontWeight.w700),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            _tr(context, subtitle),
-            style: Theme.of(context)
-                .textTheme
-                .headlineSmall
-                ?.copyWith(color: Colors.white, height: 1.15),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: const TextStyle(
-                color: Colors.white70, fontWeight: FontWeight.w500),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _SectionCard extends StatelessWidget {
   const _SectionCard({
     required this.title,
@@ -3897,278 +2557,6 @@ class _AvatarBadge extends StatelessWidget {
             color: Colors.white,
             fontWeight: FontWeight.w800,
             fontSize: size * 0.34,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _LessonProgressHeader extends StatelessWidget {
-  const _LessonProgressHeader({
-    required this.status,
-    required this.progress,
-  });
-
-  final String status;
-  final double progress;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        const Icon(Icons.close_rounded, size: 28),
-        const SizedBox(width: 12),
-        Expanded(
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(999),
-            child: LinearProgressIndicator(
-              value: progress.clamp(0, 1),
-              minHeight: 10,
-              backgroundColor: const Color(0xFFF1F3F7),
-              color: _brandTeal,
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        const Icon(Icons.more_vert_rounded),
-      ],
-    );
-  }
-}
-
-class _LessonMediaCard extends StatelessWidget {
-  const _LessonMediaCard({
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-  });
-
-  final String title;
-  final String subtitle;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(22),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(22),
-          color: _brandTeal,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ClipRRect(
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(22)),
-              child: Container(
-                height: 228,
-                color: const Color(0xFFE7F3F0),
-                child: Stack(
-                  children: [
-                    Center(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.ondemand_video_rounded,
-                                size: 72, color: Color(0xFF5E6A7D)),
-                            const SizedBox(height: 12),
-                            Text(
-                              title,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              textAlign: TextAlign.center,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleLarge
-                                  ?.copyWith(fontSize: 18),
-                            ),
-                            if (subtitle.isNotEmpty) ...[
-                              const SizedBox(height: 6),
-                              Text(
-                                subtitle,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                textAlign: TextAlign.center,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodySmall
-                                    ?.copyWith(color: _muted),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      top: 14,
-                      right: 14,
-                      child: Container(
-                        width: 48,
-                        height: 48,
-                        decoration: const BoxDecoration(
-                            color: Colors.white, shape: BoxShape.circle),
-                        child: const Icon(Icons.bookmark_border_rounded),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              child: Row(
-                children: [
-                  const Icon(Icons.play_arrow_rounded, color: Colors.white),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Container(
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.28),
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: FractionallySizedBox(
-                        widthFactor: 0.78,
-                        alignment: Alignment.centerLeft,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(999),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  const Icon(Icons.fullscreen_rounded, color: Colors.white),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _CompactCourseListCard extends StatelessWidget {
-  const _CompactCourseListCard({
-    required this.imageUrl,
-    required this.title,
-    required this.description,
-    required this.metadata,
-    required this.onTap,
-    this.eyebrow = '',
-  });
-
-  final String imageUrl;
-  final String title;
-  final String description;
-  final List<String> metadata;
-  final VoidCallback onTap;
-  final String eyebrow;
-
-  @override
-  Widget build(BuildContext context) {
-    final safeTitle =
-        title.trim().isEmpty ? _tr(context, 'Course') : title.trim();
-    final safeDescription = description.trim().isEmpty
-        ? _tr(
-            context,
-            'Practical course content with clear guidance and structured steps.',
-          )
-        : description.trim();
-    final safeEyebrow = eyebrow.trim();
-
-    return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(26),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(26),
-        onTap: onTap,
-        child: Ink(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(26),
-            border: Border.all(color: _line),
-          ),
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(
-                width: 102,
-                child: _OptimizedCourseCardImage(
-                  imageUrl: imageUrl,
-                  title: safeTitle,
-                  aspectRatio: 1.04,
-                  borderRadius: 18,
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (safeEyebrow.isNotEmpty) ...[
-                      Text(
-                        _tr(context, safeEyebrow),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: _muted,
-                              fontWeight: FontWeight.w700,
-                            ),
-                      ),
-                      const SizedBox(height: 8),
-                    ],
-                    Text(
-                      _tr(context, safeTitle),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.w800,
-                            height: 1.2,
-                          ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      _tr(context, safeDescription),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: const Color(0xFF7B879B),
-                            height: 1.45,
-                          ),
-                    ),
-                    const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        for (final item in metadata)
-                          if (item.trim().isNotEmpty)
-                            _StatusChip(label: _tr(context, item)),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 10),
-              const Padding(
-                padding: EdgeInsets.only(top: 6),
-                child: Icon(
-                  Icons.chevron_right_rounded,
-                  color: Color(0xFF9AA6B2),
-                ),
-              ),
-            ],
           ),
         ),
       ),
@@ -4475,61 +2863,78 @@ class _ChecklistItemTile extends StatelessWidget {
   const _ChecklistItemTile({
     required this.index,
     required this.title,
-    required this.completed,
+    required this.checked,
+    this.enabled = true,
+    this.onTap,
   });
 
   final int index;
   final String title;
-  final bool completed;
+  final bool checked;
+  final bool enabled;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: completed ? const Color(0xFFEAF7F4) : const Color(0xFFF8FAFC),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: enabled ? onTap : null,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: completed ? const Color(0xFFD2EBE4) : _line,
-        ),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 34,
-            height: 34,
-            decoration: BoxDecoration(
-              color: completed ? _brandTeal : Colors.white,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Center(
-              child: completed
-                  ? const Icon(
-                      Icons.check_rounded,
-                      size: 18,
-                      color: Colors.white,
-                    )
-                  : Text(
-                      '$index',
-                      style: const TextStyle(
-                        color: _brandTealDark,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: checked ? const Color(0xFFEAF7F4) : const Color(0xFFF8FAFC),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: checked ? const Color(0xFFD2EBE4) : _line,
             ),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              _tr(context, title),
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    height: 1.35,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: checked ? _brandTeal : Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: checked ? _brandTeal : const Color(0xFFD6DEE8),
+                    width: 1.4,
                   ),
-            ),
+                ),
+                child: Center(
+                  child: checked
+                      ? const Icon(
+                          Icons.check_rounded,
+                          size: 20,
+                          color: Colors.white,
+                        )
+                      : Text(
+                          '$index',
+                          style: const TextStyle(
+                            color: _brandTealDark,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  _tr(context, title),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        height: 1.35,
+                        decoration: checked ? TextDecoration.lineThrough : null,
+                        color: enabled || checked ? null : _muted,
+                      ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -4756,69 +3161,6 @@ class _NotificationSummaryChip extends StatelessWidget {
   }
 }
 
-class _CourseContentTile extends StatelessWidget {
-  const _CourseContentTile({
-    required this.title,
-    required this.subtitle,
-    required this.icon,
-    required this.onTap,
-  });
-
-  final String title;
-  final String subtitle;
-  final IconData icon;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: _surface,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: _line),
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(20),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Row(
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFDCEDE8),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Icon(icon),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(_tr(context, title),
-                        style: const TextStyle(fontWeight: FontWeight.w700)),
-                    const SizedBox(height: 4),
-                    Text(
-                      _tr(context, subtitle),
-                      style: const TextStyle(color: Color(0xFF61706C)),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 12),
-              const Icon(Icons.chevron_right_rounded),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _InlineError extends StatelessWidget {
   const _InlineError({required this.message});
 
@@ -4966,22 +3308,6 @@ String _readPath(dynamic source, List<String> path) {
     current = _asMap(current)[segment];
   }
   return (current ?? '').toString();
-}
-
-String _contentSubtitle(dynamic item) {
-  final videoUrl = _readString(item, 'video_url');
-  final pdfUrl = _readString(item, 'pdf_url');
-  final materialUrl = _readString(item, 'material_url');
-  if (videoUrl.isNotEmpty) {
-    return 'Video lesson';
-  }
-  if (pdfUrl.isNotEmpty) {
-    return 'PDF material';
-  }
-  if (materialUrl.isNotEmpty) {
-    return materialUrl;
-  }
-  return _readString(item, 'body');
 }
 
 IconData _contentIcon(dynamic item) {

@@ -34,7 +34,8 @@ class _ChatPageState extends State<ChatPage> {
     setState(() {
       teamFuture = widget.api.get('${widget.roleBasePath}/chat/team/');
       final suffix = selectedUserId == null ? '' : '?user_id=$selectedUserId';
-      privateFuture = widget.api.get('${widget.roleBasePath}/chat/private/$suffix');
+      privateFuture =
+          widget.api.get('${widget.roleBasePath}/chat/private/$suffix');
     });
   }
 
@@ -53,7 +54,8 @@ class _ChatPageState extends State<ChatPage> {
                 errorText = null;
               });
               try {
-                await widget.api.post('${widget.roleBasePath}/chat/team/send/', {
+                await widget.api
+                    .post('${widget.roleBasePath}/chat/team/send/', {
                   'body': controller.text.trim(),
                 });
                 if (!mounted) return;
@@ -68,8 +70,10 @@ class _ChatPageState extends State<ChatPage> {
 
             return Dialog(
               backgroundColor: const Color(0xFFF3FBF8),
-              insetPadding: const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
+              insetPadding:
+                  const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(32)),
               child: AnimatedPadding(
                 duration: const Duration(milliseconds: 180),
                 curve: Curves.easeOut,
@@ -86,9 +90,12 @@ class _ChatPageState extends State<ChatPage> {
                     children: [
                       Text(
                         _tr(context, 'Send Team Message'),
-                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
+                        style: Theme.of(context)
+                            .textTheme
+                            .headlineMedium
+                            ?.copyWith(
+                              fontWeight: FontWeight.w800,
+                            ),
                       ),
                       const SizedBox(height: 10),
                       Text(
@@ -97,9 +104,9 @@ class _ChatPageState extends State<ChatPage> {
                           'Share one clear update, question, or instruction with your team.',
                         ),
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: const Color(0xFF61706C),
-                          height: 1.45,
-                        ),
+                              color: const Color(0xFF61706C),
+                              height: 1.45,
+                            ),
                       ),
                       const SizedBox(height: 22),
                       TextField(
@@ -129,7 +136,9 @@ class _ChatPageState extends State<ChatPage> {
                       Align(
                         alignment: Alignment.centerRight,
                         child: TextButton(
-                          onPressed: saving ? null : () => Navigator.of(context).pop(false),
+                          onPressed: saving
+                              ? null
+                              : () => Navigator.of(context).pop(false),
                           child: Text(_tr(context, 'Cancel')),
                         ),
                       ),
@@ -139,7 +148,9 @@ class _ChatPageState extends State<ChatPage> {
                         child: FilledButton(
                           onPressed: saving ? null : submit,
                           child: Text(
-                            saving ? _tr(context, 'Sending...') : _tr(context, 'Send'),
+                            saving
+                                ? _tr(context, 'Sending...')
+                                : _tr(context, 'Send'),
                           ),
                         ),
                       ),
@@ -160,7 +171,8 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   Future<void> _sendPrivateMessage(List<dynamic> participants) async {
-    int? recipientId = selectedUserId ?? (participants.isEmpty ? null : _readInt(participants.first, 'id'));
+    int? recipientId = selectedUserId ??
+        (participants.isEmpty ? null : _readInt(participants.first, 'id'));
     final controller = TextEditingController();
     final focusNode = FocusNode();
     final sent = await showDialog<bool>(
@@ -176,7 +188,8 @@ class _ChatPageState extends State<ChatPage> {
                 errorText = null;
               });
               try {
-                await widget.api.post('${widget.roleBasePath}/chat/private/send/', {
+                await widget.api
+                    .post('${widget.roleBasePath}/chat/private/send/', {
                   'recipient_id': recipientId,
                   'body': controller.text.trim(),
                 });
@@ -192,12 +205,15 @@ class _ChatPageState extends State<ChatPage> {
 
             return Dialog(
               backgroundColor: const Color(0xFFF3FBF8),
-              insetPadding: const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
+              insetPadding:
+                  const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(32)),
               child: AnimatedPadding(
                 duration: const Duration(milliseconds: 180),
                 curve: Curves.easeOut,
-                padding: EdgeInsets.fromLTRB(22, 24, 22, MediaQuery.of(context).viewInsets.bottom + 22),
+                padding: EdgeInsets.fromLTRB(
+                    22, 24, 22, MediaQuery.of(context).viewInsets.bottom + 22),
                 child: SingleChildScrollView(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -205,12 +221,16 @@ class _ChatPageState extends State<ChatPage> {
                     children: [
                       Text(
                         _tr(context, 'Send Private Message'),
-                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w800),
+                        style: Theme.of(context)
+                            .textTheme
+                            .headlineMedium
+                            ?.copyWith(fontWeight: FontWeight.w800),
                       ),
                       const SizedBox(height: 22),
                       DropdownButtonFormField<int?>(
                         initialValue: recipientId,
-                        decoration: InputDecoration(labelText: _tr(context, 'Recipient')),
+                        decoration: InputDecoration(
+                            labelText: _tr(context, 'Recipient')),
                         items: [
                           for (final item in participants)
                             DropdownMenuItem<int?>(
@@ -243,14 +263,18 @@ class _ChatPageState extends State<ChatPage> {
                         const SizedBox(height: 12),
                         Text(
                           errorText!,
-                          style: const TextStyle(color: Color(0xFFC54C2B), fontWeight: FontWeight.w600),
+                          style: const TextStyle(
+                              color: Color(0xFFC54C2B),
+                              fontWeight: FontWeight.w600),
                         ),
                       ],
                       const SizedBox(height: 18),
                       Align(
                         alignment: Alignment.centerRight,
                         child: TextButton(
-                          onPressed: saving ? null : () => Navigator.of(context).pop(false),
+                          onPressed: saving
+                              ? null
+                              : () => Navigator.of(context).pop(false),
                           child: Text(_tr(context, 'Cancel')),
                         ),
                       ),
@@ -259,7 +283,9 @@ class _ChatPageState extends State<ChatPage> {
                         width: double.infinity,
                         child: FilledButton(
                           onPressed: saving ? null : submit,
-                          child: Text(saving ? _tr(context, 'Sending...') : _tr(context, 'Send')),
+                          child: Text(saving
+                              ? _tr(context, 'Sending...')
+                              : _tr(context, 'Send')),
                         ),
                       ),
                     ],
@@ -299,34 +325,20 @@ class _ChatPageState extends State<ChatPage> {
         final conversations = _asList(privatePayload['conversations']);
         final privateMessages = _asList(privatePayload['messages']);
         final selectedUser = _asMap(privatePayload['selected_user']);
-        final activeConversationName = selectedUser.isEmpty
-            ? _tr(context, 'your team')
-            : _readString(selectedUser, 'display_name');
         return _PageBody(
           children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: _DashboardHeroCard(
-                    title: showPrivate ? 'Private messages' : 'Team channel',
-                    subtitle: widget.title,
-                    value: showPrivate
-                        ? '${privateMessages.length} messages with $activeConversationName'
-                        : '${teamMessages.length} updates shared across your workspace',
-                    icon: showPrivate ? Icons.mark_chat_read_rounded : Icons.forum_rounded,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                _RoundIconButton(
-                  icon: showPrivate ? Icons.edit_outlined : Icons.send_outlined,
-                  onTap: showPrivate
-                      ? () => _sendPrivateMessage(participants)
-                      : _sendTeamMessage,
-                ),
-              ],
+            _HeaderRow(
+              title: widget.title,
+              titleColor: _brandTealDark,
+              titleFontSize: 26,
+              trailing: _RoundIconButton(
+                icon: showPrivate ? Icons.edit_outlined : Icons.send_outlined,
+                onTap: showPrivate
+                    ? () => _sendPrivateMessage(participants)
+                    : _sendTeamMessage,
+              ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 18),
             _DashboardMetricRow(
               metrics: [
                 _DashboardMetricData(
@@ -341,7 +353,9 @@ class _ChatPageState extends State<ChatPage> {
                 ),
                 _DashboardMetricData(
                   showPrivate ? 'Open thread' : 'Conversations',
-                  showPrivate ? '${privateMessages.length}' : '${conversations.length}',
+                  showPrivate
+                      ? '${privateMessages.length}'
+                      : '${conversations.length}',
                   icon: showPrivate
                       ? Icons.chat_bubble_rounded
                       : Icons.mark_chat_unread_rounded,
@@ -382,9 +396,9 @@ class _ChatPageState extends State<ChatPage> {
                 trailing: Text(
                   '${teamMessages.length} messages',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: const Color(0xFF61706C),
-                    fontWeight: FontWeight.w600,
-                  ),
+                        color: const Color(0xFF61706C),
+                        fontWeight: FontWeight.w600,
+                      ),
                 ),
               ),
               const SizedBox(height: 14),
@@ -419,14 +433,17 @@ class _ChatPageState extends State<ChatPage> {
                         'Pick a teammate to review the thread or send a direct message.',
                       ),
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: const Color(0xFF61706C),
-                        height: 1.45,
-                      ),
+                            color: const Color(0xFF61706C),
+                            height: 1.45,
+                          ),
                     ),
                     const SizedBox(height: 16),
                     DropdownButtonFormField<int?>(
-                      initialValue: selectedUser.isEmpty ? null : _readInt(selectedUser, 'id'),
-                      decoration: InputDecoration(labelText: _tr(context, 'Person')),
+                      initialValue: selectedUser.isEmpty
+                          ? null
+                          : _readInt(selectedUser, 'id'),
+                      decoration:
+                          InputDecoration(labelText: _tr(context, 'Person')),
                       items: [
                         for (final item in participants)
                           DropdownMenuItem<int?>(
@@ -438,7 +455,8 @@ class _ChatPageState extends State<ChatPage> {
                         setState(() {
                           selectedUserId = value;
                           final suffix = value == null ? '' : '?user_id=$value';
-                          privateFuture = widget.api.get('${widget.roleBasePath}/chat/private/$suffix');
+                          privateFuture = widget.api.get(
+                              '${widget.roleBasePath}/chat/private/$suffix');
                         });
                       },
                     ),
@@ -451,10 +469,12 @@ class _ChatPageState extends State<ChatPage> {
                             name: _readPath(item, ['partner', 'display_name']),
                             subtitle: _asMap(item['latest_message']).isEmpty
                                 ? 'No messages yet'
-                                : _readString(_asMap(item['latest_message']), 'body'),
+                                : _readString(
+                                    _asMap(item['latest_message']), 'body'),
                             unreadCount: _readInt(item, 'unread_count'),
                             selected: selectedUser.isNotEmpty &&
-                                _readInt(_asMap(item['partner']), 'id') == _readInt(selectedUser, 'id'),
+                                _readInt(_asMap(item['partner']), 'id') ==
+                                    _readInt(selectedUser, 'id'),
                             onTap: () {
                               final conversationPartner = _readInt(
                                 _asMap(item['partner']),
@@ -475,13 +495,15 @@ class _ChatPageState extends State<ChatPage> {
               ),
               const SizedBox(height: 16),
               _HeaderRow(
-                title: selectedUser.isEmpty ? 'Messages' : _readString(selectedUser, 'display_name'),
+                title: selectedUser.isEmpty
+                    ? 'Messages'
+                    : _readString(selectedUser, 'display_name'),
                 trailing: Text(
                   '${privateMessages.length} messages',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: const Color(0xFF61706C),
-                    fontWeight: FontWeight.w600,
-                  ),
+                        color: const Color(0xFF61706C),
+                        fontWeight: FontWeight.w600,
+                      ),
                 ),
               ),
               const SizedBox(height: 14),
@@ -508,7 +530,8 @@ class _ChatPageState extends State<ChatPage> {
                     body: _readString(item, 'body'),
                     meta: _readPath(item, ['read_receipt', 'label']),
                     own: selectedUser.isNotEmpty &&
-                        _readInt(_asMap(item['sender']), 'id') != _readInt(selectedUser, 'id'),
+                        _readInt(_asMap(item['sender']), 'id') !=
+                            _readInt(selectedUser, 'id'),
                   ),
                   const SizedBox(height: 14),
                 ],
@@ -519,4 +542,3 @@ class _ChatPageState extends State<ChatPage> {
     );
   }
 }
-
