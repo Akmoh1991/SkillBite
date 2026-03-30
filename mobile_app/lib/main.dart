@@ -17,7 +17,6 @@ import 'core/session/session_user.dart';
 part 'features/owner/owner_admin_flow.dart';
 part 'features/chat/chat_page.dart';
 
-
 const Color _brandTeal = AppColors.brandPrimary;
 const Color _brandTealDark = AppColors.brandPrimaryDark;
 const Color _ink = AppColors.ink;
@@ -45,10 +44,12 @@ class _AppScope extends InheritedWidget {
   }
 
   @override
-  bool updateShouldNotify(_AppScope oldWidget) => oldWidget.language != language;
+  bool updateShouldNotify(_AppScope oldWidget) =>
+      oldWidget.language != language;
 }
 
-bool _isArabic(BuildContext context) => _AppScope.of(context).language == AppLanguage.ar;
+bool _isArabic(BuildContext context) =>
+    _AppScope.of(context).language == AppLanguage.ar;
 
 String _tr(BuildContext context, String english) {
   if (!_isArabic(context)) {
@@ -59,17 +60,20 @@ String _tr(BuildContext context, String english) {
 
 const Map<String, String> _arabicStrings = {
   'Reset Password': 'إعادة تعيين كلمة المرور',
-  'Reset your password using your username and the recovery email saved on your account.': 'أعد تعيين كلمة المرور باستخدام اسم المستخدم والبريد الإلكتروني المسجل في الحساب.',
+  'Reset your password using your username and the recovery email saved on your account.':
+      'أعد تعيين كلمة المرور باستخدام اسم المستخدم والبريد الإلكتروني المسجل في الحساب.',
   'Username': 'اسم المستخدم',
   'Recovery email': 'البريد الإلكتروني للاستعادة',
   'New password': 'كلمة المرور الجديدة',
   'Confirm password': 'تأكيد كلمة المرور',
-  'Password updated. You can sign in with the new password now.': 'تم تحديث كلمة المرور. يمكنك تسجيل الدخول بكلمة المرور الجديدة الآن.',
+  'Password updated. You can sign in with the new password now.':
+      'تم تحديث كلمة المرور. يمكنك تسجيل الدخول بكلمة المرور الجديدة الآن.',
   'Updating...': 'جارٍ التحديث...',
   'Update Password': 'تحديث كلمة المرور',
   'Username and password are required.': 'اسم المستخدم وكلمة المرور مطلوبان.',
   'Sign in to SkillBite': 'تسجيل الدخول',
-  'Please enter your information below in order to login to your account': 'يرجى إدخال بياناتك أدناه لتسجيل الدخول إلى حسابك',
+  'Please enter your information below in order to login to your account':
+      'يرجى إدخال بياناتك أدناه لتسجيل الدخول إلى حسابك',
   'Enter your username': 'أدخل اسم المستخدم',
   'Password': 'كلمة المرور',
   'Enter your password': 'أدخل كلمة المرور',
@@ -81,7 +85,8 @@ const Map<String, String> _arabicStrings = {
   'Owner Demo': 'تجربة المالك',
   'Employee Demo': 'تجربة الموظف',
   'Create Account': 'إنشاء حساب',
-  'Create your business owner account to start using SkillBite.': 'أنشئ حساب لبدء استخدام SkillBite',
+  'Create your business owner account to start using SkillBite.':
+      'أنشئ حساب لبدء استخدام SkillBite',
   'Full Name': 'الاسم الكامل',
   'Enter your full name': 'أدخل اسمك الكامل',
   'Email': 'البريد الإلكتروني',
@@ -233,7 +238,8 @@ const Map<String, String> _arabicStrings = {
   'Sending...': 'جارٍ الإرسال...',
   'Send': 'إرسال',
   'Send Private Message': 'إرسال رسالة خاصة',
-  'Need an account? Ask your business owner or administrator.': 'تحتاج إلى حساب؟ اطلبه من مالك النشاط أو المسؤول.',
+  'Need an account? Ask your business owner or administrator.':
+      'تحتاج إلى حساب؟ اطلبه من مالك النشاط أو المسؤول.',
   'Recipient': 'المستلم',
   'Write your message': 'اكتب رسالتك',
   'Team': 'الفريق',
@@ -394,7 +400,8 @@ class _SkillBiteMobileAppState extends State<SkillBiteMobileApp> {
 
   @override
   Widget build(BuildContext context) {
-    debugPrint('SkillBiteMobileApp build language=$language sessionUser=${sessionUser?.username}');
+    debugPrint(
+        'SkillBiteMobileApp build language=$language sessionUser=${sessionUser?.username}');
     return _AppScope(
       language: language,
       onLanguageChanged: _handleLanguageChanged,
@@ -415,12 +422,12 @@ class _SkillBiteMobileAppState extends State<SkillBiteMobileApp> {
         home: restoringSession
             ? const _LoadingState()
             : sessionUser == null
-            ? LoginScreen(api: api, onLoggedIn: _handleLogin)
-            : RoleShell(
-                api: api,
-                user: sessionUser!,
-                onLogout: _handleLogout,
-              ),
+                ? LoginScreen(api: api, onLoggedIn: _handleLogin)
+                : RoleShell(
+                    api: api,
+                    user: sessionUser!,
+                    onLogout: _handleLogout,
+                  ),
       ),
     );
   }
@@ -513,13 +520,14 @@ class _LoginScreenState extends State<LoginScreen> {
           alignment: WrapAlignment.center,
           crossAxisAlignment: WrapCrossAlignment.center,
           spacing: 6,
-          textDirection: _isArabic(context) ? TextDirection.rtl : TextDirection.ltr,
+          textDirection:
+              _isArabic(context) ? TextDirection.rtl : TextDirection.ltr,
           children: [
             Text(
               'Need an account?',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: const Color(0xFF4A5A6A),
-              ),
+                    color: const Color(0xFF4A5A6A),
+                  ),
             ),
             InkWell(
               onTap: _openRegister,
@@ -646,7 +654,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController fullNameController = TextEditingController();
-  final TextEditingController fullNameArabicController = TextEditingController();
+  final TextEditingController fullNameArabicController =
+      TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController companyNameController = TextEditingController();
   final TextEditingController phoneNumberController = TextEditingController();
@@ -697,7 +706,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
       }
     } catch (error) {
       if (mounted) {
-        setState(() => errorText = error.toString().replaceFirst('Exception: ', ''));
+        setState(
+            () => errorText = error.toString().replaceFirst('Exception: ', ''));
       }
     } finally {
       if (mounted) {
@@ -772,13 +782,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
           alignment: WrapAlignment.center,
           crossAxisAlignment: WrapCrossAlignment.center,
           spacing: 6,
-          textDirection: _isArabic(context) ? TextDirection.rtl : TextDirection.ltr,
+          textDirection:
+              _isArabic(context) ? TextDirection.rtl : TextDirection.ltr,
           children: [
             Text(
               _tr(context, 'Already have an account?'),
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: const Color(0xFF4A5A6A),
-              ),
+                    color: const Color(0xFF4A5A6A),
+                  ),
             ),
             InkWell(
               onTap: () => Navigator.of(context).pop(),
@@ -937,7 +948,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController newPasswordController = TextEditingController();
-  final TextEditingController confirmPasswordController = TextEditingController();
+  final TextEditingController confirmPasswordController =
+      TextEditingController();
   bool saving = false;
   bool newPasswordObscured = true;
   bool confirmPasswordObscured = true;
@@ -967,7 +979,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         confirmPassword: confirmPasswordController.text,
       );
       setState(() {
-        successText = 'Password updated. You can sign in with the new password now.';
+        successText =
+            'Password updated. You can sign in with the new password now.';
       });
     } catch (error) {
       setState(() {
@@ -1083,7 +1096,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           FilledButton(
             onPressed: saving ? null : _submit,
             child: Text(
-              saving ? _tr(context, 'Updating...') : _tr(context, 'Update Password'),
+              saving
+                  ? _tr(context, 'Updating...')
+                  : _tr(context, 'Update Password'),
             ),
           ),
         ],
@@ -1169,7 +1184,9 @@ class _AuthScaffold extends StatelessWidget {
                           ),
                           child: Text(
                             'SkillBite Mobile',
-                            style: Theme.of(context).textTheme.titleMedium
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
                                 ?.copyWith(
                                   color: Colors.white,
                                   fontWeight: FontWeight.w700,
@@ -1185,7 +1202,9 @@ class _AuthScaffold extends StatelessWidget {
                         const SizedBox(height: 18),
                         Text(
                           title,
-                          style: Theme.of(context).textTheme.headlineSmall
+                          style: Theme.of(context)
+                              .textTheme
+                              .headlineSmall
                               ?.copyWith(
                                 color: Colors.white,
                                 fontSize: 26,
@@ -1195,10 +1214,11 @@ class _AuthScaffold extends StatelessWidget {
                         const SizedBox(height: 8),
                         Text(
                           subtitle,
-                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: Colors.white.withValues(alpha: 0.84),
-                            height: 1.45,
-                          ),
+                          style:
+                              Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                    color: Colors.white.withValues(alpha: 0.84),
+                                    height: 1.45,
+                                  ),
                         ),
                       ],
                     ),
@@ -1315,7 +1335,8 @@ class _LanguageToggleButton extends StatelessWidget {
       ),
       onPressed: () {
         final scope = _AppScope.of(context);
-        scope.onLanguageChanged(_isArabic(context) ? AppLanguage.en : AppLanguage.ar);
+        scope.onLanguageChanged(
+            _isArabic(context) ? AppLanguage.en : AppLanguage.ar);
       },
       icon: const Icon(Icons.language_rounded),
       label: Text(_isArabic(context) ? 'English' : _tr(context, 'Arabic')),
@@ -1383,20 +1404,42 @@ class _RoleShellState extends State<RoleShell> {
           ];
     final destinations = ownerMode
         ? [
-            NavigationDestination(icon: Icon(Icons.home_outlined), label: _tr(context, 'Home')),
-            NavigationDestination(icon: Icon(Icons.group_outlined), label: _tr(context, 'Employees')),
-            NavigationDestination(icon: Icon(Icons.badge_outlined), label: _tr(context, 'Titles')),
-            NavigationDestination(icon: Icon(Icons.menu_book_outlined), label: _tr(context, 'Courses')),
-            NavigationDestination(icon: Icon(Icons.insights_outlined), label: _tr(context, 'Reports')),
-            NavigationDestination(icon: Icon(Icons.checklist_outlined), label: _tr(context, 'Checklists')),
-            NavigationDestination(icon: Icon(Icons.chat_bubble_outline), label: _tr(context, 'Chat')),
+            NavigationDestination(
+                icon: Icon(Icons.home_outlined), label: _tr(context, 'Home')),
+            NavigationDestination(
+                icon: Icon(Icons.group_outlined),
+                label: _tr(context, 'Employees')),
+            NavigationDestination(
+                icon: Icon(Icons.badge_outlined),
+                label: _tr(context, 'Titles')),
+            NavigationDestination(
+                icon: Icon(Icons.menu_book_outlined),
+                label: _tr(context, 'Courses')),
+            NavigationDestination(
+                icon: Icon(Icons.insights_outlined),
+                label: _tr(context, 'Reports')),
+            NavigationDestination(
+                icon: Icon(Icons.checklist_outlined),
+                label: _tr(context, 'Checklists')),
+            NavigationDestination(
+                icon: Icon(Icons.chat_bubble_outline),
+                label: _tr(context, 'Chat')),
           ]
         : [
-            NavigationDestination(icon: Icon(Icons.home_outlined), label: _tr(context, 'Home')),
-            NavigationDestination(icon: Icon(Icons.menu_book_outlined), label: _tr(context, 'Courses')),
-            NavigationDestination(icon: Icon(Icons.workspace_premium_outlined), label: _tr(context, 'History')),
-            NavigationDestination(icon: Icon(Icons.checklist_outlined), label: _tr(context, 'Checklists')),
-            NavigationDestination(icon: Icon(Icons.chat_bubble_outline), label: _tr(context, 'Chat')),
+            NavigationDestination(
+                icon: Icon(Icons.home_outlined), label: _tr(context, 'Home')),
+            NavigationDestination(
+                icon: Icon(Icons.menu_book_outlined),
+                label: _tr(context, 'Courses')),
+            NavigationDestination(
+                icon: Icon(Icons.workspace_premium_outlined),
+                label: _tr(context, 'History')),
+            NavigationDestination(
+                icon: Icon(Icons.checklist_outlined),
+                label: _tr(context, 'Checklists')),
+            NavigationDestination(
+                icon: Icon(Icons.chat_bubble_outline),
+                label: _tr(context, 'Chat')),
           ];
 
     return Scaffold(
@@ -1418,9 +1461,9 @@ class _RoleShellState extends State<RoleShell> {
                         ? '@${widget.user.username}'
                         : widget.user.businessName,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: _muted,
-                      fontWeight: FontWeight.w500,
-                    ),
+                          color: _muted,
+                          fontWeight: FontWeight.w500,
+                        ),
                   ),
                 ],
               ),
@@ -1515,67 +1558,93 @@ class NotificationsPage extends StatelessWidget {
         builder: (context, payload) {
           final summary = _asMap(payload['summary']);
           final notifications = _asList(payload['notifications']);
-          return _PageBody(
-            children: [
-              Text(
-                '${_tr(context, 'Activity for ')}${user.businessName}',
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: _muted),
-              ),
-              const SizedBox(height: 16),
-              Wrap(
-                spacing: 10,
-                runSpacing: 10,
-                children: [
-                  _NotificationSummaryChip(
-                    label: _tr(context, 'Unread chat'),
-                    value: '${summary['unread_chat_count'] ?? 0}',
-                  ),
-                  _NotificationSummaryChip(
-                    label: user.role == 'employee' ? _tr(context, 'Pending courses') : _tr(context, 'Active employees'),
-                    value: user.role == 'employee'
-                        ? '${summary['pending_course_count'] ?? 0}'
-                        : '${summary['active_employee_count'] ?? 0}',
-                  ),
-                  _NotificationSummaryChip(
-                    label: user.role == 'employee' ? _tr(context, 'Pending checklists') : _tr(context, 'Active courses'),
-                    value: user.role == 'employee'
-                        ? '${summary['pending_checklist_count'] ?? 0}'
-                        : '${summary['active_course_count'] ?? 0}',
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              if (notifications.isEmpty)
-                _SectionCard(
-                  title: _tr(context, 'All caught up'),
-                  child: Text(_tr(context, 'There are no new notifications right now.')),
-                )
-              else
-                for (final item in notifications) ...[
-                  _SectionCard(
-                    title: _readString(item, 'title'),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+          return _PageSliverBody(
+            slivers: [
+              _PageSliverSection(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${_tr(context, 'Activity for ')}${user.businessName}',
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodyLarge
+                          ?.copyWith(color: _muted),
+                    ),
+                    const SizedBox(height: 16),
+                    Wrap(
+                      spacing: 10,
+                      runSpacing: 10,
                       children: [
-                        Text(_readString(item, 'body')),
-                        const SizedBox(height: 10),
-                        Row(
-                          children: [
-                            _StatusChip(
-                              label: _readString(item, 'kind').replaceAll('_', ' '),
-                            ),
-                            const SizedBox(width: 8),
-                            if (_readInt(item, 'unread_count') > 0)
-                              _StatusChip(
-                                label: '${_readInt(item, 'unread_count')} ${_tr(context, 'new')}',
-                              ),
-                          ],
+                        _NotificationSummaryChip(
+                          label: _tr(context, 'Unread chat'),
+                          value: '${summary['unread_chat_count'] ?? 0}',
+                        ),
+                        _NotificationSummaryChip(
+                          label: user.role == 'employee'
+                              ? _tr(context, 'Pending courses')
+                              : _tr(context, 'Active employees'),
+                          value: user.role == 'employee'
+                              ? '${summary['pending_course_count'] ?? 0}'
+                              : '${summary['active_employee_count'] ?? 0}',
+                        ),
+                        _NotificationSummaryChip(
+                          label: user.role == 'employee'
+                              ? _tr(context, 'Pending checklists')
+                              : _tr(context, 'Active courses'),
+                          value: user.role == 'employee'
+                              ? '${summary['pending_checklist_count'] ?? 0}'
+                              : '${summary['active_course_count'] ?? 0}',
                         ),
                       ],
                     ),
+                    const SizedBox(height: 20),
+                  ],
+                ),
+              ),
+              if (notifications.isEmpty)
+                _PageSliverSection(
+                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 120),
+                  child: _SectionCard(
+                    title: _tr(context, 'All caught up'),
+                    child: Text(_tr(
+                        context, 'There are no new notifications right now.')),
                   ),
-                  const SizedBox(height: 14),
-                ],
+                )
+              else
+                _PageSliverList(
+                  itemCount: notifications.length,
+                  itemBuilder: (context, index) {
+                    final item = notifications[index];
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 14),
+                      child: _SectionCard(
+                        title: _readString(item, 'title'),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(_readString(item, 'body')),
+                            const SizedBox(height: 10),
+                            Row(
+                              children: [
+                                _StatusChip(
+                                  label: _readString(item, 'kind')
+                                      .replaceAll('_', ' '),
+                                ),
+                                const SizedBox(width: 8),
+                                if (_readInt(item, 'unread_count') > 0)
+                                  _StatusChip(
+                                    label:
+                                        '${_readInt(item, 'unread_count')} ${_tr(context, 'new')}',
+                                  ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
             ],
           );
         },
@@ -1594,7 +1663,8 @@ class EmployeeDashboardPage extends StatelessWidget {
   final MobileApiClient api;
   final SessionUser user;
 
-  Future<void> _openAssignmentCourse(BuildContext context, int assignmentId) async {
+  Future<void> _openAssignmentCourse(
+      BuildContext context, int assignmentId) async {
     await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => EmployeeCourseDetailScreen(
@@ -1613,6 +1683,12 @@ class EmployeeDashboardPage extends StatelessWidget {
           checklistId: checklistId,
         ),
       ),
+    );
+  }
+
+  Future<void> _openCoursesPage(BuildContext context) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => EmployeeCoursesPage(api: api)),
     );
   }
 
@@ -1652,19 +1728,29 @@ class EmployeeDashboardPage extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 20),
-        _HeaderRow(title: 'Courses', trailing: _sectionLink('View all')),
+        _HeaderRow(
+          title: 'Courses',
+          trailing: _sectionLink(
+            'View all',
+            onTap: () => _openCoursesPage(context),
+          ),
+        ),
         const SizedBox(height: 16),
         if (assignments.isEmpty)
-          const _SectionCard(title: 'Courses', child: Text('No active courses.'))
+          const _SectionCard(
+              title: 'Courses', child: Text('No active courses.'))
         else
           for (final item in assignments.take(3)) ...[
             _NativeCoursePromoCard(
               eyebrow: _readString(item, 'status_label'),
               title: _readPath(item, ['course', 'title']),
-              meta:
-                  '${_readPath(item, ['course', 'estimated_minutes'])} ${_tr(context, 'min')}',
+              meta: '${_readPath(item, [
+                    'course',
+                    'estimated_minutes'
+                  ])} ${_tr(context, 'min')}',
               supporting: _readString(_asMap(item['course']), 'description'),
-              imageUrl: api.resolveUrl(_readPath(item, ['course', 'card_image_url'])),
+              imageUrl:
+                  api.resolveUrl(_readPath(item, ['course', 'card_image_url'])),
               icon: _readBool(_asMap(item['course']), 'has_exam')
                   ? Icons.verified_outlined
                   : Icons.play_circle_outline_rounded,
@@ -1735,6 +1821,20 @@ class _EmployeeCoursesPageState extends State<EmployeeCoursesPage> {
     });
   }
 
+  Future<void> _openAssignment(int assignmentId) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => EmployeeCourseDetailScreen(
+          api: widget.api,
+          assignmentId: assignmentId,
+        ),
+      ),
+    );
+    if (mounted) {
+      _reload();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return ApiFutureBuilder(
@@ -1742,117 +1842,133 @@ class _EmployeeCoursesPageState extends State<EmployeeCoursesPage> {
       builder: (context, payload) {
         final courses = _asList(payload['courses']);
         final featuredCourse = courses.isEmpty ? null : _asMap(courses.first);
-        final moreCourses = courses.length > 1 ? courses.skip(1).toList() : const <dynamic>[];
+        final moreCourses =
+            courses.length > 1 ? courses.skip(1).toList() : const <dynamic>[];
         final activeCourses = courses.where((item) {
           final status = _readString(item, 'status_label').toLowerCase();
           return !status.contains('complete');
         }).length;
         final totalMinutes = courses.fold<int>(
           0,
-          (sum, item) => sum + _readInt(_asMap(item['course']), 'estimated_minutes'),
+          (sum, item) =>
+              sum + _readInt(_asMap(item['course']), 'estimated_minutes'),
         );
-        return _PageBody(
-          children: [
-            _DashboardHeroCard(
-              title: _tr(context, 'Courses'),
-              subtitle: featuredCourse == null
-                  ? 'No assigned courses yet'
-                  : _readPath(featuredCourse, ['course', 'title']),
-              value: featuredCourse == null
-                  ? 'New training will appear here when it is assigned.'
-                  : '$activeCourses in progress - $totalMinutes ${_tr(context, 'min')} total',
-              icon: Icons.auto_stories_rounded,
-            ),
-            const SizedBox(height: 16),
-            _DashboardMetricRow(
-              metrics: [
-                _DashboardMetricData(
-                  'Courses',
-                  '${courses.length}',
-                  icon: Icons.menu_book_rounded,
-                ),
-                _DashboardMetricData(
-                  'Pending courses',
-                  '$activeCourses',
-                  icon: Icons.timelapse_rounded,
-                ),
-                _DashboardMetricData(
-                  'Learning time',
-                  '$totalMinutes ${_tr(context, 'min')}',
-                  icon: Icons.schedule_rounded,
-                ),
-              ],
-            ),
-            if (featuredCourse != null) ...[
-              const SizedBox(height: 20),
-              _NativeCoursePromoCard(
-                eyebrow: _readString(featuredCourse, 'status_label').isEmpty
-                    ? 'Course'
-                    : _readString(featuredCourse, 'status_label'),
-                title: _readPath(featuredCourse, ['course', 'title']),
-                meta:
-                    '${_readInt(_asMap(featuredCourse['course']), 'estimated_minutes')} ${_tr(context, 'min')}',
-                supporting: _readPath(featuredCourse, ['course', 'description']),
-                imageUrl: widget.api.resolveUrl(
-                  _readPath(featuredCourse, ['course', 'card_image_url']),
-                ),
-                icon: Icons.play_circle_outline_rounded,
-                onTap: () async {
-                  await Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => EmployeeCourseDetailScreen(
-                        api: widget.api,
-                        assignmentId: _readInt(featuredCourse, 'id'),
+        return _PageSliverBody(
+          slivers: [
+            _PageSliverSection(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _DashboardHeroCard(
+                    title: _tr(context, 'Courses'),
+                    subtitle: featuredCourse == null
+                        ? 'No assigned courses yet'
+                        : _readPath(featuredCourse, ['course', 'title']),
+                    value: featuredCourse == null
+                        ? 'New training will appear here when it is assigned.'
+                        : '$activeCourses in progress - $totalMinutes ${_tr(context, 'min')} total',
+                    icon: Icons.auto_stories_rounded,
+                  ),
+                  const SizedBox(height: 16),
+                  _DashboardMetricRow(
+                    metrics: [
+                      _DashboardMetricData(
+                        'Courses',
+                        '${courses.length}',
+                        icon: Icons.menu_book_rounded,
                       ),
+                      _DashboardMetricData(
+                        'Pending courses',
+                        '$activeCourses',
+                        icon: Icons.timelapse_rounded,
+                      ),
+                      _DashboardMetricData(
+                        'Learning time',
+                        '$totalMinutes ${_tr(context, 'min')}',
+                        icon: Icons.schedule_rounded,
+                      ),
+                    ],
+                  ),
+                  if (featuredCourse != null) ...[
+                    const SizedBox(height: 20),
+                    _NativeCoursePromoCard(
+                      eyebrow:
+                          _readString(featuredCourse, 'status_label').isEmpty
+                              ? 'Course'
+                              : _readString(featuredCourse, 'status_label'),
+                      title: _readPath(featuredCourse, ['course', 'title']),
+                      meta:
+                          '${_readInt(_asMap(featuredCourse['course']), 'estimated_minutes')} ${_tr(context, 'min')}',
+                      supporting:
+                          _readPath(featuredCourse, ['course', 'description']),
+                      imageUrl: widget.api.resolveUrl(
+                        _readPath(featuredCourse, ['course', 'card_image_url']),
+                      ),
+                      icon: Icons.play_circle_outline_rounded,
+                      onTap: () =>
+                          _openAssignment(_readInt(featuredCourse, 'id')),
                     ),
-                  );
-                  _reload();
-                },
-              ),
-            ],
-            const SizedBox(height: 20),
-            _HeaderRow(
-              title: featuredCourse == null ? 'Assigned courses' : 'More courses',
-              trailing: _RoundIconButton(
-                icon: Icons.refresh_rounded,
-                onTap: _reload,
+                  ],
+                  const SizedBox(height: 20),
+                  _HeaderRow(
+                    title: featuredCourse == null
+                        ? 'Assigned courses'
+                        : 'More courses',
+                    trailing: _RoundIconButton(
+                      icon: Icons.refresh_rounded,
+                      onTap: _reload,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
               ),
             ),
-            const SizedBox(height: 16),
             if (courses.isEmpty)
-              const _SectionCard(title: 'Courses', child: Text('No courses assigned.'))
+              const _PageSliverSection(
+                padding: EdgeInsets.fromLTRB(24, 0, 24, 120),
+                child: _SectionCard(
+                  title: 'Courses',
+                  child: Text('No courses assigned.'),
+                ),
+              )
             else if (moreCourses.isEmpty)
-              const _SectionCard(
-                title: 'Courses',
-                child: Text('No additional courses right now.'),
+              const _PageSliverSection(
+                padding: EdgeInsets.fromLTRB(24, 0, 24, 120),
+                child: _SectionCard(
+                  title: 'Courses',
+                  child: Text('No additional courses right now.'),
+                ),
               )
             else
-              for (final item in moreCourses) ...[
-                _LibraryCourseCard(
-                  imageUrl: widget.api.resolveUrl(
-                    _readPath(item, ['course', 'card_image_url']),
-                  ),
-                  title: _readPath(item, ['course', 'title']),
-                  description: _readPath(item, ['course', 'description']),
-                  label: _readPath(item, ['course', 'card_label']),
-                  minutesLabel: '${_readPath(item, ['course', 'estimated_minutes'])} ${_tr(context, 'min')}',
-                  contentCountLabel: '${_readPath(item, ['course', 'content_item_total'])} ${_tr(context, 'Items')}',
-                  footnote: _readString(item, 'status_label'),
-                  ctaLabel: _tr(context, 'Open'),
-                  onTap: () async {
-                    await Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => EmployeeCourseDetailScreen(
-                          api: widget.api,
-                          assignmentId: _readInt(item, 'id'),
-                        ),
+              _PageSliverList(
+                itemCount: moreCourses.length,
+                itemBuilder: (context, index) {
+                  final item = _asMap(moreCourses[index]);
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: _CompactCourseListCard(
+                      imageUrl: widget.api.resolveUrl(
+                        _readPath(item, ['course', 'card_image_url']),
                       ),
-                    );
-                    _reload();
-                  },
-                ),
-                const SizedBox(height: 16),
-              ],
+                      eyebrow: _readString(item, 'status_label'),
+                      title: _readPath(item, ['course', 'title']),
+                      description: _readPath(item, ['course', 'description']),
+                      metadata: [
+                        '${_readPath(item, [
+                              'course',
+                              'estimated_minutes'
+                            ])} ${_tr(context, 'min')}',
+                        '${_readPath(item, [
+                              'course',
+                              'content_item_total'
+                            ])} ${_tr(context, 'Items')}',
+                        _readPath(item, ['course', 'card_label']),
+                      ],
+                      onTap: () => _openAssignment(_readInt(item, 'id')),
+                    ),
+                  );
+                },
+              ),
           ],
         );
       },
@@ -1866,10 +1982,12 @@ class EmployeeLearningHistoryPage extends StatefulWidget {
   final MobileApiClient api;
 
   @override
-  State<EmployeeLearningHistoryPage> createState() => _EmployeeLearningHistoryPageState();
+  State<EmployeeLearningHistoryPage> createState() =>
+      _EmployeeLearningHistoryPageState();
 }
 
-class _EmployeeLearningHistoryPageState extends State<EmployeeLearningHistoryPage> {
+class _EmployeeLearningHistoryPageState
+    extends State<EmployeeLearningHistoryPage> {
   late Future<Map<String, dynamic>> future;
 
   @override
@@ -1884,46 +2002,111 @@ class _EmployeeLearningHistoryPageState extends State<EmployeeLearningHistoryPag
     });
   }
 
+  Future<void> _openAssignment(int assignmentId) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => EmployeeCourseDetailScreen(
+          api: widget.api,
+          assignmentId: assignmentId,
+        ),
+      ),
+    );
+    if (mounted) {
+      _reload();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return ApiFutureBuilder(
       future: future,
       builder: (context, payload) {
         final history = _asList(payload['learning_history']);
-        return _PageBody(
-          children: [
-            _HeaderRow(
-              title: 'Learning History',
-              trailing: IconButton(
-                onPressed: _reload,
-                icon: const Icon(Icons.refresh),
-              ),
-            ),
-            const SizedBox(height: 16),
-            if (history.isEmpty)
-              const _SectionCard(title: 'History', child: Text('No completed courses yet.'))
-            else
-              for (final item in history) ...[
-                _SectionCard(
-                  title: _readPath(item, ['course', 'title']),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(_readPath(item, ['course', 'description'])),
-                      const SizedBox(height: 12),
-                      Wrap(
-                        spacing: 12,
-                        runSpacing: 12,
-                        children: [
-                          _StatusChip(label: _readString(item, 'status_label')),
-                          _StatusChip(label: '${_readPath(item, ['course', 'estimated_minutes'])} min'),
-                        ],
+        final totalMinutes = history.fold<int>(
+          0,
+          (sum, item) =>
+              sum + _readInt(_asMap(item['course']), 'estimated_minutes'),
+        );
+        return _PageSliverBody(
+          slivers: [
+            _PageSliverSection(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _DashboardHeroCard(
+                    title: 'Learning History',
+                    subtitle: history.isEmpty
+                        ? 'Your completed learning will appear here'
+                        : '${history.length} completed courses',
+                    value: history.isEmpty
+                        ? 'Finished training stays easy to revisit.'
+                        : '$totalMinutes ${_tr(context, 'min')} completed',
+                    icon: Icons.workspace_premium_rounded,
+                  ),
+                  const SizedBox(height: 16),
+                  _DashboardMetricRow(
+                    metrics: [
+                      _DashboardMetricData(
+                        'Completed',
+                        '${history.length}',
+                        icon: Icons.task_alt_rounded,
+                      ),
+                      _DashboardMetricData(
+                        'Minutes',
+                        '$totalMinutes',
+                        icon: Icons.schedule_rounded,
                       ),
                     ],
                   ),
+                  const SizedBox(height: 20),
+                  _HeaderRow(
+                    title: 'Learning History',
+                    trailing: _RoundIconButton(
+                      icon: Icons.refresh_rounded,
+                      onTap: _reload,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+              ),
+            ),
+            if (history.isEmpty)
+              const _PageSliverSection(
+                padding: EdgeInsets.fromLTRB(24, 0, 24, 120),
+                child: _SectionCard(
+                  title: 'History',
+                  child: Text('No completed courses yet.'),
                 ),
-                const SizedBox(height: 16),
-              ],
+              )
+            else
+              _PageSliverList(
+                itemCount: history.length,
+                itemBuilder: (context, index) {
+                  final item = _asMap(history[index]);
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: _CompactCourseListCard(
+                      imageUrl: widget.api.resolveUrl(
+                        _readPath(item, ['course', 'card_image_url']),
+                      ),
+                      eyebrow: _readString(item, 'status_label'),
+                      title: _readPath(item, ['course', 'title']),
+                      description: _readPath(item, ['course', 'description']),
+                      metadata: [
+                        '${_readPath(item, [
+                              'course',
+                              'estimated_minutes'
+                            ])} ${_tr(context, 'min')}',
+                        '${_readPath(item, [
+                              'course',
+                              'content_item_total'
+                            ])} ${_tr(context, 'Items')}',
+                      ],
+                      onTap: () => _openAssignment(_readInt(item, 'id')),
+                    ),
+                  );
+                },
+              ),
           ],
         );
       },
@@ -1942,10 +2125,12 @@ class EmployeeCourseDetailScreen extends StatefulWidget {
   final int assignmentId;
 
   @override
-  State<EmployeeCourseDetailScreen> createState() => _EmployeeCourseDetailScreenState();
+  State<EmployeeCourseDetailScreen> createState() =>
+      _EmployeeCourseDetailScreenState();
 }
 
-class _EmployeeCourseDetailScreenState extends State<EmployeeCourseDetailScreen> {
+class _EmployeeCourseDetailScreenState
+    extends State<EmployeeCourseDetailScreen> {
   late Future<Map<String, dynamic>> future;
   bool submitting = false;
 
@@ -1965,7 +2150,8 @@ class _EmployeeCourseDetailScreenState extends State<EmployeeCourseDetailScreen>
     final title = _readString(item, 'title');
     final videoUrl = widget.api.resolveUrl(_readString(item, 'video_url'));
     final pdfUrl = widget.api.resolveUrl(_readString(item, 'pdf_url'));
-    final materialUrl = widget.api.resolveUrl(_readString(item, 'material_url'));
+    final materialUrl =
+        widget.api.resolveUrl(_readString(item, 'material_url'));
     if (videoUrl.isNotEmpty) {
       await Navigator.of(context).push(
         MaterialPageRoute(
@@ -1978,7 +2164,9 @@ class _EmployeeCourseDetailScreenState extends State<EmployeeCourseDetailScreen>
     if (browserUrl.isEmpty) {
       _showSnack(
         context,
-        _readString(item, 'body').isNotEmpty ? _readString(item, 'body') : 'No content URL available.',
+        _readString(item, 'body').isNotEmpty
+            ? _readString(item, 'body')
+            : 'No content URL available.',
       );
       return;
     }
@@ -1996,7 +2184,8 @@ class _EmployeeCourseDetailScreenState extends State<EmployeeCourseDetailScreen>
   Future<void> _completeCourse() async {
     setState(() => submitting = true);
     try {
-      await widget.api.post('/employee/courses/${widget.assignmentId}/complete/', {});
+      await widget.api
+          .post('/employee/courses/${widget.assignmentId}/complete/', {});
       if (!mounted) return;
       _showSnack(context, 'Course completed.');
       _reload();
@@ -2025,8 +2214,11 @@ class _EmployeeCourseDetailScreenState extends State<EmployeeCourseDetailScreen>
           final statusLabel = _readString(assignment, 'status_label').isEmpty
               ? _tr(context, 'In progress')
               : _readString(assignment, 'status_label');
-          final featuredContent = contentItems.isEmpty ? const <dynamic>[] : [contentItems.first];
-          final remainingContent = contentItems.length > 1 ? contentItems.skip(1).toList() : const <dynamic>[];
+          final featuredContent =
+              contentItems.isEmpty ? const <dynamic>[] : [contentItems.first];
+          final remainingContent = contentItems.length > 1
+              ? contentItems.skip(1).toList()
+              : const <dynamic>[];
           return _PageBody(
             children: [
               _DashboardHeroCard(
@@ -2044,7 +2236,8 @@ class _EmployeeCourseDetailScreenState extends State<EmployeeCourseDetailScreen>
                 runSpacing: 8,
                 children: [
                   _StatusChip(label: statusLabel),
-                  _StatusChip(label: '${contentItems.length} ${_tr(context, 'Items')}'),
+                  _StatusChip(
+                      label: '${contentItems.length} ${_tr(context, 'Items')}'),
                   if (hasExam) _StatusChip(label: _tr(context, 'Exam')),
                 ],
               ),
@@ -2057,7 +2250,9 @@ class _EmployeeCourseDetailScreenState extends State<EmployeeCourseDetailScreen>
               ],
               const SizedBox(height: 16),
               if (featuredContent.isEmpty)
-                _SectionCard(title: _tr(context, 'Lesson'), child: Text(_tr(context, 'No mobile content items.')))
+                _SectionCard(
+                    title: _tr(context, 'Lesson'),
+                    child: Text(_tr(context, 'No mobile content items.')))
               else
                 _LessonMediaCard(
                   title: _readString(course, 'title'),
@@ -2069,7 +2264,10 @@ class _EmployeeCourseDetailScreenState extends State<EmployeeCourseDetailScreen>
               const SizedBox(height: 18),
               Text(
                 _readString(course, 'title'),
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontSize: 18),
+                style: Theme.of(context)
+                    .textTheme
+                    .headlineSmall
+                    ?.copyWith(fontSize: 18),
               ),
               const SizedBox(height: 16),
               if (remainingContent.isNotEmpty) ...[
@@ -2102,20 +2300,21 @@ class _EmployeeCourseDetailScreenState extends State<EmployeeCourseDetailScreen>
                 onPressed: submitting
                     ? null
                     : hasExam
-                    ? () async {
-                        final changed = await Navigator.of(context).push<bool>(
-                          MaterialPageRoute(
-                            builder: (_) => EmployeeExamScreen(
-                              api: widget.api,
-                              assignmentId: widget.assignmentId,
-                            ),
-                          ),
-                        );
-                        if (changed == true) {
-                          _reload();
-                        }
-                      }
-                    : _completeCourse,
+                        ? () async {
+                            final changed =
+                                await Navigator.of(context).push<bool>(
+                              MaterialPageRoute(
+                                builder: (_) => EmployeeExamScreen(
+                                  api: widget.api,
+                                  assignmentId: widget.assignmentId,
+                                ),
+                              ),
+                            );
+                            if (changed == true) {
+                              _reload();
+                            }
+                          }
+                        : _completeCourse,
                 style: FilledButton.styleFrom(
                   backgroundColor: _brandTeal,
                 ),
@@ -2161,7 +2360,8 @@ class _CourseVideoScreenState extends State<CourseVideoScreen> {
 
   Future<void> _initialize() async {
     try {
-      final nextController = VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl));
+      final nextController =
+          VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl));
       await nextController.initialize();
       await nextController.setLooping(false);
       await nextController.play();
@@ -2199,7 +2399,8 @@ class _CourseVideoScreenState extends State<CourseVideoScreen> {
           : ListView(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
               children: [
-                _LessonProgressHeader(status: _tr(context, 'In progress'), progress: 0.26),
+                _LessonProgressHeader(
+                    status: _tr(context, 'In progress'), progress: 0.26),
                 const SizedBox(height: 18),
                 Text(
                   _tr(context, 'About the lesson'),
@@ -2218,9 +2419,12 @@ class _CourseVideoScreenState extends State<CourseVideoScreen> {
                   child: Column(
                     children: [
                       AspectRatio(
-                        aspectRatio: controller!.value.aspectRatio == 0 ? 16 / 9 : controller!.value.aspectRatio,
+                        aspectRatio: controller!.value.aspectRatio == 0
+                            ? 16 / 9
+                            : controller!.value.aspectRatio,
                         child: ClipRRect(
-                          borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
+                          borderRadius: const BorderRadius.vertical(
+                              top: Radius.circular(22)),
                           child: ColoredBox(
                             color: Colors.black,
                             child: VideoPlayer(controller!),
@@ -2243,7 +2447,9 @@ class _CourseVideoScreenState extends State<CourseVideoScreen> {
                                 });
                               },
                               icon: Icon(
-                                controller!.value.isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                                controller!.value.isPlaying
+                                    ? Icons.pause_rounded
+                                    : Icons.play_arrow_rounded,
                                 color: Colors.white,
                               ),
                             ),
@@ -2252,24 +2458,35 @@ class _CourseVideoScreenState extends State<CourseVideoScreen> {
                                 data: SliderTheme.of(context).copyWith(
                                   trackHeight: 4,
                                   activeTrackColor: Colors.white,
-                                  inactiveTrackColor: Colors.white.withValues(alpha: 0.35),
+                                  inactiveTrackColor:
+                                      Colors.white.withValues(alpha: 0.35),
                                   thumbColor: Colors.white,
                                   overlayShape: SliderComponentShape.noOverlay,
                                 ),
                                 child: Slider(
-                                  value: controller!.value.position.inMilliseconds.toDouble().clamp(
+                                  value: controller!
+                                      .value.position.inMilliseconds
+                                      .toDouble()
+                                      .clamp(
                                         0,
-                                        (controller!.value.duration.inMilliseconds == 0
+                                        (controller!.value.duration
+                                                        .inMilliseconds ==
+                                                    0
                                                 ? 1
-                                                : controller!.value.duration.inMilliseconds)
+                                                : controller!.value.duration
+                                                    .inMilliseconds)
                                             .toDouble(),
                                       ),
-                                  max: (controller!.value.duration.inMilliseconds == 0
+                                  max: (controller!.value.duration
+                                                  .inMilliseconds ==
+                                              0
                                           ? 1
-                                          : controller!.value.duration.inMilliseconds)
+                                          : controller!
+                                              .value.duration.inMilliseconds)
                                       .toDouble(),
                                   onChanged: (value) {
-                                    controller!.seekTo(Duration(milliseconds: value.round()));
+                                    controller!.seekTo(
+                                        Duration(milliseconds: value.round()));
                                   },
                                 ),
                               ),
@@ -2277,11 +2494,15 @@ class _CourseVideoScreenState extends State<CourseVideoScreen> {
                             IconButton(
                               onPressed: () async {
                                 final uri = Uri.parse(widget.videoUrl);
-                                if (!await launchUrl(uri, mode: LaunchMode.externalApplication) && mounted) {
-                                  _showSnack(context, 'Could not open this video externally.');
+                                if (!await launchUrl(uri,
+                                        mode: LaunchMode.externalApplication) &&
+                                    mounted) {
+                                  _showSnack(context,
+                                      'Could not open this video externally.');
                                 }
                               },
-                              icon: const Icon(Icons.fullscreen_rounded, color: Colors.white),
+                              icon: const Icon(Icons.fullscreen_rounded,
+                                  color: Colors.white),
                             ),
                           ],
                         ),
@@ -2292,7 +2513,10 @@ class _CourseVideoScreenState extends State<CourseVideoScreen> {
                 const SizedBox(height: 16),
                 Text(
                   widget.title,
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontSize: 18),
+                  style: Theme.of(context)
+                      .textTheme
+                      .headlineSmall
+                      ?.copyWith(fontSize: 18),
                 ),
                 const SizedBox(height: 24),
                 FilledButton(
@@ -2365,7 +2589,8 @@ class _CourseWebContentScreenState extends State<CourseWebContentScreen> {
           IconButton(
             onPressed: () async {
               final uri = Uri.parse(widget.url);
-              if (!await launchUrl(uri, mode: LaunchMode.externalApplication) && mounted) {
+              if (!await launchUrl(uri, mode: LaunchMode.externalApplication) &&
+                  mounted) {
                 _showSnack(context, 'Could not open this file externally.');
               }
             },
@@ -2412,9 +2637,12 @@ class _CourseWebContentScreenState extends State<CourseWebContentScreen> {
                               const SizedBox(height: 8),
                               Text(
                                 errorText!,
-                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  color: const Color(0xFF61706C),
-                                ),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium
+                                    ?.copyWith(
+                                      color: const Color(0xFF61706C),
+                                    ),
                                 textAlign: TextAlign.center,
                               ),
                               const SizedBox(height: 18),
@@ -2426,7 +2654,8 @@ class _CourseWebContentScreenState extends State<CourseWebContentScreen> {
                                       loading = true;
                                       errorText = null;
                                     });
-                                    controller.loadRequest(Uri.parse(widget.url));
+                                    controller
+                                        .loadRequest(Uri.parse(widget.url));
                                   },
                                   child: Text(_tr(context, 'Try again')),
                                 ),
@@ -2484,7 +2713,8 @@ class _EmployeeExamScreenState extends State<EmployeeExamScreen> {
   @override
   void initState() {
     super.initState();
-    future = widget.api.post('/employee/courses/${widget.assignmentId}/exam/start/', {});
+    future = widget.api
+        .post('/employee/courses/${widget.assignmentId}/exam/start/', {});
   }
 
   @override
@@ -2502,7 +2732,8 @@ class _EmployeeExamScreenState extends State<EmployeeExamScreen> {
   Future<void> _submit(Map<String, dynamic> exam) async {
     setState(() => submitting = true);
     try {
-      final result = await widget.api.post('/employee/courses/${widget.assignmentId}/exam/submit/', {
+      final result = await widget.api
+          .post('/employee/courses/${widget.assignmentId}/exam/submit/', {
         'attempt_token': _readString(exam, 'attempt_token'),
         'answers': answers,
       });
@@ -2539,7 +2770,8 @@ class _EmployeeExamScreenState extends State<EmployeeExamScreen> {
             children: [
               _HeroCard(
                 title: 'Course Exam',
-                subtitle: 'Pass score ${_readInt(exam, 'passing_score_percent')}%',
+                subtitle:
+                    'Pass score ${_readInt(exam, 'passing_score_percent')}%',
                 value: '${_readInt(exam, 'duration_minutes')} min',
               ),
               const SizedBox(height: 16),
@@ -2549,7 +2781,8 @@ class _EmployeeExamScreenState extends State<EmployeeExamScreen> {
                   child: _ExamQuestionCard(
                     question: _asMap(rawQuestion),
                     answers: answers,
-                    controller: _controllerForQuestion(_readInt(rawQuestion, 'id')),
+                    controller:
+                        _controllerForQuestion(_readInt(rawQuestion, 'id')),
                     onChanged: () => setState(() {}),
                   ),
                 ),
@@ -2610,11 +2843,13 @@ class _ExamQuestionCard extends StatelessWidget {
         if (questionType == 'MCQ_MULTI')
           for (final option in options)
             CheckboxListTile(
-              value: (answer is List ? answer : const []).contains(_readInt(option, 'id').toString()),
+              value: (answer is List ? answer : const [])
+                  .contains(_readInt(option, 'id').toString()),
               contentPadding: EdgeInsets.zero,
               title: Text(_readString(option, 'text')),
               onChanged: (checked) {
-                final values = List<String>.from(answer is List ? answer : const <String>[]);
+                final values = List<String>.from(
+                    answer is List ? answer : const <String>[]);
                 final optionId = _readInt(option, 'id').toString();
                 if (checked == true) {
                   if (!values.contains(optionId)) values.add(optionId);
@@ -2673,78 +2908,99 @@ class _EmployeeChecklistsPageState extends State<EmployeeChecklistsPage> {
       future: future,
       builder: (context, payload) {
         final checklists = _asList(payload['checklists']);
-        final completedToday = checklists.where((item) => _readBool(item, 'completed_today')).length;
+        final completedToday = checklists
+            .where((item) => _readBool(item, 'completed_today'))
+            .length;
         final pendingCount = checklists.length - completedToday;
-        return _PageBody(
-          children: [
-            _DashboardHeroCard(
-              title: _tr(context, 'Checklists'),
-              subtitle: completedToday == 0
-                  ? 'Stay on top of your operational routines'
-                  : '$completedToday ${_tr(context, 'Completed today')}',
-              value: pendingCount == 0
-                  ? 'All checklist work is up to date.'
-                  : '$pendingCount ${_tr(context, 'Pending checklists')}',
-              icon: Icons.checklist_rounded,
-            ),
-            const SizedBox(height: 16),
-            _DashboardMetricRow(
-              metrics: [
-                _DashboardMetricData(
-                  'Checklists',
-                  '${checklists.length}',
-                  icon: Icons.fact_check_outlined,
-                ),
-                _DashboardMetricData(
-                  'Completed today',
-                  '$completedToday',
-                  icon: Icons.task_alt_rounded,
-                ),
-                _DashboardMetricData(
-                  'Pending checklists',
-                  '$pendingCount',
-                  icon: Icons.pending_actions_rounded,
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            _HeaderRow(
-              title: 'Assigned checklists',
-              trailing: _RoundIconButton(
-                icon: Icons.refresh_rounded,
-                onTap: _reload,
+        return _PageSliverBody(
+          slivers: [
+            _PageSliverSection(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _DashboardHeroCard(
+                    title: _tr(context, 'Checklists'),
+                    subtitle: completedToday == 0
+                        ? 'Stay on top of your operational routines'
+                        : '$completedToday ${_tr(context, 'Completed today')}',
+                    value: pendingCount == 0
+                        ? 'All checklist work is up to date.'
+                        : '$pendingCount ${_tr(context, 'Pending checklists')}',
+                    icon: Icons.checklist_rounded,
+                  ),
+                  const SizedBox(height: 16),
+                  _DashboardMetricRow(
+                    metrics: [
+                      _DashboardMetricData(
+                        'Checklists',
+                        '${checklists.length}',
+                        icon: Icons.fact_check_outlined,
+                      ),
+                      _DashboardMetricData(
+                        'Completed today',
+                        '$completedToday',
+                        icon: Icons.task_alt_rounded,
+                      ),
+                      _DashboardMetricData(
+                        'Pending checklists',
+                        '$pendingCount',
+                        icon: Icons.pending_actions_rounded,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  _HeaderRow(
+                    title: 'Assigned checklists',
+                    trailing: _RoundIconButton(
+                      icon: Icons.refresh_rounded,
+                      onTap: _reload,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
               ),
             ),
-            const SizedBox(height: 16),
             if (checklists.isEmpty)
-              const _SectionCard(title: 'Checklists', child: Text('No checklists assigned.'))
-            else
-              for (final item in checklists) ...[
-                _NativeLessonTile(
-                  title: _readString(item, 'title'),
-                  subtitle: _readBool(item, 'completed_today')
-                      ? 'Completed today'
-                      : 'Pending checklist',
-                  accent: _readBool(item, 'completed_today')
-                      ? const Color(0xFFEAF7F4)
-                      : const Color(0xFFFFF1E7),
-                  trailingIcon: _readBool(item, 'completed_today')
-                      ? Icons.task_alt_rounded
-                      : Icons.checklist_rounded,
-                  onTap: () async {
-                    await Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => EmployeeChecklistDetailScreen(
-                          api: widget.api,
-                          checklistId: _readInt(item, 'id'),
-                        ),
-                      ),
-                    );
-                    _reload();
-                  },
+              const _PageSliverSection(
+                padding: EdgeInsets.fromLTRB(24, 0, 24, 120),
+                child: _SectionCard(
+                  title: 'Checklists',
+                  child: Text('No checklists assigned.'),
                 ),
-                const SizedBox(height: 16),
-              ],
+              )
+            else
+              _PageSliverList(
+                itemCount: checklists.length,
+                itemBuilder: (context, index) {
+                  final item = checklists[index];
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: _NativeLessonTile(
+                      title: _readString(item, 'title'),
+                      subtitle: _readBool(item, 'completed_today')
+                          ? 'Completed today'
+                          : 'Pending checklist',
+                      accent: _readBool(item, 'completed_today')
+                          ? const Color(0xFFEAF7F4)
+                          : const Color(0xFFFFF1E7),
+                      trailingIcon: _readBool(item, 'completed_today')
+                          ? Icons.task_alt_rounded
+                          : Icons.checklist_rounded,
+                      onTap: () async {
+                        await Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => EmployeeChecklistDetailScreen(
+                              api: widget.api,
+                              checklistId: _readInt(item, 'id'),
+                            ),
+                          ),
+                        );
+                        _reload();
+                      },
+                    ),
+                  );
+                },
+              ),
           ],
         );
       },
@@ -2763,10 +3019,12 @@ class EmployeeChecklistDetailScreen extends StatefulWidget {
   final int checklistId;
 
   @override
-  State<EmployeeChecklistDetailScreen> createState() => _EmployeeChecklistDetailScreenState();
+  State<EmployeeChecklistDetailScreen> createState() =>
+      _EmployeeChecklistDetailScreenState();
 }
 
-class _EmployeeChecklistDetailScreenState extends State<EmployeeChecklistDetailScreen> {
+class _EmployeeChecklistDetailScreenState
+    extends State<EmployeeChecklistDetailScreen> {
   late Future<Map<String, dynamic>> future;
   bool submitting = false;
 
@@ -2779,7 +3037,8 @@ class _EmployeeChecklistDetailScreenState extends State<EmployeeChecklistDetailS
   Future<void> _completeChecklist(List<dynamic> items) async {
     setState(() => submitting = true);
     try {
-      await widget.api.post('/employee/checklists/${widget.checklistId}/complete/', {
+      await widget.api
+          .post('/employee/checklists/${widget.checklistId}/complete/', {
         'item_ids': [for (final item in items) _readInt(item, 'id')],
         'notes': '',
       });
@@ -2813,7 +3072,8 @@ class _EmployeeChecklistDetailScreenState extends State<EmployeeChecklistDetailS
           return _PageBody(
             children: [
               _DashboardHeroCard(
-                title: frequency.isEmpty ? _tr(context, 'Checklist') : frequency,
+                title:
+                    frequency.isEmpty ? _tr(context, 'Checklist') : frequency,
                 subtitle: _readString(checklist, 'title'),
                 value: completed
                     ? _tr(context, 'Completed today')
@@ -2826,11 +3086,10 @@ class _EmployeeChecklistDetailScreenState extends State<EmployeeChecklistDetailS
                 runSpacing: 8,
                 children: [
                   _StatusChip(
-                    label: completed
-                        ? 'Completed today'
-                        : 'Pending checklist',
+                    label: completed ? 'Completed today' : 'Pending checklist',
                   ),
-                  _StatusChip(label: '${items.length} ${_tr(context, 'Items')}'),
+                  _StatusChip(
+                      label: '${items.length} ${_tr(context, 'Items')}'),
                   if (frequency.isNotEmpty) _StatusChip(label: frequency),
                 ],
               ),
@@ -2859,8 +3118,14 @@ class _EmployeeChecklistDetailScreenState extends State<EmployeeChecklistDetailS
               ),
               const SizedBox(height: 16),
               FilledButton(
-                onPressed: completed || submitting ? null : () => _completeChecklist(items),
-                child: Text(completed ? 'Already Completed' : submitting ? 'Submitting...' : 'Complete Checklist'),
+                onPressed: completed || submitting
+                    ? null
+                    : () => _completeChecklist(items),
+                child: Text(completed
+                    ? 'Already Completed'
+                    : submitting
+                        ? 'Submitting...'
+                        : 'Complete Checklist'),
               ),
             ],
           );
@@ -2870,7 +3135,6 @@ class _EmployeeChecklistDetailScreenState extends State<EmployeeChecklistDetailS
   }
 }
 
-
 class ApiFutureBuilder extends StatelessWidget {
   const ApiFutureBuilder({
     super.key,
@@ -2879,7 +3143,8 @@ class ApiFutureBuilder extends StatelessWidget {
   });
 
   final Future<Map<String, dynamic>> future;
-  final Widget Function(BuildContext context, Map<String, dynamic> payload) builder;
+  final Widget Function(BuildContext context, Map<String, dynamic> payload)
+      builder;
 
   @override
   Widget build(BuildContext context) {
@@ -2937,6 +3202,86 @@ class _PageBody extends StatelessWidget {
   }
 }
 
+class _PageSliverBody extends StatelessWidget {
+  const _PageSliverBody({required this.slivers});
+
+  final List<Widget> slivers;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFFF7FBF9), Color(0xFFF2F7F5)],
+        ),
+      ),
+      child: SafeArea(
+        top: false,
+        child: CustomScrollView(
+          cacheExtent: 900,
+          slivers: slivers,
+        ),
+      ),
+    );
+  }
+}
+
+class _PageSliverSection extends StatelessWidget {
+  const _PageSliverSection({
+    required this.child,
+    this.padding = const EdgeInsets.fromLTRB(24, 16, 24, 0),
+  });
+
+  final Widget child;
+  final EdgeInsetsGeometry padding;
+
+  @override
+  Widget build(BuildContext context) {
+    return SliverPadding(
+      padding: padding,
+      sliver: SliverToBoxAdapter(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 720),
+            child: child,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PageSliverList extends StatelessWidget {
+  const _PageSliverList({
+    required this.itemCount,
+    required this.itemBuilder,
+    this.padding = const EdgeInsets.fromLTRB(24, 0, 24, 120),
+  });
+
+  final int itemCount;
+  final IndexedWidgetBuilder itemBuilder;
+  final EdgeInsetsGeometry padding;
+
+  @override
+  Widget build(BuildContext context) {
+    return SliverPadding(
+      padding: padding,
+      sliver: SliverList(
+        delegate: SliverChildBuilderDelegate((context, index) {
+          return Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 720),
+              child: itemBuilder(context, index),
+            ),
+          );
+        }, childCount: itemCount),
+      ),
+    );
+  }
+}
+
 class _DashboardHeroCard extends StatelessWidget {
   const _DashboardHeroCard({
     required this.title,
@@ -2989,23 +3334,23 @@ class _DashboardHeroCard extends StatelessWidget {
                 Text(
                   title,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: Colors.white.withValues(alpha: 0.86),
-                  ),
+                        color: Colors.white.withValues(alpha: 0.86),
+                      ),
                 ),
                 const SizedBox(height: 6),
                 Text(
                   subtitle,
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    color: Colors.white,
-                    height: 1.1,
-                  ),
+                        color: Colors.white,
+                        height: 1.1,
+                      ),
                 ),
                 const SizedBox(height: 10),
                 Text(
                   value,
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: Colors.white.withValues(alpha: 0.82),
-                  ),
+                        color: Colors.white.withValues(alpha: 0.82),
+                      ),
                 ),
               ],
             ),
@@ -3106,8 +3451,8 @@ class _OptimizedCourseCardImage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final trimmedImageUrl = imageUrl.trim();
-    final hasImage =
-        trimmedImageUrl.isNotEmpty && (Uri.tryParse(trimmedImageUrl)?.hasScheme ?? false);
+    final hasImage = trimmedImageUrl.isNotEmpty &&
+        (Uri.tryParse(trimmedImageUrl)?.hasScheme ?? false);
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(borderRadius),
@@ -3118,17 +3463,20 @@ class _OptimizedCourseCardImage extends StatelessWidget {
             : LayoutBuilder(
                 builder: (context, constraints) {
                   final dpr = MediaQuery.devicePixelRatioOf(context);
-                  final width = constraints.hasBoundedWidth && constraints.maxWidth.isFinite
+                  final width = constraints.hasBoundedWidth &&
+                          constraints.maxWidth.isFinite
                       ? constraints.maxWidth
                       : MediaQuery.sizeOf(context).width;
-                  final targetWidth = (width * dpr).clamp(320.0, 1280.0).round();
+                  final targetWidth =
+                      (width * dpr).clamp(320.0, 1280.0).round();
 
                   return Image.network(
                     trimmedImageUrl,
                     fit: BoxFit.cover,
                     cacheWidth: targetWidth,
                     filterQuality: FilterQuality.low,
-                    frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
+                    frameBuilder:
+                        (context, child, frame, wasSynchronouslyLoaded) {
                       if (wasSynchronouslyLoaded || frame != null) {
                         return child;
                       }
@@ -3217,9 +3565,9 @@ class _NativeCoursePromoCard extends StatelessWidget {
                   Text(
                     _tr(context, meta),
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: _muted,
-                      fontWeight: FontWeight.w600,
-                    ),
+                          color: _muted,
+                          fontWeight: FontWeight.w600,
+                        ),
                   ),
                 ],
               ),
@@ -3227,9 +3575,9 @@ class _NativeCoursePromoCard extends StatelessWidget {
               Text(
                 _tr(context, title),
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontSize: 22,
-                  height: 1.12,
-                ),
+                      fontSize: 22,
+                      height: 1.12,
+                    ),
               ),
               if (supporting.trim().isNotEmpty) ...[
                 const SizedBox(height: 10),
@@ -3362,18 +3710,23 @@ class _HeroCard extends StatelessWidget {
             ),
             child: Text(
               _tr(context, title),
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+              style: const TextStyle(
+                  color: Colors.white, fontWeight: FontWeight.w700),
             ),
           ),
           const SizedBox(height: 16),
           Text(
             _tr(context, subtitle),
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: Colors.white, height: 1.15),
+            style: Theme.of(context)
+                .textTheme
+                .headlineSmall
+                ?.copyWith(color: Colors.white, height: 1.15),
           ),
           const SizedBox(height: 8),
           Text(
             value,
-            style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w500),
+            style: const TextStyle(
+                color: Colors.white70, fontWeight: FontWeight.w500),
           ),
         ],
       ),
@@ -3401,8 +3754,8 @@ class _SectionCard extends StatelessWidget {
             Text(
               _tr(context, title),
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: _ink,
-              ),
+                    color: _ink,
+                  ),
             ),
             const SizedBox(height: 12),
             child,
@@ -3430,9 +3783,9 @@ class _HeaderRow extends StatelessWidget {
           child: Text(
             _tr(context, title),
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              color: _ink,
-              fontSize: 20,
-            ),
+                  color: _ink,
+                  fontSize: 20,
+                ),
           ),
         ),
         if (trailing != null) trailing!,
@@ -3464,6 +3817,62 @@ Widget _sectionLink(String label, {VoidCallback? onTap}) {
   );
 }
 
+ButtonStyle _compactHeaderActionStyle() {
+  return FilledButton.styleFrom(
+    minimumSize: const Size(0, 44),
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+  );
+}
+
+class _HeaderActionButton extends StatelessWidget {
+  const _HeaderActionButton({
+    required this.label,
+    this.icon,
+    this.onPressed,
+  });
+
+  final String label;
+  final IconData? icon;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    if (icon != null) {
+      return FilledButton.icon(
+        style: _compactHeaderActionStyle(),
+        onPressed: onPressed,
+        icon: Icon(icon),
+        label: Text(_tr(context, label)),
+      );
+    }
+    return FilledButton(
+      style: _compactHeaderActionStyle(),
+      onPressed: onPressed,
+      child: Text(_tr(context, label)),
+    );
+  }
+}
+
+class _HeaderTonalButton extends StatelessWidget {
+  const _HeaderTonalButton({
+    required this.label,
+    this.onPressed,
+  });
+
+  final String label;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return FilledButton.tonal(
+      style: _compactHeaderActionStyle(),
+      onPressed: onPressed,
+      child: Text(_tr(context, label)),
+    );
+  }
+}
+
 class _AvatarBadge extends StatelessWidget {
   const _AvatarBadge({required this.label});
 
@@ -3487,7 +3896,8 @@ class _AvatarBadge extends StatelessWidget {
       child: Center(
         child: Text(
           initials.isEmpty ? 'SB' : initials,
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800),
+          style:
+              const TextStyle(color: Colors.white, fontWeight: FontWeight.w800),
         ),
       ),
     );
@@ -3552,7 +3962,8 @@ class _LessonMediaCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(22)),
               child: Container(
                 height: 228,
                 color: const Color(0xFFE7F3F0),
@@ -3564,14 +3975,18 @@ class _LessonMediaCard extends StatelessWidget {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(Icons.ondemand_video_rounded, size: 72, color: Color(0xFF5E6A7D)),
+                            const Icon(Icons.ondemand_video_rounded,
+                                size: 72, color: Color(0xFF5E6A7D)),
                             const SizedBox(height: 12),
                             Text(
                               title,
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                               textAlign: TextAlign.center,
-                              style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 18),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleLarge
+                                  ?.copyWith(fontSize: 18),
                             ),
                             if (subtitle.isNotEmpty) ...[
                               const SizedBox(height: 6),
@@ -3580,7 +3995,10 @@ class _LessonMediaCard extends StatelessWidget {
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                                 textAlign: TextAlign.center,
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(color: _muted),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(color: _muted),
                               ),
                             ],
                           ],
@@ -3593,7 +4011,8 @@ class _LessonMediaCard extends StatelessWidget {
                       child: Container(
                         width: 48,
                         height: 48,
-                        decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                        decoration: const BoxDecoration(
+                            color: Colors.white, shape: BoxShape.circle),
                         child: const Icon(Icons.bookmark_border_rounded),
                       ),
                     ),
@@ -3638,154 +4057,127 @@ class _LessonMediaCard extends StatelessWidget {
   }
 }
 
-class _LibraryCourseCard extends StatelessWidget {
-  const _LibraryCourseCard({
+class _CompactCourseListCard extends StatelessWidget {
+  const _CompactCourseListCard({
     required this.imageUrl,
     required this.title,
     required this.description,
-    required this.label,
-    required this.minutesLabel,
-    required this.contentCountLabel,
-    required this.ctaLabel,
+    required this.metadata,
     required this.onTap,
-    this.footnote,
+    this.eyebrow = '',
   });
 
   final String imageUrl;
   final String title;
   final String description;
-  final String label;
-  final String minutesLabel;
-  final String contentCountLabel;
-  final String ctaLabel;
+  final List<String> metadata;
   final VoidCallback onTap;
-  final String? footnote;
+  final String eyebrow;
 
   @override
   Widget build(BuildContext context) {
-    final safeTitle = title.trim().isEmpty ? 'Course' : title;
+    final safeTitle =
+        title.trim().isEmpty ? _tr(context, 'Course') : title.trim();
     final safeDescription = description.trim().isEmpty
-        ? 'Practical course content with clear guidance and structured steps.'
+        ? _tr(
+            context,
+            'Practical course content with clear guidance and structured steps.',
+          )
         : description.trim();
-    final safeLabel = label.trim().isEmpty ? 'Course' : label.trim();
-    final safeFootnote = (footnote ?? '').trim();
+    final safeEyebrow = eyebrow.trim();
 
-    return Container(
-      decoration: BoxDecoration(
-        color: _surface,
-        borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: const Color(0xFFDCE4EF)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x120F172A),
-            blurRadius: 24,
-            offset: Offset(0, 12),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _OptimizedCourseCardImage(
-              imageUrl: imageUrl,
-              title: safeTitle,
-              aspectRatio: 1.85,
-              borderRadius: 24,
-            ),
-            const SizedBox(height: 20),
-            Text(
-              _tr(context, safeTitle),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    color: _brandTealDark,
-                    fontSize: 24,
-                    fontWeight: FontWeight.w800,
-                  ),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              _tr(context, safeDescription),
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: const Color(0xFF7B879B),
-                    height: 1.5,
-                  ),
-            ),
-            const SizedBox(height: 18),
-            Wrap(
-              alignment: WrapAlignment.center,
-              spacing: 16,
-              runSpacing: 12,
-              children: [
-                _LibraryMetaItem(icon: Icons.grid_view_rounded, label: _tr(context, contentCountLabel)),
-                _LibraryMetaItem(icon: Icons.schedule_outlined, label: _tr(context, minutesLabel)),
-                _LibraryMetaItem(icon: Icons.blur_circular_rounded, label: _tr(context, safeLabel)),
-              ],
-            ),
-            if (safeFootnote.isNotEmpty) ...[
-              const SizedBox(height: 10),
-              Wrap(
-                alignment: WrapAlignment.center,
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  if (safeFootnote.isNotEmpty)
-                    _LibraryMetaItem(icon: Icons.loyalty_outlined, label: _tr(context, safeFootnote)),
-                ],
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(26),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(26),
+        onTap: onTap,
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(26),
+            border: Border.all(color: _line),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x100F172A),
+                blurRadius: 20,
+                offset: Offset(0, 10),
               ),
             ],
-            const SizedBox(height: 22),
-            FilledButton(
-              style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFFE7FBF2),
-                foregroundColor: _brandTealDark,
-                minimumSize: const Size.fromHeight(64),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(999),
-                  side: const BorderSide(color: Color(0xFF7AF0C0), width: 1.4),
+          ),
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: 102,
+                child: _OptimizedCourseCardImage(
+                  imageUrl: imageUrl,
+                  title: safeTitle,
+                  aspectRatio: 1.04,
+                  borderRadius: 18,
                 ),
-                textStyle: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
               ),
-              onPressed: onTap,
-              child: Text(ctaLabel),
-            ),
-          ],
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (safeEyebrow.isNotEmpty) ...[
+                      Text(
+                        _tr(context, safeEyebrow),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: _muted,
+                              fontWeight: FontWeight.w700,
+                            ),
+                      ),
+                      const SizedBox(height: 8),
+                    ],
+                    Text(
+                      _tr(context, safeTitle),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            height: 1.2,
+                          ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      _tr(context, safeDescription),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: const Color(0xFF7B879B),
+                            height: 1.45,
+                          ),
+                    ),
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        for (final item in metadata)
+                          if (item.trim().isNotEmpty)
+                            _StatusChip(label: _tr(context, item)),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 10),
+              const Padding(
+                padding: EdgeInsets.only(top: 6),
+                child: Icon(
+                  Icons.chevron_right_rounded,
+                  color: Color(0xFF9AA6B2),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
-    );
-  }
-}
-
-class _LibraryMetaItem extends StatelessWidget {
-  const _LibraryMetaItem({
-    required this.icon,
-    required this.label,
-  });
-
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 18, color: const Color(0xFF95A1B2)),
-        const SizedBox(width: 6),
-        Text(
-          label,
-          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: const Color(0xFF7B879B),
-                fontWeight: FontWeight.w600,
-              ),
-        ),
-      ],
     );
   }
 }
@@ -3963,13 +4355,15 @@ class _ChatMessageRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 if (!own) ...[
-                  Text(name, style: const TextStyle(fontWeight: FontWeight.w700)),
+                  Text(name,
+                      style: const TextStyle(fontWeight: FontWeight.w700)),
                   const SizedBox(height: 6),
                 ],
                 Text(body),
                 if (meta.isNotEmpty) ...[
                   const SizedBox(height: 6),
-                  Text(meta, style: const TextStyle(color: _muted, fontSize: 12)),
+                  Text(meta,
+                      style: const TextStyle(color: _muted, fontSize: 12)),
                 ],
               ],
             ),
@@ -4043,8 +4437,8 @@ class _ChatModeChip extends StatelessWidget {
             child: Text(
               label,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: selected ? _ink : const Color(0xFF61706C),
-              ),
+                    color: selected ? _ink : const Color(0xFF61706C),
+                  ),
             ),
           ),
         ),
@@ -4073,9 +4467,9 @@ class _RecordDetailLine extends StatelessWidget {
           child: Text(
             label,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: const Color(0xFF61706C),
-              height: 1.45,
-            ),
+                  color: const Color(0xFF61706C),
+                  height: 1.45,
+                ),
           ),
         ),
       ],
@@ -4137,8 +4531,8 @@ class _ChecklistItemTile extends StatelessWidget {
             child: Text(
               _tr(context, title),
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                height: 1.35,
-              ),
+                    height: 1.35,
+                  ),
             ),
           ),
         ],
@@ -4217,8 +4611,8 @@ class _ManagementRecordCard extends StatelessWidget {
                       Text(
                         _tr(context, description),
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          height: 1.5,
-                        ),
+                              height: 1.5,
+                            ),
                       ),
                     ],
                   ),
@@ -4349,12 +4743,18 @@ class _NotificationSummaryChip extends StatelessWidget {
         children: [
           Text(
             value,
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontSize: 20, color: _brandTealDark),
+            style: Theme.of(context)
+                .textTheme
+                .headlineSmall
+                ?.copyWith(fontSize: 20, color: _brandTealDark),
           ),
           const SizedBox(height: 4),
           Text(
             _tr(context, label),
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: _brandTealDark),
+            style: Theme.of(context)
+                .textTheme
+                .bodyMedium
+                ?.copyWith(color: _brandTealDark),
           ),
         ],
       ),
@@ -4405,7 +4805,8 @@ class _CourseContentTile extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(_tr(context, title), style: const TextStyle(fontWeight: FontWeight.w700)),
+                    Text(_tr(context, title),
+                        style: const TextStyle(fontWeight: FontWeight.w700)),
                     const SizedBox(height: 4),
                     Text(
                       _tr(context, subtitle),
@@ -4504,7 +4905,8 @@ class _ErrorState extends StatelessWidget {
                       color: const Color(0xFFFFECE8),
                       borderRadius: BorderRadius.circular(18),
                     ),
-                    child: const Icon(Icons.wifi_off_rounded, color: Color(0xFFC54C2B)),
+                    child: const Icon(Icons.wifi_off_rounded,
+                        color: Color(0xFFC54C2B)),
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -4516,8 +4918,8 @@ class _ErrorState extends StatelessWidget {
                   Text(
                     _tr(context, message),
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: const Color(0xFF61706C),
-                    ),
+                          color: const Color(0xFF61706C),
+                        ),
                     textAlign: TextAlign.center,
                   ),
                 ],

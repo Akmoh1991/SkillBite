@@ -111,7 +111,7 @@ ThemeData buildAppTheme() {
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
         foregroundColor: AppColors.ink,
-        minimumSize: const Size.fromHeight(54),
+        minimumSize: const Size(0, 54),
         side: const BorderSide(color: AppColors.lineStrong),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
@@ -144,7 +144,7 @@ ThemeData buildAppTheme() {
         backgroundColor: AppColors.brandPrimary,
         foregroundColor: Colors.white,
         elevation: 0,
-        minimumSize: const Size.fromHeight(56),
+        minimumSize: const Size(0, 56),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
         textStyle: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
       ),

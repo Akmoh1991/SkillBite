@@ -20,6 +20,14 @@ class OwnerDashboardPage extends StatelessWidget {
     );
   }
 
+  Future<void> _openEmployeesPage(BuildContext context) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => OwnerEmployeesPage(api: api),
+      ),
+    );
+  }
+
   Future<void> _openCourse(
     BuildContext context,
     Map<String, dynamic> course,
@@ -46,7 +54,8 @@ class OwnerDashboardPage extends StatelessWidget {
         _DashboardHeroCard(
           title: _tr(context, 'Workspace overview'),
           subtitle: user.businessName,
-          value: '${dashboard['employee_total'] ?? 0} ${_tr(context, 'Employees')}',
+          value:
+              '${dashboard['employee_total'] ?? 0} ${_tr(context, 'Employees')}',
           icon: Icons.apartment_rounded,
         ),
         const SizedBox(height: 18),
@@ -70,10 +79,17 @@ class OwnerDashboardPage extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 20),
-        _HeaderRow(title: 'Your people', trailing: _sectionLink('View all')),
+        _HeaderRow(
+          title: 'Your people',
+          trailing: _sectionLink(
+            'View all',
+            onTap: () => _openEmployeesPage(context),
+          ),
+        ),
         const SizedBox(height: 14),
         if (employees.isEmpty)
-          const _SectionCard(title: 'Employees', child: Text('No employees yet.'))
+          const _SectionCard(
+              title: 'Employees', child: Text('No employees yet.'))
         else
           for (final item in employees.take(3)) ...[
             _NativeLessonTile(
@@ -96,11 +112,14 @@ class OwnerDashboardPage extends StatelessWidget {
         ),
         const SizedBox(height: 14),
         if (courses.isEmpty)
-          const _SectionCard(title: 'Courses', child: Text('No assignable courses.'))
+          const _SectionCard(
+              title: 'Courses', child: Text('No assignable courses.'))
         else
           for (final item in courses.take(3)) ...[
             _NativeCoursePromoCard(
-              eyebrow: _readString(item, 'business_name').isEmpty ? 'Shared' : 'Workspace',
+              eyebrow: _readString(item, 'business_name').isEmpty
+                  ? 'Shared'
+                  : 'Workspace',
               title: _readString(item, 'title'),
               meta: _readString(item, 'business_name').isEmpty
                   ? user.businessName
@@ -161,8 +180,10 @@ class _OwnerEmployeesPageState extends State<OwnerEmployeesPage> {
           context: context,
           builder: (context) => Dialog(
             backgroundColor: const Color(0xFFFFF6F2),
-            insetPadding: const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
+            insetPadding:
+                const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
             child: Padding(
               padding: const EdgeInsets.all(22),
               child: Column(
@@ -176,22 +197,23 @@ class _OwnerEmployeesPageState extends State<OwnerEmployeesPage> {
                       color: const Color(0xFFFFE6DE),
                       borderRadius: BorderRadius.circular(18),
                     ),
-                    child: const Icon(Icons.person_off_rounded, color: Color(0xFFC54C2B)),
+                    child: const Icon(Icons.person_off_rounded,
+                        color: Color(0xFFC54C2B)),
                   ),
                   const SizedBox(height: 16),
                   Text(
                     _tr(context, 'Deactivate Employee'),
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
+                          fontWeight: FontWeight.w800,
+                        ),
                   ),
                   const SizedBox(height: 10),
                   Text(
                     'Disable ${_readString(employee, 'display_name')}?',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: const Color(0xFF61706C),
-                      height: 1.45,
-                    ),
+                          color: const Color(0xFF61706C),
+                          height: 1.45,
+                        ),
                   ),
                   const SizedBox(height: 18),
                   Align(
@@ -220,7 +242,9 @@ class _OwnerEmployeesPageState extends State<OwnerEmployeesPage> {
         false;
     if (!confirmed) return;
     try {
-      await widget.api.post('/business-owner/employees/${_readInt(employee, 'id')}/deactivate/', {});
+      await widget.api.post(
+          '/business-owner/employees/${_readInt(employee, 'id')}/deactivate/',
+          {});
       if (!mounted) return;
       _showSnack(context, 'Employee deactivated.');
       _reload();
@@ -268,8 +292,10 @@ class _OwnerEmployeesPageState extends State<OwnerEmployeesPage> {
 
             return Dialog(
               backgroundColor: const Color(0xFFF3FBF8),
-              insetPadding: const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
+              insetPadding:
+                  const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(32)),
               child: AnimatedPadding(
                 duration: const Duration(milliseconds: 180),
                 curve: Curves.easeOut,
@@ -286,9 +312,12 @@ class _OwnerEmployeesPageState extends State<OwnerEmployeesPage> {
                     children: [
                       Text(
                         _tr(context, 'Create Employee'),
-                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
+                        style: Theme.of(context)
+                            .textTheme
+                            .headlineMedium
+                            ?.copyWith(
+                              fontWeight: FontWeight.w800,
+                            ),
                       ),
                       const SizedBox(height: 10),
                       Text(
@@ -297,34 +326,39 @@ class _OwnerEmployeesPageState extends State<OwnerEmployeesPage> {
                           'Set up a new teammate with the right role details so they can start learning immediately.',
                         ),
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: const Color(0xFF61706C),
-                          height: 1.45,
-                        ),
+                              color: const Color(0xFF61706C),
+                              height: 1.45,
+                            ),
                       ),
                       const SizedBox(height: 22),
                       TextField(
                         controller: usernameController,
-                        decoration: InputDecoration(labelText: _tr(context, 'Username')),
+                        decoration: InputDecoration(
+                            labelText: _tr(context, 'Username')),
                       ),
                       const SizedBox(height: 14),
                       TextField(
                         controller: fullNameController,
-                        decoration: InputDecoration(labelText: _tr(context, 'Full name')),
+                        decoration: InputDecoration(
+                            labelText: _tr(context, 'Full name')),
                       ),
                       const SizedBox(height: 14),
                       TextField(
                         controller: emailController,
-                        decoration: InputDecoration(labelText: _tr(context, 'Email')),
+                        decoration:
+                            InputDecoration(labelText: _tr(context, 'Email')),
                       ),
                       const SizedBox(height: 14),
                       TextField(
                         controller: passwordController,
-                        decoration: InputDecoration(labelText: _tr(context, 'Password')),
+                        decoration: InputDecoration(
+                            labelText: _tr(context, 'Password')),
                       ),
                       const SizedBox(height: 14),
                       TextField(
                         controller: jobTitleController,
-                        decoration: InputDecoration(labelText: _tr(context, 'Job title')),
+                        decoration: InputDecoration(
+                            labelText: _tr(context, 'Job title')),
                       ),
                       if (errorText != null) ...[
                         const SizedBox(height: 12),
@@ -340,7 +374,9 @@ class _OwnerEmployeesPageState extends State<OwnerEmployeesPage> {
                       Align(
                         alignment: Alignment.centerRight,
                         child: TextButton(
-                          onPressed: saving ? null : () => Navigator.of(context).pop(false),
+                          onPressed: saving
+                              ? null
+                              : () => Navigator.of(context).pop(false),
                           child: Text(_tr(context, 'Cancel')),
                         ),
                       ),
@@ -378,99 +414,119 @@ class _OwnerEmployeesPageState extends State<OwnerEmployeesPage> {
       future: future,
       builder: (context, payload) {
         final employees = _asList(payload['employees']);
-        final activeEmployees = employees.where((item) => _readBool(item, 'is_active')).length;
+        final activeEmployees =
+            employees.where((item) => _readBool(item, 'is_active')).length;
         final titledEmployees = employees
             .where((item) => _readString(item, 'job_title').trim().isNotEmpty)
             .length;
         final untitledEmployees = employees.length - titledEmployees;
-        return _PageBody(
-          children: [
-            _DashboardHeroCard(
-              title: 'Team directory',
-              subtitle: 'Employees',
-              value: '${employees.length} people across your business workspace',
-              icon: Icons.groups_rounded,
-            ),
-            const SizedBox(height: 16),
-            _DashboardMetricRow(
-              metrics: [
-                _DashboardMetricData(
-                  'Active',
-                  '$activeEmployees',
-                  icon: Icons.verified_user_rounded,
-                ),
-                _DashboardMetricData(
-                  'With role',
-                  '$titledEmployees',
-                  icon: Icons.badge_rounded,
-                ),
-                _DashboardMetricData(
-                  'Needs title',
-                  '$untitledEmployees',
-                  icon: Icons.assignment_ind_rounded,
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            _HeaderRow(
-              title: 'Employees',
-              trailing: FilledButton.icon(
-                onPressed: _showCreateEmployeeDialog,
-                icon: const Icon(Icons.add),
-                label: Text(_tr(context, 'Add')),
-              ),
-            ),
-            const SizedBox(height: 16),
-            if (employees.isEmpty)
-              _ManagementRecordCard(
-                title: 'Build your team',
-                description:
-                    'Create the first employee account to unlock training assignments, checklists, and reporting.',
-                icon: Icons.person_add_alt_1_rounded,
-                secondaryActionLabel: _tr(context, 'Create'),
-                onSecondaryAction: _showCreateEmployeeDialog,
-              )
-            else
-              for (final item in employees) ...[
-                _ManagementRecordCard(
-                  title: _readString(item, 'display_name'),
-                  description: _readString(item, 'job_title').trim().isEmpty
-                      ? 'Role title not assigned yet.'
-                      : _readString(item, 'job_title'),
-                  icon: _readBool(item, 'is_active')
-                      ? Icons.person_rounded
-                      : Icons.person_off_rounded,
-                  metadata: [
-                    _readBool(item, 'is_active') ? 'Active' : 'Paused',
-                    _readString(item, 'username'),
-                  ],
-                  detail: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (_readString(item, 'email').trim().isNotEmpty)
-                        _RecordDetailLine(
-                          icon: Icons.alternate_email_rounded,
-                          label: _readString(item, 'email'),
-                        ),
-                      if (_readString(item, 'job_title').trim().isNotEmpty) ...[
-                        if (_readString(item, 'email').trim().isNotEmpty)
-                          const SizedBox(height: 10),
-                        _RecordDetailLine(
-                          icon: Icons.work_outline_rounded,
-                          label: _readString(item, 'job_title'),
-                        ),
-                      ],
+        return _PageSliverBody(
+          slivers: [
+            _PageSliverSection(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _DashboardHeroCard(
+                    title: 'Team directory',
+                    subtitle: 'Employees',
+                    value:
+                        '${employees.length} people across your business workspace',
+                    icon: Icons.groups_rounded,
+                  ),
+                  const SizedBox(height: 16),
+                  _DashboardMetricRow(
+                    metrics: [
+                      _DashboardMetricData(
+                        'Active',
+                        '$activeEmployees',
+                        icon: Icons.verified_user_rounded,
+                      ),
+                      _DashboardMetricData(
+                        'With role',
+                        '$titledEmployees',
+                        icon: Icons.badge_rounded,
+                      ),
+                      _DashboardMetricData(
+                        'Needs title',
+                        '$untitledEmployees',
+                        icon: Icons.assignment_ind_rounded,
+                      ),
                     ],
                   ),
-                  primaryActionLabel: _readBool(item, 'is_active')
-                      ? _tr(context, 'Deactivate')
-                      : null,
-                  onPrimaryAction: _readBool(item, 'is_active')
-                      ? () => _deactivateEmployee(_asMap(item))
-                      : null,
+                  const SizedBox(height: 20),
+                  _HeaderRow(
+                    title: 'Employees',
+                    trailing: _HeaderActionButton(
+                      label: 'Add',
+                      icon: Icons.add,
+                      onPressed: _showCreateEmployeeDialog,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+              ),
+            ),
+            if (employees.isEmpty)
+              _PageSliverSection(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 120),
+                child: _ManagementRecordCard(
+                  title: 'Build your team',
+                  description:
+                      'Create the first employee account to unlock training assignments, checklists, and reporting.',
+                  icon: Icons.person_add_alt_1_rounded,
+                  secondaryActionLabel: _tr(context, 'Create'),
+                  onSecondaryAction: _showCreateEmployeeDialog,
                 ),
-                const SizedBox(height: 16),
-              ],
+              )
+            else
+              _PageSliverList(
+                itemCount: employees.length,
+                itemBuilder: (context, index) {
+                  final item = employees[index];
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: _ManagementRecordCard(
+                      title: _readString(item, 'display_name'),
+                      description: _readString(item, 'job_title').trim().isEmpty
+                          ? 'Role title not assigned yet.'
+                          : _readString(item, 'job_title'),
+                      icon: _readBool(item, 'is_active')
+                          ? Icons.person_rounded
+                          : Icons.person_off_rounded,
+                      metadata: [
+                        _readBool(item, 'is_active') ? 'Active' : 'Paused',
+                        _readString(item, 'username'),
+                      ],
+                      detail: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (_readString(item, 'email').trim().isNotEmpty)
+                            _RecordDetailLine(
+                              icon: Icons.alternate_email_rounded,
+                              label: _readString(item, 'email'),
+                            ),
+                          if (_readString(item, 'job_title')
+                              .trim()
+                              .isNotEmpty) ...[
+                            if (_readString(item, 'email').trim().isNotEmpty)
+                              const SizedBox(height: 10),
+                            _RecordDetailLine(
+                              icon: Icons.work_outline_rounded,
+                              label: _readString(item, 'job_title'),
+                            ),
+                          ],
+                        ],
+                      ),
+                      primaryActionLabel: _readBool(item, 'is_active')
+                          ? _tr(context, 'Deactivate')
+                          : null,
+                      onPrimaryAction: _readBool(item, 'is_active')
+                          ? () => _deactivateEmployee(_asMap(item))
+                          : null,
+                    ),
+                  );
+                },
+              ),
           ],
         );
       },
@@ -532,8 +588,10 @@ class _OwnerJobTitlesPageState extends State<OwnerJobTitlesPage> {
 
             return Dialog(
               backgroundColor: const Color(0xFFF3FBF8),
-              insetPadding: const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
+              insetPadding:
+                  const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(32)),
               child: AnimatedPadding(
                 duration: const Duration(milliseconds: 180),
                 curve: Curves.easeOut,
@@ -550,9 +608,12 @@ class _OwnerJobTitlesPageState extends State<OwnerJobTitlesPage> {
                     children: [
                       Text(
                         _tr(context, 'Create Job Title'),
-                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
+                        style: Theme.of(context)
+                            .textTheme
+                            .headlineMedium
+                            ?.copyWith(
+                              fontWeight: FontWeight.w800,
+                            ),
                       ),
                       const SizedBox(height: 10),
                       Text(
@@ -561,14 +622,15 @@ class _OwnerJobTitlesPageState extends State<OwnerJobTitlesPage> {
                           'Create a reusable role title to keep employee setup and checklist assignment rules consistent.',
                         ),
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: const Color(0xFF61706C),
-                          height: 1.45,
-                        ),
+                              color: const Color(0xFF61706C),
+                              height: 1.45,
+                            ),
                       ),
                       const SizedBox(height: 22),
                       TextField(
                         controller: nameController,
-                        decoration: InputDecoration(labelText: _tr(context, 'Title name')),
+                        decoration: InputDecoration(
+                            labelText: _tr(context, 'Title name')),
                       ),
                       if (errorText != null) ...[
                         const SizedBox(height: 12),
@@ -584,7 +646,9 @@ class _OwnerJobTitlesPageState extends State<OwnerJobTitlesPage> {
                       Align(
                         alignment: Alignment.centerRight,
                         child: TextButton(
-                          onPressed: saving ? null : () => Navigator.of(context).pop(false),
+                          onPressed: saving
+                              ? null
+                              : () => Navigator.of(context).pop(false),
                           child: Text(_tr(context, 'Cancel')),
                         ),
                       ),
@@ -622,72 +686,93 @@ class _OwnerJobTitlesPageState extends State<OwnerJobTitlesPage> {
           0,
           (total, item) => total + _readInt(item, 'employee_count'),
         );
-        final staffedTitles = jobTitles.where((item) => _readInt(item, 'employee_count') > 0).length;
+        final staffedTitles = jobTitles
+            .where((item) => _readInt(item, 'employee_count') > 0)
+            .length;
         final emptyTitles = jobTitles.length - staffedTitles;
-        return _PageBody(
-          children: [
-            _DashboardHeroCard(
-              title: 'Roles and titles',
-              subtitle: 'Job titles',
-              value: '$assignedPeople active people mapped across ${jobTitles.length} titles',
-              icon: Icons.badge_rounded,
-            ),
-            const SizedBox(height: 16),
-            _DashboardMetricRow(
-              metrics: [
-                _DashboardMetricData(
-                  'Titles',
-                  '${jobTitles.length}',
-                  icon: Icons.category_rounded,
-                ),
-                _DashboardMetricData(
-                  'Staffed',
-                  '$staffedTitles',
-                  icon: Icons.people_alt_rounded,
-                ),
-                _DashboardMetricData(
-                  'Unfilled',
-                  '$emptyTitles',
-                  icon: Icons.hourglass_empty_rounded,
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            _HeaderRow(
-              title: 'Job Titles',
-              trailing: FilledButton.icon(
-                onPressed: _showCreateJobTitleDialog,
-                icon: const Icon(Icons.add),
-                label: Text(_tr(context, 'Add')),
+        return _PageSliverBody(
+          slivers: [
+            _PageSliverSection(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _DashboardHeroCard(
+                    title: 'Roles and titles',
+                    subtitle: 'Job titles',
+                    value:
+                        '$assignedPeople active people mapped across ${jobTitles.length} titles',
+                    icon: Icons.badge_rounded,
+                  ),
+                  const SizedBox(height: 16),
+                  _DashboardMetricRow(
+                    metrics: [
+                      _DashboardMetricData(
+                        'Titles',
+                        '${jobTitles.length}',
+                        icon: Icons.category_rounded,
+                      ),
+                      _DashboardMetricData(
+                        'Staffed',
+                        '$staffedTitles',
+                        icon: Icons.people_alt_rounded,
+                      ),
+                      _DashboardMetricData(
+                        'Unfilled',
+                        '$emptyTitles',
+                        icon: Icons.hourglass_empty_rounded,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  _HeaderRow(
+                    title: 'Job Titles',
+                    trailing: _HeaderActionButton(
+                      label: 'Add',
+                      icon: Icons.add,
+                      onPressed: _showCreateJobTitleDialog,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
               ),
             ),
-            const SizedBox(height: 16),
             if (jobTitles.isEmpty)
-              _ManagementRecordCard(
-                title: 'Create your first role',
-                description:
-                    'Job titles make onboarding, checklist automation, and employee organization much cleaner.',
-                icon: Icons.badge_rounded,
-                secondaryActionLabel: _tr(context, 'Create'),
-                onSecondaryAction: _showCreateJobTitleDialog,
+              _PageSliverSection(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 120),
+                child: _ManagementRecordCard(
+                  title: 'Create your first role',
+                  description:
+                      'Job titles make onboarding, checklist automation, and employee organization much cleaner.',
+                  icon: Icons.badge_rounded,
+                  secondaryActionLabel: _tr(context, 'Create'),
+                  onSecondaryAction: _showCreateJobTitleDialog,
+                ),
               )
             else
-              for (final item in jobTitles) ...[
-                _ManagementRecordCard(
-                  title: _readString(item, 'name'),
-                  description: _readInt(item, 'employee_count') == 0
-                      ? 'No active employees are assigned to this title yet.'
-                      : 'Use this title to keep assignment rules and employee setup aligned.',
-                  icon: Icons.badge_outlined,
-                  metadata: ['${_readInt(item, 'employee_count')} active employees'],
-                  detail: const _RecordDetailLine(
-                    icon: Icons.rule_folder_outlined,
-                    label:
-                        'Keep course assignment and onboarding checklist rules anchored to clear job titles.',
-                  ),
-                ),
-                const SizedBox(height: 16),
-              ],
+              _PageSliverList(
+                itemCount: jobTitles.length,
+                itemBuilder: (context, index) {
+                  final item = jobTitles[index];
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: _ManagementRecordCard(
+                      title: _readString(item, 'name'),
+                      description: _readInt(item, 'employee_count') == 0
+                          ? 'No active employees are assigned to this title yet.'
+                          : 'Use this title to keep assignment rules and employee setup aligned.',
+                      icon: Icons.badge_outlined,
+                      metadata: [
+                        '${_readInt(item, 'employee_count')} active employees'
+                      ],
+                      detail: const _RecordDetailLine(
+                        icon: Icons.rule_folder_outlined,
+                        label:
+                            'Keep course assignment and onboarding checklist rules anchored to clear job titles.',
+                      ),
+                    ),
+                  );
+                },
+              ),
           ],
         );
       },
@@ -758,7 +843,8 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
                 await widget.api.post('/business-owner/courses/create/', {
                   'title': titleController.text.trim(),
                   'description': descriptionController.text.trim(),
-                  'estimated_minutes': int.tryParse(minutesController.text.trim()) ?? 15,
+                  'estimated_minutes':
+                      int.tryParse(minutesController.text.trim()) ?? 15,
                   'is_active': true,
                   'content_items': [
                     {
@@ -780,8 +866,10 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
 
             return Dialog(
               backgroundColor: const Color(0xFFF3FBF8),
-              insetPadding: const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
+              insetPadding:
+                  const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(32)),
               child: AnimatedPadding(
                 duration: const Duration(milliseconds: 180),
                 curve: Curves.easeOut,
@@ -798,9 +886,12 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
                     children: [
                       Text(
                         _tr(context, 'Create Course'),
-                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
+                        style: Theme.of(context)
+                            .textTheme
+                            .headlineMedium
+                            ?.copyWith(
+                              fontWeight: FontWeight.w800,
+                            ),
                       ),
                       const SizedBox(height: 10),
                       Text(
@@ -809,30 +900,34 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
                           'Launch a new course with a clear first lesson so employees can start immediately.',
                         ),
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: const Color(0xFF61706C),
-                          height: 1.45,
-                        ),
+                              color: const Color(0xFF61706C),
+                              height: 1.45,
+                            ),
                       ),
                       const SizedBox(height: 22),
                       TextField(
                         controller: titleController,
-                        decoration: InputDecoration(labelText: _tr(context, 'Title')),
+                        decoration:
+                            InputDecoration(labelText: _tr(context, 'Title')),
                       ),
                       const SizedBox(height: 14),
                       TextField(
                         controller: descriptionController,
-                        decoration: InputDecoration(labelText: _tr(context, 'Description')),
+                        decoration: InputDecoration(
+                            labelText: _tr(context, 'Description')),
                       ),
                       const SizedBox(height: 14),
                       TextField(
                         controller: minutesController,
                         keyboardType: TextInputType.number,
-                        decoration: InputDecoration(labelText: _tr(context, 'Minutes')),
+                        decoration:
+                            InputDecoration(labelText: _tr(context, 'Minutes')),
                       ),
                       const SizedBox(height: 14),
                       TextField(
                         controller: contentTitleController,
-                        decoration: InputDecoration(labelText: _tr(context, 'First content title')),
+                        decoration: InputDecoration(
+                            labelText: _tr(context, 'First content title')),
                       ),
                       const SizedBox(height: 14),
                       TextField(
@@ -858,7 +953,9 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
                       Align(
                         alignment: Alignment.centerRight,
                         child: TextButton(
-                          onPressed: saving ? null : () => Navigator.of(context).pop(false),
+                          onPressed: saving
+                              ? null
+                              : () => Navigator.of(context).pop(false),
                           child: Text(_tr(context, 'Cancel')),
                         ),
                       ),
@@ -905,7 +1002,8 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
                 errorText = null;
               });
               try {
-                await widget.api.post('/business-owner/courses/$courseId/assign/', {
+                await widget.api
+                    .post('/business-owner/courses/$courseId/assign/', {
                   'employee_ids': selectedIds.toList(),
                 });
                 if (!mounted) return;
@@ -920,8 +1018,10 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
 
             return Dialog(
               backgroundColor: const Color(0xFFF3FBF8),
-              insetPadding: const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
+              insetPadding:
+                  const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(32)),
               child: AnimatedPadding(
                 duration: const Duration(milliseconds: 180),
                 curve: Curves.easeOut,
@@ -935,9 +1035,12 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
                       children: [
                         Text(
                           _tr(context, 'Assign Course'),
-                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                            fontWeight: FontWeight.w800,
-                          ),
+                          style: Theme.of(context)
+                              .textTheme
+                              .headlineMedium
+                              ?.copyWith(
+                                fontWeight: FontWeight.w800,
+                              ),
                         ),
                         const SizedBox(height: 10),
                         Text(
@@ -945,10 +1048,11 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
                             context,
                             'Choose who should receive this course now. You can select multiple employees at once.',
                           ),
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: const Color(0xFF61706C),
-                            height: 1.45,
-                          ),
+                          style:
+                              Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: const Color(0xFF61706C),
+                                    height: 1.45,
+                                  ),
                         ),
                         const SizedBox(height: 18),
                         for (final item in employees) ...[
@@ -1002,7 +1106,9 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
                         Align(
                           alignment: Alignment.centerRight,
                           child: TextButton(
-                            onPressed: saving ? null : () => Navigator.of(context).pop(false),
+                            onPressed: saving
+                                ? null
+                                : () => Navigator.of(context).pop(false),
                             child: Text(_tr(context, 'Cancel')),
                           ),
                         ),
@@ -1096,15 +1202,19 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
                                 footnote,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: _muted,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(
+                                      color: _muted,
+                                      fontWeight: FontWeight.w600,
+                                    ),
                               ),
                             ),
                             const SizedBox(width: 8),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 5),
                               decoration: BoxDecoration(
                                 color: const Color(0xFFEAF7F4),
                                 borderRadius: BorderRadius.circular(999),
@@ -1126,20 +1236,22 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
                           title,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.w800,
-                            height: 1.2,
-                          ),
+                          style:
+                              Theme.of(context).textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.w800,
+                                    height: 1.2,
+                                  ),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           description,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: const Color(0xFF7B879B),
-                            height: 1.45,
-                          ),
+                          style:
+                              Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: const Color(0xFF7B879B),
+                                    height: 1.45,
+                                  ),
                         ),
                         const SizedBox(height: 12),
                         Wrap(
@@ -1147,13 +1259,18 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
                           runSpacing: 8,
                           children: [
                             _StatusChip(
-                              label: '${_readInt(item, 'estimated_minutes')} ${_tr(context, 'min')}',
+                              label:
+                                  '${_readInt(item, 'estimated_minutes')} ${_tr(context, 'min')}',
                             ),
                             _StatusChip(
-                              label: '${_readInt(item, 'content_item_total')} ${_tr(context, 'Items')}',
+                              label:
+                                  '${_readInt(item, 'content_item_total')} ${_tr(context, 'Items')}',
                             ),
-                            if (_readString(item, 'card_label').trim().isNotEmpty)
-                              _StatusChip(label: _readString(item, 'card_label')),
+                            if (_readString(item, 'card_label')
+                                .trim()
+                                .isNotEmpty)
+                              _StatusChip(
+                                  label: _readString(item, 'card_label')),
                           ],
                         ),
                       ],
@@ -1169,7 +1286,8 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
                   FilledButton(
                     style: FilledButton.styleFrom(
                       minimumSize: const Size(0, 44),
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 12),
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
                     onPressed: () async {
@@ -1190,10 +1308,12 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
                     FilledButton.tonal(
                       style: FilledButton.styleFrom(
                         minimumSize: const Size(0, 44),
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 12),
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
-                      onPressed: () => _showAssignDialog(_readInt(item, 'id'), employees),
+                      onPressed: () =>
+                          _showAssignDialog(_readInt(item, 'id'), employees),
                       child: Text(_tr(context, 'Assign')),
                     ),
                 ],
@@ -1213,8 +1333,10 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
     List<dynamic> employees = const [],
     bool isLoading = false,
   }) {
-    final visibleCourseTotal = summary['visible_course_total'] ?? courses.length;
-    final ownedCourseTotal = summary['owned_course_total'] ?? ownedCourses.length;
+    final visibleCourseTotal =
+        summary['visible_course_total'] ?? courses.length;
+    final ownedCourseTotal =
+        summary['owned_course_total'] ?? ownedCourses.length;
     final companyCourses = [
       for (final item in courses)
         if (_readBool(item, 'is_owned_by_business')) item,
@@ -1259,9 +1381,9 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
             child: Text(
               _tr(context, 'Your courses'),
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                color: _ink,
-                fontSize: 20,
-              ),
+                    color: _ink,
+                    fontSize: 20,
+                  ),
             ),
           ),
           FilledButton(
@@ -1356,10 +1478,13 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
                         constraints: const BoxConstraints(maxWidth: 720),
                         child: Text(
                           _tr(context, 'Shared library'),
-                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            color: _ink,
-                            fontSize: 20,
-                          ),
+                          style: Theme.of(context)
+                              .textTheme
+                              .headlineSmall
+                              ?.copyWith(
+                                color: _ink,
+                                fontSize: 20,
+                              ),
                         ),
                       ),
                     ),
@@ -1428,7 +1553,8 @@ class OwnerCourseDetailScreen extends StatefulWidget {
   final Map<String, dynamic>? initialCourse;
 
   @override
-  State<OwnerCourseDetailScreen> createState() => _OwnerCourseDetailScreenState();
+  State<OwnerCourseDetailScreen> createState() =>
+      _OwnerCourseDetailScreenState();
 }
 
 class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
@@ -1446,7 +1572,8 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
     });
   }
 
-  Widget _buildContentItemCard(BuildContext context, Map<String, dynamic> rawItem) {
+  Widget _buildContentItemCard(
+      BuildContext context, Map<String, dynamic> rawItem) {
     final description = _readString(rawItem, 'body').isNotEmpty
         ? _readString(rawItem, 'body')
         : _readString(rawItem, 'material_url').isNotEmpty
@@ -1484,8 +1611,8 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
                       Text(
                         description,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          height: 1.5,
-                        ),
+                              height: 1.5,
+                            ),
                       ),
                     ],
                   ),
@@ -1587,10 +1714,14 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
                   spacing: 8,
                   runSpacing: 8,
                   children: [
-                    _StatusChip(label: '$estimatedMinutes ${_tr(context, 'min')}'),
-                    _StatusChip(label: '${items.length} ${_tr(context, 'Items')}'),
                     _StatusChip(
-                      label: hasExam ? _tr(context, 'Has exam') : _tr(context, 'No exam'),
+                        label: '$estimatedMinutes ${_tr(context, 'min')}'),
+                    _StatusChip(
+                        label: '${items.length} ${_tr(context, 'Items')}'),
+                    _StatusChip(
+                      label: hasExam
+                          ? _tr(context, 'Has exam')
+                          : _tr(context, 'No exam'),
                     ),
                   ],
                 ),
@@ -1605,15 +1736,16 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
               child: Text(
                 _tr(context, 'Content library'),
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  color: _ink,
-                  fontSize: 20,
-                ),
+                      color: _ink,
+                      fontSize: 20,
+                    ),
               ),
             ),
             FilledButton(
               style: FilledButton.styleFrom(
                 minimumSize: const Size(0, 44),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
               onPressed: () => _showContentDialog(),
@@ -1640,10 +1772,14 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
 
   Future<void> _showContentDialog({Map<String, dynamic>? item}) async {
     final isEditing = item != null;
-    final titleController = TextEditingController(text: isEditing ? _readString(item, 'title') : '');
-    final bodyController = TextEditingController(text: isEditing ? _readString(item, 'body') : '');
-    final urlController = TextEditingController(text: isEditing ? _readString(item, 'material_url') : '');
-    final orderController = TextEditingController(text: isEditing ? '${_readInt(item, 'order')}' : '1');
+    final titleController = TextEditingController(
+        text: isEditing ? _readString(item, 'title') : '');
+    final bodyController =
+        TextEditingController(text: isEditing ? _readString(item, 'body') : '');
+    final urlController = TextEditingController(
+        text: isEditing ? _readString(item, 'material_url') : '');
+    final orderController = TextEditingController(
+        text: isEditing ? '${_readInt(item, 'order')}' : '1');
     String contentType = isEditing ? _readString(item, 'content_type') : 'TEXT';
     final changed = await showDialog<bool>(
       context: context,
@@ -1666,9 +1802,13 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
               };
               try {
                 if (isEditing) {
-                  await widget.api.post('/business-owner/course-content/${_readInt(item, 'id')}/update/', payload);
+                  await widget.api.post(
+                      '/business-owner/course-content/${_readInt(item, 'id')}/update/',
+                      payload);
                 } else {
-                  await widget.api.post('/business-owner/courses/${widget.courseId}/content/create/', payload);
+                  await widget.api.post(
+                      '/business-owner/courses/${widget.courseId}/content/create/',
+                      payload);
                 }
                 if (!mounted) return;
                 Navigator.of(context).pop(true);
@@ -1682,8 +1822,10 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
 
             return Dialog(
               backgroundColor: const Color(0xFFF3FBF8),
-              insetPadding: const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
+              insetPadding:
+                  const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(32)),
               child: AnimatedPadding(
                 duration: const Duration(milliseconds: 180),
                 curve: Curves.easeOut,
@@ -1699,10 +1841,14 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        _tr(context, isEditing ? 'Edit Content' : 'Add Content'),
-                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
+                        _tr(context,
+                            isEditing ? 'Edit Content' : 'Add Content'),
+                        style: Theme.of(context)
+                            .textTheme
+                            .headlineMedium
+                            ?.copyWith(
+                              fontWeight: FontWeight.w800,
+                            ),
                       ),
                       const SizedBox(height: 10),
                       Text(
@@ -1711,18 +1857,24 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
                           'Shape the lesson flow with clear titles, useful context, and the right content type.',
                         ),
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: const Color(0xFF61706C),
-                          height: 1.45,
-                        ),
+                              color: const Color(0xFF61706C),
+                              height: 1.45,
+                            ),
                       ),
                       const SizedBox(height: 22),
                       DropdownButtonFormField<String>(
                         initialValue: contentType,
-                        decoration: InputDecoration(labelText: _tr(context, 'Content type')),
+                        decoration: InputDecoration(
+                            labelText: _tr(context, 'Content type')),
                         items: [
-                          DropdownMenuItem(value: 'TEXT', child: Text(_tr(context, 'Text'))),
-                          DropdownMenuItem(value: 'MATERIAL', child: Text(_tr(context, 'Link'))),
-                          DropdownMenuItem(value: 'LESSON', child: Text(_tr(context, 'Lesson'))),
+                          DropdownMenuItem(
+                              value: 'TEXT', child: Text(_tr(context, 'Text'))),
+                          DropdownMenuItem(
+                              value: 'MATERIAL',
+                              child: Text(_tr(context, 'Link'))),
+                          DropdownMenuItem(
+                              value: 'LESSON',
+                              child: Text(_tr(context, 'Lesson'))),
                         ],
                         onChanged: (value) {
                           setInnerState(() {
@@ -1733,7 +1885,8 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
                       const SizedBox(height: 14),
                       TextField(
                         controller: titleController,
-                        decoration: InputDecoration(labelText: _tr(context, 'Title')),
+                        decoration:
+                            InputDecoration(labelText: _tr(context, 'Title')),
                       ),
                       const SizedBox(height: 14),
                       TextField(
@@ -1748,13 +1901,15 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
                       const SizedBox(height: 14),
                       TextField(
                         controller: urlController,
-                        decoration: InputDecoration(labelText: _tr(context, 'Material URL')),
+                        decoration: InputDecoration(
+                            labelText: _tr(context, 'Material URL')),
                       ),
                       const SizedBox(height: 14),
                       TextField(
                         controller: orderController,
                         keyboardType: TextInputType.number,
-                        decoration: InputDecoration(labelText: _tr(context, 'Order')),
+                        decoration:
+                            InputDecoration(labelText: _tr(context, 'Order')),
                       ),
                       if (errorText != null) ...[
                         const SizedBox(height: 12),
@@ -1770,7 +1925,9 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
                       Align(
                         alignment: Alignment.centerRight,
                         child: TextButton(
-                          onPressed: saving ? null : () => Navigator.of(context).pop(false),
+                          onPressed: saving
+                              ? null
+                              : () => Navigator.of(context).pop(false),
                           child: Text(_tr(context, 'Cancel')),
                         ),
                       ),
@@ -1779,7 +1936,11 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
                         width: double.infinity,
                         child: FilledButton(
                           onPressed: saving ? null : submit,
-                          child: Text(saving ? 'Saving...' : isEditing ? 'Update' : 'Create'),
+                          child: Text(saving
+                              ? 'Saving...'
+                              : isEditing
+                                  ? 'Update'
+                                  : 'Create'),
                         ),
                       ),
                     ],
@@ -1806,8 +1967,10 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
           context: context,
           builder: (context) => Dialog(
             backgroundColor: const Color(0xFFFFF6F2),
-            insetPadding: const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
+            insetPadding:
+                const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
             child: Padding(
               padding: const EdgeInsets.all(22),
               child: Column(
@@ -1821,22 +1984,23 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
                       color: const Color(0xFFFFE6DE),
                       borderRadius: BorderRadius.circular(18),
                     ),
-                    child: const Icon(Icons.delete_outline_rounded, color: Color(0xFFC54C2B)),
+                    child: const Icon(Icons.delete_outline_rounded,
+                        color: Color(0xFFC54C2B)),
                   ),
                   const SizedBox(height: 16),
                   Text(
                     _tr(context, 'Delete Content'),
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
+                          fontWeight: FontWeight.w800,
+                        ),
                   ),
                   const SizedBox(height: 10),
                   Text(
                     'Delete "${_readString(item, 'title')}"?',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: const Color(0xFF61706C),
-                      height: 1.45,
-                    ),
+                          color: const Color(0xFF61706C),
+                          height: 1.45,
+                        ),
                   ),
                   const SizedBox(height: 18),
                   Align(
@@ -1865,7 +2029,8 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
         false;
     if (!confirmed) return;
     try {
-      await widget.api.post('/business-owner/course-content/${_readInt(item, 'id')}/delete/', {});
+      await widget.api.post(
+          '/business-owner/course-content/${_readInt(item, 'id')}/delete/', {});
       if (!mounted) return;
       _showSnack(context, 'Content deleted.');
       _reload();
@@ -1887,7 +2052,8 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
           }
           if (snapshot.hasError) {
             return _ErrorState(
-              message: snapshot.error.toString().replaceFirst('Exception: ', ''),
+              message:
+                  snapshot.error.toString().replaceFirst('Exception: ', ''),
             );
           }
           final payload = snapshot.data ?? const <String, dynamic>{};
@@ -1914,7 +2080,8 @@ class OwnerReportsPage extends StatelessWidget {
         final totalCompleted = _readInt(report, 'total_completed');
         final totalInProgress = _readInt(report, 'total_in_progress');
         final completionRate = _readInt(report, 'overall_completion_rate');
-        final completionProgress = totalAssigned == 0 ? 0.0 : totalCompleted / totalAssigned;
+        final completionProgress =
+            totalAssigned == 0 ? 0.0 : totalCompleted / totalAssigned;
         return _PageBody(
           children: [
             _DashboardHeroCard(
@@ -1991,9 +2158,9 @@ class OwnerReportsPage extends StatelessWidget {
                             'Track how many assignments are completed, still active, and where the next follow-up is needed.',
                           ),
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: const Color(0xFF61706C),
-                      height: 1.5,
-                    ),
+                          color: const Color(0xFF61706C),
+                          height: 1.5,
+                        ),
                   ),
                   const SizedBox(height: 18),
                   ClipRRect(
@@ -2002,7 +2169,8 @@ class OwnerReportsPage extends StatelessWidget {
                       value: completionProgress.clamp(0, 1),
                       minHeight: 12,
                       backgroundColor: const Color(0xFFE7ECEF),
-                      valueColor: const AlwaysStoppedAnimation<Color>(_brandTeal),
+                      valueColor:
+                          const AlwaysStoppedAnimation<Color>(_brandTeal),
                     ),
                   ),
                   const SizedBox(height: 18),
@@ -2011,7 +2179,8 @@ class OwnerReportsPage extends StatelessWidget {
                     runSpacing: 12,
                     children: [
                       _StatusChip(label: '$totalCompleted completed'),
-                      _StatusChip(label: '${totalAssigned - totalCompleted} remaining'),
+                      _StatusChip(
+                          label: '${totalAssigned - totalCompleted} remaining'),
                       _StatusChip(label: '$totalInProgress in progress'),
                     ],
                   ),
@@ -2095,8 +2264,10 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
 
             return Dialog(
               backgroundColor: const Color(0xFFF3FBF8),
-              insetPadding: const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
+              insetPadding:
+                  const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(32)),
               child: AnimatedPadding(
                 duration: const Duration(milliseconds: 180),
                 curve: Curves.easeOut,
@@ -2113,9 +2284,12 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
                     children: [
                       Text(
                         _tr(context, 'Create Checklist'),
-                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
+                        style: Theme.of(context)
+                            .textTheme
+                            .headlineMedium
+                            ?.copyWith(
+                              fontWeight: FontWeight.w800,
+                            ),
                       ),
                       const SizedBox(height: 10),
                       Text(
@@ -2124,28 +2298,37 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
                           'Design a repeatable routine with clear steps so teams know exactly what good looks like.',
                         ),
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: const Color(0xFF61706C),
-                          height: 1.45,
-                        ),
+                              color: const Color(0xFF61706C),
+                              height: 1.45,
+                            ),
                       ),
                       const SizedBox(height: 22),
                       TextField(
                         controller: titleController,
-                        decoration: InputDecoration(labelText: _tr(context, 'Title')),
+                        decoration:
+                            InputDecoration(labelText: _tr(context, 'Title')),
                       ),
                       const SizedBox(height: 14),
                       TextField(
                         controller: descriptionController,
-                        decoration: InputDecoration(labelText: _tr(context, 'Description')),
+                        decoration: InputDecoration(
+                            labelText: _tr(context, 'Description')),
                       ),
                       const SizedBox(height: 14),
                       DropdownButtonFormField<String>(
                         initialValue: frequency,
-                        decoration: InputDecoration(labelText: _tr(context, 'Frequency')),
+                        decoration: InputDecoration(
+                            labelText: _tr(context, 'Frequency')),
                         items: [
-                          DropdownMenuItem(value: 'DAILY', child: Text(_tr(context, 'Daily'))),
-                          DropdownMenuItem(value: 'WEEKLY', child: Text(_tr(context, 'Weekly'))),
-                          DropdownMenuItem(value: 'ON_DEMAND', child: Text(_tr(context, 'On demand'))),
+                          DropdownMenuItem(
+                              value: 'DAILY',
+                              child: Text(_tr(context, 'Daily'))),
+                          DropdownMenuItem(
+                              value: 'WEEKLY',
+                              child: Text(_tr(context, 'Weekly'))),
+                          DropdownMenuItem(
+                              value: 'ON_DEMAND',
+                              child: Text(_tr(context, 'On demand'))),
                         ],
                         onChanged: (value) {
                           setInnerState(() {
@@ -2156,11 +2339,13 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
                       const SizedBox(height: 14),
                       DropdownButtonFormField<int?>(
                         initialValue: jobTitleId,
-                        decoration: InputDecoration(labelText: _tr(context, 'Assign to job title')),
+                        decoration: InputDecoration(
+                            labelText: _tr(context, 'Assign to job title')),
                         items: [
                           DropdownMenuItem<int?>(
                             value: null,
-                            child: Text(_tr(context, 'No automatic assignment')),
+                            child:
+                                Text(_tr(context, 'No automatic assignment')),
                           ),
                           for (final rawTitle in jobTitles)
                             DropdownMenuItem<int?>(
@@ -2198,7 +2383,9 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
                       Align(
                         alignment: Alignment.centerRight,
                         child: TextButton(
-                          onPressed: saving ? null : () => Navigator.of(context).pop(false),
+                          onPressed: saving
+                              ? null
+                              : () => Navigator.of(context).pop(false),
                           child: Text(_tr(context, 'Cancel')),
                         ),
                       ),
@@ -2228,9 +2415,12 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
     }
   }
 
-  Future<void> _showCreateRuleDialog(List<dynamic> checklists, List<dynamic> jobTitles) async {
-    int? selectedChecklistId = checklists.isEmpty ? null : _readInt(checklists.first, 'id');
-    int? selectedJobTitleId = jobTitles.isEmpty ? null : _readInt(jobTitles.first, 'id');
+  Future<void> _showCreateRuleDialog(
+      List<dynamic> checklists, List<dynamic> jobTitles) async {
+    int? selectedChecklistId =
+        checklists.isEmpty ? null : _readInt(checklists.first, 'id');
+    int? selectedJobTitleId =
+        jobTitles.isEmpty ? null : _readInt(jobTitles.first, 'id');
     final created = await showDialog<bool>(
       context: context,
       builder: (context) {
@@ -2244,7 +2434,8 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
                 errorText = null;
               });
               try {
-                await widget.api.post('/business-owner/checklist-rules/create/', {
+                await widget.api
+                    .post('/business-owner/checklist-rules/create/', {
                   'job_title': selectedJobTitleId,
                   'checklist': selectedChecklistId,
                 });
@@ -2260,8 +2451,10 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
 
             return Dialog(
               backgroundColor: const Color(0xFFF3FBF8),
-              insetPadding: const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
+              insetPadding:
+                  const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(32)),
               child: AnimatedPadding(
                 duration: const Duration(milliseconds: 180),
                 curve: Curves.easeOut,
@@ -2278,9 +2471,12 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
                     children: [
                       Text(
                         _tr(context, 'Create Checklist Rule'),
-                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
+                        style: Theme.of(context)
+                            .textTheme
+                            .headlineMedium
+                            ?.copyWith(
+                              fontWeight: FontWeight.w800,
+                            ),
                       ),
                       const SizedBox(height: 10),
                       Text(
@@ -2289,14 +2485,15 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
                           'Link a role to the right checklist so onboarding and recurring routines stay automatic.',
                         ),
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: const Color(0xFF61706C),
-                          height: 1.45,
-                        ),
+                              color: const Color(0xFF61706C),
+                              height: 1.45,
+                            ),
                       ),
                       const SizedBox(height: 22),
                       DropdownButtonFormField<int?>(
                         initialValue: selectedJobTitleId,
-                        decoration: InputDecoration(labelText: _tr(context, 'Job title')),
+                        decoration: InputDecoration(
+                            labelText: _tr(context, 'Job title')),
                         items: [
                           for (final rawTitle in jobTitles)
                             DropdownMenuItem<int?>(
@@ -2313,7 +2510,8 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
                       const SizedBox(height: 14),
                       DropdownButtonFormField<int?>(
                         initialValue: selectedChecklistId,
-                        decoration: InputDecoration(labelText: _tr(context, 'Checklist')),
+                        decoration: InputDecoration(
+                            labelText: _tr(context, 'Checklist')),
                         items: [
                           for (final rawChecklist in checklists)
                             DropdownMenuItem<int?>(
@@ -2341,7 +2539,9 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
                       Align(
                         alignment: Alignment.centerRight,
                         child: TextButton(
-                          onPressed: saving ? null : () => Navigator.of(context).pop(false),
+                          onPressed: saving
+                              ? null
+                              : () => Navigator.of(context).pop(false),
                           child: Text(_tr(context, 'Cancel')),
                         ),
                       ),
@@ -2387,117 +2587,156 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
         final automatedTitleCount = {
           for (final item in rules) _readPath(item, ['job_title', 'name']),
         }.where((name) => name.trim().isNotEmpty).length;
-        return _PageBody(
-          children: [
-            _DashboardHeroCard(
-              title: _tr(context, 'Checklists'),
-              subtitle: checklists.isEmpty
-                  ? 'Design routines your team can trust'
-                  : '${checklists.length} active checklist templates',
-              value: rules.isEmpty
-                  ? 'No automation rules yet.'
-                  : '${rules.length} rules across $automatedTitleCount job titles',
-              icon: Icons.fact_check_rounded,
-            ),
-            const SizedBox(height: 16),
-            _DashboardMetricRow(
-              metrics: [
-                _DashboardMetricData(
-                  'Checklists',
-                  '${checklists.length}',
-                  icon: Icons.checklist_rounded,
-                ),
-                _DashboardMetricData(
-                  'Rule',
-                  '${rules.length}',
-                  icon: Icons.account_tree_rounded,
-                ),
-                _DashboardMetricData(
-                  'Titles',
-                  '$automatedTitleCount',
-                  icon: Icons.badge_outlined,
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            _HeaderRow(
-              title: 'Checklist library',
-              trailing: Wrap(
-                spacing: 8,
+        return _PageSliverBody(
+          slivers: [
+            _PageSliverSection(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  FilledButton.icon(
-                    onPressed: () => _showCreateChecklistDialog(jobTitles),
-                    icon: const Icon(Icons.add),
-                    label: Text(_tr(context, 'Add')),
+                  _DashboardHeroCard(
+                    title: _tr(context, 'Checklists'),
+                    subtitle: checklists.isEmpty
+                        ? 'Design routines your team can trust'
+                        : '${checklists.length} active checklist templates',
+                    value: rules.isEmpty
+                        ? 'No automation rules yet.'
+                        : '${rules.length} rules across $automatedTitleCount job titles',
+                    icon: Icons.fact_check_rounded,
                   ),
-                  FilledButton.tonal(
-                    onPressed: checklists.isEmpty || jobTitles.isEmpty
-                        ? null
-                        : () => _showCreateRuleDialog(checklists, jobTitles),
-                    child: Text(_tr(context, 'Rule')),
+                  const SizedBox(height: 16),
+                  _DashboardMetricRow(
+                    metrics: [
+                      _DashboardMetricData(
+                        'Checklists',
+                        '${checklists.length}',
+                        icon: Icons.checklist_rounded,
+                      ),
+                      _DashboardMetricData(
+                        'Rule',
+                        '${rules.length}',
+                        icon: Icons.account_tree_rounded,
+                      ),
+                      _DashboardMetricData(
+                        'Titles',
+                        '$automatedTitleCount',
+                        icon: Icons.badge_outlined,
+                      ),
+                    ],
                   ),
+                  const SizedBox(height: 20),
+                  _HeaderRow(
+                    title: 'Checklist library',
+                    trailing: Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        _HeaderActionButton(
+                          label: 'Add',
+                          icon: Icons.add,
+                          onPressed: () =>
+                              _showCreateChecklistDialog(jobTitles),
+                        ),
+                        _HeaderTonalButton(
+                          label: 'Rule',
+                          onPressed: checklists.isEmpty || jobTitles.isEmpty
+                              ? null
+                              : () =>
+                                  _showCreateRuleDialog(checklists, jobTitles),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
                 ],
               ),
             ),
-            const SizedBox(height: 16),
             if (checklists.isEmpty)
-              const _SectionCard(title: 'Checklists', child: Text('No checklists created.'))
-            else
-              for (final item in checklists) ...[
-                _ManagementRecordCard(
-                  title: _readString(item, 'title'),
-                  description: _readString(item, 'description').isEmpty
-                      ? 'No checklist description yet.'
-                      : _readString(item, 'description'),
-                  icon: Icons.checklist_rounded,
-                  metadata: [
-                    _readString(item, 'frequency'),
-                    '${_asList(item['items']).length} ${_tr(context, 'Items')}',
-                  ],
-                  detail: Column(
-                    children: [
-                      for (final checklistItem in _asList(item['items']).take(3))
-                        _ChecklistItemTile(
-                          index: _asList(item['items']).indexOf(checklistItem) + 1,
-                          title: _readString(checklistItem, 'title'),
-                          completed: false,
-                        ),
-                      if (_asList(item['items']).length > 3)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 4),
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              '+${_asList(item['items']).length - 3} more items',
-                              style: Theme.of(context).textTheme.bodySmall,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
+              const _PageSliverSection(
+                padding: EdgeInsets.fromLTRB(24, 0, 24, 0),
+                child: _SectionCard(
+                  title: 'Checklists',
+                  child: Text('No checklists created.'),
                 ),
-                const SizedBox(height: 16),
-              ],
-            const SizedBox(height: 8),
-            const _HeaderRow(title: 'Assignment rules'),
-            const SizedBox(height: 16),
-            if (rules.isEmpty)
-              const _SectionCard(
-                title: 'Assignment Rules',
-                child: Text('No checklist rules yet.'),
               )
             else
-              for (final item in rules) ...[
-                _RuleAssignmentTile(
-                  jobTitle: _readPath(item, ['job_title', 'name']),
-                  checklistTitle: _readPath(item, ['checklist', 'title']),
+              _PageSliverList(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 0),
+                itemCount: checklists.length,
+                itemBuilder: (context, index) {
+                  final item = checklists[index];
+                  final checklistItems = _asList(item['items']);
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: _ManagementRecordCard(
+                      title: _readString(item, 'title'),
+                      description: _readString(item, 'description').isEmpty
+                          ? 'No checklist description yet.'
+                          : _readString(item, 'description'),
+                      icon: Icons.checklist_rounded,
+                      metadata: [
+                        _readString(item, 'frequency'),
+                        '${checklistItems.length} ${_tr(context, 'Items')}',
+                      ],
+                      detail: Column(
+                        children: [
+                          for (final checklistItem in checklistItems.take(3))
+                            _ChecklistItemTile(
+                              index: checklistItems.indexOf(checklistItem) + 1,
+                              title: _readString(checklistItem, 'title'),
+                              completed: false,
+                            ),
+                          if (checklistItems.length > 3)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: Align(
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  '+${checklistItems.length - 3} more items',
+                                  style: Theme.of(context).textTheme.bodySmall,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            _PageSliverSection(
+              padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: const [
+                  _HeaderRow(title: 'Assignment rules'),
+                  SizedBox(height: 16),
+                ],
+              ),
+            ),
+            if (rules.isEmpty)
+              const _PageSliverSection(
+                padding: EdgeInsets.fromLTRB(24, 0, 24, 120),
+                child: _SectionCard(
+                  title: 'Assignment Rules',
+                  child: Text('No checklist rules yet.'),
                 ),
-                const SizedBox(height: 12),
-              ],
+              )
+            else
+              _PageSliverList(
+                itemCount: rules.length,
+                itemBuilder: (context, index) {
+                  final item = rules[index];
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: _RuleAssignmentTile(
+                      jobTitle: _readPath(item, ['job_title', 'name']),
+                      checklistTitle: _readPath(item, ['checklist', 'title']),
+                    ),
+                  );
+                },
+              ),
           ],
         );
       },
     );
   }
 }
-
