@@ -2927,7 +2927,8 @@ class _ChecklistItemTile extends StatelessWidget {
                   _tr(context, title),
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         height: 1.35,
-                        decoration: checked ? TextDecoration.lineThrough : null,
+                        decoration:
+                            checked ? TextDecoration.lineThrough : null,
                         color: enabled || checked ? null : _muted,
                       ),
                 ),
