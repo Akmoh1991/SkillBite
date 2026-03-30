@@ -27,29 +27,10 @@ const Color _line = AppColors.line;
 
 enum AppLanguage { en, ar }
 
-class _AppScope extends InheritedWidget {
-  const _AppScope({
-    required this.language,
-    required this.onLanguageChanged,
-    required super.child,
-  });
-
-  final AppLanguage language;
-  final ValueChanged<AppLanguage> onLanguageChanged;
-
-  static _AppScope of(BuildContext context) {
-    final scope = context.dependOnInheritedWidgetOfExactType<_AppScope>();
-    assert(scope != null, 'App scope is missing.');
-    return scope!;
-  }
-
-  @override
-  bool updateShouldNotify(_AppScope oldWidget) =>
-      oldWidget.language != language;
-}
+ValueChanged<AppLanguage>? _languageChangeHandler;
 
 bool _isArabic(BuildContext context) =>
-    _AppScope.of(context).language == AppLanguage.ar;
+    Localizations.localeOf(context).languageCode == 'ar';
 
 String _tr(BuildContext context, String english) {
   if (!_isArabic(context)) {
@@ -402,33 +383,30 @@ class _SkillBiteMobileAppState extends State<SkillBiteMobileApp> {
   Widget build(BuildContext context) {
     debugPrint(
         'SkillBiteMobileApp build language=$language sessionUser=${sessionUser?.username}');
-    return _AppScope(
-      language: language,
-      onLanguageChanged: _handleLanguageChanged,
-      child: MaterialApp(
-        title: 'SkillBite Mobile',
-        debugShowCheckedModeBanner: false,
-        theme: buildAppTheme(),
-        locale: Locale(language == AppLanguage.ar ? 'ar' : 'en'),
-        supportedLocales: const [
-          Locale('en'),
-          Locale('ar'),
-        ],
-        localizationsDelegates: [
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-        home: restoringSession
-            ? const _LoadingState()
-            : sessionUser == null
-                ? LoginScreen(api: api, onLoggedIn: _handleLogin)
-                : RoleShell(
-                    api: api,
-                    user: sessionUser!,
-                    onLogout: _handleLogout,
-                  ),
-      ),
+    _languageChangeHandler = _handleLanguageChanged;
+    return MaterialApp(
+      title: 'SkillBite Mobile',
+      debugShowCheckedModeBanner: false,
+      theme: buildAppTheme(),
+      locale: Locale(language == AppLanguage.ar ? 'ar' : 'en'),
+      supportedLocales: const [
+        Locale('en'),
+        Locale('ar'),
+      ],
+      localizationsDelegates: [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      home: restoringSession
+          ? const _LoadingState()
+          : sessionUser == null
+              ? LoginScreen(api: api, onLoggedIn: _handleLogin)
+              : RoleShell(
+                  api: api,
+                  user: sessionUser!,
+                  onLogout: _handleLogout,
+                ),
     );
   }
 }
@@ -612,7 +590,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    debugPrint('LoginScreen build language=${_AppScope.of(context).language}');
+    debugPrint(
+        'LoginScreen build language=${Localizations.localeOf(context).languageCode}');
     return _buildNativeView(context);
   }
 }
@@ -1334,9 +1313,9 @@ class _LanguageToggleButton extends StatelessWidget {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       ),
       onPressed: () {
-        final scope = _AppScope.of(context);
-        scope.onLanguageChanged(
-            _isArabic(context) ? AppLanguage.en : AppLanguage.ar);
+        _languageChangeHandler?.call(
+          _isArabic(context) ? AppLanguage.en : AppLanguage.ar,
+        );
       },
       icon: const Icon(Icons.language_rounded),
       label: Text(_isArabic(context) ? 'English' : _tr(context, 'Arabic')),
@@ -1705,7 +1684,10 @@ class EmployeeDashboardPage extends StatelessWidget {
     List<dynamic> assignments,
     List<dynamic> checklists,
   ) {
+    final visibleAssignments = assignments.take(3).toList(growable: false);
+    final visibleChecklists = checklists.take(3).toList(growable: false);
     return _PageBody(
+      bottomPadding: 24,
       children: [
         _HeaderRow(
           title: 'Courses',
@@ -1721,23 +1703,29 @@ class EmployeeDashboardPage extends StatelessWidget {
           const _SectionCard(
               title: 'Courses', child: Text('No active courses.'))
         else
-          for (final item in assignments.take(3)) ...[
+          for (var index = 0; index < visibleAssignments.length; index++) ...[
             _NativeCoursePromoCard(
-              eyebrow: _readString(item, 'status_label'),
-              title: _readPath(item, ['course', 'title']),
-              meta: '${_readPath(item, [
+              eyebrow: _readString(visibleAssignments[index], 'status_label'),
+              title: _readPath(visibleAssignments[index], ['course', 'title']),
+              meta: '${_readPath(visibleAssignments[index], [
                     'course',
                     'estimated_minutes'
                   ])} ${_tr(context, 'min')}',
-              supporting: _readString(_asMap(item['course']), 'description'),
-              imageUrl:
-                  api.resolveUrl(_readPath(item, ['course', 'card_image_url'])),
-              icon: _readBool(_asMap(item['course']), 'has_exam')
-                  ? Icons.verified_outlined
-                  : Icons.play_circle_outline_rounded,
-              onTap: () => _openAssignmentCourse(context, _readInt(item, 'id')),
+              supporting: _readString(
+                _asMap(visibleAssignments[index]['course']),
+                'description',
+              ),
+              imageUrl: api.resolveUrl(
+                _readPath(
+                    visibleAssignments[index], ['course', 'card_image_url']),
+              ),
+              onTap: () => _openAssignmentCourse(
+                context,
+                _readInt(visibleAssignments[index], 'id'),
+              ),
             ),
-            const SizedBox(height: 14),
+            if (index < visibleAssignments.length - 1)
+              const SizedBox(height: 14),
           ],
         const SizedBox(height: 8),
         const _HeaderRow(
@@ -1752,17 +1740,21 @@ class EmployeeDashboardPage extends StatelessWidget {
             child: Text('No checklists assigned.'),
           )
         else
-          for (final item in checklists.take(3)) ...[
+          for (var index = 0; index < visibleChecklists.length; index++) ...[
             _NativeLessonTile(
-              title: _readString(item, 'title'),
-              subtitle: _readBool(item, 'completed_today')
+              title: _readString(visibleChecklists[index], 'title'),
+              subtitle: _readBool(visibleChecklists[index], 'completed_today')
                   ? 'Completed today'
                   : 'Pending checklist',
               accent: const Color(0xFFEAF7F4),
               trailingIcon: Icons.checklist_rounded,
-              onTap: () => _openChecklist(context, _readInt(item, 'id')),
+              onTap: () => _openChecklist(
+                context,
+                _readInt(visibleChecklists[index], 'id'),
+              ),
             ),
-            const SizedBox(height: 14),
+            if (index < visibleChecklists.length - 1)
+              const SizedBox(height: 14),
           ],
       ],
     );
@@ -3151,9 +3143,13 @@ class ApiFutureBuilder extends StatelessWidget {
 }
 
 class _PageBody extends StatelessWidget {
-  const _PageBody({required this.children});
+  const _PageBody({
+    required this.children,
+    this.bottomPadding = 120,
+  });
 
   final List<Widget> children;
+  final double bottomPadding;
 
   @override
   Widget build(BuildContext context) {
@@ -3168,7 +3164,7 @@ class _PageBody extends StatelessWidget {
       child: SafeArea(
         top: false,
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(24, 16, 24, 120),
+          padding: EdgeInsets.fromLTRB(24, 16, 24, bottomPadding),
           children: [
             Center(
               child: ConstrainedBox(
@@ -3494,9 +3490,9 @@ class _NativeCoursePromoCard extends StatelessWidget {
     required this.eyebrow,
     required this.title,
     required this.meta,
-    required this.icon,
     this.supporting = '',
     this.imageUrl = '',
+    this.icon,
     this.onTap,
   });
 
@@ -3504,8 +3500,8 @@ class _NativeCoursePromoCard extends StatelessWidget {
   final String title;
   final String meta;
   final String supporting;
-  final IconData icon;
   final String imageUrl;
+  final IconData? icon;
   final VoidCallback? onTap;
 
   @override
@@ -3585,16 +3581,18 @@ class _NativeCoursePromoCard extends StatelessWidget {
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
               ],
-              const SizedBox(height: 18),
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFEAF7F4),
-                  borderRadius: BorderRadius.circular(18),
+              if (icon != null) ...[
+                const SizedBox(height: 18),
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEAF7F4),
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  child: Icon(icon, color: _brandTeal),
                 ),
-                child: Icon(icon, color: _brandTeal),
-              ),
+              ],
             ],
           ),
         ),
