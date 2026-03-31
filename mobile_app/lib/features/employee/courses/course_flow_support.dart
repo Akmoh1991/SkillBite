@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:skillbite_mobile/app/localization/app_localizations.dart';
 import 'package:skillbite_mobile/app/theme/app_theme_tokens.dart';
 import 'package:skillbite_mobile/core/utils/utils.dart';
+import 'package:video_player/video_player.dart';
 
 const Color courseBrandTeal = brandTeal;
 const Color courseBrandTealDark = brandTealDark;
@@ -472,11 +473,12 @@ class CourseLessonProgressHeader extends StatelessWidget {
   }
 }
 
-class CourseLessonMediaCard extends StatelessWidget {
+class CourseLessonMediaCard extends StatefulWidget {
   const CourseLessonMediaCard({
     super.key,
     required this.title,
     required this.subtitle,
+    this.videoUrl = '',
     required this.mediaLabel,
     required this.icon,
     required this.onTap,
@@ -484,251 +486,541 @@ class CourseLessonMediaCard extends StatelessWidget {
 
   final String title;
   final String subtitle;
+  final String videoUrl;
   final String mediaLabel;
   final IconData icon;
   final VoidCallback onTap;
 
   @override
+  State<CourseLessonMediaCard> createState() => _CourseLessonMediaCardState();
+}
+
+class _CourseLessonMediaCardState extends State<CourseLessonMediaCard> {
+  VideoPlayerController? _controller;
+  bool _isInitializing = false;
+
+  bool get _hasVideo => widget.videoUrl.trim().isNotEmpty;
+
+  @override
+  void didUpdateWidget(CourseLessonMediaCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.videoUrl != widget.videoUrl) {
+      _controller?.dispose();
+      _controller = null;
+      _isInitializing = false;
+    }
+  }
+
+  Future<void> _handlePrimaryAction() async {
+    if (!_hasVideo) {
+      widget.onTap();
+      return;
+    }
+
+    final controller = _controller;
+    if (controller == null) {
+      await _initializeVideo();
+      return;
+    }
+
+    if (!controller.value.isInitialized) {
+      return;
+    }
+
+    if (controller.value.isPlaying) {
+      await controller.pause();
+    } else {
+      await controller.play();
+    }
+  }
+
+  Future<void> _initializeVideo() async {
+    if (_isInitializing) {
+      return;
+    }
+
+    final uri = Uri.tryParse(widget.videoUrl.trim());
+    if (uri == null) {
+      _showVideoLoadError();
+      return;
+    }
+
+    setState(() {
+      _isInitializing = true;
+    });
+
+    final nextController = VideoPlayerController.networkUrl(uri);
+    try {
+      await nextController.initialize();
+      await nextController.setLooping(false);
+      if (!mounted) {
+        await nextController.dispose();
+        return;
+      }
+
+      final previousController = _controller;
+      _controller = nextController;
+      if (previousController != null) {
+        await previousController.dispose();
+      }
+
+      setState(() {});
+      await nextController.play();
+    } catch (_) {
+      await nextController.dispose();
+      _showVideoLoadError();
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isInitializing = false;
+        });
+      }
+    }
+  }
+
+  void _showVideoLoadError() {
+    if (!mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(courseTr(context, 'Could not load this video.'))),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller?.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final arabic = courseIsArabic(context);
     final safeTitle =
-        title.trim().isEmpty ? courseTr(context, 'Lesson') : title.trim();
-    final safeSubtitle = subtitle.trim();
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(28),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(28),
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFFE8F4F1), Color(0xFFD9ECE7)],
-          ),
-          border: Border.all(color: courseLine),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x120F172A),
-              blurRadius: 24,
-              offset: Offset(0, 12),
-            ),
-          ],
+        widget.title.trim().isEmpty
+            ? courseTr(context, 'Lesson')
+            : widget.title.trim();
+    final safeSubtitle = widget.subtitle.trim();
+    final cardChild = Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(28),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFFE8F4F1), Color(0xFFD9ECE7)],
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ClipRRect(
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(28)),
-              child: AspectRatio(
-                aspectRatio: 1.5,
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    const DecoratedBox(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            Color(0xFFF1FAF7),
-                            Color(0xFFC7DFD7),
-                            Color(0xFF81A59C),
-                          ],
-                          stops: [0, 0.6, 1],
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      top: -46,
-                      left: arabic ? null : -36,
-                      right: arabic ? -36 : null,
-                      child: Container(
-                        width: 168,
-                        height: 168,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.22),
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      bottom: -54,
-                      left: arabic ? -24 : null,
-                      right: arabic ? null : -24,
-                      child: Container(
-                        width: 204,
-                        height: 204,
-                        decoration: BoxDecoration(
-                          color: courseBrandTealDark.withValues(alpha: 0.18),
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      top: 18,
-                      right: arabic ? 18 : null,
-                      left: arabic ? null : 18,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.92),
-                          borderRadius: BorderRadius.circular(999),
-                          boxShadow: const [
-                            BoxShadow(
-                              color: Color(0x120F172A),
-                              blurRadius: 12,
-                              offset: Offset(0, 6),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(icon, size: 18, color: courseBrandTealDark),
-                            const SizedBox(width: 8),
-                            Text(
-                              courseTr(context, mediaLabel),
-                              style: const TextStyle(
-                                color: courseBrandTealDark,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      bottom: 22,
-                      left: arabic ? 20 : null,
-                      right: arabic ? null : 20,
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 220),
-                        child: Text(
-                          courseTr(context, safeTitle),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          textAlign: arabic ? TextAlign.right : TextAlign.left,
-                          style:
-                              Theme.of(context).textTheme.titleLarge?.copyWith(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w800,
-                                    height: 1.15,
-                                  ),
-                        ),
-                      ),
-                    ),
-                    Center(
-                      child: Container(
-                        width: 88,
-                        height: 88,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.96),
-                          shape: BoxShape.circle,
-                          boxShadow: const [
-                            BoxShadow(
-                              color: Color(0x1A0F172A),
-                              blurRadius: 18,
-                              offset: Offset(0, 10),
-                            ),
-                          ],
-                        ),
-                        child: Icon(
-                          icon == Icons.picture_as_pdf_outlined
-                              ? Icons.picture_as_pdf_rounded
-                              : icon == Icons.language_rounded
-                                  ? Icons.open_in_browser_rounded
-                                  : Icons.play_arrow_rounded,
-                          size: 46,
-                          color: courseBrandTealDark,
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      bottom: 16,
-                      left: arabic ? null : 136,
-                      right: arabic ? 136 : null,
-                      child: Container(
-                        width: 54,
-                        height: 6,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.42),
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      bottom: 16,
-                      left: arabic ? null : 196,
-                      right: arabic ? 196 : null,
-                      child: Container(
-                        width: 28,
-                        height: 6,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.72),
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+        border: Border.all(color: courseLine),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x120F172A),
+            blurRadius: 24,
+            offset: Offset(0, 12),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ClipRRect(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+            child: AspectRatio(
+              aspectRatio: 1.5,
+              child: _buildMediaHero(context, arabic, safeTitle),
             ),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.98),
-                borderRadius: const BorderRadius.vertical(
-                  bottom: Radius.circular(28),
-                ),
-                border: Border.all(color: const Color(0xFFF1F5F9)),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Color(0x0F0F172A),
-                    blurRadius: 14,
-                    offset: Offset(0, 8),
-                  ),
-                ],
+          ),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.98),
+              borderRadius: const BorderRadius.vertical(
+                bottom: Radius.circular(28),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                mainAxisSize: MainAxisSize.min,
-                children: [
+              border: Border.all(color: const Color(0xFFF1F5F9)),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x0F0F172A),
+                  blurRadius: 14,
+                  offset: Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  courseTr(context, safeTitle),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: arabic ? TextAlign.right : TextAlign.left,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: courseBrandTealDark,
+                        height: 1.12,
+                        fontSize: 22,
+                      ),
+                ),
+                if (safeSubtitle.isNotEmpty) ...[
+                  const SizedBox(height: 10),
                   Text(
-                    courseTr(context, safeTitle),
-                    maxLines: 2,
+                    courseTr(context, safeSubtitle),
+                    maxLines: 3,
                     overflow: TextOverflow.ellipsis,
                     textAlign: arabic ? TextAlign.right : TextAlign.left,
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          color: courseBrandTealDark,
-                          height: 1.12,
-                          fontSize: 22,
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: const Color(0xFF5B6878),
+                          height: 1.48,
                         ),
                   ),
-                  if (safeSubtitle.isNotEmpty) ...[
-                    const SizedBox(height: 10),
-                    Text(
-                      courseTr(context, safeSubtitle),
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: arabic ? TextAlign.right : TextAlign.left,
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: const Color(0xFF5B6878),
-                            height: 1.48,
-                          ),
-                    ),
-                  ],
                 ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (_hasVideo) {
+      return cardChild;
+    }
+
+    return InkWell(
+      onTap: widget.onTap,
+      borderRadius: BorderRadius.circular(28),
+      child: cardChild,
+    );
+  }
+
+  Widget _buildMediaHero(BuildContext context, bool arabic, String safeTitle) {
+    final controller = _controller;
+    final isVideoReady = controller?.value.isInitialized ?? false;
+
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        if (isVideoReady && controller != null)
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: const BoxDecoration(color: Colors.black),
+              child: Center(
+                child: AspectRatio(
+                  aspectRatio:
+                      controller.value.aspectRatio == 0
+                          ? 16 / 9
+                          : controller.value.aspectRatio,
+                  child: VideoPlayer(controller),
+                ),
               ),
             ),
-          ],
+          )
+        else ...[
+          const DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFFF1FAF7),
+                  Color(0xFFC7DFD7),
+                  Color(0xFF81A59C),
+                ],
+                stops: [0, 0.6, 1],
+              ),
+            ),
+          ),
+          Positioned(
+            top: -46,
+            left: arabic ? null : -36,
+            right: arabic ? -36 : null,
+            child: Container(
+              width: 168,
+              height: 168,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.22),
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: -54,
+            left: arabic ? -24 : null,
+            right: arabic ? null : -24,
+            child: Container(
+              width: 204,
+              height: 204,
+              decoration: BoxDecoration(
+                color: courseBrandTealDark.withValues(alpha: 0.18),
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+        ],
+        Positioned(
+          top: 18,
+          right: arabic ? 18 : null,
+          left: arabic ? null : 18,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.92),
+              borderRadius: BorderRadius.circular(999),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x120F172A),
+                  blurRadius: 12,
+                  offset: Offset(0, 6),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(widget.icon, size: 18, color: courseBrandTealDark),
+                const SizedBox(width: 8),
+                Text(
+                  courseTr(context, widget.mediaLabel),
+                  style: const TextStyle(
+                    color: courseBrandTealDark,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
+        if (!isVideoReady)
+          Positioned(
+            bottom: 22,
+            left: arabic ? 20 : null,
+            right: arabic ? null : 20,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 220),
+              child: Text(
+                courseTr(context, safeTitle),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                textAlign: arabic ? TextAlign.right : TextAlign.left,
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                      height: 1.15,
+                    ),
+              ),
+            ),
+          ),
+        Center(child: _buildMediaActionButton()),
+        if (isVideoReady && controller != null)
+          Positioned(
+            left: 16,
+            right: 16,
+            bottom: 14,
+            child: _buildVideoControls(controller),
+          )
+        else ...[
+          Positioned(
+            bottom: 16,
+            left: arabic ? null : 136,
+            right: arabic ? 136 : null,
+            child: Container(
+              width: 54,
+              height: 6,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.42),
+                borderRadius: BorderRadius.circular(999),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: 16,
+            left: arabic ? null : 196,
+            right: arabic ? 196 : null,
+            child: Container(
+              width: 28,
+              height: 6,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.72),
+                borderRadius: BorderRadius.circular(999),
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildVideoControls(VideoPlayerController controller) {
+    return ValueListenableBuilder<VideoPlayerValue>(
+      valueListenable: controller,
+      builder: (context, value, _) {
+        final duration = value.duration;
+        final position =
+            value.position > duration ? duration : value.position;
+        return Container(
+          padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
+          decoration: BoxDecoration(
+            color: Colors.black.withValues(alpha: 0.34),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
+          ),
+          child: Row(
+            textDirection: TextDirection.ltr,
+            children: [
+              GestureDetector(
+                onTap: _handlePrimaryAction,
+                behavior: HitTestBehavior.opaque,
+                child: Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.18),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    value.isPlaying
+                        ? Icons.pause_rounded
+                        : Icons.play_arrow_rounded,
+                    color: Colors.white,
+                    size: 22,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Directionality(
+                  textDirection: TextDirection.ltr,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(999),
+                    child: VideoProgressIndicator(
+                      controller,
+                      allowScrubbing: true,
+                      colors: VideoProgressColors(
+                        playedColor: Colors.white,
+                        bufferedColor: Colors.white.withValues(alpha: 0.38),
+                        backgroundColor: Colors.white.withValues(alpha: 0.18),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                '${_formatVideoTime(position)} / ${_formatVideoTime(duration)}',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  String _formatVideoTime(Duration duration) {
+    final totalSeconds = duration.inSeconds;
+    final hours = totalSeconds ~/ 3600;
+    final minutes = (totalSeconds % 3600) ~/ 60;
+    final seconds = totalSeconds % 60;
+    if (hours > 0) {
+      return '$hours:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+    }
+    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+  }
+
+  Widget _buildMediaActionButton() {
+    if (!_hasVideo) {
+      return _buildCircularMediaButton(
+        child: Icon(
+          widget.icon == Icons.picture_as_pdf_outlined
+              ? Icons.picture_as_pdf_rounded
+              : widget.icon == Icons.language_rounded
+                  ? Icons.open_in_browser_rounded
+                  : Icons.play_arrow_rounded,
+          size: 46,
+          color: courseBrandTealDark,
+        ),
+      );
+    }
+
+    final controller = _controller;
+    if (controller == null || !controller.value.isInitialized) {
+      return _buildCircularMediaButton(
+        onTap: _handlePrimaryAction,
+        child:
+            _isInitializing
+                ? const SizedBox(
+                  width: 34,
+                  height: 34,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 3,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      courseBrandTealDark,
+                    ),
+                  ),
+                )
+                : const Icon(
+                  Icons.play_arrow_rounded,
+                  size: 46,
+                  color: courseBrandTealDark,
+                ),
+      );
+    }
+
+    return ValueListenableBuilder<VideoPlayerValue>(
+      valueListenable: controller,
+      builder: (context, value, _) {
+        final isPlaying = value.isPlaying;
+        return IgnorePointer(
+          ignoring: isPlaying,
+          child: AnimatedOpacity(
+            duration: const Duration(milliseconds: 180),
+            opacity: isPlaying ? 0 : 1,
+            child: _buildCircularMediaButton(
+              onTap: _handlePrimaryAction,
+              child: Icon(
+                isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                size: 46,
+                color: courseBrandTealDark,
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildCircularMediaButton({
+    required Widget child,
+    VoidCallback? onTap,
+  }) {
+    final button = Container(
+      width: 88,
+      height: 88,
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.96),
+        shape: BoxShape.circle,
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x1A0F172A),
+            blurRadius: 18,
+            offset: Offset(0, 10),
+          ),
+        ],
       ),
+      child: Center(child: child),
+    );
+
+    if (onTap == null) {
+      return button;
+    }
+
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: button,
     );
   }
 }

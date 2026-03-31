@@ -155,6 +155,9 @@ class _EmployeeCourseDetailScreenState
                   subtitle: courseDescription.isEmpty
                       ? courseContentSubtitle(featuredContent)
                       : courseDescription,
+                  videoUrl: widget.api.resolveUrl(
+                    courseReadString(featuredContent, 'video_url'),
+                  ),
                   mediaLabel: coursePrimaryContentLabel(featuredContent),
                   icon: courseContentIcon(featuredContent),
                   onTap: () => _openContentItem(featuredContent),
@@ -208,7 +211,7 @@ class _EmployeeCourseDetailScreenState
                 ),
                 child: Text(
                   hasExam
-                      ? courseTr(context, 'Continue')
+                      ? courseTr(context, 'Start Exam')
                       : submitting
                           ? courseTr(context, 'Completing...')
                           : courseTr(context, 'Continue'),

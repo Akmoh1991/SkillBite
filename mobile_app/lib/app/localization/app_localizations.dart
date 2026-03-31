@@ -117,6 +117,7 @@ const Map<String, String> arabicStrings = {
   'No mobile content items.': 'لا توجد عناصر محتوى للجوال.',
   'More content': 'محتوى إضافي',
   'Continue': 'متابعة',
+  'Start Exam': '\u0628\u062f\u0621 \u0627\u0644\u0627\u062e\u062a\u0628\u0627\u0631',
   'In progress': 'قيد التقدم',
   'Completing...': 'جارٍ الإكمال...',
   'Exam': 'الاختبار',
@@ -208,6 +209,8 @@ const Map<String, String> arabicStrings = {
   'Person': 'الشخص',
   'No private messages yet.': 'لا توجد رسائل خاصة بعد.',
   'Could not load this file.': 'تعذر تحميل هذا الملف.',
+  'Could not load this video.':
+      '\u062a\u0639\u0630\u0631 \u062a\u062d\u0645\u064a\u0644 \u0647\u0630\u0627 \u0627\u0644\u0641\u064a\u062f\u064a\u0648.',
   'Review the lesson content, then continue to the exam when you are ready.':
       'راجع محتوى الدرس ثم انتقل إلى الاختبار عندما تكون جاهزاً.',
   'Video lesson': 'درس فيديو',
