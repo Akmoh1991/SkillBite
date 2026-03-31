@@ -166,7 +166,7 @@ class _RoleShellState extends State<RoleShell> {
         ),
         actions: [
           Padding(
-            padding: const EdgeInsets.only(right: 6),
+            padding: const EdgeInsetsDirectional.only(end: 6),
             child: Container(
               width: 44,
               height: 44,
@@ -183,7 +183,7 @@ class _RoleShellState extends State<RoleShell> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.only(right: 12),
+            padding: const EdgeInsetsDirectional.only(end: 12),
             child: Container(
               width: 44,
               height: 44,
