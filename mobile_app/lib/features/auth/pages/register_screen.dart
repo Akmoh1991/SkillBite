@@ -172,7 +172,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
           alignment: WrapAlignment.center,
           crossAxisAlignment: WrapCrossAlignment.center,
           spacing: 6,
-          textDirection: isArabic(context) ? TextDirection.rtl : TextDirection.ltr,
+          textDirection:
+              isArabic(context) ? TextDirection.rtl : TextDirection.ltr,
           children: [
             Text(
               tr(context, 'Already have an account?'),
@@ -273,7 +274,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
             value: selectedSecBusinessLine,
             options: _secBusinessLines,
             onChanged: (value) {
-              if (value != null) setState(() => selectedSecBusinessLine = value);
+              if (value != null) {
+                setState(() => selectedSecBusinessLine = value);
+              }
             },
           ),
           if (errorText != null) ...[
@@ -284,7 +287,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
           FilledButton(
             onPressed: saving ? null : _submit,
             child: Text(
-              saving ? tr(context, 'Creating account...') : tr(context, 'Create account'),
+              saving
+                  ? tr(context, 'Creating account...')
+                  : tr(context, 'Create account'),
             ),
           ),
         ],

@@ -167,7 +167,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           FilledButton(
             onPressed: saving ? null : _submit,
             child: Text(
-              saving ? tr(context, 'Updating...') : tr(context, 'Update Password'),
+              saving
+                  ? tr(context, 'Updating...')
+                  : tr(context, 'Update Password'),
             ),
           ),
         ],

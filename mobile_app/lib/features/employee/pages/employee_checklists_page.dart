@@ -35,8 +35,9 @@ class _EmployeeChecklistsPageState extends State<EmployeeChecklistsPage> {
       future: future,
       builder: (context, payload) {
         final checklists = asList(payload['checklists']);
-        final completedToday =
-            checklists.where((item) => readBool(item, 'completed_today')).length;
+        final completedToday = checklists
+            .where((item) => readBool(item, 'completed_today'))
+            .length;
         final pendingCount = checklists.length - completedToday;
         return AppPageSliverBody(
           slivers: [
@@ -155,7 +156,8 @@ class _EmployeeChecklistDetailScreenState
   Future<void> _completeChecklist(List<dynamic> items) async {
     setState(() => submitting = true);
     try {
-      await widget.api.post('/employee/checklists/${widget.checklistId}/complete/', {
+      await widget.api
+          .post('/employee/checklists/${widget.checklistId}/complete/', {
         'item_ids': selectedItemIds.toList(growable: false),
         'notes': '',
       });
@@ -200,7 +202,8 @@ class _EmployeeChecklistDetailScreenState
           final frequency = readString(checklist, 'frequency');
           final checklistTitle = readString(checklist, 'title');
           final itemCountLabel = '${items.length} ${tr(context, 'Items')}';
-          final selectedCount = completed ? items.length : selectedItemIds.length;
+          final selectedCount =
+              completed ? items.length : selectedItemIds.length;
           final allItemsSelected =
               completed || selectedItemIds.length == items.length;
           final canSubmit =
@@ -343,8 +346,7 @@ class _ChecklistItemTile extends StatelessWidget {
                   tr(context, title),
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         height: 1.35,
-                        decoration:
-                            checked ? TextDecoration.lineThrough : null,
+                        decoration: checked ? TextDecoration.lineThrough : null,
                         color: enabled || checked ? null : mutedColor,
                       ),
                 ),

@@ -13,62 +13,6 @@ bool courseIsArabic(BuildContext context) => isArabic(context);
 
 String courseTr(BuildContext context, String english) => tr(context, english);
 
-const Map<String, String> _courseArabicStrings = {
-  'Courses': 'الدورات',
-  'Pending courses': 'الدورات المعلقة',
-  'Learning time': 'وقت التعلم',
-  'Assigned courses': 'الدورات المسندة',
-  'No assigned courses yet': 'لا توجد دورات مسندة بعد.',
-  'New training will appear here when it is assigned.':
-      'ستظهر الدورات الجديدة هنا عند إسنادها.',
-  'min': 'دقيقة',
-  'More courses': 'دورات إضافية',
-  'No courses assigned.': 'لا توجد دورات مخصصة.',
-  'No additional courses right now.': 'لا توجد دورات إضافية حالياً.',
-  'Course': 'الدورة',
-  'Practical course content with clear guidance and structured steps.':
-      'محتوى تدريبي عملي بإرشادات واضحة وخطوات منظمة.',
-  'History': 'السجل',
-  'Learning History': 'سجل التعلم',
-  'Completed': 'المكتمل',
-  'Your completed learning will appear here': 'سيظهر التعلم المكتمل هنا.',
-  'Finished training stays easy to revisit.':
-      'يبقى التدريب المكتمل سهل الرجوع إليه.',
-  'Minutes': 'الدقائق',
-  'No completed courses yet.': 'لا توجد دورات مكتملة بعد.',
-  'Details': 'التفاصيل',
-  'Items': 'العناصر',
-  'In progress': 'قيد التقدم',
-  'Exam': 'الاختبار',
-  'Lesson': 'الدرس',
-  'No mobile content items.': 'لا توجد عناصر محتوى للجوال.',
-  'More content': 'محتوى إضافي',
-  'Continue': 'متابعة',
-  'Completing...': 'جارٍ الإكمال...',
-  'Course completed.': 'تم إكمال الدورة.',
-  'No content URL available.': 'لا يوجد رابط متاح لهذا المحتوى.',
-  'About the lesson': 'عن الدرس',
-  'Could not load this video.': 'تعذر تحميل هذا الفيديو.',
-  'Could not open this video externally.': 'تعذر فتح الفيديو خارج التطبيق.',
-  'Could not load this file.': 'تعذر تحميل هذا الملف.',
-  'Could not open this file externally.': 'تعذر فتح الملف خارج التطبيق.',
-  'Could not load this screen': 'تعذر تحميل هذه الشاشة',
-  'Try again': 'حاول مرة أخرى',
-  'Loading workspace...': 'جارٍ تحميل مساحة العمل...',
-  'Course Exam': 'اختبار الدورة',
-  'Pass score': 'درجة النجاح',
-  'Question': 'السؤال',
-  'Your answer': 'إجابتك',
-  'Submitting...': 'جارٍ الإرسال...',
-  'Submit Exam': 'إرسال الاختبار',
-  'Review the lesson content, then continue to the exam when you are ready.':
-      'راجع محتوى الدرس ثم انتقل إلى الاختبار عندما تكون جاهزاً.',
-  'Video lesson': 'درس فيديو',
-  'PDF material': 'ملف PDF',
-  'If this PDF does not preview properly inside the app, use the open button in the top bar.':
-      'إذا لم يظهر ملف PDF بشكل صحيح داخل التطبيق فاستخدم زر الفتح في الشريط العلوي.',
-};
-
 Map<String, dynamic> courseAsMap(Object? value) {
   return asMap(value);
 }
@@ -315,88 +259,54 @@ class CourseHeaderRow extends StatelessWidget {
   const CourseHeaderRow({
     super.key,
     required this.title,
+    this.subtitle,
     this.trailing,
-    this.titleColor = courseInk,
-    this.titleFontSize = 20,
+    this.titleColor,
+    this.titleFontSize,
+    this.crossAxisAlignment = CrossAxisAlignment.center,
   });
 
   final String title;
+  final String? subtitle;
   final Widget? trailing;
-  final Color titleColor;
-  final double titleFontSize;
+  final Color? titleColor;
+  final double? titleFontSize;
+  final CrossAxisAlignment crossAxisAlignment;
 
   @override
   Widget build(BuildContext context) {
     return Row(
+      crossAxisAlignment: crossAxisAlignment,
       children: [
         Expanded(
-          child: Text(
-            courseTr(context, title),
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  color: titleColor,
-                  fontSize: titleFontSize,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                courseTr(context, title),
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      color: titleColor ?? courseInk,
+                      fontSize: titleFontSize,
+                    ),
+              ),
+              if (subtitle != null && subtitle!.trim().isNotEmpty) ...[
+                const SizedBox(height: 6),
+                Text(
+                  courseTr(context, subtitle!),
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: courseMuted,
+                        height: 1.45,
+                      ),
                 ),
+              ],
+            ],
           ),
         ),
-        if (trailing != null) trailing!,
+        if (trailing != null) ...[
+          const SizedBox(width: 16),
+          trailing!,
+        ],
       ],
-    );
-  }
-}
-
-class CourseSectionCard extends StatelessWidget {
-  const CourseSectionCard({
-    super.key,
-    required this.title,
-    required this.child,
-  });
-
-  final String title;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              courseTr(context, title),
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: courseInk,
-                  ),
-            ),
-            const SizedBox(height: 12),
-            child,
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class CourseStatusChip extends StatelessWidget {
-  const CourseStatusChip({super.key, required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF0F5F7),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        courseTr(context, label),
-        style: const TextStyle(
-          color: courseBrandTealDark,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
     );
   }
 }
@@ -979,6 +889,115 @@ class CourseContentTile extends StatelessWidget {
   }
 }
 
+class CourseSectionCard extends StatelessWidget {
+  const CourseSectionCard({
+    super.key,
+    this.title,
+    this.subtitle,
+    this.trailing,
+    required this.child,
+  });
+
+  final String? title;
+  final String? subtitle;
+  final Widget? trailing;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: courseLine),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x100F172A),
+            blurRadius: 20,
+            offset: Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if ((title != null && title!.trim().isNotEmpty) ||
+                (subtitle != null && subtitle!.trim().isNotEmpty) ||
+                trailing != null) ...[
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (title != null && title!.trim().isNotEmpty)
+                          Text(
+                            courseTr(context, title!),
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                        if (subtitle != null &&
+                            subtitle!.trim().isNotEmpty) ...[
+                          const SizedBox(height: 6),
+                          Text(
+                            courseTr(context, subtitle!),
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium
+                                ?.copyWith(
+                                  color: courseMuted,
+                                  height: 1.45,
+                                ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  if (trailing != null) ...[
+                    const SizedBox(width: 16),
+                    trailing!,
+                  ],
+                ],
+              ),
+              const SizedBox(height: 18),
+            ],
+            child,
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class CourseStatusChip extends StatelessWidget {
+  const CourseStatusChip({
+    super.key,
+    required this.label,
+  });
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: const Color(0xFFEAF7F4),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        courseTr(context, label),
+        style: const TextStyle(
+          color: courseBrandTealDark,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+}
+
 class CourseLoadingState extends StatelessWidget {
   const CourseLoadingState({super.key});
 
@@ -1002,7 +1021,10 @@ class CourseLoadingState extends StatelessWidget {
 }
 
 class CourseErrorState extends StatelessWidget {
-  const CourseErrorState({super.key, required this.message});
+  const CourseErrorState({
+    super.key,
+    required this.message,
+  });
 
   final String message;
 

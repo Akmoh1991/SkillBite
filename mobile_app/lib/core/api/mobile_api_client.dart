@@ -237,7 +237,8 @@ class MobileApiClient {
 
   Map<String, dynamic> _parseResponse(http.Response response) {
     Map<String, dynamic> payload;
-    final rawBody = utf8.decode(response.bodyBytes, allowMalformed: true).trim();
+    final rawBody =
+        utf8.decode(response.bodyBytes, allowMalformed: true).trim();
     final normalizedBody =
         rawBody.startsWith('\uFEFF') ? rawBody.substring(1) : rawBody;
     try {

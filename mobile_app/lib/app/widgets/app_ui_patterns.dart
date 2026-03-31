@@ -270,7 +270,8 @@ class AppChatMessageRow extends StatelessWidget {
             decoration: BoxDecoration(
               color: own ? const Color(0xFFEAF7F4) : surfaceAltColor,
               borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: own ? const Color(0xFFD0ECE6) : lineColor),
+              border:
+                  Border.all(color: own ? const Color(0xFFD0ECE6) : lineColor),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

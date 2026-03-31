@@ -568,3 +568,78 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
     );
   }
 }
+
+class _ChecklistItemTile extends StatelessWidget {
+  const _ChecklistItemTile({
+    required this.index,
+    required this.title,
+    required this.checked,
+  });
+
+  final int index;
+  final String title;
+  final bool checked;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: checked ? const Color(0xFFEAF7F4) : const Color(0xFFF8FAFC),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: checked ? const Color(0xFFD2EBE4) : lineColor,
+            ),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: checked ? brandTeal : Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: checked ? brandTeal : const Color(0xFFD6DEE8),
+                    width: 1.4,
+                  ),
+                ),
+                child: Center(
+                  child: checked
+                      ? const Icon(
+                          Icons.check_rounded,
+                          size: 20,
+                          color: Colors.white,
+                        )
+                      : Text(
+                          '$index',
+                          style: const TextStyle(
+                            color: brandTealDark,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  tr(context, title),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        height: 1.35,
+                        decoration: checked ? TextDecoration.lineThrough : null,
+                      ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

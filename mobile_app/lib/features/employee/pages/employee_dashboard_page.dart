@@ -81,8 +81,10 @@ class EmployeeDashboardPage extends StatelessWidget {
             AppCoursePromoCard(
               eyebrow: readString(visibleAssignments[index], 'status_label'),
               title: readPath(visibleAssignments[index], ['course', 'title']),
-              meta:
-                  '${readPath(visibleAssignments[index], ['course', 'estimated_minutes'])} ${tr(context, 'min')}',
+              meta: '${readPath(visibleAssignments[index], [
+                    'course',
+                    'estimated_minutes'
+                  ])} ${tr(context, 'min')}',
               supporting: readString(
                 asMap(visibleAssignments[index]['course']),
                 'description',

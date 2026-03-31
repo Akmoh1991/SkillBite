@@ -93,7 +93,8 @@ class _LoginScreenState extends State<LoginScreen> {
           alignment: WrapAlignment.center,
           crossAxisAlignment: WrapCrossAlignment.center,
           spacing: 6,
-          textDirection: isArabic(context) ? TextDirection.rtl : TextDirection.ltr,
+          textDirection:
+              isArabic(context) ? TextDirection.rtl : TextDirection.ltr,
           children: [
             Text(
               'Need an account?',
@@ -169,51 +170,6 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Text(
               loading ? tr(context, 'Signing in...') : tr(context, 'Log In'),
             ),
-          ),
-          const SizedBox(height: 18),
-          FilledButton.tonal(
-            onPressed: () async {
-              final demoRole = await showModalBottomSheet<String>(
-                context: context,
-                showDragHandle: true,
-                builder: (sheetContext) => SafeArea(
-                  child: ListView(
-                    shrinkWrap: true,
-                    children: [
-                      ListTile(
-                        leading: const Icon(Icons.storefront_outlined),
-                        title: Text(tr(sheetContext, 'Owner Demo')),
-                        onTap: () => Navigator.of(sheetContext).pop('owner'),
-                      ),
-                      ListTile(
-                        leading: const Icon(Icons.badge_outlined),
-                        title: Text(tr(sheetContext, 'Employee Demo')),
-                        onTap: () => Navigator.of(sheetContext).pop('employee'),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-              if (demoRole == null || !mounted) return;
-              setState(() {
-                loading = true;
-                errorText = null;
-              });
-              try {
-                final user = await widget.api.loginDemo(demoRole);
-                widget.onLoggedIn(user);
-              } catch (error) {
-                if (!mounted) return;
-                setState(() {
-                  errorText = error.toString().replaceFirst('Exception: ', '');
-                });
-              } finally {
-                if (mounted) {
-                  setState(() => loading = false);
-                }
-              }
-            },
-            child: Text(tr(context, 'Demo Access')),
           ),
         ],
       ),

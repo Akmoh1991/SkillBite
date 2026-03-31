@@ -29,7 +29,8 @@ class SessionStore {
     SessionUser? user;
     if (rawUser != null && rawUser.isNotEmpty) {
       try {
-        user = SessionUser.fromJson(jsonDecode(rawUser) as Map<String, dynamic>);
+        user =
+            SessionUser.fromJson(jsonDecode(rawUser) as Map<String, dynamic>);
       } catch (_) {
         user = null;
       }
