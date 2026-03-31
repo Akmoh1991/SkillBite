@@ -7,7 +7,7 @@ from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.core.management import call_command
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import TestCase, override_settings
+from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
 from accounts.models import (
@@ -1700,6 +1700,7 @@ class SeedSuperAdminCommandTests(TestCase):
 
 class MobileApiTests(TestCase):
     def setUp(self):
+        cache.clear()
         self.owner = User.objects.create_user(
             username='mobile_owner',
             password='pass12345',
@@ -1810,6 +1811,70 @@ class MobileApiTests(TestCase):
         self.assertEqual(response.status_code, 200)
         completion = SOPChecklistCompletion.objects.get(employee=self.employee_user, checklist=self.checklist)
         self.assertEqual(completion.notes, 'done')
+
+    def test_employee_mobile_exam_submit_works_without_session_cookie(self):
+        template = ExamTemplate.objects.create(
+            business=self.business,
+            name='Mobile Exam',
+            duration_minutes=15,
+            total_questions=1,
+            created_by=self.owner,
+        )
+        question = ExamQuestion.objects.create(
+            template=template,
+            order=1,
+            question_text='What is the capital of France?',
+            question_type=ExamQuestion.QuestionType.TRUE_FALSE,
+            points=1,
+        )
+        correct_option = ExamOption.objects.create(
+            question=question,
+            order=1,
+            option_text='True',
+            is_correct=True,
+        )
+        ExamOption.objects.create(
+            question=question,
+            order=2,
+            option_text='False',
+            is_correct=False,
+        )
+        self.course.exam_template = template
+        self.course.save(update_fields=['exam_template'])
+
+        token = self._mobile_login('mobile_employee', 'pass12345')
+        start_response = self.client.post(
+            reverse('mobile_employee_exam_start', args=[self.assignment.id]),
+            data='{}',
+            content_type='application/json',
+            HTTP_AUTHORIZATION=f'Bearer {token}',
+        )
+        self.assertEqual(start_response.status_code, 200)
+        start_payload = start_response.json()
+        attempt_token = start_payload['exam']['attempt_token']
+
+        submit_client = Client()
+        submit_response = submit_client.post(
+            reverse('mobile_employee_exam_submit', args=[self.assignment.id]),
+            data=json.dumps(
+                {
+                    'attempt_token': attempt_token,
+                    'answers': {
+                        str(question.id): str(correct_option.id),
+                    },
+                }
+            ),
+            content_type='application/json',
+            HTTP_AUTHORIZATION=f'Bearer {token}',
+        )
+        self.assertEqual(submit_response.status_code, 200)
+        submit_payload = submit_response.json()
+        self.assertTrue(submit_payload['ok'])
+        self.assertTrue(submit_payload['result']['passed'])
+
+        self.assignment.refresh_from_db()
+        self.assertEqual(self.assignment.status, CourseAssignment.Status.COMPLETED)
+        self.assertIsNotNone(self.assignment.completed_at)
 
     def test_owner_mobile_can_assign_course_to_employee(self):
         token = self._mobile_login('mobile_owner', 'pass12345')

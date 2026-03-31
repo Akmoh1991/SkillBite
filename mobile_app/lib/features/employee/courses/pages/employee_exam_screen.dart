@@ -97,8 +97,8 @@ class _EmployeeExamScreenState extends State<EmployeeExamScreen> {
               Text(
                 '${courseTr(context, 'Pass score')} ${courseReadInt(exam, 'passing_score_percent')}%  |  ${courseReadInt(exam, 'duration_minutes')} ${courseTr(context, 'min')}',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: courseMuted,
-                      fontWeight: FontWeight.w600,
+                      color: courseBrandTealDark,
+                      fontWeight: FontWeight.w700,
                     ),
               ),
               const SizedBox(height: 20),
@@ -106,6 +106,7 @@ class _EmployeeExamScreenState extends State<EmployeeExamScreen> {
                 CourseSectionCard(
                   title:
                       '${courseTr(context, 'Question')} ${courseReadInt(rawQuestion, 'order')}',
+                  titleColor: courseBrandTealDark,
                   child: _ExamQuestionCard(
                     question: courseAsMap(rawQuestion),
                     answers: answers,

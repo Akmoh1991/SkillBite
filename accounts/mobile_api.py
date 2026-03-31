@@ -3,6 +3,7 @@ from datetime import timedelta
 
 from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.password_validation import validate_password
+from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
 from django.db.models import Prefetch, Q
@@ -702,7 +703,7 @@ def employee_course_complete_api_view(request, assignment_id: int):
     return _json_success({'course_assignment': _serialize_assignment(assignment)})
 
 
-def _exam_attempt_session_key(user_id: int, assignment_id: int) -> str:
+def _mobile_exam_attempt_cache_key(user_id: int, assignment_id: int) -> str:
     return f'mobile-exam-attempt:{user_id}:{assignment_id}'
 
 
@@ -716,6 +717,24 @@ def _build_exam_attempt_payload(*, assignment: CourseAssignment, exam_questions)
         'question_ids': [question.id for question in exam_questions],
         'expires_at': expires_at.isoformat(),
     }
+
+
+def _store_mobile_exam_attempt(*, user_id: int, assignment: CourseAssignment, attempt: dict) -> None:
+    timeout_seconds = max(assignment.course.exam_template.duration_minutes, 1) * 60 + 60
+    cache.set(
+        _mobile_exam_attempt_cache_key(user_id, assignment.id),
+        attempt,
+        timeout=timeout_seconds,
+    )
+
+
+def _get_mobile_exam_attempt(*, user_id: int, assignment_id: int) -> dict | None:
+    attempt = cache.get(_mobile_exam_attempt_cache_key(user_id, assignment_id))
+    return attempt if isinstance(attempt, dict) else None
+
+
+def _clear_mobile_exam_attempt(*, user_id: int, assignment_id: int) -> None:
+    cache.delete(_mobile_exam_attempt_cache_key(user_id, assignment_id))
 
 
 @csrf_exempt
@@ -737,8 +756,11 @@ def employee_exam_start_api_view(request, assignment_id: int):
     if unsupported:
         return _json_error('This exam includes question types that require manual grading.', status=409, code='unsupported_exam')
     attempt = _build_exam_attempt_payload(assignment=assignment, exam_questions=exam_questions)
-    request.session[_exam_attempt_session_key(auth_token.user.id, assignment.id)] = attempt
-    request.session.modified = True
+    _store_mobile_exam_attempt(
+        user_id=auth_token.user.id,
+        assignment=assignment,
+        attempt=attempt,
+    )
     return _json_success(
         {
             'exam': {
@@ -806,20 +828,18 @@ def employee_exam_submit_api_view(request, assignment_id: int):
     assignment = get_object_or_404(_visible_employee_course_assignments_queryset(auth_token.user, profile.business), id=assignment_id)
     payload = _load_json_body(request)
     attempt_token = (payload.get('attempt_token') or '').strip()
-    attempt = request.session.get(_exam_attempt_session_key(auth_token.user.id, assignment.id))
-    if not isinstance(attempt, dict) or attempt.get('token') != attempt_token:
+    attempt = _get_mobile_exam_attempt(user_id=auth_token.user.id, assignment_id=assignment.id)
+    if not attempt or attempt.get('token') != attempt_token:
         return _json_error('This exam session has expired.', status=409, code='expired_attempt')
     try:
         expires_at = timezone.datetime.fromisoformat(attempt['expires_at'])
     except (KeyError, ValueError):
-        request.session.pop(_exam_attempt_session_key(auth_token.user.id, assignment.id), None)
-        request.session.modified = True
+        _clear_mobile_exam_attempt(user_id=auth_token.user.id, assignment_id=assignment.id)
         return _json_error('This exam session is invalid.', status=409, code='invalid_attempt')
     if timezone.is_naive(expires_at):
         expires_at = timezone.make_aware(expires_at, timezone.get_current_timezone())
     if expires_at <= timezone.now():
-        request.session.pop(_exam_attempt_session_key(auth_token.user.id, assignment.id), None)
-        request.session.modified = True
+        _clear_mobile_exam_attempt(user_id=auth_token.user.id, assignment_id=assignment.id)
         return _json_error('This exam session has expired.', status=409, code='expired_attempt')
 
     exam_questions = _exam_questions_for_assignment(assignment)
@@ -832,8 +852,7 @@ def employee_exam_submit_api_view(request, assignment_id: int):
 
     passing_score = assignment.course.exam_template.passing_score_percent
     passed = evaluation['percent'] >= passing_score
-    request.session.pop(_exam_attempt_session_key(auth_token.user.id, assignment.id), None)
-    request.session.modified = True
+    _clear_mobile_exam_attempt(user_id=auth_token.user.id, assignment_id=assignment.id)
     if passed:
         assignment.status = CourseAssignment.Status.COMPLETED
         assignment.completed_at = timezone.now()

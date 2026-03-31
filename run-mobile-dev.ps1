@@ -117,6 +117,12 @@ if (-not $device) {
     throw 'Android emulator was not detected by adb.'
 }
 
+try {
+    & $adb -s $device reverse tcp:8000 tcp:8000 | Out-Null
+} catch {
+    Write-Warning "adb reverse tcp:8000 tcp:8000 failed for $device. The app will rely on host fallback URLs instead."
+}
+
 Set-Location $mobileApp
 
 $flutterArgs = @('run', '-d', $device)

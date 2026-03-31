@@ -13,12 +13,23 @@ const String _apiFallbackUrlsDefine =
 
 List<String> buildApiBaseUrlCandidates() {
   final candidates = <String>[];
+  final deferredLoopbackCandidates = <String>[];
+  final shouldDeferAndroidLoopback = !kIsWeb && Platform.isAndroid;
 
   void addCandidate(String rawUrl) {
     final normalized = normalizeApiBaseUrl(rawUrl);
-    if (normalized.isNotEmpty && !candidates.contains(normalized)) {
-      candidates.add(normalized);
+    if (normalized.isEmpty) {
+      return;
     }
+    if (candidates.contains(normalized) ||
+        deferredLoopbackCandidates.contains(normalized)) {
+      return;
+    }
+    if (shouldDeferAndroidLoopback && _isLoopbackApiBaseUrl(normalized)) {
+      deferredLoopbackCandidates.add(normalized);
+      return;
+    }
+    candidates.add(normalized);
   }
 
   addCandidate(_apiBaseUrlDefine);
@@ -38,7 +49,19 @@ List<String> buildApiBaseUrlCandidates() {
     addCandidate('http://localhost:8000/api/mobile/v1');
   }
 
+  for (final candidate in deferredLoopbackCandidates) {
+    if (!candidates.contains(candidate)) {
+      candidates.add(candidate);
+    }
+  }
+
   return candidates;
+}
+
+bool _isLoopbackApiBaseUrl(String rawUrl) {
+  final uri = Uri.tryParse(rawUrl);
+  final host = uri?.host.toLowerCase() ?? '';
+  return host == '127.0.0.1' || host == 'localhost' || host == '::1';
 }
 
 String normalizeApiBaseUrl(String rawUrl) {

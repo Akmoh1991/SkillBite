@@ -1363,12 +1363,14 @@ class CourseSectionCard extends StatelessWidget {
   const CourseSectionCard({
     super.key,
     this.title,
+    this.titleColor,
     this.subtitle,
     this.trailing,
     required this.child,
   });
 
   final String? title;
+  final Color? titleColor;
   final String? subtitle;
   final Widget? trailing;
   final Widget child;
@@ -1406,7 +1408,8 @@ class CourseSectionCard extends StatelessWidget {
                         if (title != null && title!.trim().isNotEmpty)
                           Text(
                             courseTr(context, title!),
-                            style: Theme.of(context).textTheme.titleLarge,
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(color: titleColor),
                           ),
                         if (subtitle != null &&
                             subtitle!.trim().isNotEmpty) ...[
