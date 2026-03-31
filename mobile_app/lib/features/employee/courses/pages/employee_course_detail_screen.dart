@@ -108,6 +108,7 @@ class _EmployeeCourseDetailScreenState
           final assignment = courseAsMap(payload['course_assignment']);
           final course = courseAsMap(assignment['course']);
           final courseTitle = courseReadString(course, 'title');
+          final courseDescription = courseReadString(course, 'description');
           final contentItems = courseAsList(course['content_items']);
           final hasExam = courseReadBool(course, 'has_exam');
           final statusLabel =
@@ -115,7 +116,7 @@ class _EmployeeCourseDetailScreenState
                   ? courseTr(context, 'In progress')
                   : courseReadString(assignment, 'status_label');
           final featuredContent =
-              contentItems.isEmpty ? const <dynamic>[] : [contentItems.first];
+              contentItems.isEmpty ? null : courseAsMap(contentItems.first);
           final remainingContent = contentItems.length > 1
               ? contentItems.skip(1).toList()
               : const <dynamic>[];
@@ -125,9 +126,9 @@ class _EmployeeCourseDetailScreenState
               CourseHeaderRow(
                 title: courseTitle.isEmpty ? 'Course' : courseTitle,
                 titleColor: courseBrandTealDark,
-                titleFontSize: 26,
+                titleFontSize: 24,
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 10),
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
@@ -141,21 +142,24 @@ class _EmployeeCourseDetailScreenState
                 ],
               ),
               const SizedBox(height: 16),
-              if (featuredContent.isEmpty)
+              if (featuredContent == null)
                 const CourseSectionCard(
                   title: 'Lesson',
                   child: Text('No mobile content items.'),
                 )
               else
                 CourseLessonMediaCard(
-                  title: courseReadString(course, 'title'),
-                  subtitle: courseReadString(course, 'description').isEmpty
-                      ? courseContentSubtitle(featuredContent.first)
-                      : courseReadString(course, 'description'),
-                  onTap: () =>
-                      _openContentItem(courseAsMap(featuredContent.first)),
+                  title: courseReadString(featuredContent, 'title').isEmpty
+                      ? courseTitle
+                      : courseReadString(featuredContent, 'title'),
+                  subtitle: courseDescription.isEmpty
+                      ? courseContentSubtitle(featuredContent)
+                      : courseDescription,
+                  mediaLabel: coursePrimaryContentLabel(featuredContent),
+                  icon: courseContentIcon(featuredContent),
+                  onTap: () => _openContentItem(featuredContent),
                 ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 16),
               if (remainingContent.isNotEmpty) ...[
                 CourseSectionCard(
                   title: 'More content',
@@ -172,15 +176,6 @@ class _EmployeeCourseDetailScreenState
                   ),
                 ),
                 const SizedBox(height: 24),
-              ],
-              if (hasExam) ...[
-                const CourseSectionCard(
-                  title: 'Exam',
-                  child: Text(
-                    'Review the lesson content, then continue to the exam when you are ready.',
-                  ),
-                ),
-                const SizedBox(height: 16),
               ],
               FilledButton(
                 onPressed: submitting
@@ -201,7 +196,16 @@ class _EmployeeCourseDetailScreenState
                             }
                           }
                         : _completeCourse,
-                style: FilledButton.styleFrom(backgroundColor: courseBrandTeal),
+                style: FilledButton.styleFrom(
+                  backgroundColor: courseBrandTeal,
+                  minimumSize: const Size.fromHeight(58),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  textStyle: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                ),
                 child: Text(
                   hasExam
                       ? courseTr(context, 'Continue')

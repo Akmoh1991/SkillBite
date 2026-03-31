@@ -53,6 +53,22 @@ String courseContentSubtitle(dynamic item) {
   return courseReadString(item, 'body');
 }
 
+String coursePrimaryContentLabel(dynamic item) {
+  final videoUrl = courseReadString(item, 'video_url');
+  final pdfUrl = courseReadString(item, 'pdf_url');
+  final materialUrl = courseReadString(item, 'material_url');
+  if (videoUrl.isNotEmpty) {
+    return 'Video lesson';
+  }
+  if (pdfUrl.isNotEmpty) {
+    return 'PDF material';
+  }
+  if (materialUrl.isNotEmpty) {
+    return 'Lesson';
+  }
+  return 'Lesson';
+}
+
 IconData courseContentIcon(dynamic item) {
   final videoUrl = courseReadString(item, 'video_url');
   final pdfUrl = courseReadString(item, 'pdf_url');
@@ -107,7 +123,7 @@ class CoursePageBody extends StatelessWidget {
   const CoursePageBody({
     super.key,
     required this.children,
-    this.bottomPadding = 120,
+    this.bottomPadding = 104,
   });
 
   final List<Widget> children;
@@ -126,7 +142,7 @@ class CoursePageBody extends StatelessWidget {
       child: SafeArea(
         top: false,
         child: ListView(
-          padding: EdgeInsets.fromLTRB(24, 16, 24, bottomPadding),
+          padding: EdgeInsets.fromLTRB(24, 8, 24, bottomPadding),
           children: [
             Center(
               child: ConstrainedBox(
@@ -461,117 +477,252 @@ class CourseLessonMediaCard extends StatelessWidget {
     super.key,
     required this.title,
     required this.subtitle,
+    required this.mediaLabel,
+    required this.icon,
     required this.onTap,
   });
 
   final String title;
   final String subtitle;
+  final String mediaLabel;
+  final IconData icon;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
+    final arabic = courseIsArabic(context);
+    final safeTitle =
+        title.trim().isEmpty ? courseTr(context, 'Lesson') : title.trim();
+    final safeSubtitle = subtitle.trim();
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(22),
+      borderRadius: BorderRadius.circular(28),
       child: Container(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(22),
-          color: courseBrandTeal,
+          borderRadius: BorderRadius.circular(28),
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFFE8F4F1), Color(0xFFD9ECE7)],
+          ),
+          border: Border.all(color: courseLine),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x120F172A),
+              blurRadius: 24,
+              offset: Offset(0, 12),
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ClipRRect(
               borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(22)),
-              child: Container(
-                height: 228,
-                color: const Color(0xFFE7F3F0),
+                  const BorderRadius.vertical(top: Radius.circular(28)),
+              child: AspectRatio(
+                aspectRatio: 1.5,
                 child: Stack(
+                  fit: StackFit.expand,
                   children: [
-                    Center(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                    const DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Color(0xFFF1FAF7),
+                            Color(0xFFC7DFD7),
+                            Color(0xFF81A59C),
+                          ],
+                          stops: [0, 0.6, 1],
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      top: -46,
+                      left: arabic ? null : -36,
+                      right: arabic ? -36 : null,
+                      child: Container(
+                        width: 168,
+                        height: 168,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.22),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      bottom: -54,
+                      left: arabic ? -24 : null,
+                      right: arabic ? null : -24,
+                      child: Container(
+                        width: 204,
+                        height: 204,
+                        decoration: BoxDecoration(
+                          color: courseBrandTealDark.withValues(alpha: 0.18),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      top: 18,
+                      right: arabic ? 18 : null,
+                      left: arabic ? null : 18,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.92),
+                          borderRadius: BorderRadius.circular(999),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Color(0x120F172A),
+                              blurRadius: 12,
+                              offset: Offset(0, 6),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(
-                              Icons.ondemand_video_rounded,
-                              size: 72,
-                              color: Color(0xFF5E6A7D),
-                            ),
-                            const SizedBox(height: 12),
+                            Icon(icon, size: 18, color: courseBrandTealDark),
+                            const SizedBox(width: 8),
                             Text(
-                              title,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              textAlign: TextAlign.center,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleLarge
-                                  ?.copyWith(fontSize: 18),
-                            ),
-                            if (subtitle.isNotEmpty) ...[
-                              const SizedBox(height: 6),
-                              Text(
-                                subtitle,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                textAlign: TextAlign.center,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodySmall
-                                    ?.copyWith(color: courseMuted),
+                              courseTr(context, mediaLabel),
+                              style: const TextStyle(
+                                color: courseBrandTealDark,
+                                fontWeight: FontWeight.w800,
                               ),
-                            ],
+                            ),
                           ],
                         ),
                       ),
                     ),
                     Positioned(
-                      top: 14,
-                      right: 14,
-                      child: Container(
-                        width: 48,
-                        height: 48,
-                        decoration: const BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
+                      bottom: 22,
+                      left: arabic ? 20 : null,
+                      right: arabic ? null : 20,
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 220),
+                        child: Text(
+                          courseTr(context, safeTitle),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: arabic ? TextAlign.right : TextAlign.left,
+                          style:
+                              Theme.of(context).textTheme.titleLarge?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w800,
+                                    height: 1.15,
+                                  ),
                         ),
-                        child: const Icon(Icons.bookmark_border_rounded),
+                      ),
+                    ),
+                    Center(
+                      child: Container(
+                        width: 88,
+                        height: 88,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.96),
+                          shape: BoxShape.circle,
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Color(0x1A0F172A),
+                              blurRadius: 18,
+                              offset: Offset(0, 10),
+                            ),
+                          ],
+                        ),
+                        child: Icon(
+                          icon == Icons.picture_as_pdf_outlined
+                              ? Icons.picture_as_pdf_rounded
+                              : icon == Icons.language_rounded
+                                  ? Icons.open_in_browser_rounded
+                                  : Icons.play_arrow_rounded,
+                          size: 46,
+                          color: courseBrandTealDark,
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      bottom: 16,
+                      left: arabic ? null : 136,
+                      right: arabic ? 136 : null,
+                      child: Container(
+                        width: 54,
+                        height: 6,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.42),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      bottom: 16,
+                      left: arabic ? null : 196,
+                      right: arabic ? 196 : null,
+                      child: Container(
+                        width: 28,
+                        height: 6,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.72),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              child: Row(
-                children: [
-                  const Icon(Icons.play_arrow_rounded, color: Colors.white),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Container(
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.28),
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: FractionallySizedBox(
-                        widthFactor: 0.78,
-                        alignment: Alignment.centerLeft,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(999),
-                          ),
-                        ),
-                      ),
-                    ),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.98),
+                borderRadius: const BorderRadius.vertical(
+                  bottom: Radius.circular(28),
+                ),
+                border: Border.all(color: const Color(0xFFF1F5F9)),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x0F0F172A),
+                    blurRadius: 14,
+                    offset: Offset(0, 8),
                   ),
-                  const SizedBox(width: 8),
-                  const Icon(Icons.fullscreen_rounded, color: Colors.white),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    courseTr(context, safeTitle),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: arabic ? TextAlign.right : TextAlign.left,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: courseBrandTealDark,
+                          height: 1.12,
+                          fontSize: 22,
+                        ),
+                  ),
+                  if (safeSubtitle.isNotEmpty) ...[
+                    const SizedBox(height: 10),
+                    Text(
+                      courseTr(context, safeSubtitle),
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: arabic ? TextAlign.right : TextAlign.left,
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                            color: const Color(0xFF5B6878),
+                            height: 1.48,
+                          ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -839,48 +990,75 @@ class CourseContentTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final arabic = courseIsArabic(context);
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: courseLine),
+        border: Border.all(color: const Color(0xFFE3EBF2)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x080F172A),
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ),
+        ],
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(20),
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
           child: Row(
             children: [
               Container(
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFDCEDE8),
+                  color: const Color(0xFFEAF7F4),
                   borderRadius: BorderRadius.circular(16),
                 ),
-                child: Icon(icon),
+                child: Icon(icon, color: courseBrandTealDark),
               ),
               const SizedBox(width: 14),
               Expanded(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: arabic
+                      ? CrossAxisAlignment.end
+                      : CrossAxisAlignment.start,
                   children: [
                     Text(
                       courseTr(context, title),
-                      style: const TextStyle(fontWeight: FontWeight.w700),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: arabic ? TextAlign.right : TextAlign.left,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            color: courseInk,
+                          ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 5),
                     Text(
                       courseTr(context, subtitle),
-                      style: const TextStyle(color: Color(0xFF61706C)),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: arabic ? TextAlign.right : TextAlign.left,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: const Color(0xFF5B6878),
+                            height: 1.35,
+                          ),
                     ),
                   ],
                 ),
               ),
               const SizedBox(width: 12),
-              const Icon(Icons.chevron_right_rounded),
+              Icon(
+                arabic
+                    ? Icons.chevron_left_rounded
+                    : Icons.chevron_right_rounded,
+                color: const Color(0xFF95A3B4),
+              ),
             ],
           ),
         ),
@@ -982,17 +1160,18 @@ class CourseStatusChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
       decoration: BoxDecoration(
-        color: const Color(0xFFEAF7F4),
+        color: const Color(0xFFF4FBF9),
         borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: const Color(0xFFD6EAE4)),
       ),
       child: Text(
         courseTr(context, label),
-        style: const TextStyle(
-          color: courseBrandTealDark,
-          fontWeight: FontWeight.w700,
-        ),
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: courseBrandTealDark,
+              fontWeight: FontWeight.w800,
+            ),
       ),
     );
   }

@@ -208,6 +208,10 @@ const Map<String, String> arabicStrings = {
   'Person': 'الشخص',
   'No private messages yet.': 'لا توجد رسائل خاصة بعد.',
   'Could not load this file.': 'تعذر تحميل هذا الملف.',
+  'Review the lesson content, then continue to the exam when you are ready.':
+      'راجع محتوى الدرس ثم انتقل إلى الاختبار عندما تكون جاهزاً.',
+  'Video lesson': 'درس فيديو',
+  'PDF material': 'ملف PDF',
   'Loading workspace...': 'جارٍ تحميل مساحة العمل...',
   'Try again': 'حاول مرة أخرى',
 };

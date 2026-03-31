@@ -1,5 +1,5 @@
 param(
-    [switch]$DebugMode
+    [switch]$ProfileMode
 )
 
 $ErrorActionPreference = 'Stop'
@@ -124,7 +124,7 @@ $flutterArgs = @('run', '-d', $device)
 if ($device -like 'emulator-*') {
     $flutterArgs += '--no-enable-impeller'
 
-    if (-not $DebugMode) {
+    if ($ProfileMode) {
         $flutterArgs += '--profile'
     }
 }
