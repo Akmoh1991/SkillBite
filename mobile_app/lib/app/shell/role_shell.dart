@@ -4,7 +4,6 @@ import 'package:skillbite_mobile/app/theme/app_theme_tokens.dart';
 import 'package:skillbite_mobile/app/widgets/widgets.dart';
 import 'package:skillbite_mobile/core/api/mobile_api_client.dart';
 import 'package:skillbite_mobile/core/session/session_user.dart';
-import 'package:skillbite_mobile/features/chat/chat_page.dart';
 import 'package:skillbite_mobile/features/employee/courses/pages/employee_courses_page.dart';
 import 'package:skillbite_mobile/features/employee/courses/pages/employee_learning_history_page.dart';
 import 'package:skillbite_mobile/features/employee/pages/employee_checklists_page.dart';
@@ -58,22 +57,12 @@ class _RoleShellState extends State<RoleShell> {
             OwnerCoursesPage(api: widget.api),
             OwnerReportsPage(api: widget.api),
             OwnerChecklistsPage(api: widget.api),
-            ChatPage(
-              api: widget.api,
-              roleBasePath: '/business-owner',
-              title: tr(context, 'Business Chat'),
-            ),
           ]
         : [
             EmployeeDashboardPage(api: widget.api, user: widget.user),
             EmployeeCoursesPage(api: widget.api),
             EmployeeLearningHistoryPage(api: widget.api),
             EmployeeChecklistsPage(api: widget.api),
-            ChatPage(
-              api: widget.api,
-              roleBasePath: '/employee',
-              title: tr(context, 'Team Chat'),
-            ),
           ];
     final destinations = ownerMode
         ? [
@@ -101,10 +90,6 @@ class _RoleShellState extends State<RoleShell> {
               icon: const Icon(Icons.checklist_outlined),
               label: tr(context, 'Checklists'),
             ),
-            NavigationDestination(
-              icon: const Icon(Icons.chat_bubble_outline),
-              label: tr(context, 'Chat'),
-            ),
           ]
         : [
             NavigationDestination(
@@ -123,11 +108,8 @@ class _RoleShellState extends State<RoleShell> {
               icon: const Icon(Icons.checklist_outlined),
               label: tr(context, 'Checklists'),
             ),
-            NavigationDestination(
-              icon: const Icon(Icons.chat_bubble_outline),
-              label: tr(context, 'Chat'),
-            ),
           ];
+    final effectiveIndex = index >= pages.length ? pages.length - 1 : index;
 
     return Scaffold(
       appBar: AppBar(
@@ -202,8 +184,8 @@ class _RoleShellState extends State<RoleShell> {
         ],
       ),
       body: KeyedSubtree(
-        key: ValueKey('${widget.user.role}-$index'),
-        child: pages[index],
+        key: ValueKey('${widget.user.role}-$effectiveIndex'),
+        child: pages[effectiveIndex],
       ),
       bottomNavigationBar: SafeArea(
         minimum: const EdgeInsets.fromLTRB(10, 0, 10, 10),
@@ -221,11 +203,17 @@ class _RoleShellState extends State<RoleShell> {
             ],
           ),
           padding: const EdgeInsets.only(top: 4),
-          child: NavigationBar(
-            selectedIndex: index,
-            height: 72,
-            destinations: destinations,
-            onDestinationSelected: (value) => setState(() => index = value),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(28),
+            child: NavigationBar(
+              backgroundColor: Colors.transparent,
+              surfaceTintColor: Colors.transparent,
+              elevation: 0,
+              selectedIndex: effectiveIndex,
+              height: 72,
+              destinations: destinations,
+              onDestinationSelected: (value) => setState(() => index = value),
+            ),
           ),
         ),
       ),

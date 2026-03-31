@@ -35,10 +35,6 @@ class _EmployeeChecklistsPageState extends State<EmployeeChecklistsPage> {
       future: future,
       builder: (context, payload) {
         final checklists = asList(payload['checklists']);
-        final completedToday = checklists
-            .where((item) => readBool(item, 'completed_today'))
-            .length;
-        final pendingCount = checklists.length - completedToday;
         return AppPageSliverBody(
           slivers: [
             AppPageSliverSection(
@@ -55,26 +51,6 @@ class _EmployeeChecklistsPageState extends State<EmployeeChecklistsPage> {
                     ),
                   ),
                   const SizedBox(height: 18),
-                  AppDashboardMetricRow(
-                    metrics: [
-                      AppDashboardMetricData(
-                        'Checklists',
-                        '${checklists.length}',
-                        icon: Icons.fact_check_outlined,
-                      ),
-                      AppDashboardMetricData(
-                        'Completed today',
-                        '$completedToday',
-                        icon: Icons.task_alt_rounded,
-                      ),
-                      AppDashboardMetricData(
-                        'Pending checklists',
-                        '$pendingCount',
-                        icon: Icons.pending_actions_rounded,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
                 ],
               ),
             ),
