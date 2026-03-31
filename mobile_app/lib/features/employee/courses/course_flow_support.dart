@@ -1090,16 +1090,20 @@ class CourseCompactListCard extends StatelessWidget {
     required this.title,
     required this.description,
     required this.metadata,
-    required this.onTap,
     this.eyebrow = '',
+    this.topChipLabel,
+    this.sideChipLabel,
+    this.onTap,
   });
 
   final String imageUrl;
   final String title;
   final String description;
   final List<String> metadata;
-  final VoidCallback onTap;
   final String eyebrow;
+  final String? topChipLabel;
+  final String? sideChipLabel;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -1112,93 +1116,108 @@ class CourseCompactListCard extends StatelessWidget {
           )
         : description.trim();
     final safeEyebrow = eyebrow.trim();
+    final safeTopChipLabel = topChipLabel?.trim() ?? '';
+    final safeSideChipLabel = sideChipLabel?.trim() ?? '';
+    final visibleMetadata =
+        metadata.where((item) => item.trim().isNotEmpty).toList(growable: false);
+    final cardBody = Ink(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(26),
+        border: Border.all(color: courseLine),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 102,
+            child: CourseOptimizedCardImage(
+              imageUrl: imageUrl,
+              title: safeTitle,
+              aspectRatio: 1.04,
+              borderRadius: 18,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (safeTopChipLabel.isNotEmpty) ...[
+                  CourseStatusChip(label: safeTopChipLabel),
+                  const SizedBox(height: 10),
+                ],
+                if (safeEyebrow.isNotEmpty) ...[
+                  Text(
+                    courseTr(context, safeEyebrow),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: courseMuted,
+                          fontWeight: FontWeight.w700,
+                        ),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+                Text(
+                  courseTr(context, safeTitle),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: courseBrandTealDark,
+                        fontWeight: FontWeight.w800,
+                        height: 1.2,
+                      ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  courseTr(context, safeDescription),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: const Color(0xFF7B879B),
+                        height: 1.45,
+                      ),
+                ),
+                if (visibleMetadata.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      for (final item in visibleMetadata)
+                        CourseStatusChip(label: courseTr(context, item)),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: safeSideChipLabel.isNotEmpty
+                ? CourseStatusChip(label: safeSideChipLabel)
+                : const Icon(
+                    Icons.chevron_right_rounded,
+                    color: Color(0xFF9AA6B2),
+                  ),
+          ),
+        ],
+      ),
+    );
 
     return Material(
       color: Colors.white,
       borderRadius: BorderRadius.circular(26),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(26),
-        onTap: onTap,
-        child: Ink(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(26),
-            border: Border.all(color: courseLine),
-          ),
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(
-                width: 102,
-                child: CourseOptimizedCardImage(
-                  imageUrl: imageUrl,
-                  title: safeTitle,
-                  aspectRatio: 1.04,
-                  borderRadius: 18,
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (safeEyebrow.isNotEmpty) ...[
-                      Text(
-                        courseTr(context, safeEyebrow),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: courseMuted,
-                              fontWeight: FontWeight.w700,
-                            ),
-                      ),
-                      const SizedBox(height: 8),
-                    ],
-                    Text(
-                      courseTr(context, safeTitle),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.w800,
-                            height: 1.2,
-                          ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      courseTr(context, safeDescription),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: const Color(0xFF7B879B),
-                            height: 1.45,
-                          ),
-                    ),
-                    const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        for (final item in metadata)
-                          if (item.trim().isNotEmpty)
-                            CourseStatusChip(label: courseTr(context, item)),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 10),
-              const Padding(
-                padding: EdgeInsets.only(top: 6),
-                child: Icon(
-                  Icons.chevron_right_rounded,
-                  color: Color(0xFF9AA6B2),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+      child: onTap == null
+          ? cardBody
+          : InkWell(
+              borderRadius: BorderRadius.circular(26),
+              onTap: onTap,
+              child: cardBody,
+            ),
     );
   }
 }

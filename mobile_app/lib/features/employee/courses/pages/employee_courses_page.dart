@@ -83,14 +83,16 @@ class _EmployeeCoursesPageState extends State<EmployeeCoursesPage> {
                         courseReadPath(
                             featuredCourse, ['course', 'card_image_url']),
                       ),
-                      icon: Icons.play_circle_outline_rounded,
                       onTap: () =>
                           _openAssignment(courseReadInt(featuredCourse, 'id')),
                     ),
                     if (moreCourses.isNotEmpty) const SizedBox(height: 20),
                   ],
                   if (moreCourses.isNotEmpty) ...[
-                    const CourseHeaderRow(title: 'More courses'),
+                    CourseHeaderRow(
+                      title: 'More courses',
+                      titleColor: courseBrandTealDark,
+                    ),
                     const SizedBox(height: 16),
                   ],
                 ],
@@ -127,17 +129,7 @@ class _EmployeeCoursesPageState extends State<EmployeeCoursesPage> {
                       title: courseReadPath(item, ['course', 'title']),
                       description:
                           courseReadPath(item, ['course', 'description']),
-                      metadata: [
-                        '${courseReadPath(item, [
-                              'course',
-                              'estimated_minutes'
-                            ])} ${courseTr(context, 'min')}',
-                        '${courseReadPath(item, [
-                              'course',
-                              'content_item_total'
-                            ])} ${courseTr(context, 'Items')}',
-                        courseReadPath(item, ['course', 'card_label']),
-                      ],
+                      metadata: const [],
                       onTap: () => _openAssignment(courseReadInt(item, 'id')),
                     ),
                   );

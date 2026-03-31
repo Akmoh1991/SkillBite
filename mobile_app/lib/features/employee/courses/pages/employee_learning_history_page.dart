@@ -81,27 +81,21 @@ class _EmployeeLearningHistoryPageState
                 itemCount: history.length,
                 itemBuilder: (context, index) {
                   final item = courseAsMap(history[index]);
+                  final statusLabel = courseReadString(item, 'status_label');
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 16),
                     child: CourseCompactListCard(
                       imageUrl: widget.api.resolveUrl(
                         courseReadPath(item, ['course', 'card_image_url']),
                       ),
-                      eyebrow: courseReadString(item, 'status_label'),
+                      eyebrow: '',
+                      sideChipLabel:
+                          statusLabel.isEmpty ? 'Already Completed' : statusLabel,
                       title: courseReadPath(item, ['course', 'title']),
                       description:
                           courseReadPath(item, ['course', 'description']),
-                      metadata: [
-                        '${courseReadPath(item, [
-                              'course',
-                              'estimated_minutes'
-                            ])} ${courseTr(context, 'min')}',
-                        '${courseReadPath(item, [
-                              'course',
-                              'content_item_total'
-                            ])} ${courseTr(context, 'Items')}',
-                      ],
-                      onTap: () => _openAssignment(courseReadInt(item, 'id')),
+                      metadata: const [],
+                      onTap: null,
                     ),
                   );
                 },
