@@ -7,3 +7,5 @@ __pycache__/
 .gradle/
 media/
 staticfiles/
+!docs/static/media/
+!docs/static/media/**
