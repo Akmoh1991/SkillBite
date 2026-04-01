@@ -299,8 +299,9 @@ else:
 DEFAULT_FILE_STORAGE = STORAGES["default"]["BACKEND"]
 STATICFILES_STORAGE = STORAGES["staticfiles"]["BACKEND"]
 
-# ✅ WhiteNoise: في الإنتاج الأفضل عدم الاعتماد على finders
-WHITENOISE_USE_FINDERS = False if (DJANGO_ENV == "production" and not DEBUG) else True
+# Collectstatic is currently not copying project-owned assets into STATIC_ROOT
+# reliably on this stack, so let WhiteNoise serve them directly from finders.
+WHITENOISE_USE_FINDERS = True
 
 # ✅ كاش أفضل للـ static
 WHITENOISE_MAX_AGE = 31536000  # سنة
