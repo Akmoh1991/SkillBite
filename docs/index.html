@@ -1,0 +1,249 @@
+﻿<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>سكيل بايت | منصة التدريب وقوائم التشغيل</title>
+<link rel="stylesheet" href="static/branding/branding.css">
+<link rel="stylesheet" href="static/branding/public-site.css">
+</head>
+
+<body>
+
+<header>
+  <div class="logo-area">
+    <img src="static/media/SkillBite_logo.png" alt="SkillBite Logo">
+  </div>
+
+  <!-- Desktop Nav -->
+  <nav>
+    <a href="#hero">الرئيسية</a>
+    <a href="#courses-tasks">الدورات</a>
+    <a href="#why-skillbite">المميزات</a>
+    <a href="#operational-training"> التشغيل</a>
+
+    <a class="cta" href="https://skillbite.onrender.com/accounts/login/">تسجيل الدخول</a>
+  </nav>
+
+  <!-- Burger -->
+  <button class="burger" id="burgerBtn" type="button" aria-label="فتح القائمة" aria-controls="mobileMenu" aria-expanded="false">☰</button>
+
+  <!-- Mobile Menu -->
+  <div class="mobile-menu" id="mobileMenu" aria-hidden="true">
+    <a href="#hero">الرئيسية</a>
+    <a href="#courses-tasks">الدورات والمهام</a>
+    <a href="#why-skillbite">لماذا سكيل بايت</a>
+    <a href="#operational-training">التدريب التشغيلي</a>
+    <a href="#contact">التواصل</a>
+
+    <a class="cta" href="https://skillbite.onrender.com/accounts/login/">تسجيل الدخول</a>
+  </div>
+</header>
+
+<script>
+(function () {
+  const menu = document.getElementById('mobileMenu');
+  const btn = document.getElementById('burgerBtn');
+  const headerEl = document.querySelector('header');
+
+  if(!menu || !btn) return;
+
+  function setOpen(open){
+    menu.classList.toggle('is-open', open);
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    menu.setAttribute('aria-hidden', open ? 'false' : 'true');
+    btn.textContent = open ? '✕' : '☰';
+    btn.setAttribute('aria-label', open ? 'إغلاق القائمة' : 'فتح القائمة');
+  }
+
+  function isOpen(){
+    return menu.classList.contains('is-open');
+  }
+
+  btn.addEventListener('click', function(e){
+    e.preventDefault();
+    setOpen(!isOpen());
+  });
+
+  // close when clicking a link inside
+  menu.addEventListener('click', function(e){
+    const t = e.target;
+    if(t && t.tagName === 'A'){
+      setOpen(false);
+    }
+  });
+
+  // close when clicking outside
+  document.addEventListener('click', function(e){
+    if(!isOpen()) return;
+    const target = e.target;
+    if(headerEl && (headerEl === target || headerEl.contains(target))) return;
+    setOpen(false);
+  });
+
+  // close on resize to desktop
+  window.addEventListener('resize', function(){
+    if(window.innerWidth > 1024){
+      setOpen(false);
+    }
+  });
+
+  // close on ESC
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape' && isOpen()){
+      setOpen(false);
+    }
+  });
+})();
+</script>
+
+
+<section class="hero" id="hero">
+  <video autoplay muted loop playsinline preload="auto">
+    <source src="static/media/banner_videoHD.mp4" type="video/mp4">
+  </video>
+
+  <div class="hero-content">
+    <h1>موظفك الجديد يشتغل صح من أول يوم</h1>
+    <p>نظام يدرب فريقك وينظم مهامهم اليومية خطوة بخطوة من شاشة واحدة    </p>
+    <button onclick="window.location.href='https://skillbite.onrender.com/accounts/login/'">ابدأ الآن</button>
+  </div>
+</section>
+
+<section id="courses-tasks">
+  <div class="section-title">
+    <small>المميزات الأساسية</small>
+    <h2>الدورات وقوائم المهام</h2>
+  </div>
+
+  <div class="discover-grid">
+    <div class="discover-card">
+      <img src="static/media/home/discover-role.jpg" alt="الدورات">
+      <div class="discover-content"><h4>دورات حسب الدور الوظيفي</h4><p>قم بإسناد التدريب المناسب لكل فريق بحسب المسمى الوظيفي.</p></div>
+    </div>
+
+    <div class="discover-card">
+      <img src="static/media/home/discover-progress.jpg" alt="الموظفون">
+      <div class="discover-content"><h4>متابعة تقدم الموظفين</h4><p>يرى الموظف ما تم إسناده إليه بوضوح ويكمله بسهولة.</p></div>
+    </div>
+
+    <div class="discover-card">
+      <img src="static/media/home/discover-sop.jpg" alt="قوائم التشغيل">
+      <div class="discover-content"><h4>قوائم SOP اليومية</h4><p>تابع مهام الافتتاح والإغلاق والتنظيف والسلامة بشكل يومي.</p></div>
+    </div>
+
+    <div class="discover-card">
+      <img src="static/media/home/discover-multicompany.jpg" alt="إدارة متعددة الشركات">
+      <div class="discover-content"><h4>إدارة متعددة الشركات</h4><p>كل منشأة تدير موظفيها ودوراتها وقوائمها بشكل مستقل.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="why-skillbite">
+  <div class="section-title">
+    <h2>لماذا سكيل بايت</h2>
+  </div>
+
+  <div class="features-grid">
+    <div class="feature"><h3>تشغيل بسيط وواضح</h3><p>بدون تعقيد في الإجراءات. فقط إسناد، تنفيذ، ومتابعة.</p></div>
+    <div class="feature"><h3>مصمم لفرق الأغذية والمشروبات</h3><p>يدعم المطاعم والمقاهي والمطابخ وفرق العمل المرتبطة بالورديات.</p></div>
+    <div class="feature"><h3>التدريب وSOP في مكان واحد</h3><p>اجمع بين تطوير الموظفين والانضباط التشغيلي اليومي داخل منصة واحدة.</p></div>
+  </div>
+</section>
+
+<section id="operational-training">
+  <div class="section-title">
+    <h2>تركيز على التدريب التشغيلي</h2>
+  </div>
+
+  <div class="magazine-layout">
+    <div class="magazine-main">
+      <img src="static/media/home/magazine-main.jpg" alt="التدريب التشغيلي">
+      <div class="content">
+        <h3>امنح كل موظف معايير واضحة يتعلمها ومهام واضحة ينفذها يومياً.</h3>
+        <a href="https://skillbite.onrender.com/accounts/login/">دخول المنصة</a>
+      </div>
+    </div>
+
+    <div class="magazine-side">
+      <div class="magazine-card">
+        <img src="static/media/home/magazine-role.jpg" alt="إسناد حسب الدور">
+        <div class="content">
+          <h4>أسند الدورات حسب الدور الوظيفي بدلاً من إدارة كل موظف يدوياً.</h4>
+          <a href="https://skillbite.onrender.com/accounts/login/">تسجيل الدخول</a>
+        </div>
+      </div>
+
+      <div class="magazine-card">
+        <img src="static/media/home/magazine-sop.jpg" alt="إكمال قوائم التشغيل">
+        <div class="content">
+          <h4>اجعل إكمال قوائم SOP اليومية جزءاً طبيعياً من تشغيل الفرع.</h4>
+          <a href="https://skillbite.onrender.com/accounts/login/">الانتقال إلى اللوحة</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div id="contact">
+<footer>
+  <!-- ===== TOP ===== -->
+  <div class="footer-top">
+
+    <!-- BRAND -->
+    <div class="footer-brand">
+      <img src="static/media/SkillBite_logo.png" alt="SkillBite Logo">
+      <p>
+       منصة SkillBite تساعد فرق الأغذية والمشروبات على تنظيم التدريب، متابعة التقدم، وإدارة المهام التشغيلية اليومية من مكان واحد.
+      </p>
+    </div>
+
+    <!-- COLUMN 1 -->
+    <div class="footer-col">
+      <h4>المنصة</h4>
+      <a href="#hero">الرئيسية</a>
+      <a href="#courses-tasks">الدورات والمهام</a>
+      <a href="#why-skillbite">لماذا سكيل بايت</a>
+      <a href="#operational-training">التدريب التشغيلي</a>
+    </div>
+
+    <!-- COLUMN 2 -->
+    <div class="footer-col">
+      <h4>الدعم</h4>
+      <a href="#contact">الأسئلة الشائعة</a>
+      <a href="#contact">الدعم الفني</a>
+      <a href="#contact">سياسة الخصوصية</a>
+      <a href="#contact">الشروط والأحكام</a>
+    </div>
+
+    <!-- COLUMN 3 -->
+    <div class="footer-col">
+      <h4>التواصل</h4>
+      <a href="#contact">اتصل بنا</a>
+      <a href="#contact">مركز المساعدة</a>
+      <a href="#contact">تواصل معنا</a>
+    </div>
+
+  </div>
+
+  <!-- DIVIDER -->
+  <div class="footer-divider"></div>
+
+  <!-- ===== BOTTOM ===== -->
+  <div class="footer-bottom">
+    <div>
+      © 2026 SkillBite - جميع الحقوق محفوظة
+    </div>
+    <!--
+    <div>
+      تصميم وتطوير المنصة الرقمية
+    </div>
+    -->
+  </div>
+</footer>
+
+</div>
+
+</body>
+</html>
+
