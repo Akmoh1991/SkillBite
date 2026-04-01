@@ -286,7 +286,8 @@ DEFAULT_MEDIA_STORAGE = (
 if DJANGO_ENV == "production" and not DEBUG:
     STORAGES = {
         "default": {"BACKEND": DEFAULT_MEDIA_STORAGE},
-        "staticfiles": {"BACKEND": "whitenoise.storage.CompressedStaticFilesStorage"},
+        # Avoid WhiteNoise/Django post-process failures during collectstatic on Render.
+        "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
     }
 else:
     STORAGES = {
