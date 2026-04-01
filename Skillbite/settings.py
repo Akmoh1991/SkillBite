@@ -65,6 +65,7 @@ if DJANGO_ENV == "production":
         dict.fromkeys(
             [
                 *ALLOWED_HOSTS,
+                ".onrender.com",
                 *( [RENDER_EXTERNAL_HOSTNAME] if RENDER_EXTERNAL_HOSTNAME else [] ),
                 "localhost",
                 "127.0.0.1",
@@ -292,7 +293,10 @@ LOGIN_REDIRECT_URL = "/"
 CSRF_TRUSTED_ORIGINS = env_csv("DJANGO_CSRF_TRUSTED_ORIGINS", "")
 
 if DJANGO_ENV == "production" and not CSRF_TRUSTED_ORIGINS:
-    CSRF_TRUSTED_ORIGINS = ["https://skillbite.onrender.com"]
+    CSRF_TRUSTED_ORIGINS = [
+        "https://*.onrender.com",
+        *( [f"https://{RENDER_EXTERNAL_HOSTNAME}"] if RENDER_EXTERNAL_HOSTNAME else [] ),
+    ]
 
 
 # ==================================================
