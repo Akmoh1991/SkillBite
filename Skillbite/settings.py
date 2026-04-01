@@ -58,9 +58,19 @@ elif not SECRET_KEY:
     raise RuntimeError("DJANGO_SECRET_KEY must be set outside development.")
 
 ALLOWED_HOSTS = env_csv("DJANGO_ALLOWED_HOSTS", "")
+RENDER_EXTERNAL_HOSTNAME = os.getenv("RENDER_EXTERNAL_HOSTNAME", "").strip()
 
-if DJANGO_ENV == "production" and not ALLOWED_HOSTS:
-    ALLOWED_HOSTS = ["skillbite.onrender.com"]
+if DJANGO_ENV == "production":
+    ALLOWED_HOSTS = list(
+        dict.fromkeys(
+            [
+                *ALLOWED_HOSTS,
+                *( [RENDER_EXTERNAL_HOSTNAME] if RENDER_EXTERNAL_HOSTNAME else [] ),
+                "localhost",
+                "127.0.0.1",
+            ]
+        )
+    )
 elif DJANGO_ENV != "production":
     ALLOWED_HOSTS = list(
         dict.fromkeys(
