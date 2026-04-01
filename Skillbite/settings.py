@@ -2,6 +2,7 @@ from pathlib import Path
 import os
 import mimetypes
 import sys
+from urllib.parse import parse_qs, urlparse
 from dotenv import load_dotenv
 
 # تحميل متغيرات البيئة من ملف .env (إن وجد)
@@ -161,29 +162,67 @@ WSGI_APPLICATION = "Skillbite.wsgi.application"
 # ==================================================
 # قاعدة البيانات
 # ==================================================
-if DJANGO_ENV == "production":
-    DB_ENGINE = os.getenv("DB_ENGINE", "django.db.backends.postgresql")
-    DB_NAME = os.getenv("DB_NAME")
-    DB_USER = os.getenv("DB_USER")
-    DB_PASSWORD = os.getenv("DB_PASSWORD")
-    DB_HOST = os.getenv("DB_HOST")
-    DB_PORT = os.getenv("DB_PORT", "5432")
-    DB_SSLMODE = os.getenv("DB_SSLMODE", "require")
-
-    if not all([DB_NAME, DB_USER, DB_PASSWORD, DB_HOST]):
-        raise RuntimeError("Production DB is not configured correctly. Please check .env values.")
-
-    DATABASES = {
-        "default": {
-            "ENGINE": DB_ENGINE,
-            "NAME": DB_NAME,
-            "USER": DB_USER,
-            "PASSWORD": DB_PASSWORD,
-            "HOST": DB_HOST,
-            "PORT": DB_PORT,
-            "OPTIONS": {"sslmode": DB_SSLMODE},
-        }
+def build_database_config_from_url(database_url: str) -> dict:
+    parsed = urlparse(database_url)
+    engine_map = {
+        "postgres": "django.db.backends.postgresql",
+        "postgresql": "django.db.backends.postgresql",
+        "pgsql": "django.db.backends.postgresql",
+        "sqlite": "django.db.backends.sqlite3",
     }
+    engine = engine_map.get(parsed.scheme)
+    if not engine:
+        raise RuntimeError(f"Unsupported DATABASE_URL scheme: {parsed.scheme}")
+
+    if engine == "django.db.backends.sqlite3":
+        db_path = (parsed.path or "").lstrip("/") or "db.sqlite3"
+        return {
+            "ENGINE": engine,
+            "NAME": db_path,
+        }
+
+    query = parse_qs(parsed.query)
+    sslmode = (query.get("sslmode") or [os.getenv("DB_SSLMODE", "require")])[0]
+    return {
+        "ENGINE": engine,
+        "NAME": (parsed.path or "").lstrip("/"),
+        "USER": parsed.username or "",
+        "PASSWORD": parsed.password or "",
+        "HOST": parsed.hostname or "",
+        "PORT": str(parsed.port or os.getenv("DB_PORT", "5432")),
+        "OPTIONS": {"sslmode": sslmode},
+    }
+
+
+if DJANGO_ENV == "production":
+    DATABASE_URL = os.getenv("DATABASE_URL", "").strip()
+    if DATABASE_URL:
+        DATABASES = {
+            "default": build_database_config_from_url(DATABASE_URL),
+        }
+    else:
+        DB_ENGINE = os.getenv("DB_ENGINE", "django.db.backends.postgresql")
+        DB_NAME = os.getenv("DB_NAME")
+        DB_USER = os.getenv("DB_USER")
+        DB_PASSWORD = os.getenv("DB_PASSWORD")
+        DB_HOST = os.getenv("DB_HOST")
+        DB_PORT = os.getenv("DB_PORT", "5432")
+        DB_SSLMODE = os.getenv("DB_SSLMODE", "require")
+
+        if not all([DB_NAME, DB_USER, DB_PASSWORD, DB_HOST]):
+            raise RuntimeError("Production DB is not configured correctly. Please check .env values.")
+
+        DATABASES = {
+            "default": {
+                "ENGINE": DB_ENGINE,
+                "NAME": DB_NAME,
+                "USER": DB_USER,
+                "PASSWORD": DB_PASSWORD,
+                "HOST": DB_HOST,
+                "PORT": DB_PORT,
+                "OPTIONS": {"sslmode": DB_SSLMODE},
+            }
+        }
 else:
     DATABASES = {
         "default": {
@@ -247,7 +286,7 @@ DEFAULT_MEDIA_STORAGE = (
 if DJANGO_ENV == "production" and not DEBUG:
     STORAGES = {
         "default": {"BACKEND": DEFAULT_MEDIA_STORAGE},
-        "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
+        "staticfiles": {"BACKEND": "whitenoise.storage.CompressedStaticFilesStorage"},
     }
 else:
     STORAGES = {
