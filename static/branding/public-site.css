@@ -4,7 +4,7 @@
   --orange: #00b476 !important;
   --text-dark: #1a1a1a !important;
   --bg-transparent: rgba(10, 37, 64, 0.25);
-  --bg-solid: rgba(10, 37, 64, 0.95);
+  --bg-solid: rgba(8, 96, 72, 0.95);
   --text-light: #e6e6e6;
 }
 
@@ -110,7 +110,7 @@ nav a:not(.cta):hover::after {
   top: 96px;
   right: 0;
   width: 100%;
-  background: var(--bg-solid);
+  background: rgba(8, 96, 72, 0.97) !important;
   padding: 20px;
   max-height: calc(100dvh - 96px);
   overflow-y: auto;
@@ -443,19 +443,26 @@ footer {
 
 @media (max-width: 600px) {
   header {
-    height: 84px;
-    padding: 14px 14px;
+    height: 72px;
+    padding: 10px 12px;
   }
 
   .logo-area img {
-    height: 36px;
+    height: 32px;
     width: auto;
   }
 
+  .burger {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    font-size: 20px;
+  }
+
   .mobile-menu {
-    top: 84px;
-    padding: 14px;
-    max-height: calc(100dvh - 84px);
+    top: 72px;
+    padding: 14px 16px 18px;
+    max-height: calc(100dvh - 72px);
   }
 
   .mobile-menu a,
@@ -474,27 +481,49 @@ footer {
 
   .hero {
     min-height: 100vh;
-    align-items: flex-start;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .hero::after {
+    background:
+      linear-gradient(180deg, rgba(6, 45, 34, 0.78) 0%, rgba(6, 45, 34, 0.48) 34%, rgba(6, 45, 34, 0.18) 100%);
   }
 
   .hero-content {
-    padding: 0 18px;
-    margin-top: 120px;
+    padding: 0 20px;
+    margin-top: 40px;
     max-width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
   }
 
   .hero h1 {
-    font-size: 28px;
-    margin-bottom: 14px;
+    max-width: 12ch;
+    font-size: 23px;
+    line-height: 1.35;
+    margin: 0 0 12px;
+    text-shadow: 0 4px 16px rgba(0, 0, 0, 0.28);
   }
 
   .hero p {
-    font-size: 14px;
+    max-width: 30ch;
+    font-size: 12px;
+    line-height: 1.75;
+    margin: 0;
+    color: rgba(255, 255, 255, 0.9);
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.24);
   }
 
   .hero button {
+    margin-top: 20px;
     width: 100%;
-    max-width: 340px;
+    max-width: 280px;
+    padding: 12px 22px;
+    border-radius: 999px;
+    font-size: 14px;
   }
 }
 
