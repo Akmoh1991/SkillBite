@@ -255,6 +255,10 @@ else:
         "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
     }
 
+# Compatibility for older packages that still read the pre-Django-4.2 settings.
+DEFAULT_FILE_STORAGE = STORAGES["default"]["BACKEND"]
+STATICFILES_STORAGE = STORAGES["staticfiles"]["BACKEND"]
+
 # ✅ WhiteNoise: في الإنتاج الأفضل عدم الاعتماد على finders
 WHITENOISE_USE_FINDERS = False if (DJANGO_ENV == "production" and not DEBUG) else True
 
