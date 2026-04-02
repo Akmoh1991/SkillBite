@@ -1,14 +1,12 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:flutter/material.dart';
-import 'package:skillbite_mobile/app/localization/app_localizations.dart';
-import 'package:skillbite_mobile/app/theme/app_theme_tokens.dart';
-import 'package:skillbite_mobile/app/widgets/widgets.dart';
 import 'package:skillbite_mobile/core/api/mobile_api_client.dart';
 import 'package:skillbite_mobile/core/utils/utils.dart';
+import 'package:skillbite_mobile/features/employee/courses/course_flow_support.dart';
 import 'package:skillbite_mobile/features/owner/pages/owner_course_detail_screen.dart';
 
-String _tr(BuildContext context, String english) => tr(context, english);
+String _tr(BuildContext context, String english) => courseTr(context, english);
 Map<String, dynamic> _asMap(Object? value) => asMap(value);
 List<dynamic> _asList(Object? value) => asList(value);
 String _readString(dynamic source, String key) => readString(source, key);
@@ -17,19 +15,7 @@ bool _readBool(dynamic source, String key) => readBool(source, key);
 void _showSnack(BuildContext context, String message) =>
     showSnack(context, message);
 
-const _ink = inkColor;
-const _muted = mutedColor;
-const _line = lineColor;
-const _brandTealDark = brandTealDark;
-
-typedef _HeaderRow = AppHeaderRow;
-typedef _DashboardMetricRow = AppDashboardMetricRow;
-typedef _DashboardMetricData = AppDashboardMetricData;
-typedef _ManagementRecordCard = AppManagementRecordCard;
-typedef _StatusChip = AppStatusChip;
-typedef _LoadingState = AppLoadingState;
-typedef _ErrorState = AppErrorState;
-typedef _OptimizedCourseCardImage = AppOptimizedCourseCardImage;
+const _line = courseLine;
 
 class OwnerCoursesPage extends StatefulWidget {
   const OwnerCoursesPage({super.key, required this.api});
@@ -72,6 +58,21 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
     });
   }
 
+  Future<void> _openCourse(Map<String, dynamic> course) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => OwnerCourseDetailScreen(
+          api: widget.api,
+          courseId: _readInt(course, 'id'),
+          initialCourse: _asMap(course),
+        ),
+      ),
+    );
+    if (mounted) {
+      _reload();
+    }
+  }
+
   Future<void> _showCreateCourseDialog() async {
     final titleController = TextEditingController();
     final descriptionController = TextEditingController();
@@ -105,7 +106,9 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
                     }
                   ],
                 });
-                if (!mounted) return;
+                if (!mounted) {
+                  return;
+                }
                 Navigator.of(context).pop(true);
               } catch (error) {
                 setInnerState(() {
@@ -120,7 +123,8 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
               insetPadding:
                   const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(32)),
+                borderRadius: BorderRadius.circular(32),
+              ),
               child: AnimatedPadding(
                 duration: const Duration(milliseconds: 180),
                 curve: Curves.easeOut,
@@ -165,7 +169,8 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
                       TextField(
                         controller: descriptionController,
                         decoration: InputDecoration(
-                            labelText: _tr(context, 'Description')),
+                          labelText: _tr(context, 'Description'),
+                        ),
                       ),
                       const SizedBox(height: 14),
                       TextField(
@@ -178,7 +183,8 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
                       TextField(
                         controller: contentTitleController,
                         decoration: InputDecoration(
-                            labelText: _tr(context, 'First content title')),
+                          labelText: _tr(context, 'First content title'),
+                        ),
                       ),
                       const SizedBox(height: 14),
                       TextField(
@@ -257,7 +263,9 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
                     .post('/business-owner/courses/$courseId/assign/', {
                   'employee_ids': selectedIds.toList(),
                 });
-                if (!mounted) return;
+                if (!mounted) {
+                  return;
+                }
                 Navigator.of(context).pop(true);
               } catch (error) {
                 setInnerState(() {
@@ -272,7 +280,8 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
               insetPadding:
                   const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(32)),
+                borderRadius: BorderRadius.circular(32),
+              ),
               child: AnimatedPadding(
                 duration: const Duration(milliseconds: 180),
                 curve: Curves.easeOut,
@@ -387,192 +396,31 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
     }
   }
 
-  Widget _buildCourseCard(
+  Widget _buildCourseActionRow(
     BuildContext context,
     Map<String, dynamic> item,
     List<dynamic> employees,
   ) {
-    final title = _readString(item, 'title');
-    final description = _readString(item, 'description').trim().isEmpty
-        ? 'Practical course content with clear guidance and structured steps.'
-        : _readString(item, 'description');
-    final imageUrl = widget.api.resolveUrl(_readString(item, 'card_image_url'));
-    final footnote = _readString(item, 'business_name').trim().isEmpty
-        ? (_readBool(item, 'is_owned_by_business')
-            ? 'Company course library'
-            : 'Central course library')
-        : _readString(item, 'business_name');
+    return const SizedBox.shrink();
+  }
 
-    return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(26),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(26),
-        onTap: () async {
-          await Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => OwnerCourseDetailScreen(
-                api: widget.api,
-                courseId: _readInt(item, 'id'),
-                initialCourse: _asMap(item),
-              ),
-            ),
-          );
-          _reload();
-        },
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(26),
-            border: Border.all(color: _line),
-          ),
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(
-                    width: 118,
-                    child: _OptimizedCourseCardImage(
-                      imageUrl: imageUrl,
-                      title: title,
-                      aspectRatio: 1.18,
-                      borderRadius: 18,
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                footnote,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodySmall
-                                    ?.copyWith(
-                                      color: _muted,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 5),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFEAF7F4),
-                                borderRadius: BorderRadius.circular(999),
-                              ),
-                              child: Text(
-                                _readBool(item, 'is_owned_by_business')
-                                    ? _tr(context, 'Owned')
-                                    : _tr(context, 'Shared'),
-                                style: const TextStyle(
-                                  color: _brandTealDark,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 10),
-                        Text(
-                          title,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style:
-                              Theme.of(context).textTheme.titleLarge?.copyWith(
-                                    fontWeight: FontWeight.w800,
-                                    height: 1.2,
-                                  ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          description,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style:
-                              Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: const Color(0xFF7B879B),
-                                    height: 1.45,
-                                  ),
-                        ),
-                        const SizedBox(height: 12),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: [
-                            _StatusChip(
-                              label:
-                                  '${_readInt(item, 'estimated_minutes')} ${_tr(context, 'min')}',
-                            ),
-                            _StatusChip(
-                              label:
-                                  '${_readInt(item, 'content_item_total')} ${_tr(context, 'Items')}',
-                            ),
-                            if (_readString(item, 'card_label')
-                                .trim()
-                                .isNotEmpty)
-                              _StatusChip(
-                                  label: _readString(item, 'card_label')),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 14),
-              Wrap(
-                spacing: 10,
-                runSpacing: 10,
-                children: [
-                  FilledButton(
-                    style: FilledButton.styleFrom(
-                      minimumSize: const Size(0, 44),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 12),
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                    onPressed: () async {
-                      await Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => OwnerCourseDetailScreen(
-                            api: widget.api,
-                            courseId: _readInt(item, 'id'),
-                            initialCourse: _asMap(item),
-                          ),
-                        ),
-                      );
-                      _reload();
-                    },
-                    child: Text(_tr(context, 'Manage Content')),
-                  ),
-                  if (employees.isNotEmpty)
-                    FilledButton.tonal(
-                      style: FilledButton.styleFrom(
-                        minimumSize: const Size(0, 44),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 12),
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
-                      onPressed: () =>
-                          _showAssignDialog(_readInt(item, 'id'), employees),
-                      child: Text(_tr(context, 'Assign')),
-                    ),
-                ],
-              ),
-            ],
-          ),
+  Widget _buildCourseListItem(
+    BuildContext context,
+    Map<String, dynamic> item,
+    List<dynamic> employees,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        CourseCompactListCard(
+          imageUrl: widget.api.resolveUrl(_readString(item, 'card_image_url')),
+          title: _readString(item, 'title'),
+          description: _readString(item, 'description'),
+          metadata: const [],
+          onTap: () => _openCourse(item),
         ),
-      ),
+        _buildCourseActionRow(context, item, employees),
+      ],
     );
   }
 
@@ -590,161 +438,131 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
         summary['owned_course_total'] ?? ownedCourses.length;
     final companyCourses = [
       for (final item in courses)
-        if (_readBool(item, 'is_owned_by_business')) item,
+        if (_readBool(item, 'is_owned_by_business')) _asMap(item),
     ];
     final sharedCourses = [
       for (final item in courses)
-        if (!_readBool(item, 'is_owned_by_business')) item,
+        if (!_readBool(item, 'is_owned_by_business')) _asMap(item),
     ];
-    final overviewWidgets = <Widget>[
-      _HeaderRow(
-        title: 'Courses',
-        titleColor: _brandTealDark,
-        titleFontSize: 26,
-        trailing: FilledButton(
-          style: FilledButton.styleFrom(
-            minimumSize: const Size(0, 44),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          ),
-          onPressed: _showCreateCourseDialog,
-          child: Text(_tr(context, 'Add')),
-        ),
-      ),
-      const SizedBox(height: 18),
-      _DashboardMetricRow(
-        metrics: [
-          _DashboardMetricData(
-            'Courses',
-            '$visibleCourseTotal',
-            icon: Icons.menu_book_rounded,
-          ),
-          _DashboardMetricData(
-            'Employees',
-            '${employees.length}',
-            icon: Icons.groups_rounded,
-          ),
-          _DashboardMetricData(
-            'Owned',
-            '$ownedCourseTotal',
-            icon: Icons.edit_note_rounded,
-          ),
-        ],
-      ),
-      const SizedBox(height: 16),
-    ];
+    final featuredCompanyCourse =
+        companyCourses.isEmpty ? null : _asMap(companyCourses.first);
+    final moreCompanyCourses = companyCourses.length > 1
+        ? companyCourses.skip(1).toList(growable: false)
+        : const <dynamic>[];
 
-    return DecoratedBox(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFFF7FBF9), Color(0xFFF2F7F5)],
-        ),
-      ),
-      child: SafeArea(
-        top: false,
-        child: CustomScrollView(
-          cacheExtent: 900,
-          slivers: [
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
-              sliver: SliverToBoxAdapter(
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 720),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      mainAxisSize: MainAxisSize.min,
-                      children: overviewWidgets,
+    return CoursePageSliverBody(
+      slivers: [
+        CoursePageSliverSection(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              CourseHeaderRow(
+                title: 'الدورات',
+                titleColor: courseBrandTealDark,
+                titleFontSize: 26,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                trailing: FilledButton(
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size(0, 44),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
                     ),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
+                  onPressed: _showCreateCourseDialog,
+                  child: const Text('إضافة'),
                 ),
+              ),
+              if (featuredCompanyCourse != null) ...[
+                const SizedBox(height: 20),
+                CoursePromoCard(
+                  eyebrow: _readString(featuredCompanyCourse, 'card_label')
+                          .trim()
+                          .isNotEmpty
+                      ? _readString(featuredCompanyCourse, 'card_label')
+                      : 'مملوك',
+                  title: _readString(featuredCompanyCourse, 'title'),
+                  meta:
+                      '${_readInt(featuredCompanyCourse, 'estimated_minutes')} دقيقة',
+                  supporting: _readString(featuredCompanyCourse, 'description'),
+                  imageUrl: widget.api.resolveUrl(
+                    _readString(featuredCompanyCourse, 'card_image_url'),
+                  ),
+                  onTap: () => _openCourse(featuredCompanyCourse),
+                ),
+                _buildCourseActionRow(
+                  context,
+                  featuredCompanyCourse,
+                  employees,
+                ),
+              ],
+              if (moreCompanyCourses.isNotEmpty) ...[
+                const SizedBox(height: 20),
+                CourseHeaderRow(
+                  title: 'دورات إضافية',
+                  titleColor: courseBrandTealDark,
+                ),
+              ],
+            ],
+          ),
+        ),
+        if (isLoading)
+          const CoursePageSliverSection(
+            padding: EdgeInsets.fromLTRB(24, 0, 24, 120),
+            child: CourseSectionCard(
+              title: 'الدورات',
+              child: CourseLoadingState(),
+            ),
+          )
+        else if (courses.isEmpty)
+          const CoursePageSliverSection(
+            padding: EdgeInsets.fromLTRB(24, 0, 24, 120),
+            child: CourseSectionCard(
+              title: 'الدورات',
+              child: Text('لا توجد دورات متاحة حالياً.'),
+            ),
+          )
+        else ...[
+          if (moreCompanyCourses.isNotEmpty)
+            CoursePageSliverList(
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+              itemCount: moreCompanyCourses.length,
+              itemBuilder: (context, index) {
+                final item = _asMap(moreCompanyCourses[index]);
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: _buildCourseListItem(context, item, employees),
+                );
+              },
+            ),
+          if (sharedCourses.isNotEmpty)
+            CoursePageSliverSection(
+              padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+              child: CourseHeaderRow(
+                title: 'المكتبة المشتركة',
+                titleColor: courseBrandTealDark,
               ),
             ),
-            if (isLoading)
-              const SliverPadding(
-                padding: EdgeInsets.fromLTRB(24, 0, 24, 120),
-                sliver: SliverToBoxAdapter(
-                  child: Card(
-                    child: Padding(
-                      padding: EdgeInsets.all(24),
-                      child: _LoadingState(),
-                    ),
-                  ),
-                ),
-              )
-            else if (courses.isEmpty)
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(24, 0, 24, 120),
-                sliver: SliverToBoxAdapter(
-                  child: _ManagementRecordCard(
-                    title: 'Create your first course',
-                    description:
-                        'Build a company-owned course with tailored content and then assign it to the right people.',
-                    icon: Icons.auto_stories_rounded,
-                    secondaryActionLabel: _tr(context, 'Create'),
-                    onSecondaryAction: _showCreateCourseDialog,
-                  ),
-                ),
-              )
-            else ...[
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(24, 0, 24, 0),
-                sliver: SliverList(
-                  delegate: SliverChildBuilderDelegate((context, index) {
-                    final item = _asMap(companyCourses[index]);
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      child: RepaintBoundary(
-                        child: _buildCourseCard(context, item, employees),
-                      ),
-                    );
-                  }, childCount: companyCourses.length),
-                ),
-              ),
-              if (sharedCourses.isNotEmpty)
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
-                  sliver: SliverToBoxAdapter(
-                    child: Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 720),
-                        child: Text(
-                          _tr(context, 'Shared library'),
-                          style: Theme.of(context)
-                              .textTheme
-                              .headlineSmall
-                              ?.copyWith(
-                                color: _ink,
-                                fontSize: 20,
-                              ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              if (sharedCourses.isNotEmpty)
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 120),
-                  sliver: SliverList(
-                    delegate: SliverChildBuilderDelegate((context, index) {
-                      final item = _asMap(sharedCourses[index]);
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
-                        child: RepaintBoundary(
-                          child: _buildCourseCard(context, item, employees),
-                        ),
-                      );
-                    }, childCount: sharedCourses.length),
-                  ),
-                )
-              else
-                const SliverToBoxAdapter(child: SizedBox(height: 120)),
-            ],
-          ],
-        ),
-      ),
+          if (sharedCourses.isNotEmpty)
+            CoursePageSliverList(
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 120),
+              itemCount: sharedCourses.length,
+              itemBuilder: (context, index) {
+                final item = _asMap(sharedCourses[index]);
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: _buildCourseListItem(context, item, employees),
+                );
+              },
+            )
+          else
+            const CoursePageSliverSection(
+              padding: EdgeInsets.fromLTRB(24, 0, 24, 120),
+              child: SizedBox.shrink(),
+            ),
+        ],
+      ],
     );
   }
 
@@ -757,7 +575,7 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
           return _buildBody(context, isLoading: true);
         }
         if (snapshot.hasError) {
-          return _ErrorState(
+          return CourseErrorState(
             message: snapshot.error.toString().replaceFirst('Exception: ', ''),
           );
         }

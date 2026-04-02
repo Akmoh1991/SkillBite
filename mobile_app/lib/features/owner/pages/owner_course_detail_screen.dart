@@ -1,33 +1,10 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:flutter/material.dart';
-import 'package:skillbite_mobile/app/localization/app_localizations.dart';
-import 'package:skillbite_mobile/app/theme/app_theme_tokens.dart';
-import 'package:skillbite_mobile/app/widgets/widgets.dart';
 import 'package:skillbite_mobile/core/api/mobile_api_client.dart';
-import 'package:skillbite_mobile/core/utils/utils.dart';
-
-String _tr(BuildContext context, String english) => tr(context, english);
-Map<String, dynamic> _asMap(Object? value) => asMap(value);
-List<dynamic> _asList(Object? value) => asList(value);
-String _readString(dynamic source, String key) => readString(source, key);
-int _readInt(dynamic source, String key) => readInt(source, key);
-bool _readBool(dynamic source, String key) => readBool(source, key);
-IconData _contentIcon(dynamic item) => contentIcon(item);
-void _showSnack(BuildContext context, String message) =>
-    showSnack(context, message);
-
-const _brandTeal = brandTeal;
-const _brandTealDark = brandTealDark;
-const _ink = inkColor;
-const _muted = mutedColor;
-
-typedef _PageBody = AppPageBody;
-typedef _HeaderRow = AppHeaderRow;
-typedef _DashboardMetricRow = AppDashboardMetricRow;
-typedef _DashboardMetricData = AppDashboardMetricData;
-typedef _StatusChip = AppStatusChip;
-typedef _ErrorState = AppErrorState;
+import 'package:skillbite_mobile/features/employee/courses/course_flow_support.dart';
+import 'package:skillbite_mobile/features/employee/courses/pages/course_video_screen.dart';
+import 'package:skillbite_mobile/features/employee/courses/pages/course_web_content_screen.dart';
 
 class OwnerCourseDetailScreen extends StatefulWidget {
   const OwnerCourseDetailScreen({
@@ -48,6 +25,7 @@ class OwnerCourseDetailScreen extends StatefulWidget {
 
 class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
   late Future<Map<String, dynamic>> future;
+  bool assigning = false;
 
   @override
   void initState() {
@@ -61,171 +39,448 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
     });
   }
 
-  Widget _buildContentItemCard(
-      BuildContext context, Map<String, dynamic> rawItem) {
-    final description = _readString(rawItem, 'body').isNotEmpty
-        ? _readString(rawItem, 'body')
-        : _readString(rawItem, 'material_url').isNotEmpty
-            ? _readString(rawItem, 'material_url')
-            : 'No body or link provided yet.';
+  Future<void> _showAssignDialog() async {
+    setState(() => assigning = true);
+    List<dynamic> employees = const [];
+    try {
+      final payload = await widget.api.get('/business-owner/courses/');
+      employees = courseAsList(payload['employees']);
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      courseShowSnack(
+          context, error.toString().replaceFirst('Exception: ', ''));
+      setState(() => assigning = false);
+      return;
+    }
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFEAF7F4),
-                    borderRadius: BorderRadius.circular(14),
+    if (!mounted) {
+      return;
+    }
+
+    setState(() => assigning = false);
+
+    if (employees.isEmpty) {
+      courseShowSnack(context, 'لا يوجد موظفون متاحون للإسناد.');
+      return;
+    }
+
+    final selectedIds = <int>{};
+    final assigned = await showDialog<bool>(
+          context: context,
+          builder: (context) {
+            bool saving = false;
+            String? errorText;
+            return StatefulBuilder(
+              builder: (context, setInnerState) {
+                Future<void> submit() async {
+                  setInnerState(() {
+                    saving = true;
+                    errorText = null;
+                  });
+                  try {
+                    await widget.api.post(
+                      '/business-owner/courses/${widget.courseId}/assign/',
+                      {
+                        'employee_ids': selectedIds.toList(),
+                      },
+                    );
+                    if (!mounted) {
+                      return;
+                    }
+                    Navigator.of(context).pop(true);
+                  } catch (error) {
+                    setInnerState(() {
+                      errorText =
+                          error.toString().replaceFirst('Exception: ', '');
+                      saving = false;
+                    });
+                  }
+                }
+
+                return Dialog(
+                  backgroundColor: const Color(0xFFF3FBF8),
+                  insetPadding:
+                      const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(32),
                   ),
-                  child: Icon(_contentIcon(rawItem), color: _brandTeal),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _readString(rawItem, 'title'),
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        description,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              height: 1.5,
+                  child: AnimatedPadding(
+                    duration: const Duration(milliseconds: 180),
+                    curve: Curves.easeOut,
+                    padding: const EdgeInsets.fromLTRB(22, 24, 22, 22),
+                    child: SizedBox(
+                      width: 420,
+                      child: SingleChildScrollView(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'إسناد الدورة',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .headlineMedium
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.w800,
+                                  ),
                             ),
+                            const SizedBox(height: 10),
+                            Text(
+                              'اختر الموظفين الذين تريد إسناد هذه الدورة لهم.',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium
+                                  ?.copyWith(
+                                    color: const Color(0xFF61706C),
+                                    height: 1.45,
+                                  ),
+                            ),
+                            const SizedBox(height: 18),
+                            for (final item in employees) ...[
+                              Container(
+                                margin: const EdgeInsets.only(bottom: 12),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(22),
+                                  border: Border.all(color: courseLine),
+                                ),
+                                child: CheckboxListTile(
+                                  value: selectedIds
+                                      .contains(courseReadInt(item, 'id')),
+                                  onChanged: (checked) {
+                                    setInnerState(() {
+                                      final id = courseReadInt(item, 'id');
+                                      if (checked == true) {
+                                        selectedIds.add(id);
+                                      } else {
+                                        selectedIds.remove(id);
+                                      }
+                                    });
+                                  },
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(22),
+                                  ),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 4,
+                                  ),
+                                  title: Text(
+                                      courseReadString(item, 'display_name')),
+                                  subtitle: Text(
+                                    courseReadString(item, 'job_title')
+                                            .trim()
+                                            .isEmpty
+                                        ? 'لا يوجد مسمى وظيفي'
+                                        : courseReadString(item, 'job_title'),
+                                  ),
+                                ),
+                              ),
+                            ],
+                            if (errorText != null)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 8),
+                                child: Text(
+                                  errorText!,
+                                  style: const TextStyle(
+                                    color: Color(0xFFC54C2B),
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            const SizedBox(height: 10),
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: TextButton(
+                                onPressed: saving
+                                    ? null
+                                    : () => Navigator.of(context).pop(false),
+                                child: const Text('إلغاء'),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            SizedBox(
+                              width: double.infinity,
+                              child: FilledButton(
+                                onPressed: saving ? null : submit,
+                                child: Text(saving ? 'جارٍ الحفظ...' : 'إسناد'),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ],
+                    ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                _StatusChip(label: _readString(rawItem, 'content_type')),
-                _StatusChip(label: 'Order ${_readInt(rawItem, 'order')}'),
-                if (_readString(rawItem, 'material_url').isNotEmpty)
-                  const _StatusChip(label: 'External link'),
-              ],
-            ),
-            const SizedBox(height: 14),
-            Row(
-              children: [
-                Expanded(
-                  child: FilledButton.tonal(
-                    onPressed: () => _showContentDialog(item: _asMap(rawItem)),
-                    child: Text(_tr(context, 'Edit')),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: FilledButton.tonal(
-                    onPressed: () => _deleteContent(_asMap(rawItem)),
-                    child: Text(_tr(context, 'Delete')),
-                  ),
-                ),
-              ],
-            ),
-          ],
+                );
+              },
+            );
+          },
+        ) ??
+        false;
+
+    if (assigned == true && mounted) {
+      courseShowSnack(context, 'تم إسناد الدورة.');
+    }
+  }
+
+  Future<void> _openContentItem(Map<String, dynamic> item) async {
+    final title = courseReadString(item, 'title');
+    final videoUrl = widget.api.resolveUrl(courseReadString(item, 'video_url'));
+    final pdfUrl = widget.api.resolveUrl(courseReadString(item, 'pdf_url'));
+    final materialUrl =
+        widget.api.resolveUrl(courseReadString(item, 'material_url'));
+
+    if (videoUrl.isNotEmpty) {
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => CourseVideoScreen(title: title, videoUrl: videoUrl),
+        ),
+      );
+      return;
+    }
+
+    final browserUrl = pdfUrl.isNotEmpty ? pdfUrl : materialUrl;
+    if (browserUrl.isEmpty) {
+      courseShowSnack(
+        context,
+        courseReadString(item, 'body').isNotEmpty
+            ? courseReadString(item, 'body')
+            : 'No content URL available.',
+      );
+      return;
+    }
+
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => CourseWebContentScreen(
+          title: title,
+          url: browserUrl,
+          isPdf: pdfUrl.isNotEmpty,
         ),
       ),
     );
   }
 
-  Widget _buildBody(BuildContext context, Map<String, dynamic> course) {
-    final items = _asList(course['content_items']);
-    final description = _readString(course, 'description');
-    final estimatedMinutes = _readInt(course, 'estimated_minutes');
-    final hasExam = _readBool(course, 'has_exam');
-    return _PageBody(
-      children: [
-        _HeaderRow(
-          title: _readString(course, 'title').isEmpty
-              ? 'Course'
-              : _readString(course, 'title'),
-          titleColor: _brandTealDark,
-          titleFontSize: 26,
-        ),
-        if (description.isNotEmpty) ...[
-          const SizedBox(height: 8),
-          Text(
-            description,
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: _muted,
-                  height: 1.5,
-                ),
+  Widget _buildManagedContentTile(
+    BuildContext context,
+    Map<String, dynamic> rawItem,
+  ) {
+    final title = courseReadString(rawItem, 'title').trim().isEmpty
+        ? courseTr(context, 'Lesson')
+        : courseReadString(rawItem, 'title');
+    final subtitle = courseContentSubtitle(rawItem).trim().isEmpty
+        ? 'لا توجد تفاصيل للدرس بعد.'
+        : courseContentSubtitle(rawItem);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFE3EBF2)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x080F172A),
+            blurRadius: 10,
+            offset: Offset(0, 4),
           ),
         ],
-        const SizedBox(height: 18),
-        _DashboardMetricRow(
-          metrics: [
-            _DashboardMetricData(
-              'Items',
-              '${items.length}',
-              icon: Icons.layers_rounded,
-            ),
-            _DashboardMetricData(
-              'Minutes',
-              '$estimatedMinutes',
-              icon: Icons.schedule_rounded,
-            ),
-            _DashboardMetricData(
-              hasExam ? 'Has exam' : 'No exam',
-              hasExam ? 'Yes' : 'No',
-              icon: hasExam
-                  ? Icons.quiz_rounded
-                  : Icons.check_circle_outline_rounded,
-            ),
-          ],
-        ),
-        const SizedBox(height: 20),
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                _tr(context, 'Content library'),
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      color: _ink,
-                      fontSize: 20,
+      ),
+      child: Column(
+        children: [
+          InkWell(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            onTap: () => _openContentItem(rawItem),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+              child: Row(
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEAF7F4),
+                      borderRadius: BorderRadius.circular(16),
                     ),
+                    child: Icon(
+                      courseContentIcon(rawItem),
+                      color: courseBrandTealDark,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          courseTr(context, title),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style:
+                              Theme.of(context).textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.w800,
+                                    color: courseInk,
+                                  ),
+                        ),
+                        const SizedBox(height: 5),
+                        Text(
+                          courseTr(context, subtitle),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style:
+                              Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: const Color(0xFF5B6878),
+                                    height: 1.35,
+                                  ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Icon(
+                    Icons.chevron_right_rounded,
+                    color: Color(0xFF95A3B4),
+                  ),
+                ],
               ),
             ),
-            FilledButton(
-              style: FilledButton.styleFrom(
-                minimumSize: const Size(0, 44),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-              onPressed: () => _showContentDialog(),
-              child: Text(_tr(context, 'Add')),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    CourseStatusChip(
+                      label: coursePrimaryContentLabel(rawItem),
+                    ),
+                    CourseStatusChip(
+                      label: 'الترتيب ${courseReadInt(rawItem, 'order')}',
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: FilledButton.tonal(
+                        onPressed: () => _showContentDialog(item: rawItem),
+                        child: const Text('تعديل'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: FilledButton.tonal(
+                        onPressed: () => _deleteContent(rawItem),
+                        child: const Text('حذف'),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBody(BuildContext context, Map<String, dynamic> course) {
+    final items = courseAsList(course['content_items']);
+    final description = courseReadString(course, 'description');
+    final estimatedMinutes = courseReadInt(course, 'estimated_minutes');
+    final hasExam = courseReadBool(course, 'has_exam');
+    final featuredContent = items.isEmpty ? null : courseAsMap(items.first);
+    final remainingContent =
+        items.length > 1 ? items.skip(1).toList() : const <dynamic>[];
+    final courseTitle = courseReadString(course, 'title').trim().isEmpty
+        ? 'الدورة'
+        : courseReadString(course, 'title');
+
+    return CoursePageBody(
+      children: [
+        CourseHeaderRow(
+          title: courseTitle,
+          titleColor: courseBrandTealDark,
+          titleFontSize: 24,
+        ),
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            CourseStatusChip(
+              label: '$estimatedMinutes دقيقة',
+            ),
+            CourseStatusChip(
+              label: '${items.length} عناصر',
+            ),
+            CourseStatusChip(label: hasExam ? 'الاختبار' : 'بدون اختبار'),
           ],
         ),
         const SizedBox(height: 16),
-        if (items.isEmpty)
-          const Card(
-            child: Padding(
-              padding: EdgeInsets.all(18),
-              child: Text('No content items yet.'),
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton.tonal(
+            style: FilledButton.styleFrom(
+              minimumSize: const Size.fromHeight(52),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(22),
+              ),
             ),
+            onPressed: assigning ? null : _showAssignDialog,
+            child: Text(assigning ? 'جارٍ التحميل...' : 'إسناد الدورة'),
+          ),
+        ),
+        const SizedBox(height: 16),
+        if (featuredContent == null)
+          const CourseSectionCard(
+            title: 'الدرس',
+            child: Text('لا توجد عناصر محتوى بعد.'),
           )
         else
-          for (final rawItem in items) ...[
-            _buildContentItemCard(context, _asMap(rawItem)),
-            const SizedBox(height: 16),
-          ],
+          CourseLessonMediaCard(
+            title: courseReadString(featuredContent, 'title').isEmpty
+                ? courseTitle
+                : courseReadString(featuredContent, 'title'),
+            subtitle: description.isEmpty
+                ? courseContentSubtitle(featuredContent)
+                : description,
+            videoUrl: widget.api.resolveUrl(
+              courseReadString(featuredContent, 'video_url'),
+            ),
+            mediaLabel: coursePrimaryContentLabel(featuredContent),
+            icon: courseContentIcon(featuredContent),
+            onTap: () => _openContentItem(featuredContent),
+          ),
+        const SizedBox(height: 16),
+        CourseSectionCard(
+          title: 'إدارة المحتوى',
+          subtitle: 'أضف عناصر الدورة وعدّل ترتيبها وتفاصيلها من هنا.',
+          trailing: FilledButton(
+            style: FilledButton.styleFrom(
+              minimumSize: const Size(0, 44),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              backgroundColor: courseBrandTeal,
+            ),
+            onPressed: () => _showContentDialog(),
+            child: const Text('إضافة'),
+          ),
+          child: items.isEmpty
+              ? const Text('لا توجد عناصر محتوى بعد.')
+              : Column(
+                  children: [
+                    _buildManagedContentTile(context, courseAsMap(items.first)),
+                    for (final item in remainingContent)
+                      _buildManagedContentTile(context, courseAsMap(item)),
+                  ],
+                ),
+        ),
       ],
     );
   }
@@ -233,14 +488,20 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
   Future<void> _showContentDialog({Map<String, dynamic>? item}) async {
     final isEditing = item != null;
     final titleController = TextEditingController(
-        text: isEditing ? _readString(item, 'title') : '');
-    final bodyController =
-        TextEditingController(text: isEditing ? _readString(item, 'body') : '');
+      text: isEditing ? courseReadString(item, 'title') : '',
+    );
+    final bodyController = TextEditingController(
+      text: isEditing ? courseReadString(item, 'body') : '',
+    );
     final urlController = TextEditingController(
-        text: isEditing ? _readString(item, 'material_url') : '');
+      text: isEditing ? courseReadString(item, 'material_url') : '',
+    );
     final orderController = TextEditingController(
-        text: isEditing ? '${_readInt(item, 'order')}' : '1');
-    String contentType = isEditing ? _readString(item, 'content_type') : 'TEXT';
+      text: isEditing ? '${courseReadInt(item, 'order')}' : '1',
+    );
+    String contentType =
+        isEditing ? courseReadString(item, 'content_type') : 'TEXT';
+
     final changed = await showDialog<bool>(
       context: context,
       builder: (context) {
@@ -263,14 +524,18 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
               try {
                 if (isEditing) {
                   await widget.api.post(
-                      '/business-owner/course-content/${_readInt(item, 'id')}/update/',
-                      payload);
+                    '/business-owner/course-content/${courseReadInt(item, 'id')}/update/',
+                    payload,
+                  );
                 } else {
                   await widget.api.post(
-                      '/business-owner/courses/${widget.courseId}/content/create/',
-                      payload);
+                    '/business-owner/courses/${widget.courseId}/content/create/',
+                    payload,
+                  );
                 }
-                if (!mounted) return;
+                if (!mounted) {
+                  return;
+                }
                 Navigator.of(context).pop(true);
               } catch (error) {
                 setInnerState(() {
@@ -285,7 +550,8 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
               insetPadding:
                   const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(32)),
+                borderRadius: BorderRadius.circular(32),
+              ),
               child: AnimatedPadding(
                 duration: const Duration(milliseconds: 180),
                 curve: Curves.easeOut,
@@ -301,8 +567,10 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        _tr(context,
-                            isEditing ? 'Edit Content' : 'Add Content'),
+                        courseTr(
+                          context,
+                          isEditing ? 'تعديل المحتوى' : 'إضافة محتوى',
+                        ),
                         style: Theme.of(context)
                             .textTheme
                             .headlineMedium
@@ -312,9 +580,9 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
                       ),
                       const SizedBox(height: 10),
                       Text(
-                        _tr(
+                        courseTr(
                           context,
-                          'Shape the lesson flow with clear titles, useful context, and the right content type.',
+                          'نظّم محتوى الدرس بعنوان واضح ووصف مناسب ونوع المحتوى الصحيح.',
                         ),
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                               color: const Color(0xFF61706C),
@@ -325,16 +593,21 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
                       DropdownButtonFormField<String>(
                         initialValue: contentType,
                         decoration: InputDecoration(
-                            labelText: _tr(context, 'Content type')),
+                          labelText: 'نوع المحتوى',
+                        ),
                         items: [
                           DropdownMenuItem(
-                              value: 'TEXT', child: Text(_tr(context, 'Text'))),
+                            value: 'TEXT',
+                            child: const Text('نص'),
+                          ),
                           DropdownMenuItem(
-                              value: 'MATERIAL',
-                              child: Text(_tr(context, 'Link'))),
+                            value: 'MATERIAL',
+                            child: const Text('رابط'),
+                          ),
                           DropdownMenuItem(
-                              value: 'LESSON',
-                              child: Text(_tr(context, 'Lesson'))),
+                            value: 'LESSON',
+                            child: const Text('درس'),
+                          ),
                         ],
                         onChanged: (value) {
                           setInnerState(() {
@@ -345,8 +618,9 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
                       const SizedBox(height: 14),
                       TextField(
                         controller: titleController,
-                        decoration:
-                            InputDecoration(labelText: _tr(context, 'Title')),
+                        decoration: InputDecoration(
+                          labelText: 'العنوان',
+                        ),
                       ),
                       const SizedBox(height: 14),
                       TextField(
@@ -354,7 +628,7 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
                         minLines: 3,
                         maxLines: 6,
                         decoration: InputDecoration(
-                          labelText: _tr(context, 'Body'),
+                          labelText: 'الوصف',
                           alignLabelWithHint: true,
                         ),
                       ),
@@ -362,14 +636,16 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
                       TextField(
                         controller: urlController,
                         decoration: InputDecoration(
-                            labelText: _tr(context, 'Material URL')),
+                          labelText: 'رابط المحتوى',
+                        ),
                       ),
                       const SizedBox(height: 14),
                       TextField(
                         controller: orderController,
                         keyboardType: TextInputType.number,
-                        decoration:
-                            InputDecoration(labelText: _tr(context, 'Order')),
+                        decoration: InputDecoration(
+                          labelText: 'الترتيب',
+                        ),
                       ),
                       if (errorText != null) ...[
                         const SizedBox(height: 12),
@@ -388,7 +664,7 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
                           onPressed: saving
                               ? null
                               : () => Navigator.of(context).pop(false),
-                          child: Text(_tr(context, 'Cancel')),
+                          child: const Text('إلغاء'),
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -396,11 +672,13 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
                         width: double.infinity,
                         child: FilledButton(
                           onPressed: saving ? null : submit,
-                          child: Text(saving
-                              ? 'Saving...'
-                              : isEditing
-                                  ? 'Update'
-                                  : 'Create'),
+                          child: Text(
+                            saving
+                                ? 'جارٍ الحفظ...'
+                                : isEditing
+                                    ? 'تحديث'
+                                    : 'إنشاء',
+                          ),
                         ),
                       ),
                     ],
@@ -412,12 +690,17 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
         );
       },
     );
+
     titleController.dispose();
     bodyController.dispose();
     urlController.dispose();
     orderController.dispose();
+
     if (changed == true) {
-      _showSnack(context, isEditing ? 'Content updated.' : 'Content created.');
+      courseShowSnack(
+        context,
+        isEditing ? 'تم تحديث المحتوى.' : 'تم إنشاء المحتوى.',
+      );
       _reload();
     }
   }
@@ -444,19 +727,21 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
                       color: const Color(0xFFFFE6DE),
                       borderRadius: BorderRadius.circular(18),
                     ),
-                    child: const Icon(Icons.delete_outline_rounded,
-                        color: Color(0xFFC54C2B)),
+                    child: const Icon(
+                      Icons.delete_outline_rounded,
+                      color: Color(0xFFC54C2B),
+                    ),
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    _tr(context, 'Delete Content'),
+                    'حذف المحتوى',
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                           fontWeight: FontWeight.w800,
                         ),
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    'Delete "${_readString(item, 'title')}"?',
+                    'هل تريد حذف "${courseReadString(item, 'title')}"؟',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: const Color(0xFF61706C),
                           height: 1.45,
@@ -467,7 +752,7 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
                     alignment: Alignment.centerRight,
                     child: TextButton(
                       onPressed: () => Navigator.of(context).pop(false),
-                      child: Text(_tr(context, 'Cancel')),
+                      child: const Text('إلغاء'),
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -478,7 +763,7 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
                         backgroundColor: const Color(0xFFC54C2B),
                       ),
                       onPressed: () => Navigator.of(context).pop(true),
-                      child: Text(_tr(context, 'Delete')),
+                      child: const Text('حذف'),
                     ),
                   ),
                 ],
@@ -487,23 +772,34 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
           ),
         ) ??
         false;
-    if (!confirmed) return;
+
+    if (!confirmed) {
+      return;
+    }
+
     try {
       await widget.api.post(
-          '/business-owner/course-content/${_readInt(item, 'id')}/delete/', {});
-      if (!mounted) return;
-      _showSnack(context, 'Content deleted.');
+        '/business-owner/course-content/${courseReadInt(item, 'id')}/delete/',
+        {},
+      );
+      if (!mounted) {
+        return;
+      }
+      courseShowSnack(context, 'تم حذف المحتوى.');
       _reload();
     } catch (error) {
-      if (!mounted) return;
-      _showSnack(context, error.toString().replaceFirst('Exception: ', ''));
+      if (!mounted) {
+        return;
+      }
+      courseShowSnack(
+          context, error.toString().replaceFirst('Exception: ', ''));
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(_tr(context, 'Course Content'))),
+      appBar: AppBar(title: const Text('التفاصيل')),
       body: FutureBuilder<Map<String, dynamic>>(
         future: future,
         builder: (context, snapshot) {
@@ -511,13 +807,13 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
             return _buildBody(context, widget.initialCourse ?? const {});
           }
           if (snapshot.hasError) {
-            return _ErrorState(
+            return CourseErrorState(
               message:
                   snapshot.error.toString().replaceFirst('Exception: ', ''),
             );
           }
           final payload = snapshot.data ?? const <String, dynamic>{};
-          return _buildBody(context, _asMap(payload['course']));
+          return _buildBody(context, courseAsMap(payload['course']));
         },
       ),
     );
