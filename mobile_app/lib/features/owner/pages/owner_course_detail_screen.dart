@@ -262,141 +262,12 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
     );
   }
 
-  Widget _buildManagedContentTile(
-    BuildContext context,
-    Map<String, dynamic> rawItem,
-  ) {
-    final title = courseReadString(rawItem, 'title').trim().isEmpty
-        ? courseTr(context, 'Lesson')
-        : courseReadString(rawItem, 'title');
-    final subtitle = courseContentSubtitle(rawItem).trim().isEmpty
-        ? 'لا توجد تفاصيل للدرس بعد.'
-        : courseContentSubtitle(rawItem);
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFE3EBF2)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x080F172A),
-            blurRadius: 10,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          InkWell(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-            onTap: () => _openContentItem(rawItem),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
-              child: Row(
-                children: [
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFEAF7F4),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Icon(
-                      courseContentIcon(rawItem),
-                      color: courseBrandTealDark,
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          courseTr(context, title),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style:
-                              Theme.of(context).textTheme.titleSmall?.copyWith(
-                                    fontWeight: FontWeight.w800,
-                                    color: courseInk,
-                                  ),
-                        ),
-                        const SizedBox(height: 5),
-                        Text(
-                          courseTr(context, subtitle),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style:
-                              Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: const Color(0xFF5B6878),
-                                    height: 1.35,
-                                  ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  const Icon(
-                    Icons.chevron_right_rounded,
-                    color: Color(0xFF95A3B4),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    CourseStatusChip(
-                      label: coursePrimaryContentLabel(rawItem),
-                    ),
-                    CourseStatusChip(
-                      label: 'الترتيب ${courseReadInt(rawItem, 'order')}',
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: FilledButton.tonal(
-                        onPressed: () => _showContentDialog(item: rawItem),
-                        child: const Text('تعديل'),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: FilledButton.tonal(
-                        onPressed: () => _deleteContent(rawItem),
-                        child: const Text('حذف'),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildBody(BuildContext context, Map<String, dynamic> course) {
     final items = courseAsList(course['content_items']);
     final description = courseReadString(course, 'description');
     final estimatedMinutes = courseReadInt(course, 'estimated_minutes');
     final hasExam = courseReadBool(course, 'has_exam');
     final featuredContent = items.isEmpty ? null : courseAsMap(items.first);
-    final remainingContent =
-        items.length > 1 ? items.skip(1).toList() : const <dynamic>[];
     final courseTitle = courseReadString(course, 'title').trim().isEmpty
         ? 'الدورة'
         : courseReadString(course, 'title');
@@ -422,21 +293,7 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
             CourseStatusChip(label: hasExam ? 'الاختبار' : 'بدون اختبار'),
           ],
         ),
-        const SizedBox(height: 16),
-        SizedBox(
-          width: double.infinity,
-          child: FilledButton.tonal(
-            style: FilledButton.styleFrom(
-              minimumSize: const Size.fromHeight(52),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(22),
-              ),
-            ),
-            onPressed: assigning ? null : _showAssignDialog,
-            child: Text(assigning ? 'جارٍ التحميل...' : 'إسناد الدورة'),
-          ),
-        ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 24),
         if (featuredContent == null)
           const CourseSectionCard(
             title: 'الدرس',
@@ -458,28 +315,22 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
             onTap: () => _openContentItem(featuredContent),
           ),
         const SizedBox(height: 16),
-        CourseSectionCard(
-          title: 'إدارة المحتوى',
-          subtitle: 'أضف عناصر الدورة وعدّل ترتيبها وتفاصيلها من هنا.',
-          trailing: FilledButton(
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton(
             style: FilledButton.styleFrom(
-              minimumSize: const Size(0, 44),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               backgroundColor: courseBrandTeal,
+              minimumSize: const Size.fromHeight(58),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+              textStyle: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
             ),
-            onPressed: () => _showContentDialog(),
-            child: const Text('إضافة'),
+            onPressed: assigning ? null : _showAssignDialog,
+            child: Text(assigning ? 'جارٍ التحميل...' : 'إسناد الدورة'),
           ),
-          child: items.isEmpty
-              ? const Text('لا توجد عناصر محتوى بعد.')
-              : Column(
-                  children: [
-                    _buildManagedContentTile(context, courseAsMap(items.first)),
-                    for (final item in remainingContent)
-                      _buildManagedContentTile(context, courseAsMap(item)),
-                  ],
-                ),
         ),
       ],
     );
