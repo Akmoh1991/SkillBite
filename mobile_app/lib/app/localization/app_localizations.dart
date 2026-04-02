@@ -30,7 +30,7 @@ const Map<String, String> arabicStrings = {
   'Update Password': 'تحديث كلمة المرور',
   'Username and password are required.': 'اسم المستخدم وكلمة المرور مطلوبان.',
   'Sign in to SkillBite': 'تسجيل الدخول',
-  'Please enter your information below in order to login to your account':
+  'Please enter your information to login to your account':
       'يرجى إدخال بياناتك أدناه لتسجيل الدخول إلى حسابك',
   'Enter your username': 'أدخل اسم المستخدم',
   'Password': 'كلمة المرور',
@@ -42,9 +42,10 @@ const Map<String, String> arabicStrings = {
   'Demo Access': 'الوصول التجريبي',
   'Owner Demo': 'تجربة المالك',
   'Employee Demo': 'تجربة الموظف',
+  'Need an account?': 'لا يوجد لديك حساب؟',
   'Create Account': 'إنشاء حساب',
-  'Create your business owner account to start using SkillBite.':
-      'أنشئ حساب لبدء استخدام SkillBite',
+  'Create an account to start using SkillBite':
+      'أنشئ حساب لاستخدام التطبيق',
   'Full Name': 'الاسم الكامل',
   'Enter your full name': 'أدخل اسمك الكامل',
   'Email': 'البريد الإلكتروني',
@@ -59,7 +60,7 @@ const Map<String, String> arabicStrings = {
   'SEC Business Line': 'قطاع أعمال SEC',
   'Create account': 'إنشاء حساب',
   'Creating account...': 'جارٍ إنشاء الحساب...',
-  'Already have an account?': 'لديك حساب بالفعل؟',
+  'Already have an account?': 'لديك حساب؟',
   'Eastern region': 'المنطقة الشرقية',
   'Central region': 'المنطقة الوسطى',
   'Western region': 'المنطقة الغربية',

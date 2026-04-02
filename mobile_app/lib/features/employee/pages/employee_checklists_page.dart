@@ -123,6 +123,28 @@ class _EmployeeChecklistDetailScreenState
   bool submitting = false;
   final Set<int> selectedItemIds = <int>{};
 
+  String _translateFrequency(BuildContext context, String value) {
+    final normalized = value.trim().toUpperCase();
+    switch (normalized) {
+      case 'DAILY':
+        return tr(context, 'Daily');
+      case 'WEEKLY':
+        return tr(context, 'Weekly');
+      case 'ON_DEMAND':
+      case 'ON DEMAND':
+        return tr(context, 'On demand');
+      default:
+        return tr(context, value);
+    }
+  }
+
+  String _translateActionLabel(BuildContext context, String value) {
+    if (value == 'Check All Items' && isArabic(context)) {
+      return 'تحقق من جميع العناصر';
+    }
+    return tr(context, value);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -187,14 +209,17 @@ class _EmployeeChecklistDetailScreenState
           return AppPageBody(
             children: [
               AppHeaderRow(
-                title: checklistTitle.isEmpty ? 'Checklist' : checklistTitle,
+                title: checklistTitle.isEmpty
+                    ? tr(context, 'Checklist')
+                    : checklistTitle,
                 titleColor: brandTealDark,
                 titleFontSize: 26,
               ),
               const SizedBox(height: 6),
               Text(
                 [
-                  if (frequency.isNotEmpty) tr(context, frequency),
+                  if (frequency.isNotEmpty)
+                    _translateFrequency(context, frequency),
                   itemCountLabel,
                 ].join('  |  '),
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -204,9 +229,9 @@ class _EmployeeChecklistDetailScreenState
               ),
               const SizedBox(height: 20),
               AppSectionCard(
-                title: 'Items',
+                title: tr(context, 'Items'),
                 child: items.isEmpty
-                    ? const Text('No checklist items.')
+                    ? Text(tr(context, 'No checklist items.'))
                     : Column(
                         children: [
                           for (var index = 0; index < items.length; index++)
@@ -237,13 +262,16 @@ class _EmployeeChecklistDetailScreenState
               FilledButton(
                 onPressed: canSubmit ? () => _completeChecklist(items) : null,
                 child: Text(
-                  completed
-                      ? 'Already Completed'
-                      : submitting
-                          ? 'Submitting...'
-                          : selectedCount == items.length
-                              ? 'Complete Checklist'
-                              : 'Check All Items',
+                  _translateActionLabel(
+                    context,
+                    completed
+                        ? 'Already Completed'
+                        : submitting
+                            ? 'Submitting...'
+                            : selectedCount == items.length
+                                ? 'Complete Checklist'
+                                : 'Check All Items',
+                  ),
                 ),
               ),
             ],

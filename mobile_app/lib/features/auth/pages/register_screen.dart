@@ -21,6 +21,8 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
+  static const String _defaultSecBusinessLine = 'Distribution Contractors';
+  static const String _defaultIdNumber = '1000000000';
   static const List<String> _regions = [
     'Eastern region',
     'Central region',
@@ -29,28 +31,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
     'Southern region',
   ];
 
-  static const List<String> _secBusinessLines = [
-    'Distribution Contractors',
-    'National Grid Contractors',
-    'Projects Contractors',
-    'Generation Contractors',
-    'Dawiyat Contractors',
-    'HSSE Contractors',
-    'Material Sector',
-    'Facilities Sector',
-  ];
-
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController fullNameController = TextEditingController();
-  final TextEditingController fullNameArabicController =
-      TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController companyNameController = TextEditingController();
   final TextEditingController phoneNumberController = TextEditingController();
-  final TextEditingController idNumberController = TextEditingController();
   String selectedRegion = _regions.first;
-  String selectedSecBusinessLine = _secBusinessLines.first;
   bool saving = false;
   bool passwordObscured = true;
   String? errorText;
@@ -60,11 +47,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
     usernameController.dispose();
     emailController.dispose();
     fullNameController.dispose();
-    fullNameArabicController.dispose();
     passwordController.dispose();
     companyNameController.dispose();
     phoneNumberController.dispose();
-    idNumberController.dispose();
     super.dispose();
   }
 
@@ -78,15 +63,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
         username: usernameController.text.trim(),
         email: emailController.text.trim(),
         fullName: fullNameController.text.trim(),
-        fullNameArabic: fullNameArabicController.text.trim().isEmpty
-            ? fullNameController.text.trim()
-            : fullNameArabicController.text.trim(),
+        fullNameArabic: fullNameController.text.trim(),
         password: passwordController.text,
         companyName: companyNameController.text.trim(),
         phoneNumber: phoneNumberController.text.trim(),
-        idNumber: idNumberController.text.trim(),
+        idNumber: _defaultIdNumber,
         region: selectedRegion,
-        secBusinessLine: selectedSecBusinessLine,
+        secBusinessLine: _defaultSecBusinessLine,
       );
       widget.onRegistered(user);
       if (mounted) {
@@ -165,7 +148,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       title: tr(context, 'Create Account'),
       subtitle: tr(
         context,
-        'Create your business owner account to start using SkillBite.',
+        'Create an account to start using SkillBite',
       ),
       footer: Center(
         child: Wrap(
@@ -194,7 +177,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _buildTextField(
             controller: usernameController,
@@ -204,12 +187,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
           const SizedBox(height: 16),
           _buildTextField(
             controller: fullNameController,
-            label: tr(context, 'Full Name'),
-            hint: tr(context, 'Enter your full name'),
-          ),
-          const SizedBox(height: 16),
-          _buildTextField(
-            controller: fullNameArabicController,
             label: tr(context, 'Full Name'),
             hint: tr(context, 'Enter your full name'),
           ),
@@ -254,12 +231,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
             keyboardType: TextInputType.phone,
           ),
           const SizedBox(height: 16),
-          _buildTextField(
-            controller: idNumberController,
-            label: tr(context, 'ID Number'),
-            hint: tr(context, 'Enter your ID number'),
-          ),
-          const SizedBox(height: 16),
           _buildDropdown(
             label: tr(context, 'Region'),
             value: selectedRegion,
@@ -268,28 +239,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
               if (value != null) setState(() => selectedRegion = value);
             },
           ),
-          const SizedBox(height: 16),
-          _buildDropdown(
-            label: tr(context, 'SEC Business Line'),
-            value: selectedSecBusinessLine,
-            options: _secBusinessLines,
-            onChanged: (value) {
-              if (value != null) {
-                setState(() => selectedSecBusinessLine = value);
-              }
-            },
-          ),
           if (errorText != null) ...[
             const SizedBox(height: 16),
             AppInlineError(message: errorText!),
           ],
           const SizedBox(height: 24),
-          FilledButton(
-            onPressed: saving ? null : _submit,
-            child: Text(
-              saving
-                  ? tr(context, 'Creating account...')
-                  : tr(context, 'Create account'),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: saving ? null : _submit,
+              child: Text(
+                saving
+                    ? tr(context, 'Creating account...')
+                    : tr(context, 'Create account'),
+              ),
             ),
           ),
         ],

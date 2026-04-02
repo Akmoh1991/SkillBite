@@ -25,10 +25,10 @@ class AuthScaffold extends StatelessWidget {
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
-          gradient: LinearGradient(
+          gradient: const LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Color(0xFFF3FAF7), Color(0xFFF8FBFA)],
+            colors: [Color(0xFFF4FBF8), Color(0xFFF8FBFA)],
           ),
         ),
         child: SafeArea(
@@ -37,102 +37,68 @@ class AuthScaffold extends StatelessWidget {
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 460),
               child: ListView(
-                padding: const EdgeInsets.fromLTRB(24, 18, 24, 32),
+                padding: const EdgeInsets.fromLTRB(20, 14, 20, 28),
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [leading, trailing],
                   ),
-                  const SizedBox(height: 24),
-                  Container(
-                    padding: const EdgeInsets.fromLTRB(22, 22, 22, 24),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(32),
-                      gradient: const LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [Color(0xFF0F766E), Color(0xFF13A36E)],
-                      ),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Color(0x180F172A),
-                          blurRadius: 32,
-                          offset: Offset(0, 14),
-                        ),
-                      ],
-                    ),
+                  const SizedBox(height: 18),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(8, 6, 8, 0),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.16),
-                            borderRadius: BorderRadius.circular(999),
-                          ),
-                          child: Text(
-                            'SkillBite Mobile',
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleMedium
-                                ?.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w700,
-                                ),
+                        SizedBox(
+                          width: 152,
+                          height: 72,
+                          child: Image.asset(
+                            'assets/SkillBite_logo.png',
+                            fit: BoxFit.contain,
                           ),
                         ),
-                        const SizedBox(height: 18),
-                        Image.asset(
-                          'assets/SkillBite_logo.png',
-                          width: 164,
-                          fit: BoxFit.contain,
-                        ),
-                        const SizedBox(height: 18),
+                        const SizedBox(height: 12),
                         Text(
                           title,
-                          style: Theme.of(context)
-                              .textTheme
-                              .headlineSmall
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.headlineSmall
                               ?.copyWith(
-                                color: Colors.white,
-                                fontSize: 26,
-                                height: 1.1,
+                                color: brandTeal,
+                                fontSize: 28,
+                                height: 1.08,
                               ),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           subtitle,
-                          style:
-                              Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                    color: Colors.white.withValues(alpha: 0.84),
-                                    height: 1.45,
-                                  ),
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                color: const Color(0xFF64748B),
+                                height: 1.45,
+                              ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 20),
                   Container(
-                    padding: const EdgeInsets.fromLTRB(20, 22, 20, 22),
+                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 22),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(30),
+                      borderRadius: BorderRadius.circular(28),
                       border: Border.all(color: const Color(0xFFE2E8F0)),
                       boxShadow: const [
                         BoxShadow(
                           color: Color(0x120F172A),
-                          blurRadius: 24,
-                          offset: Offset(0, 12),
+                          blurRadius: 18,
+                          offset: Offset(0, 10),
                         ),
                       ],
                     ),
                     child: child,
                   ),
                   if (footer != null) ...[
-                    const SizedBox(height: 18),
+                    const SizedBox(height: 14),
                     footer!,
                   ],
                 ],
@@ -154,6 +120,7 @@ class AuthFieldLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       label,
+      textAlign: isArabic(context) ? TextAlign.right : TextAlign.left,
       style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 16),
     );
   }
@@ -191,11 +158,12 @@ class LanguageToggleButton extends StatelessWidget {
       style: TextButton.styleFrom(
         foregroundColor: brandTeal,
         backgroundColor: Colors.white,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         textStyle: Theme.of(
           context,
         ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        elevation: 0,
       ),
       onPressed: () {
         AppLanguageController.onChange?.call(

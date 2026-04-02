@@ -80,24 +80,24 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final arabic = isArabic(context);
     return AuthScaffold(
       leading: const LanguageToggleButton(),
-      trailing: const AuthOrb(icon: Icons.shield_rounded),
+      trailing: const SizedBox(width: 52),
       title: tr(context, 'Sign in to SkillBite'),
       subtitle: tr(
         context,
-        'Please enter your information below in order to login to your account',
+        'Please enter your information to login to your account',
       ),
       footer: Center(
         child: Wrap(
           alignment: WrapAlignment.center,
           crossAxisAlignment: WrapCrossAlignment.center,
           spacing: 6,
-          textDirection:
-              isArabic(context) ? TextDirection.rtl : TextDirection.ltr,
+          textDirection: arabic ? TextDirection.rtl : TextDirection.ltr,
           children: [
             Text(
-              'Need an account?',
+              tr(context, 'Need an account?'),
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     color: const Color(0xFF4A5A6A),
                   ),
@@ -115,7 +115,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           AuthFieldLabel(label: tr(context, 'Username')),
           const SizedBox(height: 10),
@@ -165,10 +165,13 @@ class _LoginScreenState extends State<LoginScreen> {
             AppInlineError(message: errorText!),
           ],
           const SizedBox(height: 16),
-          FilledButton(
-            onPressed: loading ? null : _submit,
-            child: Text(
-              loading ? tr(context, 'Signing in...') : tr(context, 'Log In'),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: loading ? null : _submit,
+              child: Text(
+                loading ? tr(context, 'Signing in...') : tr(context, 'Log In'),
+              ),
             ),
           ),
         ],
