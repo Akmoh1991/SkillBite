@@ -117,14 +117,29 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
                           mainAxisSize: MainAxisSize.min,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              'إسناد الدورة',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .headlineMedium
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.w800,
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    'إسناد الدورة',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .headlineMedium
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.w800,
+                                        ),
                                   ),
+                                ),
+                                const SizedBox(width: 8),
+                                IconButton(
+                                  onPressed: saving
+                                      ? null
+                                      : () => Navigator.of(context).pop(false),
+                                  icon: const Icon(Icons.close_rounded),
+                                  tooltip: 'إغلاق',
+                                  visualDensity: VisualDensity.compact,
+                                ),
+                              ],
                             ),
                             const SizedBox(height: 10),
                             Text(
@@ -189,16 +204,6 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
                                   ),
                                 ),
                               ),
-                            const SizedBox(height: 10),
-                            Align(
-                              alignment: Alignment.centerRight,
-                              child: TextButton(
-                                onPressed: saving
-                                    ? null
-                                    : () => Navigator.of(context).pop(false),
-                                child: const Text('إلغاء'),
-                              ),
-                            ),
                             const SizedBox(height: 8),
                             SizedBox(
                               width: double.infinity,
