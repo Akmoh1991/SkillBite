@@ -81,11 +81,11 @@ class OwnerDashboardPage extends StatelessWidget {
         else
           for (var index = 0; index < visibleCourses.length; index++) ...[
             AppCoursePromoCard(
-              eyebrow: readString(visibleCourses[index], 'business_name').isEmpty
-                  ? 'Workspace'
-                  : readString(visibleCourses[index], 'business_name'),
+              eyebrow: '${dashboard['employee_total'] ?? 0} موظف',
               title: readString(visibleCourses[index], 'title'),
-              meta: '${dashboard['employee_total'] ?? 0} ${tr(context, 'employees')}',
+              meta: '',
+              forceEyebrowLeft: true,
+              inlineTitleWithEyebrow: true,
               supporting: readString(visibleCourses[index], 'description').isEmpty
                   ? tr(context, 'Suggested course pushes')
                   : readString(visibleCourses[index], 'description'),

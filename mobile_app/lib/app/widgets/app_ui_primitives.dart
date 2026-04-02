@@ -331,6 +331,8 @@ class AppCoursePromoCard extends StatelessWidget {
     this.imageUrl = '',
     this.icon,
     this.onTap,
+    this.forceEyebrowLeft = false,
+    this.inlineTitleWithEyebrow = false,
   });
 
   final String eyebrow;
@@ -340,6 +342,8 @@ class AppCoursePromoCard extends StatelessWidget {
   final String imageUrl;
   final IconData? icon;
   final VoidCallback? onTap;
+  final bool forceEyebrowLeft;
+  final bool inlineTitleWithEyebrow;
 
   @override
   Widget build(BuildContext context) {
@@ -366,43 +370,103 @@ class AppCoursePromoCard extends StatelessWidget {
                 borderRadius: 22,
               ),
               const SizedBox(height: 18),
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 7,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFEAF7F4),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Text(
-                      tr(context, eyebrow),
-                      style: const TextStyle(
-                        color: brandTealDark,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                  const Spacer(),
-                  Text(
-                    tr(context, meta),
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: mutedColor,
-                          fontWeight: FontWeight.w600,
+              if (inlineTitleWithEyebrow)
+                Directionality(
+                  textDirection: forceEyebrowLeft
+                      ? TextDirection.ltr
+                      : Directionality.of(context),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 7,
                         ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEAF7F4),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text(
+                          tr(context, eyebrow),
+                          style: const TextStyle(
+                            color: brandTealDark,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Text(
+                          tr(context, title),
+                          textAlign: TextAlign.right,
+                          style: Theme.of(context).textTheme.headlineSmall
+                              ?.copyWith(
+                                fontSize: 22,
+                                height: 1.12,
+                              ),
+                        ),
+                      ),
+                      if (meta.trim().isNotEmpty) ...[
+                        const SizedBox(width: 12),
+                        Text(
+                          tr(context, meta),
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: mutedColor,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                        ),
+                      ],
+                    ],
                   ),
-                ],
-              ),
-              const SizedBox(height: 18),
-              Text(
-                tr(context, title),
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontSize: 22,
-                      height: 1.12,
-                    ),
-              ),
+                )
+              else ...[
+                Directionality(
+                  textDirection: forceEyebrowLeft
+                      ? TextDirection.ltr
+                      : Directionality.of(context),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 7,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEAF7F4),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text(
+                          tr(context, eyebrow),
+                          style: const TextStyle(
+                            color: brandTealDark,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      if (meta.trim().isNotEmpty) ...[
+                        const Spacer(),
+                        Text(
+                          tr(context, meta),
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: mutedColor,
+                                fontWeight: FontWeight.w600,
+                              ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 18),
+                Text(
+                  tr(context, title),
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        fontSize: 22,
+                        height: 1.12,
+                      ),
+                ),
+              ],
               if (supporting.trim().isNotEmpty) ...[
                 const SizedBox(height: 10),
                 Text(
