@@ -58,36 +58,50 @@ class OwnerDashboardPage extends StatelessWidget {
     List<dynamic> employees,
     List<dynamic> courses,
   ) {
+    final visibleCourses = courses.take(3).toList(growable: false);
+    final visibleEmployees = employees.take(3).toList(growable: false);
     return AppPageBody(
+      bottomPadding: 24,
       children: [
-        const AppHeaderRow(
-          title: 'Workspace overview',
+        AppHeaderRow(
+          title: 'Courses',
           titleColor: brandTealDark,
           titleFontSize: 26,
+          trailing: AppSectionLink(
+            label: 'View all',
+            onTap: () => _openCoursesPage(context),
+          ),
         ),
-        const SizedBox(height: 18),
-        AppDashboardMetricRow(
-          metrics: [
-            AppDashboardMetricData(
-              'Employees',
-              '${dashboard['employee_total'] ?? 0}',
-              icon: Icons.group_outlined,
+        const SizedBox(height: 16),
+        if (courses.isEmpty)
+          const AppSectionCard(
+            title: 'Courses',
+            child: Text('No assignable courses.'),
+          )
+        else
+          for (var index = 0; index < visibleCourses.length; index++) ...[
+            AppCoursePromoCard(
+              eyebrow: readString(visibleCourses[index], 'business_name').isEmpty
+                  ? 'Workspace'
+                  : readString(visibleCourses[index], 'business_name'),
+              title: readString(visibleCourses[index], 'title'),
+              meta: '${dashboard['employee_total'] ?? 0} ${tr(context, 'employees')}',
+              supporting: readString(visibleCourses[index], 'description').isEmpty
+                  ? tr(context, 'Suggested course pushes')
+                  : readString(visibleCourses[index], 'description'),
+              imageUrl: api.resolveUrl(
+                readString(visibleCourses[index], 'card_image_url'),
+              ),
+              onTap: () => _openCourse(context, asMap(visibleCourses[index])),
             ),
-            AppDashboardMetricData(
-              'Courses',
-              '${dashboard['course_total'] ?? 0}',
-              icon: Icons.menu_book_outlined,
-            ),
-            AppDashboardMetricData(
-              'Checklists',
-              '${dashboard['checklist_total'] ?? 0}',
-              icon: Icons.checklist_rounded,
-            ),
+            if (index < visibleCourses.length - 1)
+              const SizedBox(height: 14),
           ],
-        ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 8),
         AppHeaderRow(
-          title: 'Your people',
+          title: 'Employees',
+          titleColor: brandTealDark,
+          titleFontSize: 26,
           trailing: AppSectionLink(
             label: 'View all',
             onTap: () => _openEmployeesPage(context),
@@ -100,49 +114,19 @@ class OwnerDashboardPage extends StatelessWidget {
             child: Text('No employees yet.'),
           )
         else
-          for (final item in employees.take(3)) ...[
+          for (var index = 0; index < visibleEmployees.length; index++) ...[
             AppLessonTile(
-              title: readString(item, 'display_name'),
-              subtitle: readString(item, 'job_title').isEmpty
-                  ? readString(item, 'username')
-                  : readString(item, 'job_title'),
-              accent: const Color(0xFFEFF5FF),
+              title: readString(visibleEmployees[index], 'display_name'),
+              subtitle: readString(visibleEmployees[index], 'job_title').isEmpty
+                  ? (readString(visibleEmployees[index], 'username').isEmpty
+                      ? user.businessName
+                      : readString(visibleEmployees[index], 'username'))
+                  : readString(visibleEmployees[index], 'job_title'),
+              accent: const Color(0xFFEAF7F4),
               trailingIcon: Icons.person_outline_rounded,
             ),
-            const SizedBox(height: 14),
-          ],
-        const SizedBox(height: 6),
-        AppHeaderRow(
-          title: 'Courses',
-          trailing: AppSectionLink(
-            label: 'View all',
-            onTap: () => _openCoursesPage(context),
-          ),
-        ),
-        const SizedBox(height: 14),
-        if (courses.isEmpty)
-          const AppSectionCard(
-            title: 'Courses',
-            child: Text('No assignable courses.'),
-          )
-        else
-          for (final item in courses.take(3)) ...[
-            AppCoursePromoCard(
-              eyebrow: readString(item, 'business_name').isEmpty
-                  ? 'Shared'
-                  : 'Workspace',
-              title: readString(item, 'title'),
-              meta: readString(item, 'business_name').isEmpty
-                  ? user.businessName
-                  : readString(item, 'business_name'),
-              supporting: readString(item, 'description').isEmpty
-                  ? tr(context, 'Suggested course pushes')
-                  : readString(item, 'description'),
-              imageUrl: api.resolveUrl(readString(item, 'card_image_url')),
-              icon: Icons.auto_awesome_motion_rounded,
-              onTap: () => _openCourse(context, asMap(item)),
-            ),
-            const SizedBox(height: 14),
+            if (index < visibleEmployees.length - 1)
+              const SizedBox(height: 14),
           ],
       ],
     );
