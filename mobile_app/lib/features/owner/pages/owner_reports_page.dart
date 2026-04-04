@@ -41,6 +41,8 @@ class OwnerReportsPage extends StatelessWidget {
             _readInt(report, 'completed_checklist_employee_total');
         final pendingChecklistEmployeeTotal =
             _readInt(report, 'pending_checklist_employee_total');
+        final employeeCourseStatuses =
+            _asList(report['employee_course_statuses']);
         final todayChecklistStatuses =
             _asList(report['today_checklist_statuses']);
         final completionProgress =
@@ -164,6 +166,42 @@ class OwnerReportsPage extends StatelessWidget {
                       ],
                     ),
                   ),
+                  const SizedBox(height: 18),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => OwnerCourseProgressDetailsPage(
+                                  employeeCourseStatuses: employeeCourseStatuses,
+                                  trackedEmployeeTotal: trackedEmployeeTotal,
+                                  totalAssigned: totalAssigned,
+                                  totalCompleted: totalCompleted,
+                                  totalInProgress: totalInProgress,
+                                  completionRate: completionRate,
+                                ),
+                              ),
+                            );
+                          },
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: _brandTealDark,
+                            side: const BorderSide(color: _line),
+                            minimumSize: const Size(0, 56),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 14,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                          ),
+                          child: const Text('التفاصيل'),
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -257,18 +295,46 @@ class OwnerReportsPage extends StatelessWidget {
                       ],
                     ),
                   ),
-                  if (todayChecklistStatuses.isNotEmpty) ...[
-                    const SizedBox(height: 18),
-                    for (var index = 0;
-                        index < todayChecklistStatuses.length;
-                        index++) ...[
-                      _ChecklistStatusTile(
-                        item: _asMap(todayChecklistStatuses[index]),
+                  const SizedBox(height: 18),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => OwnerDailyChecklistDetailsPage(
+                                  todayChecklistStatuses:
+                                      todayChecklistStatuses,
+                                  assignedChecklistEmployeeTotal:
+                                      assignedChecklistEmployeeTotal,
+                                  completedChecklistEmployeeTotal:
+                                      completedChecklistEmployeeTotal,
+                                  pendingChecklistEmployeeTotal:
+                                      pendingChecklistEmployeeTotal,
+                                  dailyChecklistCompletionRate:
+                                      dailyChecklistCompletionRate,
+                                ),
+                              ),
+                            );
+                          },
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: _brandTealDark,
+                            side: const BorderSide(color: _line),
+                            minimumSize: const Size(0, 56),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 14,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                          ),
+                          child: const Text('التفاصيل'),
+                        ),
                       ),
-                      if (index < todayChecklistStatuses.length - 1)
-                        const SizedBox(height: 12),
                     ],
-                  ],
+                  ),
                 ],
               ),
             ),
@@ -374,6 +440,558 @@ class _ChecklistStatusTile extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class OwnerDailyChecklistDetailsPage extends StatelessWidget {
+  const OwnerDailyChecklistDetailsPage({
+    super.key,
+    required this.todayChecklistStatuses,
+    required this.assignedChecklistEmployeeTotal,
+    required this.completedChecklistEmployeeTotal,
+    required this.pendingChecklistEmployeeTotal,
+    required this.dailyChecklistCompletionRate,
+  });
+
+  final List<dynamic> todayChecklistStatuses;
+  final int assignedChecklistEmployeeTotal;
+  final int completedChecklistEmployeeTotal;
+  final int pendingChecklistEmployeeTotal;
+  final int dailyChecklistCompletionRate;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF7FAFB),
+      appBar: AppBar(
+        title: const Text('التفاصيل'),
+      ),
+      body: _PageBody(
+        children: [
+          const _HeaderRow(
+            title: 'تفاصيل مهام اليوم',
+            titleColor: _brandTealDark,
+            titleFontSize: 26,
+          ),
+          const SizedBox(height: 20),
+          Container(
+            padding: const EdgeInsets.all(22),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(28),
+              border: Border.all(color: _line),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x100F172A),
+                  blurRadius: 20,
+                  offset: Offset(0, 10),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'حالة مهام اليوم',
+                        textAlign: TextAlign.right,
+                        style:
+                            Theme.of(context).textTheme.titleLarge?.copyWith(
+                                  color: _brandTealDark,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF1F6F8),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        '$dailyChecklistCompletionRate% ${tr(context, 'Completed')}',
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  color: _brandTealDark,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 18),
+                Container(
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF9FCFB),
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(color: _line),
+                  ),
+                  child: Column(
+                    children: [
+                      _ReportStatRow(
+                        label: 'الموظفون بقوائم تحقق اليوم',
+                        value: '$assignedChecklistEmployeeTotal',
+                      ),
+                      const Divider(height: 1, color: _line),
+                      _ReportStatRow(
+                        label: 'أكملوا اليوم',
+                        value: '$completedChecklistEmployeeTotal',
+                      ),
+                      const Divider(height: 1, color: _line),
+                      _ReportStatRow(
+                        label: 'بانتظار الإكمال',
+                        value: '$pendingChecklistEmployeeTotal',
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 18),
+          if (todayChecklistStatuses.isEmpty)
+            Container(
+              padding: const EdgeInsets.all(22),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(28),
+                border: Border.all(color: _line),
+              ),
+              child: Text(
+                'لا توجد تفاصيل متاحة اليوم.',
+                textAlign: TextAlign.right,
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: const Color(0xFF61706C),
+                    ),
+              ),
+            )
+          else
+            for (var index = 0; index < todayChecklistStatuses.length; index++) ...[
+              _ChecklistStatusTile(
+                item: _asMap(todayChecklistStatuses[index]),
+              ),
+              if (index < todayChecklistStatuses.length - 1)
+                const SizedBox(height: 12),
+            ],
+        ],
+      ),
+    );
+  }
+}
+
+class OwnerCourseProgressDetailsPage extends StatelessWidget {
+  const OwnerCourseProgressDetailsPage({
+    super.key,
+    required this.employeeCourseStatuses,
+    required this.trackedEmployeeTotal,
+    required this.totalAssigned,
+    required this.totalCompleted,
+    required this.totalInProgress,
+    required this.completionRate,
+  });
+
+  final List<dynamic> employeeCourseStatuses;
+  final int trackedEmployeeTotal;
+  final int totalAssigned;
+  final int totalCompleted;
+  final int totalInProgress;
+  final int completionRate;
+
+  @override
+  Widget build(BuildContext context) {
+    final completionProgress =
+        totalAssigned == 0 ? 0.0 : totalCompleted / totalAssigned;
+    return Scaffold(
+      backgroundColor: const Color(0xFFF7FAFB),
+      appBar: AppBar(
+        title: const Text('التفاصيل'),
+      ),
+      body: _PageBody(
+        children: [
+          const _HeaderRow(
+            title: 'تفاصيل الدورات',
+            titleColor: _brandTealDark,
+            titleFontSize: 26,
+          ),
+          const SizedBox(height: 20),
+          Container(
+            padding: const EdgeInsets.all(22),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(28),
+              border: Border.all(color: _line),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x100F172A),
+                  blurRadius: 20,
+                  offset: Offset(0, 10),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'نظرة عامة على الإكمال',
+                        textAlign: TextAlign.right,
+                        style:
+                            Theme.of(context).textTheme.titleLarge?.copyWith(
+                                  color: _brandTealDark,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF1F6F8),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        '$completionRate% مكتمل',
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  color: _brandTealDark,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(999),
+                  child: LinearProgressIndicator(
+                    value: completionProgress.clamp(0, 1),
+                    minHeight: 12,
+                    backgroundColor: const Color(0xFFE7ECEF),
+                    valueColor:
+                        const AlwaysStoppedAnimation<Color>(_brandTeal),
+                  ),
+                ),
+                const SizedBox(height: 18),
+                Container(
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF9FCFB),
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(color: _line),
+                  ),
+                  child: Column(
+                    children: [
+                      _ReportStatRow(
+                        label: 'الموظفون المتابعون',
+                        value: '$trackedEmployeeTotal',
+                      ),
+                      const Divider(height: 1, color: _line),
+                      _ReportStatRow(
+                        label: 'الدورات المسندة',
+                        value: '$totalAssigned',
+                      ),
+                      const Divider(height: 1, color: _line),
+                      _ReportStatRow(
+                        label: 'الدورات المكتملة',
+                        value: '$totalCompleted',
+                      ),
+                      const Divider(height: 1, color: _line),
+                      _ReportStatRow(
+                        label: 'قيد التنفيذ',
+                        value: '$totalInProgress',
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 18),
+          if (employeeCourseStatuses.isEmpty)
+            Container(
+              padding: const EdgeInsets.all(22),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(28),
+                border: Border.all(color: _line),
+              ),
+              child: Text(
+                'لا توجد تفاصيل دورات متاحة حالياً.',
+                textAlign: TextAlign.right,
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: const Color(0xFF61706C),
+                    ),
+              ),
+            )
+          else
+            for (var index = 0; index < employeeCourseStatuses.length; index++) ...[
+              _EmployeeCourseStatusTile(
+                item: _asMap(employeeCourseStatuses[index]),
+              ),
+              if (index < employeeCourseStatuses.length - 1)
+                const SizedBox(height: 12),
+            ],
+        ],
+      ),
+    );
+  }
+}
+
+class _EmployeeCourseStatusTile extends StatelessWidget {
+  const _EmployeeCourseStatusTile({required this.item});
+
+  final Map<String, dynamic> item;
+
+  @override
+  Widget build(BuildContext context) {
+    final employee = _asMap(item['employee']);
+    final completedCourses = _asList(item['completed_courses']);
+    final remainingCourses = _asList(item['remaining_courses']);
+    final assignedCourseTotal = _readInt(item, 'assigned_course_total');
+    final completedCourseTotal = _readInt(item, 'completed_course_total');
+    final remainingCourseTotal = _readInt(item, 'remaining_course_total');
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: _line),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF1F6F8),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  '$completedCourseTotal/$assignedCourseTotal',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: _brandTealDark,
+                        fontWeight: FontWeight.w700,
+                      ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      _readString(employee, 'display_name'),
+                      textAlign: TextAlign.right,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w800,
+                          ),
+                    ),
+                    if (_readString(employee, 'job_title').isNotEmpty)
+                      Text(
+                        _readString(employee, 'job_title'),
+                        textAlign: TextAlign.right,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: const Color(0xFF61706C),
+                            ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              _ChecklistMiniStat(
+                value: '$remainingCourseTotal',
+                label: 'Pending',
+              ),
+              const SizedBox(width: 10),
+              _ChecklistMiniStat(
+                value: '$completedCourseTotal',
+                label: 'Completed',
+              ),
+              const SizedBox(width: 10),
+              _ChecklistMiniStat(
+                value: '$assignedCourseTotal',
+                label: 'Assigned',
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _CourseListSection(
+            title: 'الدورات المكتملة',
+            items: completedCourses,
+            emptyLabel: 'لا توجد دورات مكتملة.',
+          ),
+          const SizedBox(height: 12),
+          _CourseListSection(
+            title: 'الدورات المتبقية',
+            items: remainingCourses,
+            emptyLabel: 'لا توجد دورات متبقية.',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CourseListSection extends StatelessWidget {
+  const _CourseListSection({
+    required this.title,
+    required this.items,
+    required this.emptyLabel,
+  });
+
+  final String title;
+  final List<dynamic> items;
+  final String emptyLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Align(
+          alignment: Alignment.centerRight,
+          child: Text(
+            title,
+            textAlign: TextAlign.right,
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  color: _brandTealDark,
+                  fontWeight: FontWeight.w800,
+                ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF7FAFB),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: _line),
+          ),
+          child: items.isEmpty
+              ? Align(
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    emptyLabel,
+                    textAlign: TextAlign.right,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: const Color(0xFF61706C),
+                        ),
+                  ),
+                )
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    for (var index = 0; index < items.length; index++) ...[
+                      Container(
+                        alignment: Alignment.centerRight,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 12,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: _line),
+                        ),
+                        child: Text(
+                          _readString(items[index], 'title'),
+                          textAlign: TextAlign.right,
+                          style:
+                              Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: _brandTealDark,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                        ),
+                      ),
+                      if (index < items.length - 1) const SizedBox(height: 8),
+                    ],
+                  ],
+                ),
+        ),
+      ],
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Text(
+          title,
+          textAlign: TextAlign.right,
+          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                color: _brandTealDark,
+                fontWeight: FontWeight.w800,
+              ),
+        ),
+        const SizedBox(height: 8),
+        if (items.isEmpty)
+          Align(
+            alignment: Alignment.centerRight,
+            child: Text(
+              emptyLabel,
+              textAlign: TextAlign.right,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: const Color(0xFF61706C),
+                  ),
+            ),
+          )
+        else
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              for (var index = 0; index < items.length; index++) ...[
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        _readString(items[index], 'title'),
+                        textAlign: TextAlign.right,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: _brandTealDark,
+                              fontWeight: FontWeight.w600,
+                            ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '•',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: _brandTealDark,
+                            fontWeight: FontWeight.w800,
+                          ),
+                    ),
+                  ],
+                ),
+                if (index < items.length - 1) const SizedBox(height: 8),
+              ],
+            ],
+          ),
+      ],
     );
   }
 }

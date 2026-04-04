@@ -2032,3 +2032,39 @@ class MobileApiTests(TestCase):
         self.assertEqual(len(report['today_checklist_statuses']), 1)
         self.assertEqual(report['today_checklist_statuses'][0]['status_code'], 'completed')
         self.assertEqual(report['today_checklist_statuses'][0]['completed_checklist_total'], 1)
+
+    def test_owner_mobile_reports_include_employee_course_statuses(self):
+        token = self._mobile_login('mobile_owner', 'pass12345')
+        second_course = Course.objects.create(
+            business=self.business,
+            title='Closing Shift Basics',
+            estimated_minutes=10,
+            created_by=self.owner,
+        )
+        CourseAssignment.objects.create(
+            business=self.business,
+            course=second_course,
+            employee=self.employee_user,
+            assigned_by=self.owner,
+            status=CourseAssignment.Status.IN_PROGRESS,
+        )
+        self.assignment.status = CourseAssignment.Status.COMPLETED
+        self.assignment.completed_at = timezone.now()
+        self.assignment.save(update_fields=['status', 'completed_at'])
+
+        response = self.client.get(
+            reverse('mobile_owner_reports'),
+            HTTP_AUTHORIZATION=f'Bearer {token}',
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertTrue(payload['ok'])
+        report = payload['report']
+        self.assertEqual(len(report['employee_course_statuses']), 1)
+        employee_status = report['employee_course_statuses'][0]
+        self.assertEqual(employee_status['assigned_course_total'], 2)
+        self.assertEqual(employee_status['completed_course_total'], 1)
+        self.assertEqual(employee_status['remaining_course_total'], 1)
+        self.assertEqual(employee_status['completed_courses'][0]['title'], self.course.title)
+        self.assertEqual(employee_status['remaining_courses'][0]['title'], second_course.title)

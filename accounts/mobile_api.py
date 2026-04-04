@@ -1320,6 +1320,9 @@ def owner_reports_api_view(request):
             employee__is_active=True,
         ).select_related('course', 'employee__employee_profile__job_title')
     )
+    assignments_by_employee_id: dict[int, list[CourseAssignment]] = {}
+    for assignment in assignments:
+        assignments_by_employee_id.setdefault(assignment.employee_id, []).append(assignment)
     total_assigned = len(assignments)
     total_completed = sum(1 for item in assignments if item.status == CourseAssignment.Status.COMPLETED)
     total_in_progress = sum(1 for item in assignments if item.status == CourseAssignment.Status.IN_PROGRESS)
@@ -1339,10 +1342,44 @@ def owner_reports_api_view(request):
         completed_checklist_map.setdefault(row['employee_id'], set()).add(row['checklist_id'])
 
     checklist_statuses: list[dict] = []
+    employee_course_statuses: list[dict] = []
     assigned_checklist_employee_total = 0
     completed_checklist_employee_total = 0
     pending_checklist_employee_total = 0
     for employee in employees:
+        employee_assignments = assignments_by_employee_id.get(employee.user_id, [])
+        completed_courses = [
+            {
+                'assignment_id': assignment.id,
+                'course_id': assignment.course_id,
+                'title': assignment.course.title,
+            }
+            for assignment in employee_assignments
+            if assignment.status == CourseAssignment.Status.COMPLETED
+        ]
+        remaining_courses = [
+            {
+                'assignment_id': assignment.id,
+                'course_id': assignment.course_id,
+                'title': assignment.course.title,
+            }
+            for assignment in employee_assignments
+            if assignment.status != CourseAssignment.Status.COMPLETED
+        ]
+        employee_course_statuses.append(
+            {
+                'employee': {
+                    'id': employee.user_id,
+                    'display_name': _display_name(employee.user),
+                    'job_title': employee.job_title.name if employee.job_title else '',
+                },
+                'assigned_course_total': len(employee_assignments),
+                'completed_course_total': len(completed_courses),
+                'remaining_course_total': len(remaining_courses),
+                'completed_courses': completed_courses,
+                'remaining_courses': remaining_courses,
+            }
+        )
         assigned_checklists = list(_assigned_checklists_queryset(employee))
         assigned_ids = {item.id for item in assigned_checklists}
         completed_ids = completed_checklist_map.get(employee.user_id, set()) & assigned_ids
@@ -1385,6 +1422,7 @@ def owner_reports_api_view(request):
                 'total_completed': total_completed,
                 'total_in_progress': total_in_progress,
                 'overall_completion_rate': round((total_completed / total_assigned) * 100) if total_assigned else 0,
+                'employee_course_statuses': employee_course_statuses,
                 'assigned_checklist_employee_total': assigned_checklist_employee_total,
                 'completed_checklist_employee_total': completed_checklist_employee_total,
                 'pending_checklist_employee_total': pending_checklist_employee_total,
