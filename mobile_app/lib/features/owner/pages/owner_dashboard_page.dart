@@ -109,9 +109,9 @@ class OwnerDashboardPage extends StatelessWidget {
         ),
         const SizedBox(height: 14),
         if (employees.isEmpty)
-          const AppSectionCard(
+          AppSectionCard(
             title: 'Employees',
-            child: Text('No employees yet.'),
+            child: Text(tr(context, 'No employees yet.')),
           )
         else
           for (var index = 0; index < visibleEmployees.length; index++) ...[

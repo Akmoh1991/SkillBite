@@ -6,7 +6,6 @@ import 'package:skillbite_mobile/app/theme/app_theme_tokens.dart';
 import 'package:skillbite_mobile/app/widgets/widgets.dart';
 import 'package:skillbite_mobile/core/api/mobile_api_client.dart';
 import 'package:skillbite_mobile/core/utils/utils.dart';
-import 'package:skillbite_mobile/features/owner/pages/owner_job_titles_page.dart';
 
 String _tr(BuildContext context, String english) => tr(context, english);
 Map<String, dynamic> _asMap(Object? value) => asMap(value);
@@ -62,14 +61,6 @@ class _OwnerEmployeesPageState extends State<OwnerEmployeesPage> {
     if (changed == true && mounted) {
       _reload();
     }
-  }
-
-  Future<void> _openJobTitlesPage() async {
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => OwnerJobTitlesPage(api: widget.api),
-      ),
-    );
   }
 
   Future<void> _showAddChooserDialog() async {
@@ -652,14 +643,6 @@ class _OwnerEmployeesPageState extends State<OwnerEmployeesPage> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: AppSectionLink(
-                      label: 'Job titles',
-                      onTap: _openJobTitlesPage,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
                 ],
               ),
             ),

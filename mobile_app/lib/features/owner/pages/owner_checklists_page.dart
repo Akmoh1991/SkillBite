@@ -40,6 +40,7 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
   late Future<Map<String, dynamic>> checklistsFuture;
   late Future<Map<String, dynamic>> rulesFuture;
   late Future<Map<String, dynamic>> jobTitlesFuture;
+  final Set<int> expandedChecklistIds = <int>{};
 
   @override
   void initState() {
@@ -596,11 +597,14 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
               ),
             ),
             if (checklists.isEmpty)
-              const _PageSliverSection(
-                padding: EdgeInsets.fromLTRB(24, 0, 24, 0),
-                child: _SectionCard(
+              _PageSliverSection(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 0),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: _SectionCard(
                   title: 'المهام',
                   child: Text('لا توجد مهام مضافة حاليًا.'),
+                  ),
                 ),
               )
             else
@@ -609,7 +613,12 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
                 itemCount: checklists.length,
                 itemBuilder: (context, index) {
                   final item = checklists[index];
+                  final checklistId = _readInt(item, 'id');
                   final checklistItems = _asList(item['items']);
+                  final expanded = expandedChecklistIds.contains(checklistId);
+                  final visibleItems = expanded
+                      ? checklistItems
+                      : checklistItems.take(3).toList(growable: false);
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 16),
                     child: _ManagementRecordCard(
@@ -624,7 +633,7 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
                       ],
                       detail: Column(
                         children: [
-                          for (final checklistItem in checklistItems.take(3))
+                          for (final checklistItem in visibleItems)
                             _ChecklistItemTile(
                               index: checklistItems.indexOf(checklistItem) + 1,
                               title: _readString(checklistItem, 'title'),
@@ -635,9 +644,33 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
                               padding: const EdgeInsets.only(top: 4),
                               child: Align(
                                 alignment: Alignment.centerLeft,
-                                child: Text(
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(999),
+                                  onTap: () {
+                                    setState(() {
+                                      if (expanded) {
+                                        expandedChecklistIds.remove(checklistId);
+                                      } else {
+                                        expandedChecklistIds.add(checklistId);
+                                      }
+                                    });
+                                  },
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 4,
+                                    ),
+                                    child: Text(
                                   '+${checklistItems.length - 3} عناصر إضافية',
-                                  style: Theme.of(context).textTheme.bodySmall,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodySmall
+                                      ?.copyWith(
+                                        color: brandTeal,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
@@ -652,17 +685,24 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: const [
-                  _HeaderRow(title: 'القواعد'),
+                  _HeaderRow(
+                    title: 'القواعد',
+                    titleColor: _brandTealDark,
+                    titleFontSize: 26,
+                  ),
                   SizedBox(height: 16),
                 ],
               ),
             ),
             if (rules.isEmpty)
-              const _PageSliverSection(
-                padding: EdgeInsets.fromLTRB(24, 0, 24, 24),
-                child: _SectionCard(
+              _PageSliverSection(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: _SectionCard(
                   title: 'القواعد',
                   child: Text('لا توجد قواعد مضافة حاليًا.'),
+                  ),
                 ),
               )
             else
