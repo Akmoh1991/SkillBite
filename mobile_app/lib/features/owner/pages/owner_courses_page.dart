@@ -401,19 +401,7 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
     Map<String, dynamic> item,
     List<dynamic> employees,
   ) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 10),
-      child: Align(
-        alignment: AlignmentDirectional.centerEnd,
-        child: FilledButton.tonalIcon(
-          onPressed: employees.isEmpty
-              ? null
-              : () => _showAssignDialog(_readInt(item, 'id'), employees),
-          icon: const Icon(Icons.person_add_alt_1_rounded),
-          label: Text(_tr(context, 'Assign')),
-        ),
-      ),
-    );
+    return const SizedBox.shrink();
   }
 
   Widget _buildCourseListItem(
