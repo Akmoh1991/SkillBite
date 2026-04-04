@@ -53,8 +53,8 @@ class _RoleShellState extends State<RoleShell> {
             OwnerDashboardPage(api: widget.api, user: widget.user),
             OwnerEmployeesPage(api: widget.api),
             OwnerCoursesPage(api: widget.api),
-            OwnerReportsPage(api: widget.api),
             OwnerChecklistsPage(api: widget.api),
+            OwnerReportsPage(api: widget.api),
           ]
         : [
             EmployeeDashboardPage(api: widget.api, user: widget.user),
@@ -77,12 +77,12 @@ class _RoleShellState extends State<RoleShell> {
               label: tr(context, 'Courses'),
             ),
             NavigationDestination(
-              icon: const Icon(Icons.insights_outlined),
-              label: tr(context, 'Reports'),
+              icon: const Icon(Icons.checklist_outlined),
+              label: 'المهام',
             ),
             NavigationDestination(
-              icon: const Icon(Icons.checklist_outlined),
-              label: tr(context, 'Checklists'),
+              icon: const Icon(Icons.insights_outlined),
+              label: tr(context, 'Reports'),
             ),
           ]
         : [

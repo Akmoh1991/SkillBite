@@ -7,7 +7,6 @@ import 'package:skillbite_mobile/app/widgets/widgets.dart';
 import 'package:skillbite_mobile/core/api/mobile_api_client.dart';
 import 'package:skillbite_mobile/core/utils/utils.dart';
 
-String _tr(BuildContext context, String english) => tr(context, english);
 List<dynamic> _asList(Object? value) => asList(value);
 String _readString(dynamic source, String key) => readString(source, key);
 int _readInt(dynamic source, String key) => readInt(source, key);
@@ -17,11 +16,8 @@ void _showSnack(BuildContext context, String message) =>
 
 const _brandTealDark = brandTealDark;
 
-typedef _DashboardMetricRow = AppDashboardMetricRow;
-typedef _DashboardMetricData = AppDashboardMetricData;
 typedef _HeaderRow = AppHeaderRow;
 typedef _HeaderActionButton = AppHeaderActionButton;
-typedef _HeaderTonalButton = AppHeaderTonalButton;
 typedef _ManagementRecordCard = AppManagementRecordCard;
 typedef _RuleAssignmentTile = AppRuleAssignmentTile;
 typedef _SectionCard = AppSectionCard;
@@ -57,6 +53,125 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
       rulesFuture = widget.api.get('/business-owner/checklist-rules/');
       jobTitlesFuture = widget.api.get('/business-owner/job-titles/');
     });
+  }
+
+  String _frequencyLabel(String raw) {
+    switch (raw) {
+      case 'DAILY':
+        return 'يومي';
+      case 'WEEKLY':
+        return 'أسبوعي';
+      case 'ON_DEMAND':
+        return 'عند الحاجة';
+      default:
+        return raw;
+    }
+  }
+
+  Future<void> _showAddMenuDialog(
+    List<dynamic> checklists,
+    List<dynamic> jobTitles,
+  ) async {
+    final action = await showDialog<String>(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          backgroundColor: const Color(0xFFF3FBF8),
+          insetPadding:
+              const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(22, 24, 22, 22),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Directionality(
+                  textDirection: TextDirection.ltr,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      IconButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        icon: const Icon(Icons.close_rounded),
+                        tooltip: 'إغلاق',
+                        iconSize: 34,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints.tightFor(
+                          width: 40,
+                          height: 40,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Align(
+                          alignment: AlignmentDirectional.topEnd,
+                          child: Text(
+                            'إضافة',
+                            textAlign: TextAlign.right,
+                            style: Theme.of(context)
+                                .textTheme
+                                .headlineMedium
+                                ?.copyWith(fontWeight: FontWeight.w800),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  'اختر ما تريد إضافته إلى صفحة المهام.',
+                  textAlign: TextAlign.right,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: const Color(0xFF61706C),
+                        height: 1.45,
+                      ),
+                ),
+                const SizedBox(height: 22),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: () => Navigator.of(context).pop('task'),
+                    child: const Text('إضافة مهمة'),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.tonal(
+                    onPressed: checklists.isEmpty || jobTitles.isEmpty
+                        ? null
+                        : () => Navigator.of(context).pop('rule'),
+                    child: const Text('إضافة قاعدة'),
+                  ),
+                ),
+                if (checklists.isEmpty || jobTitles.isEmpty) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    'لإضافة قاعدة، يجب أن توجد مهمة واحدة على الأقل ومسمى وظيفي واحد.',
+                    textAlign: TextAlign.right,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: const Color(0xFF61706C),
+                          height: 1.45,
+                        ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        );
+      },
+    );
+    if (!mounted || action == null) return;
+    if (action == 'task') {
+      await _showCreateChecklistDialog(jobTitles);
+      return;
+    }
+    if (action == 'rule') {
+      await _showCreateRuleDialog(checklists, jobTitles);
+    }
   }
 
   Future<void> _showCreateChecklistDialog(List<dynamic> jobTitles) async {
@@ -119,21 +234,47 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        _tr(context, 'Create Checklist'),
-                        style: Theme.of(context)
-                            .textTheme
-                            .headlineMedium
-                            ?.copyWith(
-                              fontWeight: FontWeight.w800,
+                      Directionality(
+                        textDirection: TextDirection.ltr,
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            IconButton(
+                              onPressed: saving
+                                  ? null
+                                  : () => Navigator.of(context).pop(false),
+                              icon: const Icon(Icons.close_rounded),
+                              tooltip: 'إغلاق',
+                              iconSize: 34,
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints.tightFor(
+                                width: 40,
+                                height: 40,
+                              ),
                             ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Align(
+                                alignment: AlignmentDirectional.topEnd,
+                                child: Text(
+                                  'إضافة مهمة',
+                                  textAlign: TextAlign.right,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .headlineMedium
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                       const SizedBox(height: 10),
                       Text(
-                        _tr(
-                          context,
-                          'Design a repeatable routine with clear steps so teams know exactly what good looks like.',
-                        ),
+                        'أنشئ مهمة متكررة بخطوات واضحة حتى يعرف الفريق ما الذي يجب تنفيذه بدقة.',
+                        textAlign: TextAlign.right,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                               color: const Color(0xFF61706C),
                               height: 1.45,
@@ -142,30 +283,34 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
                       const SizedBox(height: 22),
                       TextField(
                         controller: titleController,
-                        decoration:
-                            InputDecoration(labelText: _tr(context, 'Title')),
+                        decoration: const InputDecoration(labelText: 'العنوان'),
                       ),
                       const SizedBox(height: 14),
                       TextField(
                         controller: descriptionController,
-                        decoration: InputDecoration(
-                            labelText: _tr(context, 'Description')),
+                        decoration: const InputDecoration(
+                          labelText: 'الوصف',
+                        ),
                       ),
                       const SizedBox(height: 14),
                       DropdownButtonFormField<String>(
                         initialValue: frequency,
-                        decoration: InputDecoration(
-                            labelText: _tr(context, 'Frequency')),
+                        decoration: const InputDecoration(
+                          labelText: 'التكرار',
+                        ),
                         items: [
                           DropdownMenuItem(
-                              value: 'DAILY',
-                              child: Text(_tr(context, 'Daily'))),
+                            value: 'DAILY',
+                            child: Text('يومي'),
+                          ),
                           DropdownMenuItem(
-                              value: 'WEEKLY',
-                              child: Text(_tr(context, 'Weekly'))),
+                            value: 'WEEKLY',
+                            child: Text('أسبوعي'),
+                          ),
                           DropdownMenuItem(
-                              value: 'ON_DEMAND',
-                              child: Text(_tr(context, 'On demand'))),
+                            value: 'ON_DEMAND',
+                            child: Text('عند الحاجة'),
+                          ),
                         ],
                         onChanged: (value) {
                           setInnerState(() {
@@ -176,13 +321,13 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
                       const SizedBox(height: 14),
                       DropdownButtonFormField<int?>(
                         initialValue: jobTitleId,
-                        decoration: InputDecoration(
-                            labelText: _tr(context, 'Assign to job title')),
+                        decoration: const InputDecoration(
+                          labelText: 'ربط بمسمى وظيفي',
+                        ),
                         items: [
                           DropdownMenuItem<int?>(
                             value: null,
-                            child:
-                                Text(_tr(context, 'No automatic assignment')),
+                            child: Text('بدون ربط تلقائي'),
                           ),
                           for (final rawTitle in jobTitles)
                             DropdownMenuItem<int?>(
@@ -201,8 +346,8 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
                         controller: itemsController,
                         minLines: 4,
                         maxLines: 7,
-                        decoration: InputDecoration(
-                          labelText: _tr(context, 'Items, one per line'),
+                        decoration: const InputDecoration(
+                          labelText: 'العناصر، عنصر في كل سطر',
                           alignLabelWithHint: true,
                         ),
                       ),
@@ -217,21 +362,11 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
                         ),
                       ],
                       const SizedBox(height: 18),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: TextButton(
-                          onPressed: saving
-                              ? null
-                              : () => Navigator.of(context).pop(false),
-                          child: Text(_tr(context, 'Cancel')),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
                       SizedBox(
                         width: double.infinity,
                         child: FilledButton(
                           onPressed: saving ? null : submit,
-                          child: Text(saving ? 'Saving...' : 'Create'),
+                          child: Text(saving ? 'جاري الحفظ...' : 'إنشاء'),
                         ),
                       ),
                     ],
@@ -247,7 +382,7 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
     descriptionController.dispose();
     itemsController.dispose();
     if (created == true) {
-      _showSnack(context, 'Checklist created.');
+      _showSnack(context, 'تم إنشاء المهمة.');
       _reload();
     }
   }
@@ -306,21 +441,47 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        _tr(context, 'Create Checklist Rule'),
-                        style: Theme.of(context)
-                            .textTheme
-                            .headlineMedium
-                            ?.copyWith(
-                              fontWeight: FontWeight.w800,
+                      Directionality(
+                        textDirection: TextDirection.ltr,
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            IconButton(
+                              onPressed: saving
+                                  ? null
+                                  : () => Navigator.of(context).pop(false),
+                              icon: const Icon(Icons.close_rounded),
+                              tooltip: 'إغلاق',
+                              iconSize: 34,
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints.tightFor(
+                                width: 40,
+                                height: 40,
+                              ),
                             ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Align(
+                                alignment: AlignmentDirectional.topEnd,
+                                child: Text(
+                                  'إضافة قاعدة',
+                                  textAlign: TextAlign.right,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .headlineMedium
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                       const SizedBox(height: 10),
                       Text(
-                        _tr(
-                          context,
-                          'Link a role to the right checklist so onboarding and recurring routines stay automatic.',
-                        ),
+                        'اربط المسمى الوظيفي بالمهمة المناسبة حتى يتم الإسناد تلقائيًا بشكل منظم.',
+                        textAlign: TextAlign.right,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                               color: const Color(0xFF61706C),
                               height: 1.45,
@@ -329,8 +490,9 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
                       const SizedBox(height: 22),
                       DropdownButtonFormField<int?>(
                         initialValue: selectedJobTitleId,
-                        decoration: InputDecoration(
-                            labelText: _tr(context, 'Job title')),
+                        decoration: const InputDecoration(
+                          labelText: 'المسمى الوظيفي',
+                        ),
                         items: [
                           for (final rawTitle in jobTitles)
                             DropdownMenuItem<int?>(
@@ -347,8 +509,9 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
                       const SizedBox(height: 14),
                       DropdownButtonFormField<int?>(
                         initialValue: selectedChecklistId,
-                        decoration: InputDecoration(
-                            labelText: _tr(context, 'Checklist')),
+                        decoration: const InputDecoration(
+                          labelText: 'المهمة',
+                        ),
                         items: [
                           for (final rawChecklist in checklists)
                             DropdownMenuItem<int?>(
@@ -373,21 +536,11 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
                         ),
                       ],
                       const SizedBox(height: 18),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: TextButton(
-                          onPressed: saving
-                              ? null
-                              : () => Navigator.of(context).pop(false),
-                          child: Text(_tr(context, 'Cancel')),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
                       SizedBox(
                         width: double.infinity,
                         child: FilledButton(
                           onPressed: saving ? null : submit,
-                          child: Text(saving ? 'Saving...' : 'Create'),
+                          child: Text(saving ? 'جاري الحفظ...' : 'إنشاء'),
                         ),
                       ),
                     ],
@@ -400,7 +553,7 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
       },
     );
     if (created == true) {
-      _showSnack(context, 'Checklist rule created.');
+      _showSnack(context, 'تم إنشاء القاعدة.');
       _reload();
     }
   }
@@ -421,9 +574,6 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
         final checklists = _asList(snapshot.data![0]['checklists']);
         final rules = _asList(snapshot.data![1]['rules']);
         final jobTitles = _asList(snapshot.data![2]['job_titles']);
-        final automatedTitleCount = {
-          for (final item in rules) _readPath(item, ['job_title', 'name']),
-        }.where((name) => name.trim().isNotEmpty).length;
         return _PageSliverBody(
           slivers: [
             _PageSliverSection(
@@ -431,50 +581,17 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   _HeaderRow(
-                    title: 'Checklists',
+                    title: 'المهام',
                     titleColor: _brandTealDark,
                     titleFontSize: 26,
-                    trailing: Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        _HeaderActionButton(
-                          label: 'Add',
-                          icon: Icons.add,
-                          onPressed: () =>
-                              _showCreateChecklistDialog(jobTitles),
-                        ),
-                        _HeaderTonalButton(
-                          label: 'Rule',
-                          onPressed: checklists.isEmpty || jobTitles.isEmpty
-                              ? null
-                              : () =>
-                                  _showCreateRuleDialog(checklists, jobTitles),
-                        ),
-                      ],
+                    trailing: _HeaderActionButton(
+                      label: 'إضافة',
+                      icon: Icons.add,
+                      onPressed: () =>
+                          _showAddMenuDialog(checklists, jobTitles),
                     ),
                   ),
-                  const SizedBox(height: 18),
-                  _DashboardMetricRow(
-                    metrics: [
-                      _DashboardMetricData(
-                        'Checklists',
-                        '${checklists.length}',
-                        icon: Icons.checklist_rounded,
-                      ),
-                      _DashboardMetricData(
-                        'Rule',
-                        '${rules.length}',
-                        icon: Icons.account_tree_rounded,
-                      ),
-                      _DashboardMetricData(
-                        'Titles',
-                        '$automatedTitleCount',
-                        icon: Icons.badge_outlined,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 20),
                 ],
               ),
             ),
@@ -482,8 +599,8 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
               const _PageSliverSection(
                 padding: EdgeInsets.fromLTRB(24, 0, 24, 0),
                 child: _SectionCard(
-                  title: 'Checklists',
-                  child: Text('No checklists created.'),
+                  title: 'المهام',
+                  child: Text('لا توجد مهام مضافة حاليًا.'),
                 ),
               )
             else
@@ -498,12 +615,12 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
                     child: _ManagementRecordCard(
                       title: _readString(item, 'title'),
                       description: _readString(item, 'description').isEmpty
-                          ? 'No checklist description yet.'
+                          ? 'لا يوجد وصف لهذه المهمة حتى الآن.'
                           : _readString(item, 'description'),
                       icon: Icons.checklist_rounded,
                       metadata: [
-                        _readString(item, 'frequency'),
-                        '${checklistItems.length} ${_tr(context, 'Items')}',
+                        _frequencyLabel(_readString(item, 'frequency')),
+                        '${checklistItems.length} عناصر',
                       ],
                       detail: Column(
                         children: [
@@ -519,7 +636,7 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
                               child: Align(
                                 alignment: Alignment.centerLeft,
                                 child: Text(
-                                  '+${checklistItems.length - 3} more items',
+                                  '+${checklistItems.length - 3} عناصر إضافية',
                                   style: Theme.of(context).textTheme.bodySmall,
                                 ),
                               ),
@@ -535,21 +652,22 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: const [
-                  _HeaderRow(title: 'Assignment rules'),
+                  _HeaderRow(title: 'القواعد'),
                   SizedBox(height: 16),
                 ],
               ),
             ),
             if (rules.isEmpty)
               const _PageSliverSection(
-                padding: EdgeInsets.fromLTRB(24, 0, 24, 120),
+                padding: EdgeInsets.fromLTRB(24, 0, 24, 24),
                 child: _SectionCard(
-                  title: 'Assignment Rules',
-                  child: Text('No checklist rules yet.'),
+                  title: 'القواعد',
+                  child: Text('لا توجد قواعد مضافة حاليًا.'),
                 ),
               )
             else
               _PageSliverList(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
                 itemCount: rules.length,
                 itemBuilder: (context, index) {
                   final item = rules[index];

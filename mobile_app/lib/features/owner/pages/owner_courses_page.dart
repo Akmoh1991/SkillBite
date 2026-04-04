@@ -546,7 +546,7 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
             ),
           if (sharedCourses.isNotEmpty)
             CoursePageSliverList(
-              padding: const EdgeInsets.fromLTRB(24, 16, 24, 120),
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
               itemCount: sharedCourses.length,
               itemBuilder: (context, index) {
                 final item = _asMap(sharedCourses[index]);
@@ -555,11 +555,6 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
                   child: _buildCourseListItem(context, item, employees),
                 );
               },
-            )
-          else
-            const CoursePageSliverSection(
-              padding: EdgeInsets.fromLTRB(24, 0, 24, 120),
-              child: SizedBox.shrink(),
             ),
         ],
       ],
