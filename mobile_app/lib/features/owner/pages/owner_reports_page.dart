@@ -372,7 +372,7 @@ class _ChecklistStatusTile extends StatelessWidget {
         border: Border.all(color: _line),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
