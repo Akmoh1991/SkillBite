@@ -13,7 +13,6 @@ import 'package:skillbite_mobile/features/owner/pages/owner_checklists_page.dart
 import 'package:skillbite_mobile/features/owner/pages/owner_courses_page.dart';
 import 'package:skillbite_mobile/features/owner/pages/owner_dashboard_page.dart';
 import 'package:skillbite_mobile/features/owner/pages/owner_employees_page.dart';
-import 'package:skillbite_mobile/features/owner/pages/owner_job_titles_page.dart';
 import 'package:skillbite_mobile/features/owner/pages/owner_reports_page.dart';
 
 class RoleShell extends StatefulWidget {
@@ -53,7 +52,6 @@ class _RoleShellState extends State<RoleShell> {
         ? [
             OwnerDashboardPage(api: widget.api, user: widget.user),
             OwnerEmployeesPage(api: widget.api),
-            OwnerJobTitlesPage(api: widget.api),
             OwnerCoursesPage(api: widget.api),
             OwnerReportsPage(api: widget.api),
             OwnerChecklistsPage(api: widget.api),
@@ -73,10 +71,6 @@ class _RoleShellState extends State<RoleShell> {
             NavigationDestination(
               icon: const Icon(Icons.group_outlined),
               label: tr(context, 'Employees'),
-            ),
-            NavigationDestination(
-              icon: const Icon(Icons.badge_outlined),
-              label: tr(context, 'Titles'),
             ),
             NavigationDestination(
               icon: const Icon(Icons.menu_book_outlined),

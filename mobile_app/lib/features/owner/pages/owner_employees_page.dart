@@ -20,10 +20,7 @@ const _brandTealDark = brandTealDark;
 
 typedef _HeaderRow = AppHeaderRow;
 typedef _HeaderActionButton = AppHeaderActionButton;
-typedef _DashboardMetricRow = AppDashboardMetricRow;
-typedef _DashboardMetricData = AppDashboardMetricData;
 typedef _ManagementRecordCard = AppManagementRecordCard;
-typedef _RecordDetailLine = AppRecordDetailLine;
 typedef _PageSliverBody = AppPageSliverBody;
 typedef _PageSliverSection = AppPageSliverSection;
 typedef _PageSliverList = AppPageSliverList;
@@ -52,6 +49,90 @@ class _OwnerEmployeesPageState extends State<OwnerEmployeesPage> {
     });
   }
 
+  Future<void> _openEmployeeDetail(Map<String, dynamic> employee) async {
+    final changed = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => OwnerEmployeeDetailPage(
+          employee: employee,
+          onDeactivate: () => _deactivateEmployee(employee),
+        ),
+      ),
+    );
+    if (changed == true && mounted) {
+      _reload();
+    }
+  }
+
+  Future<void> _showAddChooserDialog() async {
+    final selection = await showDialog<String>(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: const Color(0xFFF3FBF8),
+        insetPadding: const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
+        child: Padding(
+          padding: const EdgeInsets.all(22),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'إضافة جديدة',
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'اختر ما الذي تريد إضافته أولاً.',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: const Color(0xFF61706C),
+                      height: 1.45,
+                    ),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.tonalIcon(
+                  onPressed: () => Navigator.of(context).pop('employee'),
+                  icon: const Icon(Icons.person_add_alt_1_rounded),
+                  label: const Text('إضافة موظف'),
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size.fromHeight(52),
+                    alignment: Alignment.centerRight,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.tonalIcon(
+                  onPressed: () => Navigator.of(context).pop('job_title'),
+                  icon: const Icon(Icons.badge_outlined),
+                  label: const Text('إضافة مسمى وظيفي'),
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size.fromHeight(52),
+                    alignment: Alignment.centerRight,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    if (!mounted || selection == null) {
+      return;
+    }
+
+    if (selection == 'employee') {
+      await _showCreateEmployeeDialog();
+    } else if (selection == 'job_title') {
+      await _showCreateJobTitleDialog();
+    }
+  }
+
   Future<void> _deactivateEmployee(Map<String, dynamic> employee) async {
     final confirmed = await showDialog<bool>(
           context: context,
@@ -74,19 +155,21 @@ class _OwnerEmployeesPageState extends State<OwnerEmployeesPage> {
                       color: const Color(0xFFFFE6DE),
                       borderRadius: BorderRadius.circular(18),
                     ),
-                    child: const Icon(Icons.person_off_rounded,
-                        color: Color(0xFFC54C2B)),
+                    child: const Icon(
+                      Icons.person_off_rounded,
+                      color: Color(0xFFC54C2B),
+                    ),
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    _tr(context, 'Deactivate Employee'),
+                    'تعطيل الموظف',
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                           fontWeight: FontWeight.w800,
                         ),
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    'Disable ${_readString(employee, 'display_name')}?',
+                    'هل تريد تعطيل ${_readString(employee, 'display_name')}؟',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: const Color(0xFF61706C),
                           height: 1.45,
@@ -97,7 +180,7 @@ class _OwnerEmployeesPageState extends State<OwnerEmployeesPage> {
                     alignment: Alignment.centerRight,
                     child: TextButton(
                       onPressed: () => Navigator.of(context).pop(false),
-                      child: Text(_tr(context, 'Cancel')),
+                      child: const Text('إلغاء'),
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -108,7 +191,7 @@ class _OwnerEmployeesPageState extends State<OwnerEmployeesPage> {
                         backgroundColor: const Color(0xFFC54C2B),
                       ),
                       onPressed: () => Navigator.of(context).pop(true),
-                      child: Text(_tr(context, 'Deactivate')),
+                      child: const Text('تعطيل'),
                     ),
                   ),
                 ],
@@ -117,16 +200,23 @@ class _OwnerEmployeesPageState extends State<OwnerEmployeesPage> {
           ),
         ) ??
         false;
-    if (!confirmed) return;
+    if (!confirmed) {
+      return;
+    }
     try {
       await widget.api.post(
-          '/business-owner/employees/${_readInt(employee, 'id')}/deactivate/',
-          {});
-      if (!mounted) return;
-      _showSnack(context, 'Employee deactivated.');
+        '/business-owner/employees/${_readInt(employee, 'id')}/deactivate/',
+        {},
+      );
+      if (!mounted) {
+        return;
+      }
+      _showSnack(context, 'تم تعطيل الموظف.');
       _reload();
     } catch (error) {
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       _showSnack(context, error.toString().replaceFirst('Exception: ', ''));
     }
   }
@@ -157,7 +247,9 @@ class _OwnerEmployeesPageState extends State<OwnerEmployeesPage> {
                   'password': passwordController.text,
                   'job_title': jobTitleController.text.trim(),
                 });
-                if (!mounted) return;
+                if (!mounted) {
+                  return;
+                }
                 Navigator.of(context).pop(true);
               } catch (error) {
                 setInnerState(() {
@@ -172,7 +264,8 @@ class _OwnerEmployeesPageState extends State<OwnerEmployeesPage> {
               insetPadding:
                   const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(32)),
+                borderRadius: BorderRadius.circular(32),
+              ),
               child: AnimatedPadding(
                 duration: const Duration(milliseconds: 180),
                 curve: Curves.easeOut,
@@ -187,21 +280,46 @@ class _OwnerEmployeesPageState extends State<OwnerEmployeesPage> {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        _tr(context, 'Create Employee'),
-                        style: Theme.of(context)
-                            .textTheme
-                            .headlineMedium
-                            ?.copyWith(
-                              fontWeight: FontWeight.w800,
+                      Directionality(
+                        textDirection: TextDirection.ltr,
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            IconButton(
+                              onPressed: saving
+                                  ? null
+                                  : () => Navigator.of(context).pop(false),
+                              icon: const Icon(Icons.close_rounded),
+                              tooltip: 'إغلاق',
+                              iconSize: 34,
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints.tightFor(
+                                width: 40,
+                                height: 40,
+                              ),
                             ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Align(
+                                alignment: AlignmentDirectional.topEnd,
+                                child: Text(
+                                  'إضافة موظف',
+                                  textAlign: TextAlign.right,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .headlineMedium
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                       const SizedBox(height: 10),
                       Text(
-                        _tr(
-                          context,
-                          'Set up a new teammate with the right role details so they can start learning immediately.',
-                        ),
+                        'أضف موظفاً جديداً وحدد بياناته الأساسية ليبدأ مباشرة.',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                               color: const Color(0xFF61706C),
                               height: 1.45,
@@ -210,32 +328,37 @@ class _OwnerEmployeesPageState extends State<OwnerEmployeesPage> {
                       const SizedBox(height: 22),
                       TextField(
                         controller: usernameController,
-                        decoration: InputDecoration(
-                            labelText: _tr(context, 'Username')),
+                        decoration: const InputDecoration(
+                          labelText: 'اسم المستخدم',
+                        ),
                       ),
                       const SizedBox(height: 14),
                       TextField(
                         controller: fullNameController,
-                        decoration: InputDecoration(
-                            labelText: _tr(context, 'Full name')),
+                        decoration: const InputDecoration(
+                          labelText: 'الاسم الكامل',
+                        ),
                       ),
                       const SizedBox(height: 14),
                       TextField(
                         controller: emailController,
-                        decoration:
-                            InputDecoration(labelText: _tr(context, 'Email')),
+                        decoration: const InputDecoration(
+                          labelText: 'البريد الإلكتروني',
+                        ),
                       ),
                       const SizedBox(height: 14),
                       TextField(
                         controller: passwordController,
-                        decoration: InputDecoration(
-                            labelText: _tr(context, 'Password')),
+                        decoration: const InputDecoration(
+                          labelText: 'كلمة المرور',
+                        ),
                       ),
                       const SizedBox(height: 14),
                       TextField(
                         controller: jobTitleController,
-                        decoration: InputDecoration(
-                            labelText: _tr(context, 'Job title')),
+                        decoration: const InputDecoration(
+                          labelText: 'المسمى الوظيفي',
+                        ),
                       ),
                       if (errorText != null) ...[
                         const SizedBox(height: 12),
@@ -247,22 +370,12 @@ class _OwnerEmployeesPageState extends State<OwnerEmployeesPage> {
                           ),
                         ),
                       ],
-                      const SizedBox(height: 18),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: TextButton(
-                          onPressed: saving
-                              ? null
-                              : () => Navigator.of(context).pop(false),
-                          child: Text(_tr(context, 'Cancel')),
-                        ),
-                      ),
                       const SizedBox(height: 8),
                       SizedBox(
                         width: double.infinity,
                         child: FilledButton(
                           onPressed: saving ? null : submit,
-                          child: Text(saving ? 'Saving...' : 'Create'),
+                          child: Text(saving ? 'جارٍ الحفظ...' : 'إنشاء'),
                         ),
                       ),
                     ],
@@ -280,9 +393,231 @@ class _OwnerEmployeesPageState extends State<OwnerEmployeesPage> {
     passwordController.dispose();
     jobTitleController.dispose();
     if (created == true) {
-      _showSnack(context, 'Employee created.');
+      _showSnack(context, 'تم إنشاء الموظف.');
       _reload();
     }
+  }
+
+  Future<void> _showCreateJobTitleDialog() async {
+    final nameController = TextEditingController();
+    final created = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        bool saving = false;
+        String? errorText;
+        return StatefulBuilder(
+          builder: (context, setInnerState) {
+            Future<void> submit() async {
+              setInnerState(() {
+                saving = true;
+                errorText = null;
+              });
+              try {
+                await widget.api.post('/business-owner/job-titles/create/', {
+                  'name': nameController.text.trim(),
+                });
+                if (!mounted) {
+                  return;
+                }
+                Navigator.of(context).pop(true);
+              } catch (error) {
+                setInnerState(() {
+                  errorText = error.toString().replaceFirst('Exception: ', '');
+                  saving = false;
+                });
+              }
+            }
+
+            return Dialog(
+              backgroundColor: const Color(0xFFF3FBF8),
+              insetPadding:
+                  const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(32),
+              ),
+              child: AnimatedPadding(
+                duration: const Duration(milliseconds: 180),
+                curve: Curves.easeOut,
+                padding: EdgeInsets.fromLTRB(
+                  22,
+                  24,
+                  22,
+                  MediaQuery.of(context).viewInsets.bottom + 22,
+                ),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Directionality(
+                        textDirection: TextDirection.ltr,
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            IconButton(
+                              onPressed: saving
+                                  ? null
+                                  : () => Navigator.of(context).pop(false),
+                              icon: const Icon(Icons.close_rounded),
+                              tooltip: 'إغلاق',
+                              iconSize: 34,
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints.tightFor(
+                                width: 40,
+                                height: 40,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Align(
+                                alignment: AlignmentDirectional.topEnd,
+                                child: Text(
+                                  'إضافة مسمى وظيفي',
+                                  textAlign: TextAlign.right,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .headlineMedium
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        'أضف مسمى وظيفياً يمكن استخدامه مع الموظفين.',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: const Color(0xFF61706C),
+                              height: 1.45,
+                            ),
+                      ),
+                      const SizedBox(height: 22),
+                      TextField(
+                        controller: nameController,
+                        decoration: const InputDecoration(
+                          labelText: 'اسم المسمى الوظيفي',
+                        ),
+                      ),
+                      if (errorText != null) ...[
+                        const SizedBox(height: 12),
+                        Text(
+                          errorText!,
+                          style: const TextStyle(
+                            color: Color(0xFFC54C2B),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton(
+                          onPressed: saving ? null : submit,
+                          child: Text(saving ? 'جارٍ الحفظ...' : 'إنشاء'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+    nameController.dispose();
+    if (created == true) {
+      _showSnack(context, 'تم إنشاء المسمى الوظيفي.');
+      _reload();
+    }
+  }
+
+  Widget _buildEmployeeListItem(Map<String, dynamic> employee) {
+    final name = _readString(employee, 'display_name').trim().isEmpty
+        ? _readString(employee, 'username')
+        : _readString(employee, 'display_name');
+    final jobTitle = _readString(employee, 'job_title').trim();
+    final isActive = _readBool(employee, 'is_active');
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: lineColor),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0C0F172A),
+            blurRadius: 14,
+            offset: Offset(0, 6),
+          ),
+        ],
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(24),
+        onTap: () => _openEmployeeDetail(employee),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          child: Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEAF7F4),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Icon(
+                  isActive ? Icons.person_rounded : Icons.person_off_rounded,
+                  color: brandTeal,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w800,
+                          ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      jobTitle.isEmpty
+                          ? 'لم يتم تعيين مسمى وظيفي بعد.'
+                          : jobTitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: mutedColor,
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  AppStatusChip(label: isActive ? 'نشط' : 'متوقف'),
+                  const SizedBox(height: 12),
+                  const Icon(
+                    Icons.chevron_right_rounded,
+                    color: Color(0xFF95A3B4),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -291,12 +626,6 @@ class _OwnerEmployeesPageState extends State<OwnerEmployeesPage> {
       future: future,
       builder: (context, payload) {
         final employees = _asList(payload['employees']);
-        final activeEmployees =
-            employees.where((item) => _readBool(item, 'is_active')).length;
-        final titledEmployees = employees
-            .where((item) => _readString(item, 'job_title').trim().isNotEmpty)
-            .length;
-        final untitledEmployees = employees.length - titledEmployees;
         return _PageSliverBody(
           slivers: [
             _PageSliverSection(
@@ -304,34 +633,14 @@ class _OwnerEmployeesPageState extends State<OwnerEmployeesPage> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   _HeaderRow(
-                    title: 'Employees',
+                    title: 'الموظفون',
                     titleColor: _brandTealDark,
                     titleFontSize: 26,
                     trailing: _HeaderActionButton(
-                      label: 'Add',
+                      label: 'إضافة',
                       icon: Icons.add,
-                      onPressed: _showCreateEmployeeDialog,
+                      onPressed: _showAddChooserDialog,
                     ),
-                  ),
-                  const SizedBox(height: 18),
-                  _DashboardMetricRow(
-                    metrics: [
-                      _DashboardMetricData(
-                        'Active',
-                        '$activeEmployees',
-                        icon: Icons.verified_user_rounded,
-                      ),
-                      _DashboardMetricData(
-                        'With role',
-                        '$titledEmployees',
-                        icon: Icons.badge_rounded,
-                      ),
-                      _DashboardMetricData(
-                        'Needs title',
-                        '$untitledEmployees',
-                        icon: Icons.assignment_ind_rounded,
-                      ),
-                    ],
                   ),
                   const SizedBox(height: 16),
                 ],
@@ -341,12 +650,12 @@ class _OwnerEmployeesPageState extends State<OwnerEmployeesPage> {
               _PageSliverSection(
                 padding: const EdgeInsets.fromLTRB(24, 0, 24, 120),
                 child: _ManagementRecordCard(
-                  title: 'Build your team',
+                  title: 'ابدأ بإضافة فريقك',
                   description:
-                      'Create the first employee account to unlock training assignments, checklists, and reporting.',
+                      'أنشئ أول موظف أو أضف مسمى وظيفياً لتنظيم فريقك بشكل أفضل.',
                   icon: Icons.person_add_alt_1_rounded,
-                  secondaryActionLabel: _tr(context, 'Create'),
-                  onSecondaryAction: _showCreateEmployeeDialog,
+                  secondaryActionLabel: 'إضافة',
+                  onSecondaryAction: _showAddChooserDialog,
                 ),
               )
             else
@@ -356,51 +665,165 @@ class _OwnerEmployeesPageState extends State<OwnerEmployeesPage> {
                   final item = employees[index];
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 16),
-                    child: _ManagementRecordCard(
-                      title: _readString(item, 'display_name'),
-                      description: _readString(item, 'job_title').trim().isEmpty
-                          ? 'Role title not assigned yet.'
-                          : _readString(item, 'job_title'),
-                      icon: _readBool(item, 'is_active')
-                          ? Icons.person_rounded
-                          : Icons.person_off_rounded,
-                      metadata: [
-                        _readBool(item, 'is_active') ? 'Active' : 'Paused',
-                        _readString(item, 'username'),
-                      ],
-                      detail: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (_readString(item, 'email').trim().isNotEmpty)
-                            _RecordDetailLine(
-                              icon: Icons.alternate_email_rounded,
-                              label: _readString(item, 'email'),
-                            ),
-                          if (_readString(item, 'job_title')
-                              .trim()
-                              .isNotEmpty) ...[
-                            if (_readString(item, 'email').trim().isNotEmpty)
-                              const SizedBox(height: 10),
-                            _RecordDetailLine(
-                              icon: Icons.work_outline_rounded,
-                              label: _readString(item, 'job_title'),
-                            ),
-                          ],
-                        ],
-                      ),
-                      primaryActionLabel: _readBool(item, 'is_active')
-                          ? _tr(context, 'Deactivate')
-                          : null,
-                      onPrimaryAction: _readBool(item, 'is_active')
-                          ? () => _deactivateEmployee(_asMap(item))
-                          : null,
-                    ),
+                    child: _buildEmployeeListItem(_asMap(item)),
                   );
                 },
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 120),
               ),
           ],
         );
       },
+    );
+  }
+}
+
+class OwnerEmployeeDetailPage extends StatelessWidget {
+  const OwnerEmployeeDetailPage({
+    super.key,
+    required this.employee,
+    required this.onDeactivate,
+  });
+
+  final Map<String, dynamic> employee;
+  final Future<void> Function() onDeactivate;
+
+  @override
+  Widget build(BuildContext context) {
+    final name = _readString(employee, 'display_name').trim().isEmpty
+        ? _readString(employee, 'username')
+        : _readString(employee, 'display_name');
+    final username = _readString(employee, 'username').trim();
+    final email = _readString(employee, 'email').trim();
+    final jobTitle = _readString(employee, 'job_title').trim();
+    final isActive = _readBool(employee, 'is_active');
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('تفاصيل الموظف')),
+      body: _PageSliverBody(
+        slivers: [
+          _PageSliverSection(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(28),
+                    border: Border.all(color: lineColor),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x100F172A),
+                        blurRadius: 20,
+                        offset: Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(18),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              width: 56,
+                              height: 56,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFEAF7F4),
+                                borderRadius: BorderRadius.circular(18),
+                              ),
+                              child: Icon(
+                                isActive
+                                    ? Icons.person_rounded
+                                    : Icons.person_off_rounded,
+                                color: brandTeal,
+                              ),
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    name,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .headlineSmall,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    jobTitle.isEmpty
+                                        ? 'لم يتم تعيين مسمى وظيفي بعد.'
+                                        : jobTitle,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyLarge
+                                        ?.copyWith(color: mutedColor),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            AppStatusChip(label: isActive ? 'نشط' : 'متوقف'),
+                            if (username.isNotEmpty)
+                              AppStatusChip(label: username),
+                          ],
+                        ),
+                        if (email.isNotEmpty) ...[
+                          const SizedBox(height: 18),
+                          Text(
+                            'البريد الإلكتروني',
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            email,
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyLarge
+                                ?.copyWith(color: inkColor),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+                if (isActive) ...[
+                  const SizedBox(height: 20),
+                  FilledButton(
+                    onPressed: () async {
+                      await onDeactivate();
+                      if (context.mounted) {
+                        Navigator.of(context).pop(true);
+                      }
+                    },
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFFC54C2B),
+                      minimumSize: const Size.fromHeight(56),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                    ),
+                    child: const Text('تعطيل'),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
