@@ -4,6 +4,7 @@ import 'package:skillbite_mobile/app/theme/app_theme_tokens.dart';
 import 'package:skillbite_mobile/app/widgets/widgets.dart';
 import 'package:skillbite_mobile/core/api/mobile_api_client.dart';
 import 'package:skillbite_mobile/core/session/session_user.dart';
+import 'package:skillbite_mobile/features/chat/chat_page.dart';
 import 'package:skillbite_mobile/features/employee/courses/pages/employee_courses_page.dart';
 import 'package:skillbite_mobile/features/employee/courses/pages/employee_learning_history_page.dart';
 import 'package:skillbite_mobile/features/employee/pages/employee_checklists_page.dart';
@@ -45,6 +46,19 @@ class _RoleShellState extends State<RoleShell> {
     );
   }
 
+  Future<void> _openChat() async {
+    final ownerMode = widget.user.role == 'business_owner';
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ChatPage(
+          api: widget.api,
+          roleBasePath: ownerMode ? '/business-owner' : '/employee',
+          title: tr(context, 'Chat'),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final ownerMode = widget.user.role == 'business_owner';
@@ -78,7 +92,7 @@ class _RoleShellState extends State<RoleShell> {
             ),
             NavigationDestination(
               icon: const Icon(Icons.checklist_outlined),
-              label: 'المهام',
+              label: tr(context, 'Checklists'),
             ),
             NavigationDestination(
               icon: const Icon(Icons.insights_outlined),
@@ -141,6 +155,23 @@ class _RoleShellState extends State<RoleShell> {
           ],
         ),
         actions: [
+          Padding(
+            padding: const EdgeInsetsDirectional.only(end: 6),
+            child: Container(
+              width: 44,
+              height: 44,
+              margin: const EdgeInsets.symmetric(vertical: 14),
+              decoration: BoxDecoration(
+                color: surfaceColor,
+                borderRadius: BorderRadius.circular(15),
+                border: Border.all(color: lineColor),
+              ),
+              child: IconButton(
+                onPressed: _openChat,
+                icon: const Icon(Icons.forum_outlined),
+              ),
+            ),
+          ),
           Padding(
             padding: const EdgeInsetsDirectional.only(end: 6),
             child: Container(

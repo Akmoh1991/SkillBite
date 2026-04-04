@@ -124,6 +124,7 @@ class OwnerDashboardPage extends StatelessWidget {
                   : readString(visibleEmployees[index], 'job_title'),
               accent: const Color(0xFFEAF7F4),
               trailingIcon: Icons.person_outline_rounded,
+              onTap: () => _openEmployeesPage(context),
             ),
             if (index < visibleEmployees.length - 1)
               const SizedBox(height: 14),

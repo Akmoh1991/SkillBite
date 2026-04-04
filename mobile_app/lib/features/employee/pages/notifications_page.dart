@@ -5,6 +5,12 @@ import 'package:skillbite_mobile/app/widgets/widgets.dart';
 import 'package:skillbite_mobile/core/api/mobile_api_client.dart';
 import 'package:skillbite_mobile/core/session/session_user.dart';
 import 'package:skillbite_mobile/core/utils/utils.dart';
+import 'package:skillbite_mobile/features/chat/chat_page.dart';
+import 'package:skillbite_mobile/features/employee/courses/pages/employee_course_detail_screen.dart';
+import 'package:skillbite_mobile/features/employee/courses/pages/employee_courses_page.dart';
+import 'package:skillbite_mobile/features/employee/pages/employee_checklists_page.dart';
+import 'package:skillbite_mobile/features/owner/pages/owner_courses_page.dart';
+import 'package:skillbite_mobile/features/owner/pages/owner_employees_page.dart';
 
 class NotificationsPage extends StatelessWidget {
   const NotificationsPage({
@@ -15,6 +21,91 @@ class NotificationsPage extends StatelessWidget {
 
   final MobileApiClient api;
   final SessionUser user;
+
+  int? _parseEntityId(String rawId, String prefix) {
+    if (!rawId.startsWith(prefix)) {
+      return null;
+    }
+    return int.tryParse(rawId.substring(prefix.length));
+  }
+
+  Future<void> _openNotification(
+    BuildContext context,
+    Map<String, dynamic> item,
+  ) async {
+    final kind = readString(item, 'kind');
+    final rawId = readString(item, 'id');
+
+    if (kind == 'team_chat' || kind == 'private_chat') {
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => ChatPage(
+            api: api,
+            roleBasePath:
+                user.role == 'employee' ? '/employee' : '/business-owner',
+            title: tr(context, 'Chat'),
+            initialShowPrivate: kind == 'private_chat',
+          ),
+        ),
+      );
+      return;
+    }
+
+    if (user.role == 'employee' && kind == 'course_assignment') {
+      final assignmentId = _parseEntityId(rawId, 'course-');
+      if (assignmentId != null) {
+        await Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => EmployeeCourseDetailScreen(
+              api: api,
+              assignmentId: assignmentId,
+            ),
+          ),
+        );
+        return;
+      }
+      await Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => EmployeeCoursesPage(api: api)),
+      );
+      return;
+    }
+
+    if (user.role == 'employee' && kind == 'checklist') {
+      final checklistId = _parseEntityId(rawId, 'checklist-');
+      if (checklistId != null) {
+        await Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => EmployeeChecklistDetailScreen(
+              api: api,
+              checklistId: checklistId,
+            ),
+          ),
+        );
+        return;
+      }
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => EmployeeChecklistsPage(api: api),
+        ),
+      );
+      return;
+    }
+
+    if (user.role == 'business_owner' && kind == 'employee') {
+      await Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => OwnerEmployeesPage(api: api)),
+      );
+      return;
+    }
+
+    if (user.role == 'business_owner' && kind == 'course_catalog') {
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => OwnerCoursesExplorerScreen(api: api),
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -83,31 +174,44 @@ class NotificationsPage extends StatelessWidget {
                 AppPageSliverList(
                   itemCount: notifications.length,
                   itemBuilder: (context, index) {
-                    final item = notifications[index];
+                    final item = asMap(notifications[index]);
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 14),
-                      child: AppSectionCard(
-                        title: readString(item, 'title'),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(readString(item, 'body')),
-                            const SizedBox(height: 10),
-                            Row(
-                              children: [
-                                AppStatusChip(
-                                  label: readString(item, 'kind')
-                                      .replaceAll('_', ' '),
-                                ),
-                                const SizedBox(width: 8),
-                                if (readInt(item, 'unread_count') > 0)
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(16),
+                        onTap: () => _openNotification(context, item),
+                        child: AppSectionCard(
+                          title: readString(item, 'title'),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(readString(item, 'body')),
+                              const SizedBox(height: 10),
+                              Row(
+                                children: [
                                   AppStatusChip(
-                                    label:
-                                        '${readInt(item, 'unread_count')} ${tr(context, 'new')}',
+                                    label: readString(item, 'kind')
+                                        .replaceAll('_', ' '),
                                   ),
-                              ],
-                            ),
-                          ],
+                                  const SizedBox(width: 8),
+                                  if (readInt(item, 'unread_count') > 0)
+                                    AppStatusChip(
+                                      label:
+                                          '${readInt(item, 'unread_count')} ${tr(context, 'new')}',
+                                    ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              Align(
+                                alignment: AlignmentDirectional.centerEnd,
+                                child: TextButton(
+                                  onPressed: () =>
+                                      _openNotification(context, item),
+                                  child: Text(tr(context, 'Open')),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     );

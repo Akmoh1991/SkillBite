@@ -39,11 +39,15 @@ class ChatPage extends StatefulWidget {
     required this.api,
     required this.roleBasePath,
     required this.title,
+    this.initialShowPrivate = false,
+    this.initialSelectedUserId,
   });
 
   final MobileApiClient api;
   final String roleBasePath;
   final String title;
+  final bool initialShowPrivate;
+  final int? initialSelectedUserId;
 
   @override
   State<ChatPage> createState() => _ChatPageState();
@@ -58,6 +62,8 @@ class _ChatPageState extends State<ChatPage> {
   @override
   void initState() {
     super.initState();
+    showPrivate = widget.initialShowPrivate;
+    selectedUserId = widget.initialSelectedUserId;
     _reload();
   }
 

@@ -122,6 +122,7 @@ class _EmployeeChecklistDetailScreenState
   late Future<Map<String, dynamic>> future;
   bool submitting = false;
   final Set<int> selectedItemIds = <int>{};
+  final TextEditingController notesController = TextEditingController();
 
   String _translateFrequency(BuildContext context, String value) {
     final normalized = value.trim().toUpperCase();
@@ -151,17 +152,24 @@ class _EmployeeChecklistDetailScreenState
     future = widget.api.get('/employee/checklists/${widget.checklistId}/');
   }
 
+  @override
+  void dispose() {
+    notesController.dispose();
+    super.dispose();
+  }
+
   Future<void> _completeChecklist(List<dynamic> items) async {
     setState(() => submitting = true);
     try {
       await widget.api
           .post('/employee/checklists/${widget.checklistId}/complete/', {
         'item_ids': selectedItemIds.toList(growable: false),
-        'notes': '',
+        'notes': notesController.text.trim(),
       });
       if (!mounted) return;
       showSnack(context, 'Checklist completed.');
       setState(() {
+        notesController.text = notesController.text.trim();
         selectedItemIds
           ..clear()
           ..addAll([for (final item in items) readInt(item, 'id')]);
@@ -197,6 +205,10 @@ class _EmployeeChecklistDetailScreenState
           final checklist = asMap(payload['checklist']);
           final items = asList(checklist['items']);
           final completed = readBool(checklist, 'completed_today');
+          final completionNotes = readString(checklist, 'notes');
+          if (notesController.text.isEmpty && completionNotes.isNotEmpty) {
+            notesController.text = completionNotes;
+          }
           final frequency = readString(checklist, 'frequency');
           final checklistTitle = readString(checklist, 'title');
           final itemCountLabel = '${items.length} ${tr(context, 'Items')}';
@@ -257,6 +269,26 @@ class _EmployeeChecklistDetailScreenState
                             ),
                         ],
                       ),
+              ),
+              const SizedBox(height: 16),
+              AppSectionCard(
+                title: tr(context, 'Notes'),
+                child: TextField(
+                  controller: notesController,
+                  enabled: !submitting,
+                  readOnly: completed,
+                  minLines: 3,
+                  maxLines: 5,
+                  textInputAction: TextInputAction.done,
+                  decoration: InputDecoration(
+                    hintText: completed
+                        ? tr(context, 'No notes were added.')
+                        : tr(
+                            context,
+                            'Add optional handoff or completion notes.',
+                          ),
+                  ),
+                ),
               ),
               const SizedBox(height: 16),
               FilledButton(

@@ -95,7 +95,7 @@ class _EmployeeLearningHistoryPageState
                       description:
                           courseReadPath(item, ['course', 'description']),
                       metadata: const [],
-                      onTap: null,
+                      onTap: () => _openAssignment(courseReadInt(item, 'id')),
                     ),
                   );
                 },
