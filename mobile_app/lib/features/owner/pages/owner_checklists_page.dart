@@ -282,12 +282,12 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
                             ),
                       ),
                       const SizedBox(height: 22),
-                      TextField(
+                      AppTextField(
                         controller: titleController,
                         decoration: const InputDecoration(labelText: 'العنوان'),
                       ),
                       const SizedBox(height: 14),
-                      TextField(
+                      AppTextField(
                         controller: descriptionController,
                         decoration: const InputDecoration(
                           labelText: 'الوصف',
@@ -343,7 +343,7 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
                         },
                       ),
                       const SizedBox(height: 14),
-                      TextField(
+                      AppTextField(
                         controller: itemsController,
                         minLines: 4,
                         maxLines: 7,
@@ -602,8 +602,8 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
                 child: SizedBox(
                   width: double.infinity,
                   child: _SectionCard(
-                  title: 'المهام',
-                  child: Text('لا توجد مهام مضافة حاليًا.'),
+                    title: 'المهام',
+                    child: Text('لا توجد مهام مضافة حاليًا.'),
                   ),
                 ),
               )
@@ -649,7 +649,8 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
                                   onTap: () {
                                     setState(() {
                                       if (expanded) {
-                                        expandedChecklistIds.remove(checklistId);
+                                        expandedChecklistIds
+                                            .remove(checklistId);
                                       } else {
                                         expandedChecklistIds.add(checklistId);
                                       }
@@ -661,14 +662,14 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
                                       vertical: 4,
                                     ),
                                     child: Text(
-                                  '+${checklistItems.length - 3} عناصر إضافية',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodySmall
-                                      ?.copyWith(
-                                        color: brandTeal,
-                                        fontWeight: FontWeight.w700,
-                                      ),
+                                      '+${checklistItems.length - 3} عناصر إضافية',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall
+                                          ?.copyWith(
+                                            color: brandTeal,
+                                            fontWeight: FontWeight.w700,
+                                          ),
                                     ),
                                   ),
                                 ),
@@ -700,8 +701,8 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
                 child: SizedBox(
                   width: double.infinity,
                   child: _SectionCard(
-                  title: 'القواعد',
-                  child: Text('لا توجد قواعد مضافة حاليًا.'),
+                    title: 'القواعد',
+                    child: Text('لا توجد قواعد مضافة حاليًا.'),
                   ),
                 ),
               )

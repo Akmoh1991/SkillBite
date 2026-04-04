@@ -1,6 +1,7 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
+import 'package:skillbite_mobile/app/widgets/widgets.dart';
 import 'package:skillbite_mobile/core/api/mobile_api_client.dart';
 import 'package:skillbite_mobile/features/employee/courses/course_flow_support.dart';
 
@@ -197,7 +198,7 @@ class _ExamQuestionCard extends StatelessWidget {
               },
             ),
         if (questionType == 'SHORT_ANSWER' || questionType == 'ESSAY')
-          TextField(
+          AppTextField(
             controller: controller,
             minLines: questionType == 'ESSAY' ? 4 : 2,
             maxLines: questionType == 'ESSAY' ? 8 : 3,

@@ -119,7 +119,7 @@ class _OwnerJobTitlesPageState extends State<OwnerJobTitlesPage> {
                             ),
                       ),
                       const SizedBox(height: 22),
-                      TextField(
+                      AppTextField(
                         controller: nameController,
                         decoration: InputDecoration(
                             labelText: _tr(context, 'Title name')),

@@ -94,16 +94,29 @@ class _RegisterScreenState extends State<RegisterScreen> {
     required String hint,
     TextInputType? keyboardType,
     bool obscureText = false,
+    TextInputAction? textInputAction,
+    Iterable<String>? autofillHints,
+    bool autocorrect = true,
+    bool enableSuggestions = true,
+    TextCapitalization textCapitalization = TextCapitalization.sentences,
+    AppTextFieldDirectionMode directionMode =
+        AppTextFieldDirectionMode.contentAware,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         AuthFieldLabel(label: label),
         const SizedBox(height: 10),
-        TextField(
+        AuthTextField(
           controller: controller,
           keyboardType: keyboardType,
           obscureText: obscureText,
+          textInputAction: textInputAction,
+          autofillHints: autofillHints,
+          autocorrect: autocorrect,
+          enableSuggestions: enableSuggestions,
+          textCapitalization: textCapitalization,
+          directionMode: directionMode,
           decoration: InputDecoration(hintText: hint),
         ),
       ],
@@ -183,12 +196,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
             controller: usernameController,
             label: tr(context, 'Username'),
             hint: tr(context, 'Enter your username'),
+            keyboardType: TextInputType.text,
+            textInputAction: TextInputAction.next,
+            autofillHints: const [AutofillHints.username],
+            autocorrect: false,
+            enableSuggestions: false,
+            textCapitalization: TextCapitalization.none,
           ),
           const SizedBox(height: 16),
           _buildTextField(
             controller: fullNameController,
             label: tr(context, 'Full Name'),
             hint: tr(context, 'Enter your full name'),
+            textInputAction: TextInputAction.next,
           ),
           const SizedBox(height: 16),
           _buildTextField(
@@ -196,13 +216,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
             label: tr(context, 'Email'),
             hint: tr(context, 'Enter your email'),
             keyboardType: TextInputType.emailAddress,
+            textInputAction: TextInputAction.next,
+            autofillHints: const [AutofillHints.email],
+            autocorrect: false,
+            enableSuggestions: false,
+            textCapitalization: TextCapitalization.none,
+            directionMode: AppTextFieldDirectionMode.ltr,
           ),
           const SizedBox(height: 16),
           AuthFieldLabel(label: tr(context, 'Password')),
           const SizedBox(height: 10),
-          TextField(
+          AuthTextField(
             controller: passwordController,
+            keyboardType: TextInputType.text,
             obscureText: passwordObscured,
+            textInputAction: TextInputAction.next,
+            autofillHints: const [AutofillHints.newPassword],
+            autocorrect: false,
+            enableSuggestions: false,
+            textCapitalization: TextCapitalization.none,
             decoration: InputDecoration(
               hintText: tr(context, 'Enter your password'),
               suffixIcon: IconButton(
@@ -222,6 +254,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             controller: companyNameController,
             label: tr(context, 'Company Name'),
             hint: tr(context, 'Enter your company name'),
+            textInputAction: TextInputAction.next,
           ),
           const SizedBox(height: 16),
           _buildTextField(
@@ -229,6 +262,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
             label: tr(context, 'Phone Number'),
             hint: tr(context, 'Enter your phone number'),
             keyboardType: TextInputType.phone,
+            textInputAction: TextInputAction.done,
+            autofillHints: const [AutofillHints.telephoneNumber],
+            textCapitalization: TextCapitalization.none,
+            directionMode: AppTextFieldDirectionMode.ltr,
           ),
           const SizedBox(height: 16),
           _buildDropdown(

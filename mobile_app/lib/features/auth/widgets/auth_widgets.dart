@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:skillbite_mobile/app/localization/app_localizations.dart';
 import 'package:skillbite_mobile/app/theme/app_theme_tokens.dart';
+import 'package:skillbite_mobile/app/widgets/widgets.dart';
 
 class AuthScaffold extends StatelessWidget {
   const AuthScaffold({
@@ -61,7 +62,9 @@ class AuthScaffold extends StatelessWidget {
                         Text(
                           title,
                           textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.headlineSmall
+                          style: Theme.of(context)
+                              .textTheme
+                              .headlineSmall
                               ?.copyWith(
                                 color: brandTeal,
                                 fontSize: 28,
@@ -72,10 +75,11 @@ class AuthScaffold extends StatelessWidget {
                         Text(
                           subtitle,
                           textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                color: const Color(0xFF64748B),
-                                height: 1.45,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                    color: const Color(0xFF64748B),
+                                    height: 1.45,
+                                  ),
                         ),
                       ],
                     ),
@@ -122,6 +126,49 @@ class AuthFieldLabel extends StatelessWidget {
       label,
       textAlign: isArabic(context) ? TextAlign.right : TextAlign.left,
       style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 16),
+    );
+  }
+}
+
+class AuthTextField extends StatelessWidget {
+  const AuthTextField({
+    super.key,
+    required this.controller,
+    required this.decoration,
+    this.keyboardType,
+    this.obscureText = false,
+    this.textInputAction,
+    this.autofillHints,
+    this.autocorrect = true,
+    this.enableSuggestions = true,
+    this.textCapitalization = TextCapitalization.sentences,
+    this.directionMode = AppTextFieldDirectionMode.contentAware,
+  });
+
+  final TextEditingController controller;
+  final InputDecoration decoration;
+  final TextInputType? keyboardType;
+  final bool obscureText;
+  final TextInputAction? textInputAction;
+  final Iterable<String>? autofillHints;
+  final bool autocorrect;
+  final bool enableSuggestions;
+  final TextCapitalization textCapitalization;
+  final AppTextFieldDirectionMode directionMode;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppTextField(
+      controller: controller,
+      keyboardType: keyboardType,
+      obscureText: obscureText,
+      textInputAction: textInputAction,
+      autofillHints: autofillHints,
+      autocorrect: autocorrect,
+      enableSuggestions: enableSuggestions,
+      textCapitalization: textCapitalization,
+      directionMode: directionMode,
+      decoration: decoration,
     );
   }
 }

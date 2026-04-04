@@ -146,7 +146,7 @@ class _ChatPageState extends State<ChatPage> {
                             ),
                       ),
                       const SizedBox(height: 22),
-                      TextField(
+                      AppTextField(
                         controller: controller,
                         keyboardType: TextInputType.multiline,
                         textInputAction: TextInputAction.newline,
@@ -282,7 +282,7 @@ class _ChatPageState extends State<ChatPage> {
                         },
                       ),
                       const SizedBox(height: 18),
-                      TextField(
+                      AppTextField(
                         controller: controller,
                         focusNode: focusNode,
                         keyboardType: TextInputType.multiline,

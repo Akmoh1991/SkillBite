@@ -81,8 +81,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         children: [
           AuthFieldLabel(label: tr(context, 'Username')),
           const SizedBox(height: 10),
-          TextField(
+          AuthTextField(
             controller: usernameController,
+            keyboardType: TextInputType.text,
+            textInputAction: TextInputAction.next,
+            autofillHints: const [AutofillHints.username],
+            autocorrect: false,
+            enableSuggestions: false,
+            textCapitalization: TextCapitalization.none,
             decoration: InputDecoration(
               hintText: tr(context, 'Enter your username'),
               prefixIcon: const Icon(Icons.person_outline_rounded),
@@ -91,9 +97,15 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           const SizedBox(height: 16),
           AuthFieldLabel(label: tr(context, 'Recovery email')),
           const SizedBox(height: 10),
-          TextField(
+          AuthTextField(
             controller: emailController,
             keyboardType: TextInputType.emailAddress,
+            textInputAction: TextInputAction.next,
+            autofillHints: const [AutofillHints.email],
+            autocorrect: false,
+            enableSuggestions: false,
+            textCapitalization: TextCapitalization.none,
+            directionMode: AppTextFieldDirectionMode.ltr,
             decoration: InputDecoration(
               hintText: tr(context, 'Enter your email'),
               prefixIcon: const Icon(Icons.mail_outline_rounded),
@@ -102,9 +114,15 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           const SizedBox(height: 16),
           AuthFieldLabel(label: tr(context, 'New password')),
           const SizedBox(height: 10),
-          TextField(
+          AuthTextField(
             controller: newPasswordController,
+            keyboardType: TextInputType.text,
             obscureText: newPasswordObscured,
+            textInputAction: TextInputAction.next,
+            autofillHints: const [AutofillHints.newPassword],
+            autocorrect: false,
+            enableSuggestions: false,
+            textCapitalization: TextCapitalization.none,
             decoration: InputDecoration(
               hintText: tr(context, 'New password'),
               prefixIcon: const Icon(Icons.lock_outline_rounded),
@@ -123,9 +141,15 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           const SizedBox(height: 16),
           AuthFieldLabel(label: tr(context, 'Confirm password')),
           const SizedBox(height: 10),
-          TextField(
+          AuthTextField(
             controller: confirmPasswordController,
+            keyboardType: TextInputType.text,
             obscureText: confirmPasswordObscured,
+            textInputAction: TextInputAction.done,
+            autofillHints: const [AutofillHints.password],
+            autocorrect: false,
+            enableSuggestions: false,
+            textCapitalization: TextCapitalization.none,
             decoration: InputDecoration(
               hintText: tr(context, 'Confirm password'),
               prefixIcon: const Icon(Icons.lock_outline_rounded),

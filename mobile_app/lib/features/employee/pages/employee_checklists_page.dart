@@ -273,7 +273,7 @@ class _EmployeeChecklistDetailScreenState
               const SizedBox(height: 16),
               AppSectionCard(
                 title: tr(context, 'Notes'),
-                child: TextField(
+                child: AppTextField(
                   controller: notesController,
                   enabled: !submitting,
                   readOnly: completed,

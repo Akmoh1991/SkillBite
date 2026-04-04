@@ -326,35 +326,47 @@ class _OwnerEmployeesPageState extends State<OwnerEmployeesPage> {
                             ),
                       ),
                       const SizedBox(height: 22),
-                      TextField(
+                      AppTextField(
                         controller: usernameController,
+                        autocorrect: false,
+                        enableSuggestions: false,
+                        textCapitalization: TextCapitalization.none,
                         decoration: const InputDecoration(
                           labelText: 'اسم المستخدم',
                         ),
                       ),
                       const SizedBox(height: 14),
-                      TextField(
+                      AppTextField(
                         controller: fullNameController,
                         decoration: const InputDecoration(
                           labelText: 'الاسم الكامل',
                         ),
                       ),
                       const SizedBox(height: 14),
-                      TextField(
+                      AppTextField(
                         controller: emailController,
+                        keyboardType: TextInputType.emailAddress,
+                        autocorrect: false,
+                        enableSuggestions: false,
+                        textCapitalization: TextCapitalization.none,
+                        directionMode: AppTextFieldDirectionMode.ltr,
                         decoration: const InputDecoration(
                           labelText: 'البريد الإلكتروني',
                         ),
                       ),
                       const SizedBox(height: 14),
-                      TextField(
+                      AppTextField(
                         controller: passwordController,
+                        keyboardType: TextInputType.text,
+                        autocorrect: false,
+                        enableSuggestions: false,
+                        textCapitalization: TextCapitalization.none,
                         decoration: const InputDecoration(
                           labelText: 'كلمة المرور',
                         ),
                       ),
                       const SizedBox(height: 14),
-                      TextField(
+                      AppTextField(
                         controller: jobTitleController,
                         decoration: const InputDecoration(
                           labelText: 'المسمى الوظيفي',
@@ -495,7 +507,7 @@ class _OwnerEmployeesPageState extends State<OwnerEmployeesPage> {
                             ),
                       ),
                       const SizedBox(height: 22),
-                      TextField(
+                      AppTextField(
                         controller: nameController,
                         decoration: const InputDecoration(
                           labelText: 'اسم المسمى الوظيفي',

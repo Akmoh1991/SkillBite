@@ -1,6 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:flutter/material.dart';
+import 'package:skillbite_mobile/app/widgets/widgets.dart';
 import 'package:skillbite_mobile/core/api/mobile_api_client.dart';
 import 'package:skillbite_mobile/core/utils/utils.dart';
 import 'package:skillbite_mobile/features/employee/courses/course_flow_support.dart';
@@ -160,34 +161,35 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
                             ),
                       ),
                       const SizedBox(height: 22),
-                      TextField(
+                      AppTextField(
                         controller: titleController,
                         decoration:
                             InputDecoration(labelText: _tr(context, 'Title')),
                       ),
                       const SizedBox(height: 14),
-                      TextField(
+                      AppTextField(
                         controller: descriptionController,
                         decoration: InputDecoration(
                           labelText: _tr(context, 'Description'),
                         ),
                       ),
                       const SizedBox(height: 14),
-                      TextField(
+                      AppTextField(
                         controller: minutesController,
                         keyboardType: TextInputType.number,
+                        directionMode: AppTextFieldDirectionMode.ltr,
                         decoration:
                             InputDecoration(labelText: _tr(context, 'Minutes')),
                       ),
                       const SizedBox(height: 14),
-                      TextField(
+                      AppTextField(
                         controller: contentTitleController,
                         decoration: InputDecoration(
                           labelText: _tr(context, 'First content title'),
                         ),
                       ),
                       const SizedBox(height: 14),
-                      TextField(
+                      AppTextField(
                         controller: contentBodyController,
                         minLines: 3,
                         maxLines: 5,

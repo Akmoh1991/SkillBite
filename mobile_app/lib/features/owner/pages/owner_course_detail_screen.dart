@@ -1,6 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:flutter/material.dart';
+import 'package:skillbite_mobile/app/widgets/widgets.dart';
 import 'package:skillbite_mobile/core/api/mobile_api_client.dart';
 import 'package:skillbite_mobile/features/employee/courses/course_flow_support.dart';
 import 'package:skillbite_mobile/features/employee/courses/pages/course_video_screen.dart';
@@ -473,14 +474,14 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
                         },
                       ),
                       const SizedBox(height: 14),
-                      TextField(
+                      AppTextField(
                         controller: titleController,
                         decoration: InputDecoration(
                           labelText: 'العنوان',
                         ),
                       ),
                       const SizedBox(height: 14),
-                      TextField(
+                      AppTextField(
                         controller: bodyController,
                         minLines: 3,
                         maxLines: 6,
@@ -490,16 +491,18 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
                         ),
                       ),
                       const SizedBox(height: 14),
-                      TextField(
+                      AppTextField(
                         controller: urlController,
+                        directionMode: AppTextFieldDirectionMode.ltr,
                         decoration: InputDecoration(
                           labelText: 'رابط المحتوى',
                         ),
                       ),
                       const SizedBox(height: 14),
-                      TextField(
+                      AppTextField(
                         controller: orderController,
                         keyboardType: TextInputType.number,
+                        directionMode: AppTextFieldDirectionMode.ltr,
                         decoration: InputDecoration(
                           labelText: 'الترتيب',
                         ),
