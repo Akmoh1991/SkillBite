@@ -1323,6 +1323,60 @@ def owner_reports_api_view(request):
     total_assigned = len(assignments)
     total_completed = sum(1 for item in assignments if item.status == CourseAssignment.Status.COMPLETED)
     total_in_progress = sum(1 for item in assignments if item.status == CourseAssignment.Status.IN_PROGRESS)
+    employees = context['employees']
+    today = timezone.localdate()
+    employee_ids = [employee.user_id for employee in employees]
+    completion_rows = (
+        SOPChecklistCompletion.objects.filter(
+            business=business,
+            completed_for=today,
+            employee_id__in=employee_ids,
+        )
+        .values('employee_id', 'checklist_id')
+    )
+    completed_checklist_map: dict[int, set[int]] = {}
+    for row in completion_rows:
+        completed_checklist_map.setdefault(row['employee_id'], set()).add(row['checklist_id'])
+
+    checklist_statuses: list[dict] = []
+    assigned_checklist_employee_total = 0
+    completed_checklist_employee_total = 0
+    pending_checklist_employee_total = 0
+    for employee in employees:
+        assigned_checklists = list(_assigned_checklists_queryset(employee))
+        assigned_ids = {item.id for item in assigned_checklists}
+        completed_ids = completed_checklist_map.get(employee.user_id, set()) & assigned_ids
+        assigned_total = len(assigned_ids)
+        completed_total = len(completed_ids)
+        pending_total = max(assigned_total - completed_total, 0)
+        if assigned_total:
+            assigned_checklist_employee_total += 1
+        if assigned_total and pending_total == 0:
+            status_code = 'completed'
+            status_label = 'Completed today'
+            completed_checklist_employee_total += 1
+        elif assigned_total:
+            status_code = 'pending'
+            status_label = 'Pending today'
+            pending_checklist_employee_total += 1
+        else:
+            status_code = 'no_checklists'
+            status_label = 'No checklist assigned'
+        checklist_statuses.append(
+            {
+                'employee': {
+                    'id': employee.user_id,
+                    'display_name': _display_name(employee.user),
+                    'job_title': employee.job_title.name if employee.job_title else '',
+                },
+                'assigned_checklist_total': assigned_total,
+                'completed_checklist_total': completed_total,
+                'pending_checklist_total': pending_total,
+                'status_code': status_code,
+                'status_label': status_label,
+            }
+        )
+
     return _json_success(
         {
             'report': {
@@ -1331,6 +1385,10 @@ def owner_reports_api_view(request):
                 'total_completed': total_completed,
                 'total_in_progress': total_in_progress,
                 'overall_completion_rate': round((total_completed / total_assigned) * 100) if total_assigned else 0,
+                'assigned_checklist_employee_total': assigned_checklist_employee_total,
+                'completed_checklist_employee_total': completed_checklist_employee_total,
+                'pending_checklist_employee_total': pending_checklist_employee_total,
+                'today_checklist_statuses': checklist_statuses,
             }
         }
     )

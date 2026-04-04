@@ -100,7 +100,7 @@ class _RoleShellState extends State<RoleShell> {
             ),
             NavigationDestination(
               icon: const Icon(Icons.checklist_outlined),
-              label: tr(context, 'Checklists'),
+              label: isArabic(context) ? 'المهام' : tr(context, 'Checklists'),
             ),
           ];
     final effectiveIndex = index >= pages.length ? pages.length - 1 : index;

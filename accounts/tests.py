@@ -9,6 +9,7 @@ from django.core.management import call_command
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
+from django.utils import timezone
 
 from accounts.models import (
     BusinessTenant,
@@ -2006,3 +2007,28 @@ class MobileApiTests(TestCase):
         self.assertTrue(payload['ok'])
         self.assertGreaterEqual(payload['summary']['unread_chat_count'], 2)
         self.assertTrue(any(item['kind'] == 'team_chat' for item in payload['notifications']))
+
+    def test_owner_mobile_reports_include_today_checklist_statuses(self):
+        token = self._mobile_login('mobile_owner', 'pass12345')
+        SOPChecklistCompletion.objects.create(
+            business=self.business,
+            checklist=self.checklist,
+            employee=self.employee_user,
+            completed_for=timezone.localdate(),
+        )
+
+        response = self.client.get(
+            reverse('mobile_owner_reports'),
+            HTTP_AUTHORIZATION=f'Bearer {token}',
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertTrue(payload['ok'])
+        report = payload['report']
+        self.assertEqual(report['assigned_checklist_employee_total'], 1)
+        self.assertEqual(report['completed_checklist_employee_total'], 1)
+        self.assertEqual(report['pending_checklist_employee_total'], 0)
+        self.assertEqual(len(report['today_checklist_statuses']), 1)
+        self.assertEqual(report['today_checklist_statuses'][0]['status_code'], 'completed')
+        self.assertEqual(report['today_checklist_statuses'][0]['completed_checklist_total'], 1)

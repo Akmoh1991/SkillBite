@@ -69,11 +69,11 @@ class _EmployeeLearningHistoryPageState
               ),
             ),
             if (history.isEmpty)
-              const CoursePageSliverSection(
-                padding: EdgeInsets.fromLTRB(24, 0, 24, 120),
+              CoursePageSliverSection(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 120),
                 child: CourseSectionCard(
                   title: 'History',
-                  child: Text('No completed courses yet.'),
+                  child: Text(courseTr(context, 'No completed courses yet.')),
                 ),
               )
             else
