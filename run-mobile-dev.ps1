@@ -1,5 +1,7 @@
 param(
-    [switch]$ProfileMode
+    [switch]$ProfileMode,
+    [switch]$Clean,
+    [switch]$SkipPubGet
 )
 
 $ErrorActionPreference = 'Stop'
@@ -124,6 +126,16 @@ try {
 }
 
 Set-Location $mobileApp
+
+if ($Clean) {
+    Write-Host 'Running flutter clean...'
+    flutter clean
+}
+
+if (-not $SkipPubGet) {
+    Write-Host 'Running flutter pub get...'
+    flutter pub get
+}
 
 $flutterArgs = @('run', '-d', $device)
 
