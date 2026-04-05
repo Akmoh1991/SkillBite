@@ -80,6 +80,7 @@ class _ChatPageState extends State<ChatPage> {
     final controller = TextEditingController();
     final sent = await showDialog<bool>(
       context: context,
+      requestFocus: false,
       builder: (context) {
         bool saving = false;
         String? errorText;
@@ -96,6 +97,7 @@ class _ChatPageState extends State<ChatPage> {
                   'body': controller.text.trim(),
                 });
                 if (!mounted) return;
+                FocusManager.instance.primaryFocus?.unfocus();
                 Navigator.of(context).pop(true);
               } catch (error) {
                 setInnerState(() {
@@ -152,7 +154,7 @@ class _ChatPageState extends State<ChatPage> {
                         textInputAction: TextInputAction.newline,
                         minLines: 5,
                         maxLines: 7,
-                        autofocus: true,
+                        autofocus: false,
                         decoration: InputDecoration(
                           labelText: _tr(context, 'Message'),
                           alignLabelWithHint: true,
@@ -214,6 +216,7 @@ class _ChatPageState extends State<ChatPage> {
     final focusNode = FocusNode();
     final sent = await showDialog<bool>(
       context: context,
+      requestFocus: false,
       builder: (context) {
         bool saving = false;
         String? errorText;
@@ -231,6 +234,7 @@ class _ChatPageState extends State<ChatPage> {
                   'body': controller.text.trim(),
                 });
                 if (!mounted) return;
+                FocusManager.instance.primaryFocus?.unfocus();
                 Navigator.of(context).pop(true);
               } catch (error) {
                 setInnerState(() {
@@ -289,7 +293,7 @@ class _ChatPageState extends State<ChatPage> {
                         textInputAction: TextInputAction.newline,
                         minLines: 5,
                         maxLines: 7,
-                        autofocus: true,
+                        autofocus: false,
                         decoration: InputDecoration(
                           labelText: _tr(context, 'Message'),
                           alignLabelWithHint: true,

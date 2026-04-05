@@ -40,6 +40,10 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
     });
   }
 
+  void _dismissKeyboard() {
+    FocusManager.instance.primaryFocus?.unfocus();
+  }
+
   Future<void> _showAssignDialog() async {
     setState(() => assigning = true);
     List<dynamic> employees = const [];
@@ -70,6 +74,7 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
     final selectedIds = <int>{};
     final assigned = await showDialog<bool>(
           context: context,
+          requestFocus: false,
           builder: (context) {
             bool saving = false;
             String? errorText;
@@ -90,6 +95,7 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
                     if (!mounted) {
                       return;
                     }
+                    _dismissKeyboard();
                     Navigator.of(context).pop(true);
                   } catch (error) {
                     setInnerState(() {
@@ -135,7 +141,10 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
                                 IconButton(
                                   onPressed: saving
                                       ? null
-                                      : () => Navigator.of(context).pop(false),
+                                      : () {
+                                          _dismissKeyboard();
+                                          Navigator.of(context).pop(false);
+                                        },
                                   icon: const Icon(Icons.close_rounded),
                                   tooltip: 'إغلاق',
                                   visualDensity: VisualDensity.compact,
@@ -327,7 +336,7 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
           child: FilledButton(
             style: FilledButton.styleFrom(
               backgroundColor: courseBrandTeal,
-              minimumSize: const Size.fromHeight(58),
+              minimumSize: const Size(0, 58),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(24),
               ),
@@ -362,6 +371,7 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
 
     final changed = await showDialog<bool>(
       context: context,
+      requestFocus: false,
       builder: (context) {
         bool saving = false;
         String? errorText;
@@ -394,6 +404,7 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
                 if (!mounted) {
                   return;
                 }
+                _dismissKeyboard();
                 Navigator.of(context).pop(true);
               } catch (error) {
                 setInnerState(() {
@@ -523,7 +534,10 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
                         child: TextButton(
                           onPressed: saving
                               ? null
-                              : () => Navigator.of(context).pop(false),
+                              : () {
+                                  _dismissKeyboard();
+                                  Navigator.of(context).pop(false);
+                                },
                           child: const Text('إلغاء'),
                         ),
                       ),
@@ -551,6 +565,7 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
       },
     );
 
+    _dismissKeyboard();
     titleController.dispose();
     bodyController.dispose();
     urlController.dispose();
@@ -568,6 +583,7 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
   Future<void> _deleteContent(Map<String, dynamic> item) async {
     final confirmed = await showDialog<bool>(
           context: context,
+          requestFocus: false,
           builder: (context) => Dialog(
             backgroundColor: const Color(0xFFFFF6F2),
             insetPadding:
@@ -611,7 +627,10 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
-                      onPressed: () => Navigator.of(context).pop(false),
+                      onPressed: () {
+                        _dismissKeyboard();
+                        Navigator.of(context).pop(false);
+                      },
                       child: const Text('إلغاء'),
                     ),
                   ),
@@ -622,7 +641,10 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
                       style: FilledButton.styleFrom(
                         backgroundColor: const Color(0xFFC54C2B),
                       ),
-                      onPressed: () => Navigator.of(context).pop(true),
+                      onPressed: () {
+                        _dismissKeyboard();
+                        Navigator.of(context).pop(true);
+                      },
                       child: const Text('حذف'),
                     ),
                   ),

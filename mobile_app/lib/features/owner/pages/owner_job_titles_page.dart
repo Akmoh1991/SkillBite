@@ -50,10 +50,15 @@ class _OwnerJobTitlesPageState extends State<OwnerJobTitlesPage> {
     });
   }
 
+  void _dismissKeyboard() {
+    FocusManager.instance.primaryFocus?.unfocus();
+  }
+
   Future<void> _showCreateJobTitleDialog() async {
     final nameController = TextEditingController();
     final created = await showDialog<bool>(
       context: context,
+      requestFocus: false,
       builder: (context) {
         bool saving = false;
         String? errorText;
@@ -69,6 +74,7 @@ class _OwnerJobTitlesPageState extends State<OwnerJobTitlesPage> {
                   'name': nameController.text.trim(),
                 });
                 if (!mounted) return;
+                _dismissKeyboard();
                 Navigator.of(context).pop(true);
               } catch (error) {
                 setInnerState(() {
@@ -140,7 +146,10 @@ class _OwnerJobTitlesPageState extends State<OwnerJobTitlesPage> {
                         child: TextButton(
                           onPressed: saving
                               ? null
-                              : () => Navigator.of(context).pop(false),
+                              : () {
+                                  _dismissKeyboard();
+                                  Navigator.of(context).pop(false);
+                                },
                           child: Text(_tr(context, 'Cancel')),
                         ),
                       ),
@@ -161,6 +170,7 @@ class _OwnerJobTitlesPageState extends State<OwnerJobTitlesPage> {
         );
       },
     );
+    _dismissKeyboard();
     nameController.dispose();
     if (created == true) {
       _showSnack(context, 'Job title created.');

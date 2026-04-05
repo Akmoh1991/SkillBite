@@ -321,7 +321,13 @@ class CourseHeaderRow extends StatelessWidget {
         ),
         if (trailing != null) ...[
           const SizedBox(width: 16),
-          trailing!,
+          Flexible(
+            fit: FlexFit.loose,
+            child: Align(
+              alignment: AlignmentDirectional.centerEnd,
+              child: trailing!,
+            ),
+          ),
         ],
       ],
     );

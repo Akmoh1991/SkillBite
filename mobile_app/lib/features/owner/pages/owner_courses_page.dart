@@ -59,6 +59,10 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
     });
   }
 
+  void _dismissKeyboard() {
+    FocusManager.instance.primaryFocus?.unfocus();
+  }
+
   Future<void> _openCourse(Map<String, dynamic> course) async {
     await Navigator.of(context).push(
       MaterialPageRoute(
@@ -82,6 +86,7 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
     final contentBodyController = TextEditingController();
     final created = await showDialog<bool>(
       context: context,
+      requestFocus: false,
       builder: (context) {
         bool saving = false;
         String? errorText;
@@ -110,6 +115,7 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
                 if (!mounted) {
                   return;
                 }
+                _dismissKeyboard();
                 Navigator.of(context).pop(true);
               } catch (error) {
                 setInnerState(() {
@@ -214,7 +220,10 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
                         child: TextButton(
                           onPressed: saving
                               ? null
-                              : () => Navigator.of(context).pop(false),
+                              : () {
+                                  _dismissKeyboard();
+                                  Navigator.of(context).pop(false);
+                                },
                           child: Text(_tr(context, 'Cancel')),
                         ),
                       ),
@@ -235,6 +244,7 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
         );
       },
     );
+    _dismissKeyboard();
     titleController.dispose();
     descriptionController.dispose();
     minutesController.dispose();
@@ -250,6 +260,7 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
     final selectedIds = <int>{};
     final assigned = await showDialog<bool>(
       context: context,
+      requestFocus: false,
       builder: (context) {
         bool saving = false;
         String? errorText;
@@ -268,6 +279,7 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
                 if (!mounted) {
                   return;
                 }
+                _dismissKeyboard();
                 Navigator.of(context).pop(true);
               } catch (error) {
                 setInnerState(() {
@@ -370,7 +382,10 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
                           child: TextButton(
                             onPressed: saving
                                 ? null
-                                : () => Navigator.of(context).pop(false),
+                                : () {
+                                    _dismissKeyboard();
+                                    Navigator.of(context).pop(false);
+                                  },
                             child: Text(_tr(context, 'Cancel')),
                           ),
                         ),

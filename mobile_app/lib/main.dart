@@ -35,12 +35,21 @@ class _SkillBiteMobileAppState extends State<SkillBiteMobileApp> {
   @override
   void initState() {
     super.initState();
+    AppLanguageController.onChange = _handleLanguageChanged;
     final apiBaseUrlCandidates = buildApiBaseUrlCandidates();
     api = MobileApiClient(
       baseUrl: apiBaseUrlCandidates.first,
       fallbackBaseUrls: apiBaseUrlCandidates.skip(1).toList(),
     );
     unawaited(_restoreSession());
+  }
+
+  @override
+  void dispose() {
+    if (AppLanguageController.onChange == _handleLanguageChanged) {
+      AppLanguageController.onChange = null;
+    }
+    super.dispose();
   }
 
   Future<void> _restoreSession() async {
@@ -158,7 +167,9 @@ class _SkillBiteMobileAppState extends State<SkillBiteMobileApp> {
 
   @override
   Widget build(BuildContext context) {
-    AppLanguageController.onChange = _handleLanguageChanged;
+    final homeKey = ValueKey<String>(
+      'home-${language.name}-${restoringSession ? 'restoring' : sessionUser?.role ?? 'guest'}-${sessionUser?.id ?? 0}',
+    );
     return MaterialApp(
       title: 'SkillBite Mobile',
       debugShowCheckedModeBanner: false,
@@ -174,10 +185,11 @@ class _SkillBiteMobileAppState extends State<SkillBiteMobileApp> {
         GlobalCupertinoLocalizations.delegate,
       ],
       home: restoringSession
-          ? const AppLoadingState()
+          ? AppLoadingState(key: homeKey)
           : sessionUser == null
-              ? LoginScreen(api: api, onLoggedIn: _handleLogin)
+              ? LoginScreen(key: homeKey, api: api, onLoggedIn: _handleLogin)
               : RoleShell(
+                  key: homeKey,
                   api: api,
                   user: sessionUser!,
                   onLogout: _handleLogout,

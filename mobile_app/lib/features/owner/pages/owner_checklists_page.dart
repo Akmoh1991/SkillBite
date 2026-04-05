@@ -56,6 +56,10 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
     });
   }
 
+  void _dismissKeyboard() {
+    FocusManager.instance.primaryFocus?.unfocus();
+  }
+
   String _frequencyLabel(String raw) {
     switch (raw) {
       case 'DAILY':
@@ -75,6 +79,7 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
   ) async {
     final action = await showDialog<String>(
       context: context,
+      requestFocus: false,
       builder: (context) {
         return Dialog(
           backgroundColor: const Color(0xFFF3FBF8),
@@ -94,7 +99,10 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       IconButton(
-                        onPressed: () => Navigator.of(context).pop(),
+                        onPressed: () {
+                          _dismissKeyboard();
+                          Navigator.of(context).pop();
+                        },
                         icon: const Icon(Icons.close_rounded),
                         tooltip: 'إغلاق',
                         iconSize: 34,
@@ -134,7 +142,10 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
                 SizedBox(
                   width: double.infinity,
                   child: FilledButton(
-                    onPressed: () => Navigator.of(context).pop('task'),
+                    onPressed: () {
+                      _dismissKeyboard();
+                      Navigator.of(context).pop('task');
+                    },
                     child: const Text('إضافة مهمة'),
                   ),
                 ),
@@ -144,7 +155,10 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
                   child: FilledButton.tonal(
                     onPressed: checklists.isEmpty || jobTitles.isEmpty
                         ? null
-                        : () => Navigator.of(context).pop('rule'),
+                        : () {
+                            _dismissKeyboard();
+                            Navigator.of(context).pop('rule');
+                          },
                     child: const Text('إضافة قاعدة'),
                   ),
                 ),
@@ -183,6 +197,7 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
     int? jobTitleId;
     final created = await showDialog<bool>(
       context: context,
+      requestFocus: false,
       builder: (context) {
         bool saving = false;
         String? errorText;
@@ -206,6 +221,7 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
                   ],
                 });
                 if (!mounted) return;
+                _dismissKeyboard();
                 Navigator.of(context).pop(true);
               } catch (error) {
                 setInnerState(() {
@@ -243,7 +259,10 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
                             IconButton(
                               onPressed: saving
                                   ? null
-                                  : () => Navigator.of(context).pop(false),
+                                  : () {
+                                      _dismissKeyboard();
+                                      Navigator.of(context).pop(false);
+                                    },
                               icon: const Icon(Icons.close_rounded),
                               tooltip: 'إغلاق',
                               iconSize: 34,
@@ -379,6 +398,7 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
         );
       },
     );
+    _dismissKeyboard();
     titleController.dispose();
     descriptionController.dispose();
     itemsController.dispose();
@@ -396,6 +416,7 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
         jobTitles.isEmpty ? null : _readInt(jobTitles.first, 'id');
     final created = await showDialog<bool>(
       context: context,
+      requestFocus: false,
       builder: (context) {
         bool saving = false;
         String? errorText;
@@ -413,6 +434,7 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
                   'checklist': selectedChecklistId,
                 });
                 if (!mounted) return;
+                _dismissKeyboard();
                 Navigator.of(context).pop(true);
               } catch (error) {
                 setInnerState(() {
@@ -450,7 +472,10 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
                             IconButton(
                               onPressed: saving
                                   ? null
-                                  : () => Navigator.of(context).pop(false),
+                                  : () {
+                                      _dismissKeyboard();
+                                      Navigator.of(context).pop(false);
+                                    },
                               icon: const Icon(Icons.close_rounded),
                               tooltip: 'إغلاق',
                               iconSize: 34,

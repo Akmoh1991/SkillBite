@@ -201,7 +201,7 @@ class _EmployeeCourseDetailScreenState
                         : _completeCourse,
                 style: FilledButton.styleFrom(
                   backgroundColor: courseBrandTeal,
-                  minimumSize: const Size.fromHeight(58),
+                  minimumSize: const Size(0, 58),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(24),
                   ),
