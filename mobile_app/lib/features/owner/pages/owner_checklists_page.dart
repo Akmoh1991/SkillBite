@@ -183,6 +183,7 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
     int? jobTitleId;
     final created = await showDialog<bool>(
       context: context,
+      requestFocus: false,
       builder: (context) {
         bool saving = false;
         String? errorText;
@@ -221,15 +222,8 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
                   const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(32)),
-              child: AnimatedPadding(
-                duration: const Duration(milliseconds: 180),
-                curve: Curves.easeOut,
-                padding: EdgeInsets.fromLTRB(
-                  22,
-                  24,
-                  22,
-                  MediaQuery.of(context).viewInsets.bottom + 22,
-                ),
+              child: const Padding(
+                padding: EdgeInsets.fromLTRB(22, 24, 22, 22),
                 child: SingleChildScrollView(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -379,6 +373,7 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
         );
       },
     );
+    await Future<void>.delayed(const Duration(milliseconds: 250));
     titleController.dispose();
     descriptionController.dispose();
     itemsController.dispose();
@@ -396,6 +391,7 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
         jobTitles.isEmpty ? null : _readInt(jobTitles.first, 'id');
     final created = await showDialog<bool>(
       context: context,
+      requestFocus: false,
       builder: (context) {
         bool saving = false;
         String? errorText;
@@ -428,15 +424,8 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
                   const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(32)),
-              child: AnimatedPadding(
-                duration: const Duration(milliseconds: 180),
-                curve: Curves.easeOut,
-                padding: EdgeInsets.fromLTRB(
-                  22,
-                  24,
-                  22,
-                  MediaQuery.of(context).viewInsets.bottom + 22,
-                ),
+              child: const Padding(
+                padding: EdgeInsets.fromLTRB(22, 24, 22, 22),
                 child: SingleChildScrollView(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,

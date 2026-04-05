@@ -81,6 +81,7 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
     final contentBodyController = TextEditingController();
     final created = await showDialog<bool>(
       context: context,
+      requestFocus: false,
       builder: (context) {
         bool saving = false;
         String? errorText;
@@ -125,15 +126,8 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(32),
               ),
-              child: AnimatedPadding(
-                duration: const Duration(milliseconds: 180),
-                curve: Curves.easeOut,
-                padding: EdgeInsets.fromLTRB(
-                  22,
-                  24,
-                  22,
-                  MediaQuery.of(context).viewInsets.bottom + 22,
-                ),
+              child: const Padding(
+                padding: EdgeInsets.fromLTRB(22, 24, 22, 22),
                 child: SingleChildScrollView(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -233,6 +227,7 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
         );
       },
     );
+    await Future<void>.delayed(const Duration(milliseconds: 250));
     titleController.dispose();
     descriptionController.dispose();
     minutesController.dispose();
@@ -248,6 +243,7 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
     final selectedIds = <int>{};
     final assigned = await showDialog<bool>(
       context: context,
+      requestFocus: false,
       builder: (context) {
         bool saving = false;
         String? errorText;
@@ -282,10 +278,8 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(32),
               ),
-              child: AnimatedPadding(
-                duration: const Duration(milliseconds: 180),
-                curve: Curves.easeOut,
-                padding: const EdgeInsets.fromLTRB(22, 24, 22, 22),
+              child: const Padding(
+                padding: EdgeInsets.fromLTRB(22, 24, 22, 22),
                 child: SizedBox(
                   width: 420,
                   child: SingleChildScrollView(

@@ -69,6 +69,7 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
     final selectedIds = <int>{};
     final assigned = await showDialog<bool>(
           context: context,
+          requestFocus: false,
           builder: (context) {
             bool saving = false;
             String? errorText;
@@ -106,10 +107,8 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(32),
                   ),
-                  child: AnimatedPadding(
-                    duration: const Duration(milliseconds: 180),
-                    curve: Curves.easeOut,
-                    padding: const EdgeInsets.fromLTRB(22, 24, 22, 22),
+                  child: const Padding(
+                    padding: EdgeInsets.fromLTRB(22, 24, 22, 22),
                     child: SizedBox(
                       width: 420,
                       child: SingleChildScrollView(
@@ -361,6 +360,7 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
 
     final changed = await showDialog<bool>(
       context: context,
+      requestFocus: false,
       builder: (context) {
         bool saving = false;
         String? errorText;
@@ -409,15 +409,8 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(32),
               ),
-              child: AnimatedPadding(
-                duration: const Duration(milliseconds: 180),
-                curve: Curves.easeOut,
-                padding: EdgeInsets.fromLTRB(
-                  22,
-                  24,
-                  22,
-                  MediaQuery.of(context).viewInsets.bottom + 22,
-                ),
+              child: const Padding(
+                padding: EdgeInsets.fromLTRB(22, 24, 22, 22),
                 child: SingleChildScrollView(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -548,6 +541,7 @@ class _OwnerCourseDetailScreenState extends State<OwnerCourseDetailScreen> {
       },
     );
 
+    await Future<void>.delayed(const Duration(milliseconds: 250));
     titleController.dispose();
     bodyController.dispose();
     urlController.dispose();

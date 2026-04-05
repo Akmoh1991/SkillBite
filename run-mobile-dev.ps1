@@ -2,7 +2,8 @@ param(
     [switch]$ProfileMode,
     [switch]$Clean,
     [switch]$SkipPubGet,
-    [switch]$SkipEmulatorTuning
+    [switch]$SkipEmulatorTuning,
+    [switch]$UninstallApp
 )
 
 $ErrorActionPreference = 'Stop'
@@ -126,6 +127,15 @@ if (-not $SkipEmulatorTuning -and $device -like 'emulator-*') {
     & $adb -s $device shell settings put global window_animation_scale 0 | Out-Null
     & $adb -s $device shell settings put global transition_animation_scale 0 | Out-Null
     & $adb -s $device shell settings put global animator_duration_scale 0 | Out-Null
+}
+
+if ($UninstallApp -or $Clean) {
+    Write-Host 'Uninstalling existing app from emulator...'
+    try {
+        & $adb -s $device uninstall com.example.skillbite_mobile | Out-Null
+    } catch {
+        Write-Warning "App uninstall failed or app was not installed on $device."
+    }
 }
 
 try {
