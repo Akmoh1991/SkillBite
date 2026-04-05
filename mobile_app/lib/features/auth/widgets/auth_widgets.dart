@@ -24,9 +24,10 @@ class AuthScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       body: Container(
         decoration: const BoxDecoration(
-          gradient: const LinearGradient(
+          gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [Color(0xFFF4FBF8), Color(0xFFF8FBFA)],
@@ -91,13 +92,6 @@ class AuthScaffold extends StatelessWidget {
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(28),
                       border: Border.all(color: const Color(0xFFE2E8F0)),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Color(0x120F172A),
-                          blurRadius: 18,
-                          offset: Offset(0, 10),
-                        ),
-                      ],
                     ),
                     child: child,
                   ),

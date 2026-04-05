@@ -33,6 +33,7 @@ class RoleShell extends StatefulWidget {
 
 class _RoleShellState extends State<RoleShell> {
   int index = 0;
+  final Set<int> _visitedIndexes = <int>{0};
 
   Future<void> _openNotifications() async {
     await Navigator.of(context).push(
@@ -48,19 +49,19 @@ class _RoleShellState extends State<RoleShell> {
   @override
   Widget build(BuildContext context) {
     final ownerMode = widget.user.role == 'business_owner';
-    final pages = ownerMode
-        ? [
-            OwnerDashboardPage(api: widget.api, user: widget.user),
-            OwnerEmployeesPage(api: widget.api),
-            OwnerCoursesPage(api: widget.api),
-            OwnerChecklistsPage(api: widget.api),
-            OwnerReportsPage(api: widget.api),
+    final pageBuilders = ownerMode
+        ? <Widget Function()>[
+            () => OwnerDashboardPage(api: widget.api, user: widget.user),
+            () => OwnerEmployeesPage(api: widget.api),
+            () => OwnerCoursesPage(api: widget.api),
+            () => OwnerChecklistsPage(api: widget.api),
+            () => OwnerReportsPage(api: widget.api),
           ]
-        : [
-            EmployeeDashboardPage(api: widget.api, user: widget.user),
-            EmployeeCoursesPage(api: widget.api),
-            EmployeeLearningHistoryPage(api: widget.api),
-            EmployeeChecklistsPage(api: widget.api),
+        : <Widget Function()>[
+            () => EmployeeDashboardPage(api: widget.api, user: widget.user),
+            () => EmployeeCoursesPage(api: widget.api),
+            () => EmployeeLearningHistoryPage(api: widget.api),
+            () => EmployeeChecklistsPage(api: widget.api),
           ];
     final destinations = ownerMode
         ? [
@@ -103,7 +104,22 @@ class _RoleShellState extends State<RoleShell> {
               label: isArabic(context) ? 'المهام' : tr(context, 'Checklists'),
             ),
           ];
-    final effectiveIndex = index >= pages.length ? pages.length - 1 : index;
+    final effectiveIndex = index >= pageBuilders.length
+        ? pageBuilders.length - 1
+        : index;
+    _visitedIndexes.add(effectiveIndex);
+    final pages = List<Widget>.generate(
+      pageBuilders.length,
+      (pageIndex) => _visitedIndexes.contains(pageIndex)
+          ? KeyedSubtree(
+              key: ValueKey<String>(
+                '${ownerMode ? 'owner' : 'employee'}-tab-$pageIndex',
+              ),
+              child: pageBuilders[pageIndex](),
+            )
+          : const SizedBox.shrink(),
+      growable: false,
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -206,7 +222,15 @@ class _RoleShellState extends State<RoleShell> {
               selectedIndex: effectiveIndex,
               height: 72,
               destinations: destinations,
-              onDestinationSelected: (value) => setState(() => index = value),
+              onDestinationSelected: (value) {
+                if (value == index && _visitedIndexes.contains(value)) {
+                  return;
+                }
+                setState(() {
+                  index = value;
+                  _visitedIndexes.add(value);
+                });
+              },
             ),
           ),
         ),

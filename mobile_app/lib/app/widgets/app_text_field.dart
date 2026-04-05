@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 enum AppTextFieldDirectionMode { locale, contentAware, ltr, rtl }
 
-class AppTextField extends StatelessWidget {
+class AppTextField extends StatefulWidget {
   const AppTextField({
     super.key,
     required this.controller,
@@ -22,6 +22,9 @@ class AppTextField extends StatelessWidget {
     this.autofillHints,
     this.onChanged,
     this.directionMode = AppTextFieldDirectionMode.contentAware,
+    this.enableInteractiveSelection = true,
+    this.enableIMEPersonalizedLearning = false,
+    this.scrollPadding = EdgeInsets.zero,
   });
 
   final TextEditingController controller;
@@ -41,37 +44,95 @@ class AppTextField extends StatelessWidget {
   final Iterable<String>? autofillHints;
   final ValueChanged<String>? onChanged;
   final AppTextFieldDirectionMode directionMode;
+  final bool enableInteractiveSelection;
+  final bool enableIMEPersonalizedLearning;
+  final EdgeInsets scrollPadding;
+
+  @override
+  State<AppTextField> createState() => _AppTextFieldState();
+}
+
+class _AppTextFieldState extends State<AppTextField> {
+  late TextDirection _effectiveDirection;
+
+  @override
+  void initState() {
+    super.initState();
+    _effectiveDirection = _resolveDirection(
+      widget.controller.text,
+      TextDirection.ltr,
+    );
+    widget.controller.addListener(_handleTextChanged);
+  }
+
+  @override
+  void didUpdateWidget(covariant AppTextField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller != widget.controller) {
+      oldWidget.controller.removeListener(_handleTextChanged);
+      widget.controller.addListener(_handleTextChanged);
+      _effectiveDirection = _resolveDirection(
+        widget.controller.text,
+        Directionality.of(context),
+      );
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final nextDirection = _resolveDirection(
+      widget.controller.text,
+      Directionality.of(context),
+    );
+    if (nextDirection != _effectiveDirection) {
+      _effectiveDirection = nextDirection;
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.controller.removeListener(_handleTextChanged);
+    super.dispose();
+  }
+
+  void _handleTextChanged() {
+    final nextDirection = _resolveDirection(
+      widget.controller.text,
+      Directionality.of(context),
+    );
+    if (nextDirection == _effectiveDirection || !mounted) {
+      return;
+    }
+    setState(() {
+      _effectiveDirection = nextDirection;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<TextEditingValue>(
-      valueListenable: controller,
-      builder: (context, value, _) {
-        final effectiveDirection = _resolveDirection(
-          value.text,
-          Directionality.of(context),
-        );
-        return TextField(
-          controller: controller,
-          focusNode: focusNode,
-          decoration: decoration,
-          keyboardType: keyboardType,
-          textInputAction: textInputAction,
-          minLines: minLines,
-          maxLines: maxLines,
-          autofocus: autofocus,
-          obscureText: obscureText,
-          enabled: enabled,
-          readOnly: readOnly,
-          autocorrect: autocorrect,
-          enableSuggestions: enableSuggestions,
-          textCapitalization: textCapitalization,
-          autofillHints: autofillHints,
-          onChanged: onChanged,
-          textDirection: effectiveDirection,
-          textAlign: TextAlign.start,
-        );
-      },
+    return TextField(
+      controller: widget.controller,
+      focusNode: widget.focusNode,
+      decoration: widget.decoration,
+      keyboardType: widget.keyboardType,
+      textInputAction: widget.textInputAction,
+      minLines: widget.minLines,
+      maxLines: widget.maxLines,
+      autofocus: widget.autofocus,
+      obscureText: widget.obscureText,
+      enabled: widget.enabled,
+      readOnly: widget.readOnly,
+      autocorrect: widget.autocorrect,
+      enableSuggestions: widget.enableSuggestions,
+      textCapitalization: widget.textCapitalization,
+      autofillHints: widget.autofillHints,
+      onChanged: widget.onChanged,
+      enableInteractiveSelection: widget.enableInteractiveSelection,
+      enableIMEPersonalizedLearning: widget.enableIMEPersonalizedLearning,
+      scrollPadding: widget.scrollPadding,
+      textDirection: _effectiveDirection,
+      textAlign: TextAlign.start,
     );
   }
 
@@ -79,7 +140,7 @@ class AppTextField extends StatelessWidget {
     String text,
     TextDirection ambientDirection,
   ) {
-    switch (directionMode) {
+    switch (widget.directionMode) {
       case AppTextFieldDirectionMode.locale:
         return ambientDirection;
       case AppTextFieldDirectionMode.ltr:

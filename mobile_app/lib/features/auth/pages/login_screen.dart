@@ -123,10 +123,12 @@ class _LoginScreenState extends State<LoginScreen> {
             controller: usernameController,
             keyboardType: TextInputType.text,
             textInputAction: TextInputAction.next,
-            autofillHints: const [AutofillHints.username],
             autocorrect: false,
             enableSuggestions: false,
             textCapitalization: TextCapitalization.none,
+            directionMode: arabic
+                ? AppTextFieldDirectionMode.rtl
+                : AppTextFieldDirectionMode.ltr,
             decoration: InputDecoration(
               hintText: tr(context, 'Enter your username'),
               prefixIcon: const Icon(Icons.person_outline_rounded),
@@ -137,13 +139,13 @@ class _LoginScreenState extends State<LoginScreen> {
           const SizedBox(height: 10),
           AuthTextField(
             controller: passwordController,
-            keyboardType: TextInputType.text,
+            keyboardType: TextInputType.visiblePassword,
             obscureText: passwordObscured,
             textInputAction: TextInputAction.done,
-            autofillHints: const [AutofillHints.password],
             autocorrect: false,
             enableSuggestions: false,
             textCapitalization: TextCapitalization.none,
+            directionMode: AppTextFieldDirectionMode.ltr,
             decoration: InputDecoration(
               hintText: tr(context, 'Enter your password'),
               prefixIcon: const Icon(Icons.lock_outline_rounded),
