@@ -126,7 +126,7 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(32),
               ),
-              child: const Padding(
+              child: Padding(
                 padding: EdgeInsets.fromLTRB(22, 24, 22, 22),
                 child: SingleChildScrollView(
                   child: Column(
@@ -278,7 +278,7 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(32),
               ),
-              child: const Padding(
+              child: Padding(
                 padding: EdgeInsets.fromLTRB(22, 24, 22, 22),
                 child: SizedBox(
                   width: 420,
