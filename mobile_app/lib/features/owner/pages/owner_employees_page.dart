@@ -49,10 +49,6 @@ class _OwnerEmployeesPageState extends State<OwnerEmployeesPage> {
     });
   }
 
-  void _dismissKeyboard() {
-    FocusManager.instance.primaryFocus?.unfocus();
-  }
-
   Future<void> _openEmployeeDetail(Map<String, dynamic> employee) async {
     final changed = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
@@ -70,7 +66,6 @@ class _OwnerEmployeesPageState extends State<OwnerEmployeesPage> {
   Future<void> _showAddChooserDialog() async {
     final selection = await showDialog<String>(
       context: context,
-      requestFocus: false,
       builder: (context) => Dialog(
         backgroundColor: const Color(0xFFF3FBF8),
         insetPadding: const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
@@ -99,14 +94,11 @@ class _OwnerEmployeesPageState extends State<OwnerEmployeesPage> {
               SizedBox(
                 width: double.infinity,
                 child: FilledButton.tonalIcon(
-                  onPressed: () {
-                    _dismissKeyboard();
-                    Navigator.of(context).pop('employee');
-                  },
+                  onPressed: () => Navigator.of(context).pop('employee'),
                   icon: const Icon(Icons.person_add_alt_1_rounded),
                   label: const Text('إضافة موظف'),
                   style: FilledButton.styleFrom(
-                    minimumSize: const Size(0, 52),
+                    minimumSize: const Size.fromHeight(52),
                     alignment: Alignment.centerRight,
                   ),
                 ),
@@ -115,14 +107,11 @@ class _OwnerEmployeesPageState extends State<OwnerEmployeesPage> {
               SizedBox(
                 width: double.infinity,
                 child: FilledButton.tonalIcon(
-                  onPressed: () {
-                    _dismissKeyboard();
-                    Navigator.of(context).pop('job_title');
-                  },
+                  onPressed: () => Navigator.of(context).pop('job_title'),
                   icon: const Icon(Icons.badge_outlined),
                   label: const Text('إضافة مسمى وظيفي'),
                   style: FilledButton.styleFrom(
-                    minimumSize: const Size(0, 52),
+                    minimumSize: const Size.fromHeight(52),
                     alignment: Alignment.centerRight,
                   ),
                 ),
@@ -147,7 +136,6 @@ class _OwnerEmployeesPageState extends State<OwnerEmployeesPage> {
   Future<void> _deactivateEmployee(Map<String, dynamic> employee) async {
     final confirmed = await showDialog<bool>(
           context: context,
-          requestFocus: false,
           builder: (context) => Dialog(
             backgroundColor: const Color(0xFFFFF6F2),
             insetPadding:
@@ -191,10 +179,7 @@ class _OwnerEmployeesPageState extends State<OwnerEmployeesPage> {
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
-                      onPressed: () {
-                        _dismissKeyboard();
-                        Navigator.of(context).pop(false);
-                      },
+                      onPressed: () => Navigator.of(context).pop(false),
                       child: const Text('إلغاء'),
                     ),
                   ),
@@ -205,10 +190,7 @@ class _OwnerEmployeesPageState extends State<OwnerEmployeesPage> {
                       style: FilledButton.styleFrom(
                         backgroundColor: const Color(0xFFC54C2B),
                       ),
-                      onPressed: () {
-                        _dismissKeyboard();
-                        Navigator.of(context).pop(true);
-                      },
+                      onPressed: () => Navigator.of(context).pop(true),
                       child: const Text('تعطيل'),
                     ),
                   ),
@@ -247,7 +229,6 @@ class _OwnerEmployeesPageState extends State<OwnerEmployeesPage> {
     final jobTitleController = TextEditingController();
     final created = await showDialog<bool>(
       context: context,
-      requestFocus: false,
       builder: (context) {
         bool saving = false;
         String? errorText;
@@ -269,7 +250,6 @@ class _OwnerEmployeesPageState extends State<OwnerEmployeesPage> {
                 if (!mounted) {
                   return;
                 }
-                _dismissKeyboard();
                 Navigator.of(context).pop(true);
               } catch (error) {
                 setInnerState(() {
@@ -308,10 +288,7 @@ class _OwnerEmployeesPageState extends State<OwnerEmployeesPage> {
                             IconButton(
                               onPressed: saving
                                   ? null
-                                  : () {
-                                      _dismissKeyboard();
-                                      Navigator.of(context).pop(false);
-                                    },
+                                  : () => Navigator.of(context).pop(false),
                               icon: const Icon(Icons.close_rounded),
                               tooltip: 'إغلاق',
                               iconSize: 34,
@@ -349,47 +326,35 @@ class _OwnerEmployeesPageState extends State<OwnerEmployeesPage> {
                             ),
                       ),
                       const SizedBox(height: 22),
-                      AppTextField(
+                      TextField(
                         controller: usernameController,
-                        autocorrect: false,
-                        enableSuggestions: false,
-                        textCapitalization: TextCapitalization.none,
                         decoration: const InputDecoration(
                           labelText: 'اسم المستخدم',
                         ),
                       ),
                       const SizedBox(height: 14),
-                      AppTextField(
+                      TextField(
                         controller: fullNameController,
                         decoration: const InputDecoration(
                           labelText: 'الاسم الكامل',
                         ),
                       ),
                       const SizedBox(height: 14),
-                      AppTextField(
+                      TextField(
                         controller: emailController,
-                        keyboardType: TextInputType.emailAddress,
-                        autocorrect: false,
-                        enableSuggestions: false,
-                        textCapitalization: TextCapitalization.none,
-                        directionMode: AppTextFieldDirectionMode.ltr,
                         decoration: const InputDecoration(
                           labelText: 'البريد الإلكتروني',
                         ),
                       ),
                       const SizedBox(height: 14),
-                      AppTextField(
+                      TextField(
                         controller: passwordController,
-                        keyboardType: TextInputType.text,
-                        autocorrect: false,
-                        enableSuggestions: false,
-                        textCapitalization: TextCapitalization.none,
                         decoration: const InputDecoration(
                           labelText: 'كلمة المرور',
                         ),
                       ),
                       const SizedBox(height: 14),
-                      AppTextField(
+                      TextField(
                         controller: jobTitleController,
                         decoration: const InputDecoration(
                           labelText: 'المسمى الوظيفي',
@@ -422,7 +387,6 @@ class _OwnerEmployeesPageState extends State<OwnerEmployeesPage> {
         );
       },
     );
-    _dismissKeyboard();
     usernameController.dispose();
     fullNameController.dispose();
     emailController.dispose();
@@ -438,7 +402,6 @@ class _OwnerEmployeesPageState extends State<OwnerEmployeesPage> {
     final nameController = TextEditingController();
     final created = await showDialog<bool>(
       context: context,
-      requestFocus: false,
       builder: (context) {
         bool saving = false;
         String? errorText;
@@ -456,7 +419,6 @@ class _OwnerEmployeesPageState extends State<OwnerEmployeesPage> {
                 if (!mounted) {
                   return;
                 }
-                _dismissKeyboard();
                 Navigator.of(context).pop(true);
               } catch (error) {
                 setInnerState(() {
@@ -495,10 +457,7 @@ class _OwnerEmployeesPageState extends State<OwnerEmployeesPage> {
                             IconButton(
                               onPressed: saving
                                   ? null
-                                  : () {
-                                      _dismissKeyboard();
-                                      Navigator.of(context).pop(false);
-                                    },
+                                  : () => Navigator.of(context).pop(false),
                               icon: const Icon(Icons.close_rounded),
                               tooltip: 'إغلاق',
                               iconSize: 34,
@@ -536,7 +495,7 @@ class _OwnerEmployeesPageState extends State<OwnerEmployeesPage> {
                             ),
                       ),
                       const SizedBox(height: 22),
-                      AppTextField(
+                      TextField(
                         controller: nameController,
                         decoration: const InputDecoration(
                           labelText: 'اسم المسمى الوظيفي',
@@ -569,7 +528,6 @@ class _OwnerEmployeesPageState extends State<OwnerEmployeesPage> {
         );
       },
     );
-    _dismissKeyboard();
     nameController.dispose();
     if (created == true) {
       _showSnack(context, 'تم إنشاء المسمى الوظيفي.');
@@ -853,7 +811,7 @@ class OwnerEmployeeDetailPage extends StatelessWidget {
                     },
                     style: FilledButton.styleFrom(
                       backgroundColor: const Color(0xFFC54C2B),
-                      minimumSize: const Size(0, 56),
+                      minimumSize: const Size.fromHeight(56),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(24),
                       ),

@@ -1,7 +1,8 @@
 param(
     [switch]$ProfileMode,
     [switch]$Clean,
-    [switch]$SkipPubGet
+    [switch]$SkipPubGet,
+    [switch]$SkipEmulatorTuning
 )
 
 $ErrorActionPreference = 'Stop'
@@ -117,6 +118,14 @@ if (-not $device) {
 
 if (-not $device) {
     throw 'Android emulator was not detected by adb.'
+}
+
+if (-not $SkipEmulatorTuning -and $device -like 'emulator-*') {
+    & $adb -s $device shell settings put secure show_ime_with_hard_keyboard 0 | Out-Null
+    & $adb -s $device shell settings put secure spell_checker_enabled 0 | Out-Null
+    & $adb -s $device shell settings put global window_animation_scale 0 | Out-Null
+    & $adb -s $device shell settings put global transition_animation_scale 0 | Out-Null
+    & $adb -s $device shell settings put global animator_duration_scale 0 | Out-Null
 }
 
 try {

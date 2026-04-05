@@ -56,10 +56,6 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
     });
   }
 
-  void _dismissKeyboard() {
-    FocusManager.instance.primaryFocus?.unfocus();
-  }
-
   String _frequencyLabel(String raw) {
     switch (raw) {
       case 'DAILY':
@@ -79,7 +75,6 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
   ) async {
     final action = await showDialog<String>(
       context: context,
-      requestFocus: false,
       builder: (context) {
         return Dialog(
           backgroundColor: const Color(0xFFF3FBF8),
@@ -99,10 +94,7 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       IconButton(
-                        onPressed: () {
-                          _dismissKeyboard();
-                          Navigator.of(context).pop();
-                        },
+                        onPressed: () => Navigator.of(context).pop(),
                         icon: const Icon(Icons.close_rounded),
                         tooltip: 'إغلاق',
                         iconSize: 34,
@@ -142,10 +134,7 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
                 SizedBox(
                   width: double.infinity,
                   child: FilledButton(
-                    onPressed: () {
-                      _dismissKeyboard();
-                      Navigator.of(context).pop('task');
-                    },
+                    onPressed: () => Navigator.of(context).pop('task'),
                     child: const Text('إضافة مهمة'),
                   ),
                 ),
@@ -155,10 +144,7 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
                   child: FilledButton.tonal(
                     onPressed: checklists.isEmpty || jobTitles.isEmpty
                         ? null
-                        : () {
-                            _dismissKeyboard();
-                            Navigator.of(context).pop('rule');
-                          },
+                        : () => Navigator.of(context).pop('rule'),
                     child: const Text('إضافة قاعدة'),
                   ),
                 ),
@@ -197,7 +183,6 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
     int? jobTitleId;
     final created = await showDialog<bool>(
       context: context,
-      requestFocus: false,
       builder: (context) {
         bool saving = false;
         String? errorText;
@@ -221,7 +206,6 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
                   ],
                 });
                 if (!mounted) return;
-                _dismissKeyboard();
                 Navigator.of(context).pop(true);
               } catch (error) {
                 setInnerState(() {
@@ -259,10 +243,7 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
                             IconButton(
                               onPressed: saving
                                   ? null
-                                  : () {
-                                      _dismissKeyboard();
-                                      Navigator.of(context).pop(false);
-                                    },
+                                  : () => Navigator.of(context).pop(false),
                               icon: const Icon(Icons.close_rounded),
                               tooltip: 'إغلاق',
                               iconSize: 34,
@@ -301,12 +282,12 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
                             ),
                       ),
                       const SizedBox(height: 22),
-                      AppTextField(
+                      TextField(
                         controller: titleController,
                         decoration: const InputDecoration(labelText: 'العنوان'),
                       ),
                       const SizedBox(height: 14),
-                      AppTextField(
+                      TextField(
                         controller: descriptionController,
                         decoration: const InputDecoration(
                           labelText: 'الوصف',
@@ -362,7 +343,7 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
                         },
                       ),
                       const SizedBox(height: 14),
-                      AppTextField(
+                      TextField(
                         controller: itemsController,
                         minLines: 4,
                         maxLines: 7,
@@ -398,7 +379,6 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
         );
       },
     );
-    _dismissKeyboard();
     titleController.dispose();
     descriptionController.dispose();
     itemsController.dispose();
@@ -416,7 +396,6 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
         jobTitles.isEmpty ? null : _readInt(jobTitles.first, 'id');
     final created = await showDialog<bool>(
       context: context,
-      requestFocus: false,
       builder: (context) {
         bool saving = false;
         String? errorText;
@@ -434,7 +413,6 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
                   'checklist': selectedChecklistId,
                 });
                 if (!mounted) return;
-                _dismissKeyboard();
                 Navigator.of(context).pop(true);
               } catch (error) {
                 setInnerState(() {
@@ -472,10 +450,7 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
                             IconButton(
                               onPressed: saving
                                   ? null
-                                  : () {
-                                      _dismissKeyboard();
-                                      Navigator.of(context).pop(false);
-                                    },
+                                  : () => Navigator.of(context).pop(false),
                               icon: const Icon(Icons.close_rounded),
                               tooltip: 'إغلاق',
                               iconSize: 34,
@@ -627,8 +602,8 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
                 child: SizedBox(
                   width: double.infinity,
                   child: _SectionCard(
-                    title: 'المهام',
-                    child: Text('لا توجد مهام مضافة حاليًا.'),
+                  title: 'المهام',
+                  child: Text('لا توجد مهام مضافة حاليًا.'),
                   ),
                 ),
               )
@@ -674,8 +649,7 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
                                   onTap: () {
                                     setState(() {
                                       if (expanded) {
-                                        expandedChecklistIds
-                                            .remove(checklistId);
+                                        expandedChecklistIds.remove(checklistId);
                                       } else {
                                         expandedChecklistIds.add(checklistId);
                                       }
@@ -687,14 +661,14 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
                                       vertical: 4,
                                     ),
                                     child: Text(
-                                      '+${checklistItems.length - 3} عناصر إضافية',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodySmall
-                                          ?.copyWith(
-                                            color: brandTeal,
-                                            fontWeight: FontWeight.w700,
-                                          ),
+                                  '+${checklistItems.length - 3} عناصر إضافية',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodySmall
+                                      ?.copyWith(
+                                        color: brandTeal,
+                                        fontWeight: FontWeight.w700,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -726,8 +700,8 @@ class _OwnerChecklistsPageState extends State<OwnerChecklistsPage> {
                 child: SizedBox(
                   width: double.infinity,
                   child: _SectionCard(
-                    title: 'القواعد',
-                    child: Text('لا توجد قواعد مضافة حاليًا.'),
+                  title: 'القواعد',
+                  child: Text('لا توجد قواعد مضافة حاليًا.'),
                   ),
                 ),
               )

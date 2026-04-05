@@ -80,7 +80,6 @@ class _ChatPageState extends State<ChatPage> {
     final controller = TextEditingController();
     final sent = await showDialog<bool>(
       context: context,
-      requestFocus: false,
       builder: (context) {
         bool saving = false;
         String? errorText;
@@ -97,7 +96,6 @@ class _ChatPageState extends State<ChatPage> {
                   'body': controller.text.trim(),
                 });
                 if (!mounted) return;
-                FocusManager.instance.primaryFocus?.unfocus();
                 Navigator.of(context).pop(true);
               } catch (error) {
                 setInnerState(() {
@@ -148,13 +146,13 @@ class _ChatPageState extends State<ChatPage> {
                             ),
                       ),
                       const SizedBox(height: 22),
-                      AppTextField(
+                      TextField(
                         controller: controller,
                         keyboardType: TextInputType.multiline,
                         textInputAction: TextInputAction.newline,
                         minLines: 5,
                         maxLines: 7,
-                        autofocus: false,
+                        autofocus: true,
                         decoration: InputDecoration(
                           labelText: _tr(context, 'Message'),
                           alignLabelWithHint: true,
@@ -216,7 +214,6 @@ class _ChatPageState extends State<ChatPage> {
     final focusNode = FocusNode();
     final sent = await showDialog<bool>(
       context: context,
-      requestFocus: false,
       builder: (context) {
         bool saving = false;
         String? errorText;
@@ -234,7 +231,6 @@ class _ChatPageState extends State<ChatPage> {
                   'body': controller.text.trim(),
                 });
                 if (!mounted) return;
-                FocusManager.instance.primaryFocus?.unfocus();
                 Navigator.of(context).pop(true);
               } catch (error) {
                 setInnerState(() {
@@ -286,14 +282,14 @@ class _ChatPageState extends State<ChatPage> {
                         },
                       ),
                       const SizedBox(height: 18),
-                      AppTextField(
+                      TextField(
                         controller: controller,
                         focusNode: focusNode,
                         keyboardType: TextInputType.multiline,
                         textInputAction: TextInputAction.newline,
                         minLines: 5,
                         maxLines: 7,
-                        autofocus: false,
+                        autofocus: true,
                         decoration: InputDecoration(
                           labelText: _tr(context, 'Message'),
                           alignLabelWithHint: true,

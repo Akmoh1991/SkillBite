@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:skillbite_mobile/app/localization/app_localizations.dart';
 import 'package:skillbite_mobile/app/theme/app_theme_tokens.dart';
-import 'package:skillbite_mobile/app/widgets/widgets.dart';
 
 class AuthScaffold extends StatelessWidget {
   const AuthScaffold({
@@ -24,10 +23,9 @@ class AuthScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      resizeToAvoidBottomInset: false,
       body: Container(
         decoration: const BoxDecoration(
-          gradient: LinearGradient(
+          gradient: const LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [Color(0xFFF4FBF8), Color(0xFFF8FBFA)],
@@ -63,9 +61,7 @@ class AuthScaffold extends StatelessWidget {
                         Text(
                           title,
                           textAlign: TextAlign.center,
-                          style: Theme.of(context)
-                              .textTheme
-                              .headlineSmall
+                          style: Theme.of(context).textTheme.headlineSmall
                               ?.copyWith(
                                 color: brandTeal,
                                 fontSize: 28,
@@ -76,11 +72,10 @@ class AuthScaffold extends StatelessWidget {
                         Text(
                           subtitle,
                           textAlign: TextAlign.center,
-                          style:
-                              Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                    color: const Color(0xFF64748B),
-                                    height: 1.45,
-                                  ),
+                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                color: const Color(0xFF64748B),
+                                height: 1.45,
+                              ),
                         ),
                       ],
                     ),
@@ -92,6 +87,13 @@ class AuthScaffold extends StatelessWidget {
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(28),
                       border: Border.all(color: const Color(0xFFE2E8F0)),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x120F172A),
+                          blurRadius: 18,
+                          offset: Offset(0, 10),
+                        ),
+                      ],
                     ),
                     child: child,
                   ),
@@ -120,49 +122,6 @@ class AuthFieldLabel extends StatelessWidget {
       label,
       textAlign: isArabic(context) ? TextAlign.right : TextAlign.left,
       style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 16),
-    );
-  }
-}
-
-class AuthTextField extends StatelessWidget {
-  const AuthTextField({
-    super.key,
-    required this.controller,
-    required this.decoration,
-    this.keyboardType,
-    this.obscureText = false,
-    this.textInputAction,
-    this.autofillHints,
-    this.autocorrect = true,
-    this.enableSuggestions = true,
-    this.textCapitalization = TextCapitalization.sentences,
-    this.directionMode = AppTextFieldDirectionMode.contentAware,
-  });
-
-  final TextEditingController controller;
-  final InputDecoration decoration;
-  final TextInputType? keyboardType;
-  final bool obscureText;
-  final TextInputAction? textInputAction;
-  final Iterable<String>? autofillHints;
-  final bool autocorrect;
-  final bool enableSuggestions;
-  final TextCapitalization textCapitalization;
-  final AppTextFieldDirectionMode directionMode;
-
-  @override
-  Widget build(BuildContext context) {
-    return AppTextField(
-      controller: controller,
-      keyboardType: keyboardType,
-      obscureText: obscureText,
-      textInputAction: textInputAction,
-      autofillHints: autofillHints,
-      autocorrect: autocorrect,
-      enableSuggestions: enableSuggestions,
-      textCapitalization: textCapitalization,
-      directionMode: directionMode,
-      decoration: decoration,
     );
   }
 }

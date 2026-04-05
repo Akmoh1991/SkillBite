@@ -1,7 +1,6 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:flutter/material.dart';
-import 'package:skillbite_mobile/app/widgets/widgets.dart';
 import 'package:skillbite_mobile/core/api/mobile_api_client.dart';
 import 'package:skillbite_mobile/core/utils/utils.dart';
 import 'package:skillbite_mobile/features/employee/courses/course_flow_support.dart';
@@ -59,10 +58,6 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
     });
   }
 
-  void _dismissKeyboard() {
-    FocusManager.instance.primaryFocus?.unfocus();
-  }
-
   Future<void> _openCourse(Map<String, dynamic> course) async {
     await Navigator.of(context).push(
       MaterialPageRoute(
@@ -86,7 +81,6 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
     final contentBodyController = TextEditingController();
     final created = await showDialog<bool>(
       context: context,
-      requestFocus: false,
       builder: (context) {
         bool saving = false;
         String? errorText;
@@ -115,7 +109,6 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
                 if (!mounted) {
                   return;
                 }
-                _dismissKeyboard();
                 Navigator.of(context).pop(true);
               } catch (error) {
                 setInnerState(() {
@@ -167,35 +160,34 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
                             ),
                       ),
                       const SizedBox(height: 22),
-                      AppTextField(
+                      TextField(
                         controller: titleController,
                         decoration:
                             InputDecoration(labelText: _tr(context, 'Title')),
                       ),
                       const SizedBox(height: 14),
-                      AppTextField(
+                      TextField(
                         controller: descriptionController,
                         decoration: InputDecoration(
                           labelText: _tr(context, 'Description'),
                         ),
                       ),
                       const SizedBox(height: 14),
-                      AppTextField(
+                      TextField(
                         controller: minutesController,
                         keyboardType: TextInputType.number,
-                        directionMode: AppTextFieldDirectionMode.ltr,
                         decoration:
                             InputDecoration(labelText: _tr(context, 'Minutes')),
                       ),
                       const SizedBox(height: 14),
-                      AppTextField(
+                      TextField(
                         controller: contentTitleController,
                         decoration: InputDecoration(
                           labelText: _tr(context, 'First content title'),
                         ),
                       ),
                       const SizedBox(height: 14),
-                      AppTextField(
+                      TextField(
                         controller: contentBodyController,
                         minLines: 3,
                         maxLines: 5,
@@ -220,10 +212,7 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
                         child: TextButton(
                           onPressed: saving
                               ? null
-                              : () {
-                                  _dismissKeyboard();
-                                  Navigator.of(context).pop(false);
-                                },
+                              : () => Navigator.of(context).pop(false),
                           child: Text(_tr(context, 'Cancel')),
                         ),
                       ),
@@ -244,7 +233,6 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
         );
       },
     );
-    _dismissKeyboard();
     titleController.dispose();
     descriptionController.dispose();
     minutesController.dispose();
@@ -260,7 +248,6 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
     final selectedIds = <int>{};
     final assigned = await showDialog<bool>(
       context: context,
-      requestFocus: false,
       builder: (context) {
         bool saving = false;
         String? errorText;
@@ -279,7 +266,6 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
                 if (!mounted) {
                   return;
                 }
-                _dismissKeyboard();
                 Navigator.of(context).pop(true);
               } catch (error) {
                 setInnerState(() {
@@ -382,10 +368,7 @@ class _OwnerCoursesPageState extends State<OwnerCoursesPage> {
                           child: TextButton(
                             onPressed: saving
                                 ? null
-                                : () {
-                                    _dismissKeyboard();
-                                    Navigator.of(context).pop(false);
-                                  },
+                                : () => Navigator.of(context).pop(false),
                             child: Text(_tr(context, 'Cancel')),
                           ),
                         ),
